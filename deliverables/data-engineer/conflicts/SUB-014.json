@@ -1,0 +1,21 @@
+{
+  "submission": "SUB-014",
+  "conflicts": [
+    {
+      "field": "premises_address",
+      "values": [
+        {
+          "value": "12 Nogal St, San Antonio, TX 78212",
+          "source": "application.md"
+        },
+        {
+          "value": "120 Nogal St, San Antonio, TX 78212",
+          "source": "schedule.csv"
+        }
+      ],
+      "resolution": "resolved",
+      "resolved_value": "12 Nogal St, San Antonio, TX 78212",
+      "resolved_by": "reply.md states this value and not the other"
+    }
+  ]
+}

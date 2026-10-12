@@ -1,0 +1,69 @@
+{
+  "submission": "SUB-008",
+  "fields": [
+    {
+      "field_id": "named_insured",
+      "value": "Caliche Dry Goods LLC",
+      "source": "application.md",
+      "start": 15,
+      "end": 36
+    },
+    {
+      "field_id": "premises_address",
+      "value": "410 S Flores St, San Antonio, TX 78204",
+      "source": "application.md",
+      "start": 55,
+      "end": 93
+    },
+    {
+      "field_id": "effective_date",
+      "value": "2027-01-15",
+      "source": "application.md",
+      "start": 110,
+      "end": 120
+    },
+    {
+      "field_id": "operations",
+      "value": "dry retail, gifts, no cooking, no liquor",
+      "source": "application.md",
+      "start": 148,
+      "end": 188
+    },
+    {
+      "field_id": "sales_or_payroll",
+      "value": "540000",
+      "source": "application.md",
+      "start": 207,
+      "end": 213
+    },
+    {
+      "field_id": "tiv_building",
+      "value": "750000",
+      "source": "application.md",
+      "start": 228,
+      "end": 234
+    },
+    {
+      "field_id": "construction",
+      "value": "joisted masonry",
+      "source": "application.md",
+      "start": 249,
+      "end": 264
+    },
+    {
+      "field_id": "year_built",
+      "value": "1948",
+      "source": "application.md",
+      "start": 277,
+      "end": 281
+    },
+    {
+      "field_id": "loss_run_valued_through",
+      "value": "2026-09-15",
+      "source": "loss-runs.md",
+      "start": 53,
+      "end": 63
+    }
+  ],
+  "conflicts": []
+}

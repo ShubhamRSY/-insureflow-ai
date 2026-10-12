@@ -1,0 +1,69 @@
+{
+  "submission": "SUB-002",
+  "fields": [
+    {
+      "field_id": "named_insured",
+      "value": "Rio Patio Tacos LLC",
+      "source": "application.md",
+      "start": 71,
+      "end": 90
+    },
+    {
+      "field_id": "premises_address",
+      "value": "902 E Grayson St, San Antonio, TX 78208",
+      "source": "application.md",
+      "start": 109,
+      "end": 148
+    },
+    {
+      "field_id": "effective_date",
+      "value": "2026-11-15",
+      "source": "application.md",
+      "start": 165,
+      "end": 175
+    },
+    {
+      "field_id": "operations",
+      "value": "restaurant, tacos, some fryer",
+      "source": "application.md",
+      "start": 203,
+      "end": 232
+    },
+    {
+      "field_id": "sales_or_payroll",
+      "value": "1200000",
+      "source": "reply.md",
+      "start": 71,
+      "end": 78
+    },
+    {
+      "field_id": "tiv_building",
+      "value": "800000",
+      "source": "application.md",
+      "start": 265,
+      "end": 271
+    },
+    {
+      "field_id": "construction",
+      "value": "joisted masonry",
+      "source": "application.md",
+      "start": 286,
+      "end": 301
+    },
+    {
+      "field_id": "year_built",
+      "value": "1986",
+      "source": "reply.md",
+      "start": 91,
+      "end": 95
+    },
+    {
+      "field_id": "loss_run_valued_through",
+      "value": null,
+      "source": null,
+      "start": null,
+      "end": null
+    }
+  ],
+  "conflicts": []
+}

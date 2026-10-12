@@ -1,0 +1,236 @@
+{
+  "submissions": [
+    {
+      "submission": "SUB-047",
+      "format": "text PDF",
+      "error": null,
+      "checks": {
+        "named_insured": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Woodlawn Tax Office LLC"
+    },
+    {
+      "submission": "SUB-048",
+      "format": "scanned page",
+      "error": null,
+      "checks": {
+        "named_insured": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Southcross Pet Supply LLC"
+    },
+    {
+      "submission": "SUB-049",
+      "format": "Excel schedule plus email",
+      "error": null,
+      "checks": {
+        "named_insured": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "not_credited",
+        "conflict": "hit",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Rigsby Paper LLC"
+    },
+    {
+      "submission": "SUB-050",
+      "format": "email body",
+      "error": null,
+      "checks": {
+        "named_insured": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "not_credited",
+        "conflict": "hit",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Theo Avenue Gorditas LLC"
+    },
+    {
+      "submission": "SUB-051",
+      "format": "Spanish",
+      "error": null,
+      "checks": {
+        "named_insured": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Despacho Augusta LLC"
+    },
+    {
+      "submission": "SUB-052",
+      "format": "text PDF plus email",
+      "error": null,
+      "checks": {
+        "named_insured": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "hit"
+      },
+      "extracted_named_insured": "San Pedro Clinic Office LLC"
+    },
+    {
+      "submission": "SUB-053",
+      "format": "scanned page",
+      "error": null,
+      "checks": {
+        "named_insured": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "not_credited",
+        "conflict": "hit",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Colima Court LLC"
+    },
+    {
+      "submission": "SUB-054",
+      "format": "Excel schedule plus email",
+      "error": null,
+      "checks": {
+        "named_insured": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "not_credited",
+        "conflict": "hit",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Broadway Gifts LLC"
+    },
+    {
+      "submission": "SUB-055",
+      "format": "Spanish",
+      "error": null,
+      "checks": {
+        "named_insured": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Club St Marys LLC"
+    },
+    {
+      "submission": "SUB-056",
+      "format": "text PDF plus carrier loss run and no-known-loss letter",
+      "error": null,
+      "checks": {
+        "named_insured": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Elmira Electric LLC"
+    }
+  ],
+  "counted": {
+    "named_insured": {
+      "hit": 10,
+      "miss": 0,
+      "not_credited": 0
+    },
+    "premises": {
+      "hit": 10,
+      "miss": 0,
+      "not_credited": 0
+    },
+    "operations": {
+      "hit": 10,
+      "miss": 0,
+      "not_credited": 0
+    },
+    "sales": {
+      "hit": 10,
+      "miss": 0,
+      "not_credited": 0
+    },
+    "tiv": {
+      "hit": 10,
+      "miss": 0,
+      "not_credited": 0
+    },
+    "construction": {
+      "hit": 10,
+      "miss": 0,
+      "not_credited": 0
+    },
+    "year_built": {
+      "hit": 10,
+      "miss": 0,
+      "not_credited": 0
+    },
+    "loss_runs": {
+      "hit": 6,
+      "miss": 0,
+      "not_credited": 4
+    },
+    "conflict": {
+      "hit": 10,
+      "miss": 0,
+      "not_credited": 0
+    },
+    "status": {
+      "hit": 10,
+      "miss": 0,
+      "not_credited": 0
+    }
+  }
+}

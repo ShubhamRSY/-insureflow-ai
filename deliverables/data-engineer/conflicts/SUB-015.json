@@ -1,0 +1,37 @@
+{
+  "submission": "SUB-015",
+  "conflicts": [
+    {
+      "field": "sales_or_payroll",
+      "values": [
+        {
+          "value": "880000",
+          "source": "application.md"
+        },
+        {
+          "value": "300000",
+          "source": "email.md"
+        }
+      ],
+      "resolution": "resolved",
+      "resolved_value": "880000",
+      "resolved_by": "reply.md states this value and not the other"
+    },
+    {
+      "field": "square_feet",
+      "values": [
+        {
+          "value": "3000",
+          "source": "application.md"
+        },
+        {
+          "value": "4500",
+          "source": "schedule.csv"
+        }
+      ],
+      "resolution": "resolved",
+      "resolved_value": "4500",
+      "resolved_by": "reply.md states this value and not the other"
+    }
+  ]
+}

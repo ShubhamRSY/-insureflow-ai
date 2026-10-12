@@ -1,0 +1,361 @@
+{
+  "submissions": [
+    {
+      "submission": "SUB-017",
+      "format": "text PDF",
+      "ignored_files": [
+        "application.pdf"
+      ],
+      "extracted_named_insured": null,
+      "complete": false,
+      "missing": [
+        "named_insured",
+        "premises_address",
+        "effective_date",
+        "operations",
+        "sales_or_payroll",
+        "tiv_building",
+        "construction",
+        "year_built",
+        "loss_run_valued_through"
+      ],
+      "conflicts": [],
+      "checks": {
+        "named_insured": false,
+        "premises": false,
+        "operations": false,
+        "sales": false,
+        "tiv": false,
+        "construction": false,
+        "year_built": false,
+        "loss_runs": false,
+        "conflict": true,
+        "status": false
+      },
+      "correct": 1,
+      "scored": 10
+    },
+    {
+      "submission": "SUB-018",
+      "format": "scanned-style PDF",
+      "ignored_files": [
+        "scan.pdf"
+      ],
+      "extracted_named_insured": null,
+      "complete": false,
+      "missing": [
+        "named_insured",
+        "premises_address",
+        "effective_date",
+        "operations",
+        "sales_or_payroll",
+        "tiv_building",
+        "construction",
+        "year_built",
+        "loss_run_valued_through"
+      ],
+      "conflicts": [],
+      "checks": {
+        "named_insured": false,
+        "premises": false,
+        "operations": false,
+        "sales": false,
+        "tiv": false,
+        "construction": false,
+        "year_built": false,
+        "loss_runs": false,
+        "conflict": true,
+        "status": false
+      },
+      "correct": 1,
+      "scored": 10
+    },
+    {
+      "submission": "SUB-019",
+      "format": "Excel schedule",
+      "ignored_files": [
+        "schedule.xlsx"
+      ],
+      "extracted_named_insured": null,
+      "complete": false,
+      "missing": [
+        "named_insured",
+        "premises_address",
+        "effective_date",
+        "operations",
+        "sales_or_payroll",
+        "tiv_building",
+        "construction",
+        "year_built",
+        "loss_run_valued_through"
+      ],
+      "conflicts": [],
+      "checks": {
+        "named_insured": false,
+        "premises": false,
+        "operations": false,
+        "sales": false,
+        "tiv": false,
+        "construction": false,
+        "year_built": false,
+        "loss_runs": true,
+        "conflict": true,
+        "status": true
+      },
+      "correct": 3,
+      "scored": 10
+    },
+    {
+      "submission": "SUB-020",
+      "format": "email body",
+      "ignored_files": [],
+      "extracted_named_insured": null,
+      "complete": false,
+      "missing": [
+        "named_insured",
+        "premises_address",
+        "effective_date",
+        "operations",
+        "sales_or_payroll",
+        "tiv_building",
+        "construction",
+        "year_built",
+        "loss_run_valued_through"
+      ],
+      "conflicts": [],
+      "checks": {
+        "named_insured": false,
+        "premises": false,
+        "operations": false,
+        "sales": false,
+        "tiv": false,
+        "construction": false,
+        "year_built": false,
+        "loss_runs": true,
+        "conflict": true,
+        "status": true
+      },
+      "correct": 3,
+      "scored": 10
+    },
+    {
+      "submission": "SUB-021",
+      "format": "Spanish",
+      "ignored_files": [],
+      "extracted_named_insured": null,
+      "complete": false,
+      "missing": [
+        "named_insured",
+        "premises_address",
+        "effective_date",
+        "operations",
+        "sales_or_payroll",
+        "tiv_building",
+        "construction",
+        "year_built",
+        "loss_run_valued_through"
+      ],
+      "conflicts": [],
+      "checks": {
+        "named_insured": false,
+        "premises": false,
+        "operations": false,
+        "sales": false,
+        "tiv": false,
+        "construction": false,
+        "year_built": false,
+        "loss_runs": false,
+        "conflict": true,
+        "status": false
+      },
+      "correct": 1,
+      "scored": 10
+    },
+    {
+      "submission": "SUB-022",
+      "format": "text PDF plus email",
+      "ignored_files": [
+        "application.pdf"
+      ],
+      "extracted_named_insured": null,
+      "complete": false,
+      "missing": [
+        "named_insured",
+        "premises_address",
+        "effective_date",
+        "operations",
+        "sales_or_payroll",
+        "tiv_building",
+        "construction",
+        "year_built",
+        "loss_run_valued_through"
+      ],
+      "conflicts": [],
+      "checks": {
+        "named_insured": false,
+        "premises": false,
+        "operations": false,
+        "sales": false,
+        "tiv": false,
+        "construction": false,
+        "year_built": false,
+        "loss_runs": false,
+        "conflict": false,
+        "status": true
+      },
+      "correct": 1,
+      "scored": 10
+    },
+    {
+      "submission": "SUB-023",
+      "format": "scanned-style PDF",
+      "ignored_files": [
+        "scan.pdf"
+      ],
+      "extracted_named_insured": null,
+      "complete": false,
+      "missing": [
+        "named_insured",
+        "premises_address",
+        "effective_date",
+        "operations",
+        "sales_or_payroll",
+        "tiv_building",
+        "construction",
+        "year_built",
+        "loss_run_valued_through"
+      ],
+      "conflicts": [],
+      "checks": {
+        "named_insured": false,
+        "premises": false,
+        "operations": false,
+        "sales": false,
+        "tiv": false,
+        "construction": false,
+        "year_built": false,
+        "loss_runs": true,
+        "conflict": true,
+        "status": true
+      },
+      "correct": 3,
+      "scored": 10
+    },
+    {
+      "submission": "SUB-024",
+      "format": "Excel schedule plus email",
+      "ignored_files": [
+        "schedule.xlsx"
+      ],
+      "extracted_named_insured": null,
+      "complete": false,
+      "missing": [
+        "named_insured",
+        "premises_address",
+        "effective_date",
+        "operations",
+        "sales_or_payroll",
+        "tiv_building",
+        "construction",
+        "year_built",
+        "loss_run_valued_through"
+      ],
+      "conflicts": [],
+      "checks": {
+        "named_insured": false,
+        "premises": false,
+        "operations": false,
+        "sales": false,
+        "tiv": false,
+        "construction": false,
+        "year_built": false,
+        "loss_runs": true,
+        "conflict": false,
+        "status": true
+      },
+      "correct": 2,
+      "scored": 10
+    },
+    {
+      "submission": "SUB-025",
+      "format": "Spanish",
+      "ignored_files": [],
+      "extracted_named_insured": null,
+      "complete": false,
+      "missing": [
+        "named_insured",
+        "premises_address",
+        "effective_date",
+        "operations",
+        "sales_or_payroll",
+        "tiv_building",
+        "construction",
+        "year_built",
+        "loss_run_valued_through"
+      ],
+      "conflicts": [],
+      "checks": {
+        "named_insured": false,
+        "premises": false,
+        "operations": false,
+        "sales": false,
+        "tiv": false,
+        "construction": false,
+        "year_built": false,
+        "loss_runs": false,
+        "conflict": true,
+        "status": false
+      },
+      "correct": 1,
+      "scored": 10
+    },
+    {
+      "submission": "SUB-026",
+      "format": "text PDF",
+      "ignored_files": [
+        "application.pdf"
+      ],
+      "extracted_named_insured": null,
+      "complete": false,
+      "missing": [
+        "named_insured",
+        "premises_address",
+        "effective_date",
+        "operations",
+        "sales_or_payroll",
+        "tiv_building",
+        "construction",
+        "year_built",
+        "loss_run_valued_through"
+      ],
+      "conflicts": [],
+      "checks": {
+        "named_insured": false,
+        "premises": false,
+        "operations": false,
+        "sales": false,
+        "tiv": false,
+        "construction": false,
+        "year_built": false,
+        "loss_runs": false,
+        "conflict": true,
+        "status": false
+      },
+      "correct": 1,
+      "scored": 10
+    }
+  ],
+  "per_field": {
+    "named_insured": 0,
+    "premises": 0,
+    "operations": 0,
+    "sales": 0,
+    "tiv": 0,
+    "construction": 0,
+    "year_built": 0,
+    "loss_runs": 4,
+    "conflict": 8,
+    "status": 5
+  },
+  "n": 10
+}

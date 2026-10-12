@@ -1,0 +1,1232 @@
+{
+  "bands": [
+    {
+      "band": "017-026",
+      "counted": {
+        "named_insured": {
+          "hit": 10
+        },
+        "premises": {
+          "hit": 10
+        },
+        "operations": {
+          "hit": 9,
+          "miss": 1
+        },
+        "sales": {
+          "hit": 10
+        },
+        "tiv": {
+          "hit": 10
+        },
+        "construction": {
+          "hit": 10
+        },
+        "year_built": {
+          "hit": 10
+        },
+        "loss_runs": {
+          "hit": 10
+        },
+        "conflict": {
+          "hit": 10
+        },
+        "status": {
+          "hit": 10
+        }
+      },
+      "rows": [
+        {
+          "submission": "SUB-017",
+          "checks": {
+            "named_insured": true,
+            "premises": true,
+            "operations": true,
+            "sales": true,
+            "tiv": true,
+            "construction": true,
+            "year_built": true,
+            "loss_runs": true,
+            "conflict": true,
+            "status": true
+          },
+          "name": "Culebra Drafting LLC"
+        },
+        {
+          "submission": "SUB-018",
+          "checks": {
+            "named_insured": true,
+            "premises": true,
+            "operations": true,
+            "sales": true,
+            "tiv": true,
+            "construction": true,
+            "year_built": true,
+            "loss_runs": true,
+            "conflict": true,
+            "status": true
+          },
+          "name": "Frio Street Dry Goods LLC"
+        },
+        {
+          "submission": "SUB-019",
+          "checks": {
+            "named_insured": true,
+            "premises": true,
+            "operations": false,
+            "sales": true,
+            "tiv": true,
+            "construction": true,
+            "year_built": true,
+            "loss_runs": true,
+            "conflict": true,
+            "status": true
+          },
+          "name": "Zarzamora Paper Supply LLC"
+        },
+        {
+          "submission": "SUB-020",
+          "checks": {
+            "named_insured": true,
+            "premises": true,
+            "operations": true,
+            "sales": true,
+            "tiv": true,
+            "construction": true,
+            "year_built": true,
+            "loss_runs": true,
+            "conflict": true,
+            "status": true
+          },
+          "name": "Guenther Tacos y Mas LLC"
+        },
+        {
+          "submission": "SUB-021",
+          "checks": {
+            "named_insured": true,
+            "premises": true,
+            "operations": true,
+            "sales": true,
+            "tiv": true,
+            "construction": true,
+            "year_built": true,
+            "loss_runs": true,
+            "conflict": true,
+            "status": true
+          },
+          "name": "Contadores Del Nogal LLC"
+        },
+        {
+          "submission": "SUB-022",
+          "checks": {
+            "named_insured": true,
+            "premises": true,
+            "operations": true,
+            "sales": true,
+            "tiv": true,
+            "construction": true,
+            "year_built": true,
+            "loss_runs": true,
+            "conflict": true,
+            "status": true
+          },
+          "name": "Perez Bench Office LLC"
+        },
+        {
+          "submission": "SUB-023",
+          "checks": {
+            "named_insured": true,
+            "premises": true,
+            "operations": true,
+            "sales": true,
+            "tiv": true,
+            "construction": true,
+            "year_built": true,
+            "loss_runs": true,
+            "conflict": true,
+            "status": true
+          },
+          "name": "Nogales Court Flats LLC"
+        },
+        {
+          "submission": "SUB-024",
+          "checks": {
+            "named_insured": true,
+            "premises": true,
+            "operations": true,
+            "sales": true,
+            "tiv": true,
+            "construction": true,
+            "year_built": true,
+            "loss_runs": true,
+            "conflict": true,
+            "status": true
+          },
+          "name": "Bandera Home Goods LLC"
+        },
+        {
+          "submission": "SUB-025",
+          "checks": {
+            "named_insured": true,
+            "premises": true,
+            "operations": true,
+            "sales": true,
+            "tiv": true,
+            "construction": true,
+            "year_built": true,
+            "loss_runs": true,
+            "conflict": true,
+            "status": true
+          },
+          "name": "Club Nocturno Soledad LLC"
+        },
+        {
+          "submission": "SUB-026",
+          "checks": {
+            "named_insured": true,
+            "premises": true,
+            "operations": true,
+            "sales": true,
+            "tiv": true,
+            "construction": true,
+            "year_built": true,
+            "loss_runs": true,
+            "conflict": true,
+            "status": true
+          },
+          "name": "Mission Interior Paint LLC"
+        }
+      ]
+    },
+    {
+      "band": "027-036",
+      "counted": {
+        "named_insured": {
+          "hit": 10
+        },
+        "operations": {
+          "hit": 10
+        },
+        "sales": {
+          "hit": 10
+        },
+        "construction": {
+          "hit": 10
+        },
+        "year_built": {
+          "hit": 10
+        },
+        "premises": {
+          "hit": 10
+        },
+        "tiv": {
+          "hit": 10
+        },
+        "loss_runs": {
+          "hit": 6,
+          "not_credited": 4
+        },
+        "conflict": {
+          "hit": 9,
+          "miss": 1
+        },
+        "status": {
+          "hit": 10
+        }
+      },
+      "rows": [
+        {
+          "submission": "SUB-027",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "hit",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "Alamo Ledger Office LLC"
+        },
+        {
+          "submission": "SUB-028",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "hit",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "South Flores Stationery LLC"
+        },
+        {
+          "submission": "SUB-029",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "not_credited",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "Fredericksburg Paper LLC"
+        },
+        {
+          "submission": "SUB-030",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "not_credited",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "Blanco Street Kitchen LLC"
+        },
+        {
+          "submission": "SUB-031",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "hit",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "Bufete Robles LLC"
+        },
+        {
+          "submission": "SUB-032",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "hit",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "Commerce Tax Office LLC"
+        },
+        {
+          "submission": "SUB-033",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "not_credited",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "Dolorosa Court LLC"
+        },
+        {
+          "submission": "SUB-034",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "not_credited",
+            "conflict": "miss",
+            "status": "hit"
+          },
+          "name": "Houston Street Goods LLC"
+        },
+        {
+          "submission": "SUB-035",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "hit",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "Bar La Villita LLC"
+        },
+        {
+          "submission": "SUB-036",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "hit",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "Olmos Cabinets LLC"
+        }
+      ]
+    },
+    {
+      "band": "037-046",
+      "counted": {
+        "named_insured": {
+          "hit": 9,
+          "miss": 1
+        },
+        "operations": {
+          "hit": 10
+        },
+        "sales": {
+          "hit": 10
+        },
+        "construction": {
+          "hit": 10
+        },
+        "year_built": {
+          "hit": 10
+        },
+        "premises": {
+          "hit": 9,
+          "miss": 1
+        },
+        "tiv": {
+          "hit": 10
+        },
+        "loss_runs": {
+          "hit": 6,
+          "not_credited": 4
+        },
+        "conflict": {
+          "hit": 10
+        },
+        "status": {
+          "hit": 10
+        }
+      },
+      "rows": [
+        {
+          "submission": "SUB-037",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "hit",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "Mission Creek Bookkeeping LLC"
+        },
+        {
+          "submission": "SUB-038",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "miss",
+            "tiv": "hit",
+            "loss_runs": "hit",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "Probandt Shoe Repair LLC"
+        },
+        {
+          "submission": "SUB-039",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "not_credited",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "South Presa Dry Goods LLC"
+        },
+        {
+          "submission": "SUB-040",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "not_credited",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "Nogal Street Pupusas LLC"
+        },
+        {
+          "submission": "SUB-041",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "hit",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "Estudio Salinas LLC"
+        },
+        {
+          "submission": "SUB-042",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "hit",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "Cesar Chavez Tax LLC"
+        },
+        {
+          "submission": "SUB-043",
+          "checks": {
+            "named_insured": "miss",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "not_credited",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "Labor Street Flats LLc"
+        },
+        {
+          "submission": "SUB-044",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "not_credited",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "McCullough Gifts LLC"
+        },
+        {
+          "submission": "SUB-045",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "hit",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "Club del Rio LLC"
+        },
+        {
+          "submission": "SUB-046",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "hit",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "Martin Street Painting LLC"
+        }
+      ]
+    },
+    {
+      "band": "047-056",
+      "counted": {
+        "named_insured": {
+          "hit": 7,
+          "miss": 3
+        },
+        "operations": {
+          "hit": 7,
+          "miss": 3
+        },
+        "sales": {
+          "hit": 7,
+          "miss": 3
+        },
+        "construction": {
+          "hit": 7,
+          "miss": 3
+        },
+        "year_built": {
+          "hit": 7,
+          "miss": 3
+        },
+        "premises": {
+          "hit": 7,
+          "miss": 3
+        },
+        "tiv": {
+          "hit": 7,
+          "miss": 3
+        },
+        "loss_runs": {
+          "hit": 4,
+          "not_credited": 4,
+          "miss": 2
+        },
+        "conflict": {
+          "hit": 7,
+          "not_credited": 3
+        },
+        "status": {
+          "hit": 7,
+          "miss": 2,
+          "not_credited": 1
+        }
+      },
+      "rows": [
+        {
+          "submission": "SUB-047",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "hit",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "Woodlawn Tax Office LLC"
+        },
+        {
+          "submission": "SUB-048",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "hit",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "Southcross Pet Supply LLC"
+        },
+        {
+          "submission": "SUB-049",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "not_credited",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "Rigsby Paper LLC"
+        },
+        {
+          "submission": "SUB-050",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "not_credited",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "Theo Avenue Gorditas LLC"
+        },
+        {
+          "submission": "SUB-051",
+          "checks": {
+            "named_insured": "miss",
+            "operations": "miss",
+            "sales": "miss",
+            "construction": "miss",
+            "year_built": "miss",
+            "premises": "miss",
+            "tiv": "miss",
+            "loss_runs": "miss",
+            "conflict": "not_credited",
+            "status": "miss"
+          },
+          "name": null
+        },
+        {
+          "submission": "SUB-052",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "hit",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "San Pedro Clinic Office LLC"
+        },
+        {
+          "submission": "SUB-053",
+          "checks": {
+            "named_insured": "miss",
+            "operations": "miss",
+            "sales": "miss",
+            "construction": "miss",
+            "year_built": "miss",
+            "premises": "miss",
+            "tiv": "miss",
+            "loss_runs": "not_credited",
+            "conflict": "not_credited",
+            "status": "not_credited"
+          },
+          "name": null
+        },
+        {
+          "submission": "SUB-054",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "not_credited",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "Broadway Gifts LLC"
+        },
+        {
+          "submission": "SUB-055",
+          "checks": {
+            "named_insured": "miss",
+            "operations": "miss",
+            "sales": "miss",
+            "construction": "miss",
+            "year_built": "miss",
+            "premises": "miss",
+            "tiv": "miss",
+            "loss_runs": "miss",
+            "conflict": "not_credited",
+            "status": "miss"
+          },
+          "name": null
+        },
+        {
+          "submission": "SUB-056",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "hit",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "Elmira Electric LLC"
+        }
+      ]
+    },
+    {
+      "band": "057-066",
+      "counted": {
+        "named_insured": {
+          "miss": 4,
+          "hit": 6
+        },
+        "operations": {
+          "miss": 5,
+          "hit": 5
+        },
+        "sales": {
+          "miss": 5,
+          "hit": 5
+        },
+        "construction": {
+          "miss": 3,
+          "hit": 7
+        },
+        "year_built": {
+          "miss": 4,
+          "hit": 6
+        },
+        "premises": {
+          "miss": 6,
+          "hit": 4
+        },
+        "tiv": {
+          "miss": 3,
+          "hit": 7
+        },
+        "loss_runs": {
+          "miss": 5,
+          "hit": 3,
+          "not_credited": 2
+        },
+        "conflict": {
+          "not_credited": 3,
+          "hit": 6,
+          "miss": 1
+        },
+        "status": {
+          "miss": 6,
+          "hit": 4
+        }
+      },
+      "rows": [
+        {
+          "submission": "SUB-057",
+          "checks": {
+            "named_insured": "miss",
+            "operations": "miss",
+            "sales": "miss",
+            "construction": "miss",
+            "year_built": "miss",
+            "premises": "miss",
+            "tiv": "miss",
+            "loss_runs": "miss",
+            "conflict": "not_credited",
+            "status": "miss"
+          },
+          "name": null
+        },
+        {
+          "submission": "SUB-058",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "miss",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "miss",
+            "tiv": "hit",
+            "loss_runs": "hit",
+            "conflict": "hit",
+            "status": "miss"
+          },
+          "name": "Pleasanton Road Office LLC"
+        },
+        {
+          "submission": "SUB-059",
+          "checks": {
+            "named_insured": "miss",
+            "operations": "miss",
+            "sales": "miss",
+            "construction": "hit",
+            "year_built": "miss",
+            "premises": "miss",
+            "tiv": "miss",
+            "loss_runs": "miss",
+            "conflict": "not_credited",
+            "status": "miss"
+          },
+          "name": null
+        },
+        {
+          "submission": "SUB-060",
+          "checks": {
+            "named_insured": "miss",
+            "operations": "miss",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "miss",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "not_credited",
+            "conflict": "miss",
+            "status": "hit"
+          },
+          "name": "Babcock Wholesale LLC."
+        },
+        {
+          "submission": "SUB-061",
+          "checks": {
+            "named_insured": "miss",
+            "operations": "miss",
+            "sales": "miss",
+            "construction": "miss",
+            "year_built": "miss",
+            "premises": "miss",
+            "tiv": "miss",
+            "loss_runs": "miss",
+            "conflict": "not_credited",
+            "status": "miss"
+          },
+          "name": null
+        },
+        {
+          "submission": "SUB-062",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "not_credited",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "Poplar Retail LLC"
+        },
+        {
+          "submission": "SUB-063",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "miss",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "hit",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "Duval Gifts LLC"
+        },
+        {
+          "submission": "SUB-064",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "miss",
+            "sales": "hit",
+            "construction": "miss",
+            "year_built": "hit",
+            "premises": "miss",
+            "tiv": "hit",
+            "loss_runs": "miss",
+            "conflict": "hit",
+            "status": "miss"
+          },
+          "name": "Panaderia Ruiz LLC"
+        },
+        {
+          "submission": "SUB-065",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "miss",
+            "tiv": "hit",
+            "loss_runs": "hit",
+            "conflict": "hit",
+            "status": "miss"
+          },
+          "name": "Wurzbach Painting LLC"
+        },
+        {
+          "submission": "SUB-066",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "miss",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "Bandera Law Office LLC"
+        }
+      ]
+    },
+    {
+      "band": "067-076",
+      "counted": {
+        "named_insured": {
+          "miss": 4,
+          "hit": 6
+        },
+        "operations": {
+          "miss": 5,
+          "hit": 5
+        },
+        "sales": {
+          "miss": 3,
+          "hit": 7
+        },
+        "construction": {
+          "hit": 8,
+          "miss": 2
+        },
+        "year_built": {
+          "hit": 8,
+          "miss": 2
+        },
+        "premises": {
+          "miss": 5,
+          "hit": 4,
+          "flagged": 1
+        },
+        "tiv": {
+          "hit": 7,
+          "miss": 3
+        },
+        "loss_runs": {
+          "hit": 5,
+          "not_credited": 2,
+          "miss": 2,
+          "flagged": 1
+        },
+        "conflict": {
+          "hit": 6,
+          "flagged": 2,
+          "miss": 1,
+          "not_credited": 1
+        },
+        "status": {
+          "miss": 4,
+          "hit": 5,
+          "not_credited": 1
+        }
+      },
+      "rows": [
+        {
+          "submission": "SUB-067",
+          "checks": {
+            "named_insured": "miss",
+            "operations": "miss",
+            "sales": "miss",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "miss",
+            "tiv": "hit",
+            "loss_runs": "hit",
+            "conflict": "hit",
+            "status": "miss"
+          },
+          "name": "Nogalitos watch LLC"
+        },
+        {
+          "submission": "SUB-068",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "miss",
+            "tiv": "hit",
+            "loss_runs": "hit",
+            "conflict": "hit",
+            "status": "miss"
+          },
+          "name": "Military Drive Office LLC"
+        },
+        {
+          "submission": "SUB-069",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "hit",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "Huebner Clinic Office LLC"
+        },
+        {
+          "submission": "SUB-070",
+          "checks": {
+            "named_insured": "miss",
+            "operations": "miss",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "not_credited",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "De Zavala Wholesale LLC."
+        },
+        {
+          "submission": "SUB-071",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "hit",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "Eleanor Avenue Accounting LLC"
+        },
+        {
+          "submission": "SUB-072",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "flagged",
+            "tiv": "hit",
+            "loss_runs": "not_credited",
+            "conflict": "flagged",
+            "status": "hit"
+          },
+          "name": "Mistletoe Retail LLC"
+        },
+        {
+          "submission": "SUB-073",
+          "checks": {
+            "named_insured": "miss",
+            "operations": "miss",
+            "sales": "miss",
+            "construction": "miss",
+            "year_built": "miss",
+            "premises": "miss",
+            "tiv": "miss",
+            "loss_runs": "miss",
+            "conflict": "miss",
+            "status": "not_credited"
+          },
+          "name": null
+        },
+        {
+          "submission": "SUB-074",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "miss",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "miss",
+            "tiv": "miss",
+            "loss_runs": "hit",
+            "conflict": "hit",
+            "status": "miss"
+          },
+          "name": "Tortilleria Sol LLC"
+        },
+        {
+          "submission": "SUB-075",
+          "checks": {
+            "named_insured": "miss",
+            "operations": "miss",
+            "sales": "miss",
+            "construction": "miss",
+            "year_built": "miss",
+            "premises": "miss",
+            "tiv": "miss",
+            "loss_runs": "miss",
+            "conflict": "not_credited",
+            "status": "miss"
+          },
+          "name": null
+        },
+        {
+          "submission": "SUB-076",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "flagged",
+            "conflict": "flagged",
+            "status": "hit"
+          },
+          "name": "Main Avenue Law Office LLC"
+        }
+      ]
+    }
+  ]
+}

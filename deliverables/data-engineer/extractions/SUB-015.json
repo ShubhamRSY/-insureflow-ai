@@ -1,0 +1,102 @@
+{
+  "submission": "SUB-015",
+  "fields": [
+    {
+      "field_id": "named_insured",
+      "value": "Soledad Home Goods LLC",
+      "source": "application.md",
+      "start": 15,
+      "end": 37
+    },
+    {
+      "field_id": "premises_address",
+      "value": "50 Soledad St, San Antonio, TX 78205",
+      "source": "application.md",
+      "start": 56,
+      "end": 92
+    },
+    {
+      "field_id": "effective_date",
+      "value": "2027-03-15",
+      "source": "application.md",
+      "start": 109,
+      "end": 119
+    },
+    {
+      "field_id": "operations",
+      "value": "dry retail, home goods, no cooking, no liquor",
+      "source": "application.md",
+      "start": 147,
+      "end": 192
+    },
+    {
+      "field_id": "sales_or_payroll",
+      "value": "880000",
+      "source": "application.md",
+      "start": 211,
+      "end": 217
+    },
+    {
+      "field_id": "tiv_building",
+      "value": "1100000",
+      "source": "application.md",
+      "start": 232,
+      "end": 239
+    },
+    {
+      "field_id": "construction",
+      "value": "masonry",
+      "source": "application.md",
+      "start": 254,
+      "end": 261
+    },
+    {
+      "field_id": "year_built",
+      "value": "1910",
+      "source": "application.md",
+      "start": 274,
+      "end": 278
+    },
+    {
+      "field_id": "loss_run_valued_through",
+      "value": "2026-08-01",
+      "source": "loss-runs.md",
+      "start": 54,
+      "end": 64
+    }
+  ],
+  "conflicts": [
+    {
+      "field": "sales_or_payroll",
+      "values": [
+        {
+          "value": "880000",
+          "source": "application.md"
+        },
+        {
+          "value": "300000",
+          "source": "email.md"
+        }
+      ],
+      "resolution": "resolved",
+      "resolved_value": "880000",
+      "resolved_by": "reply.md states this value and not the other"
+    },
+    {
+      "field": "square_feet",
+      "values": [
+        {
+          "value": "3000",
+          "source": "application.md"
+        },
+        {
+          "value": "4500",
+          "source": "schedule.csv"
+        }
+      ],
+      "resolution": "unresolved",
+      "resolved_value": null,
+      "resolved_by": null
+    }
+  ]
+}

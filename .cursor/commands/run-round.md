@@ -1,0 +1,1 @@
+(Use with @role-orchestrator.) Run one team round: follow the "Running a round" steps in the orchestrator rule, playing each role in turn, then print the round summary and stop. If a number follows this command, run that many rounds, stopping early for any decision that needs the user.

@@ -1,0 +1,325 @@
+"""Step 6 — one page of the queue. Does not bind and does not send to a carrier.
+
+The React workbench in frontend/ is a different app and is not modified.
+
+# ponytail: stdlib HTML plus one JSONL log. Split the page when a second screen exists.
+
+Run: python underwriting_pipeline/app/workbench.py
+Serve: python underwriting_pipeline/app/workbench.py --serve
+"""
+
+import html
+import json
+import os
+import sys
+from datetime import date
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
+from urllib.parse import parse_qs
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "underwriting_pipeline" / "ai"))
+sys.path.insert(0, str(ROOT / "underwriting_pipeline" / "models"))
+import points
+import prepare
+
+INBOX = ROOT / "simulation" / "inbox"
+PAGE = Path(__file__).resolve().parent / "workbench.html"
+LOG = ROOT / "deliverables" / "software-engineer" / "decisions.jsonl"
+
+
+def _ops(report: dict) -> str:
+    for row in report["fields"]:
+        if row["field_id"] == "operations" and row["value"]:
+            return row["value"].lower()
+    return ""
+
+
+def route(report: dict) -> str:
+    ops = _ops(report)
+    if any(word in ops for word in ("bar", "nightclub", "firework", "explosive")):
+        return "no_match"
+    if not report["complete"]:
+        return "hold"
+    if any(word in ops for word in ("habitational", "apartment", "flats")):
+        if report.get("sprinklers") == "yes" or "sprinklers yes" in ops or "sprinklered" in ops:
+            return "carrier_c"
+        return "hold"
+    if any(word in ops for word in ("restaurant", "taco", "kitchen", "contractor", "painting")):
+        return "carrier_b"
+    if any(word in ops for word in ("office", "retail", "wholesale")):
+        return "carrier_a"
+    return "hold"
+
+
+def facts(report: dict) -> dict:
+    by = {row["field_id"]: (row["value"] or "") for row in report["fields"]}
+    ops = by.get("operations", "").lower()
+    tiv = "".join(ch for ch in by.get("tiv_building", "") if ch.isdigit())
+    return {
+        "restaurant": any(word in ops for word in ("restaurant", "taco", "kitchen")),
+        "cooking": any(word in ops for word in ("fryer", "restaurant", "taco", "kitchen")),
+        "habitational": any(word in ops for word in ("habitational", "apartment", "flats")),
+        "contracting": "contractor" in ops or "painting" in ops,
+        "construction": by.get("construction", "").lower(),
+        "tiv": int(tiv) if tiv else 0,
+    }
+
+
+def snippet(folder: Path, row: dict) -> str:
+    source = row.get("source")
+    if not source or row.get("start") is None:
+        return ""
+    path = folder / source
+    if not path.is_file():
+        return ""
+    text = path.read_text()
+    return text[row["start"] : row["end"]]
+
+
+def load_queue(only: str | None = None) -> list[dict]:
+    folders = sorted(p for p in INBOX.iterdir() if p.is_dir() and p.name.startswith("SUB-"))
+    if only:
+        folders = [folder for folder in folders if folder.name == only]
+    rows = []
+    for folder in folders:
+        report = prepare.process_submission(folder)
+        files = sorted(p.name for p in folder.iterdir() if p.is_file())
+        ignored = [name for name in files if not name.endswith((".md", ".csv"))]
+        rows.append(
+            {
+                "id": folder.name,
+                "report": report,
+                "files": files,
+                "ignored": ignored,
+                "route": route(report),
+                "score": points.score(facts(report)),
+                "snippets": {row["field_id"]: snippet(folder, row) for row in report["fields"]},
+            }
+        )
+    return rows
+
+
+def ai_version() -> str:
+    model = os.environ.get("LLM_MODEL") or "local-default"
+    return model + "+rules-d015"
+
+
+def correction_counts(log_path: Path) -> dict:
+    counts = {"approve": 0, "edit": 0, "decline": 0}
+    if not log_path.exists():
+        return counts
+    for line in log_path.read_text().splitlines():
+        if not line.strip():
+            continue
+        action = json.loads(line).get("action")
+        if action in counts:
+            counts[action] += 1
+    return counts
+
+
+def record_decision(payload: dict, log_path: Path) -> dict:
+    actor = (payload.get("underwriter_id") or "").strip()
+    action = (payload.get("action") or "").strip()
+    reason = (payload.get("reason") or "").strip()
+    if not actor:
+        raise ValueError("underwriter id required")
+    if action not in {"approve", "edit", "decline"}:
+        raise ValueError("action must be approve, edit, or decline")
+    if action in {"edit", "decline"} and not reason:
+        raise ValueError("edit and decline require a reason")
+    row = {
+        "submission": payload.get("submission"),
+        "action": action,
+        "underwriter_id": actor,
+        "reason": reason,
+        "date": date.today().isoformat(),
+        "ai_version": ai_version(),
+        "bound": False,
+        "sent_to_carrier": False,
+    }
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    with log_path.open("a") as handle:
+        handle.write(json.dumps(row) + "\n")
+    return row
+
+
+def _confidence(row: dict) -> str:
+    used = row.get("confidence", "")
+    model = row.get("model_confidence")
+    if model is None or model == used:
+        return str(used)
+    return f"{used} ocr / {model} model"
+
+
+def render(queue: list[dict], counts: dict | None = None) -> str:
+    counts = counts or {"approve": 0, "edit": 0, "decline": 0}
+    corrections = counts["edit"] + counts["decline"]
+    blocks = []
+    for item in queue:
+        report = item["report"]
+        field_rows = []
+        for row in report["fields"]:
+            field_rows.append(
+                "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
+                    html.escape(row["field_id"]),
+                    html.escape(row["value"] or "—"),
+                    html.escape(_confidence(row)),
+                    html.escape(row.get("source") or "—"),
+                    html.escape(item["snippets"].get(row["field_id"]) or "—"),
+                )
+            )
+        conflicts = report["conflicts"] or []
+        conflict_html = "<p>No stored conflict.</p>"
+        if conflicts:
+            conflict_html = "<ul>" + "".join(
+                "<li>{}: {}</li>".format(
+                    html.escape(item_c["field"]),
+                    html.escape(json.dumps(item_c["values"])),
+                )
+                for item_c in conflicts
+            ) + "</ul>"
+        address_check = "—"
+        for row in report["fields"]:
+            if row["field_id"] == "premises_address":
+                address_check = row.get("address_check") or "—"
+        extraction = "ok"
+        if report.get("status") == "extraction_failed":
+            extraction = f"FAILED — {report['error']}. No field was read. This is not a missing-data file. Sends are blocked."
+        missing = report["missing"] + report.get("extra", [])
+        blocks.append(
+            f"""<article id="{html.escape(item['id'])}">
+<h2>{html.escape(item['id'])}</h2>
+<p>Files: {html.escape(', '.join(item['files']) or 'none')}</p>
+<p>Not read by extraction: {html.escape(', '.join(item['ignored']) or 'none')}</p>
+<p>Score: {item['score']['points']} · {html.escape(', '.join(item['score']['reason_codes']) or 'none')} · not a price</p>
+<p>Carrier match: {html.escape(item['route'])} · recommendation only</p>
+<p>Extraction: {html.escape(extraction)}</p>
+<p>Needs human read: {html.escape(', '.join(report.get('needs_human') or []) or 'none')}</p>
+<p>Address check: {html.escape(address_check)}</p>
+<p>Locations: {html.escape('; '.join(('primary ' if row.get('primary') else 'other ') + row['address'] for row in report.get('locations') or []) or 'one premises')}</p>
+<h3>Extracted fields</h3>
+<table><tr><th>Field</th><th>Value</th><th>Confidence</th><th>Source</th><th>Cited text</th></tr>{''.join(field_rows)}</table>
+<h3>Conflicts</h3>{conflict_html}
+<h3>Missing</h3>
+<p>{html.escape(', '.join(missing) or 'none')}</p>
+<form method="post" action="/decision">
+<input type="hidden" name="submission" value="{html.escape(item['id'])}">
+<label>Underwriter id <input name="underwriter_id" required></label>
+<label>Action
+<select name="action"><option>approve</option><option>edit</option><option>decline</option></select>
+</label>
+<label>Reason <input name="reason"></label>
+<button type="submit">Record decision</button>
+</form>
+</article>"""
+        )
+    return f"""<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Underwriter workbench</title>
+<style>
+body {{ font: 15px/1.4 sans-serif; margin: 2rem; }}
+article {{ border-top: 1px solid #ccc; padding: 1rem 0; }}
+table {{ border-collapse: collapse; }}
+td, th {{ border: 1px solid #ddd; padding: 0.3rem 0.5rem; text-align: left; }}
+</style></head><body>
+<h1>Underwriter workbench</h1>
+<p>Synthetic queue. A decision is logged only with an underwriter id. Decline and edit need a reason. Approve, edit, and decline are saved with that reason. This page does not bind and does not send a carrier package.</p>
+<p>Decisions so far: {counts['approve']} approved, {counts['edit']} edited, {counts['decline']} declined. Corrections: {corrections}.</p>
+{''.join(blocks)}
+</body></html>
+"""
+
+
+def serve(port: int = 8765, only: str | None = None) -> None:
+    page = render(load_queue(only), correction_counts(LOG))
+    PAGE.write_text(page)
+
+    class Handler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            body = PAGE.read_text().encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(body)
+
+        def do_POST(self):
+            if self.path != "/decision":
+                self.send_error(404)
+                return
+            size = int(self.headers.get("Content-Length", "0"))
+            payload = {k: v[0] for k, v in parse_qs(self.rfile.read(size).decode()).items()}
+            try:
+                record_decision(payload, LOG)
+            except ValueError as exc:
+                self.send_response(400)
+                self.end_headers()
+                self.wfile.write(str(exc).encode())
+                return
+            self.send_response(303)
+            self.send_header("Location", "/")
+            self.end_headers()
+
+    ThreadingHTTPServer(("127.0.0.1", port), Handler).serve_forever()
+
+
+if __name__ == "__main__":
+    import tempfile
+
+    if "--serve" in sys.argv:
+        chosen = next((arg for arg in sys.argv if arg.startswith("SUB-")), None)
+        serve(only=chosen)
+    else:
+        with tempfile.TemporaryDirectory() as tmp:
+            check = Path(tmp) / "decisions.jsonl"
+            try:
+                record_decision({"action": "decline"}, check)
+                raise SystemExit("missing id should fail")
+            except ValueError:
+                pass
+            try:
+                record_decision(
+                    {"underwriter_id": "UW-1", "action": "decline", "submission": "SUB-000"},
+                    check,
+                )
+                raise SystemExit("decline without reason should fail")
+            except ValueError:
+                pass
+            record_decision(
+                {
+                    "underwriter_id": "UW-TEST",
+                    "action": "approve",
+                    "submission": "SUB-000",
+                    "reason": "self-check",
+                },
+                check,
+            )
+            logged = json.loads(check.read_text().splitlines()[-1])
+            record_decision(
+                {
+                    "underwriter_id": "UW-TEST",
+                    "action": "edit",
+                    "submission": "SUB-000",
+                    "reason": "square feet were 4500",
+                },
+                check,
+            )
+            assert correction_counts(check) == {"approve": 1, "edit": 1, "decline": 0}
+        assert logged["sent_to_carrier"] is False
+        assert logged["reason"] == "self-check"
+        assert logged["ai_version"].endswith("+rules-d015")
+        fake = {
+            "complete": True,
+            "fields": [{"field_id": "operations", "value": "bookkeeping office, no cooking"}],
+        }
+        assert route(fake) == "carrier_a"
+        held = {
+            "complete": True,
+            "sprinklers": "no",
+            "fields": [{"field_id": "operations", "value": "habitational, 8 units, no commercial cooking"}],
+        }
+        ready = dict(held)
+        ready["sprinklers"] = "yes"
+        assert route(held) == "hold"
+        assert route(ready) == "carrier_c"
+        assert "COOKING" not in points.score(facts(fake))["reason_codes"]
+        print("workbench ok")

@@ -1,0 +1,236 @@
+{
+  "submissions": [
+    {
+      "submission": "SUB-027",
+      "format": "text PDF",
+      "error": null,
+      "checks": {
+        "named_insured": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Alamo Ledger Office LLC"
+    },
+    {
+      "submission": "SUB-028",
+      "format": "scanned page",
+      "error": null,
+      "checks": {
+        "named_insured": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "hit"
+      },
+      "extracted_named_insured": "South Flores Stationery LLC"
+    },
+    {
+      "submission": "SUB-029",
+      "format": "Excel schedule",
+      "error": null,
+      "checks": {
+        "named_insured": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "not_credited",
+        "conflict": "hit",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Fredericksburg Paper LLC"
+    },
+    {
+      "submission": "SUB-030",
+      "format": "email body",
+      "error": null,
+      "checks": {
+        "named_insured": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "miss",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "not_credited",
+        "conflict": "hit",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Blanco Street Kitchen LLC"
+    },
+    {
+      "submission": "SUB-031",
+      "format": "Spanish",
+      "error": null,
+      "checks": {
+        "named_insured": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Bufete Robles LLC"
+    },
+    {
+      "submission": "SUB-032",
+      "format": "text PDF plus email",
+      "error": null,
+      "checks": {
+        "named_insured": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Commerce Tax Office LLC"
+    },
+    {
+      "submission": "SUB-033",
+      "format": "scanned page",
+      "error": null,
+      "checks": {
+        "named_insured": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "not_credited",
+        "conflict": "hit",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Dolorosa Court LLC"
+    },
+    {
+      "submission": "SUB-034",
+      "format": "Excel schedule plus email",
+      "error": null,
+      "checks": {
+        "named_insured": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "not_credited",
+        "conflict": "miss",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Houston Street Goods LLC"
+    },
+    {
+      "submission": "SUB-035",
+      "format": "Spanish",
+      "error": null,
+      "checks": {
+        "named_insured": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Bar La Villita LLC"
+    },
+    {
+      "submission": "SUB-036",
+      "format": "text PDF",
+      "error": null,
+      "checks": {
+        "named_insured": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Olmos Cabinets LLC"
+    }
+  ],
+  "counted": {
+    "named_insured": {
+      "hit": 10,
+      "miss": 0,
+      "not_credited": 0
+    },
+    "premises": {
+      "hit": 10,
+      "miss": 0,
+      "not_credited": 0
+    },
+    "operations": {
+      "hit": 10,
+      "miss": 0,
+      "not_credited": 0
+    },
+    "sales": {
+      "hit": 10,
+      "miss": 0,
+      "not_credited": 0
+    },
+    "tiv": {
+      "hit": 10,
+      "miss": 0,
+      "not_credited": 0
+    },
+    "construction": {
+      "hit": 9,
+      "miss": 1,
+      "not_credited": 0
+    },
+    "year_built": {
+      "hit": 10,
+      "miss": 0,
+      "not_credited": 0
+    },
+    "loss_runs": {
+      "hit": 6,
+      "miss": 0,
+      "not_credited": 4
+    },
+    "conflict": {
+      "hit": 9,
+      "miss": 1,
+      "not_credited": 0
+    },
+    "status": {
+      "hit": 10,
+      "miss": 0,
+      "not_credited": 0
+    }
+  }
+}

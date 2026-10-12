@@ -1,0 +1,1376 @@
+# Task Board
+
+Statuses: TODO · IN_PROGRESS · BLOCKED · IN_REVIEW · DONE · CANCELLED
+Only @pm creates and assigns tasks. Owners update their own status.
+
+D-004 (user, 2026-10-09): Sanger & Altgelt agency pipeline. Eight steps. No auto-decline, no auto-bind. Texas small commercial. Carriers A/B/C are placeholders.
+
+## Sprint 0 — Discovery
+
+### T-001 — Write project charter and roadmap
+- Owner: @pm
+- Requested by: @user
+- Status: CANCELLED
+- Priority: P0
+- Depends on: —
+- Reviewers: @head-of-underwriting
+- Acceptance criteria:
+  - [x] Goal, scope, out-of-scope, success metrics
+  - [x] Phase plan with milestones
+  - [x] Initial task breakdown for Sprint 1 added to this board
+- Output: deliverables/pm/roadmap.md
+- Notes: CANCELLED 2026-10-09. Carrier/MGA charter does not fit D-004. Replaced by T-013. The roadmap file was rewritten; do not follow the old metrics.
+
+### T-002 — Define risk appetite and authority matrix
+- Owner: @head-of-underwriting
+- Requested by: @pm
+- Status: CANCELLED
+- Priority: P0
+- Depends on: —
+- Reviewers: @senior-underwriter, @actuary, @compliance
+- Acceptance criteria:
+  - [x] Target, restricted and prohibited classes
+  - [x] Auto-quote / refer / decline bands
+- Output: deliverables/head-of-underwriting/appetite-guide.md, authority-matrix.md
+- Notes: CANCELLED 2026-10-09. Auto-quote and auto-bind are forbidden by D-004. Carrier matching is T-018. Old files are historical only.
+
+### T-003 — Document current underwriting workflow and required fields
+- Owner: @senior-underwriter
+- Requested by: @pm
+- Status: DONE
+- Priority: P0
+- Depends on: —
+- Reviewers: @ai-engineer, @data-engineer
+- Acceptance criteria:
+  - [x] Step-by-step workflow with time per step and pain points
+  - [x] Required fields per class and source documents
+- Output: deliverables/senior-underwriter/current-workflow.md, required-fields.md
+- Notes: Field list still feeds steps 2 and 3. The carrier bind path in the workflow doc is not the target. Desk times are estimates.
+
+### T-004 — Data inventory and canonical data model (draft)
+- Owner: @data-engineer
+- Requested by: @pm
+- Status: DONE
+- Priority: P0
+- Depends on: T-003
+- Reviewers: @compliance, @data-scientist, @ai-engineer
+- Acceptance criteria:
+  - [x] Internal and third-party sources listed with permitted uses marked "pending compliance"
+  - [x] Draft entity model
+  - [x] Conflicts stored with both values, sources, and resolution
+- Output: deliverables/data-engineer/data-inventory.md, data-model.md, extractions/, conflicts/
+- Notes: Closed 2026-10-09 under D-007. Open conflicts stay unresolved until a reply names one side. SUB-003 is the resolved example: 55 Culebra Park Dr and 14,000 square feet were the schedule side; the reply kept the application. Resolved rows are not deleted when the live files later agree. Square feet compare on digits.
+
+### T-005 — Regulatory requirements register
+- Owner: @compliance
+- Requested by: @pm
+- Status: CANCELLED
+- Priority: P0
+- Depends on: —
+- Reviewers: @head-of-underwriting, @responsible-ai
+- Acceptance criteria:
+  - [x] Applicable rules listed with how we comply
+  - [x] Items needing real legal confirmation flagged
+- Output: deliverables/compliance/regulatory-register.md
+- Notes: CANCELLED 2026-10-09. Written for a writing company (rate filing, MGA authority). Agency register is T-022. Old file is not the control.
+
+### T-006 — AI architecture proposal (intake, extraction, triage, copilot)
+- Owner: @ai-engineer
+- Requested by: @pm
+- Status: CANCELLED
+- Priority: P1
+- Depends on: T-003
+- Reviewers: @ml-engineer, @software-engineer, @model-risk, @compliance
+- Acceptance criteria:
+  - [x] Component diagram and data flow
+  - [x] Human-in-the-loop points
+  - [x] Evaluation approach
+  - [x] Raised as a PROPOSAL in DISCUSSION.md
+- Output: deliverables/ai-engineer/architecture.md
+- Notes: CANCELLED 2026-10-09. Auto-quote path conflicts with D-004. Steps 1–3 are T-014–T-016. Old architecture is not to be built.
+
+### T-007 — Risk model problem framing
+- Owner: @data-scientist
+- Requested by: @pm
+- Status: DONE
+- Priority: P1
+- Depends on: T-004
+- Reviewers: @actuary, @responsible-ai, @model-risk
+- Acceptance criteria:
+  - [x] Target, window, exclusions, baseline approach
+- Output: deliverables/data-scientist/problem-framing.md
+- Notes: Accepted 2026-10-09. Points, not a price, not a carrier decline. Not a validation.
+
+### T-008 — Model and AI validation standards
+- Owner: @model-risk
+- Requested by: @pm
+- Status: DONE
+- Priority: P1
+- Depends on: —
+- Reviewers: @compliance
+- Acceptance criteria:
+  - [x] Evidence required by risk tier, for predictive models and LLM components
+- Output: deliverables/model-risk/validation-standards.md
+- Notes: Addendum for D-004 appended 2026-10-09. Auto-quote Tier 1 path withdrawn. Not a production approval.
+
+### T-009 — Fairness test plan
+- Owner: @responsible-ai
+- Requested by: @pm
+- Status: DONE
+- Priority: P1
+- Depends on: T-022
+- Reviewers: @compliance, @data-scientist
+- Acceptance criteria:
+  - [x] Groups, metrics, thresholds, data approach
+- Output: deliverables/responsible-ai/fairness-test-plan.md
+- Notes: Accepted by @compliance and @data-scientist 2026-10-09. No AI approve/decline metric.
+
+### T-010 — Target underwriting workflow with human-in-the-loop
+- Owner: @senior-underwriter
+- Requested by: @pm
+- Status: CANCELLED
+- Priority: P0
+- Depends on: T-002, T-003
+- Reviewers: @head-of-underwriting, @compliance, @ai-engineer
+- Acceptance criteria:
+  - [ ] Target steps from submission to bind, with who acts (system vs human)
+  - [ ] Every auto-quote gate mapped to a field in required-fields.md
+- Output: deliverables/senior-underwriter/target-workflow.md
+- Notes: CANCELLED 2026-10-09. Auto-quote gates are void. The pipeline tasks are the workflow.
+
+### T-011 — Pilot loss and pricing assumptions
+- Owner: @actuary
+- Requested by: @pm
+- Status: CANCELLED
+- Priority: P0
+- Depends on: T-002
+- Reviewers: @head-of-underwriting
+- Acceptance criteria:
+  - [x] Expected loss ratio for the proposed auto-quote band, with the assumption stated
+  - [x] Statement that the system may not deviate from the filed rate
+- Output: deliverables/actuary/pilot-assumptions.md
+- Notes: CANCELLED 2026-10-09. Rate manual is not applicable (D-004). Scoring and carrier appetite moved to T-023. Do not use the 0.65 permissible LR as a product gate.
+
+### T-012 — Permitted-use review of inventoried data sources
+- Owner: @compliance
+- Requested by: @pm
+- Status: DONE
+- Priority: P0
+- Depends on: T-004, T-005
+- Reviewers: @responsible-ai, @data-engineer
+- Acceptance criteria:
+  - [x] Each source marked approved, restricted, or prohibited
+  - [x] Training-use called out separately from underwriting-use
+- Output: deliverables/compliance/data-use-review.md
+- Notes: S-05 set to not used. Accepted by @responsible-ai and @data-engineer this round. Training on submissions still prohibited.
+
+### T-013 — Rewrite the roadmap for the agency pipeline
+- Owner: @pm
+- Requested by: @user
+- Status: DONE
+- Priority: P0
+- Depends on: —
+- Reviewers: @head-of-underwriting
+- Acceptance criteria:
+  - [x] Eight steps, owners, and the build-sprint cut
+  - [x] Success metrics match D-004
+  - [x] Cancelled carrier auto-quote work listed
+- Output: deliverables/pm/roadmap.md
+- Notes: Accepted by @head-of-underwriting 2026-10-09.
+
+## Build sprint 1 — steps 1–3
+
+### T-014 — Step 1: Submission intake
+- Owner: @software-engineer
+- Requested by: @pm
+- Status: DONE
+- Priority: P0
+- Depends on: —
+- Reviewers: @senior-underwriter, @compliance
+- Acceptance criteria:
+  - [x] A submission id and a hash per document
+  - [x] Empty pack rejected
+  - [x] Synthetic flag on every record
+- Output: underwriting_pipeline/app/intake.py, deliverables/software-engineer/api-spec.md
+- Notes: Accepted 2026-10-09. Hashed SUB-001, SUB-002, SUB-003. No bind or decline in this module.
+
+### T-015 — Step 2: Document extraction with citations
+- Owner: @ai-engineer
+- Requested by: @pm
+- Status: DONE
+- Priority: P0
+- Depends on: T-003
+- Reviewers: @senior-underwriter, @model-risk, @data-engineer
+- Acceptance criteria:
+  - [x] Each value has a span that matches the source text
+  - [x] Missing field stays null
+  - [x] A "no known loss" letter does not become a loss-run date
+- Output: underwriting_pipeline/ai/prepare.py
+- Notes: Scored 2026-10-09 against the original SUB-007–SUB-016 pack. Field accuracy is in deliverables/ai-engineer/evals/SUB-007-016-field-accuracy.md. D-009: that 100% is not proof. The hold-out score is T-026. Not a production approval.
+
+### T-016 — Step 3: Completeness check and missing-info request
+- Owner: @ai-engineer
+- Requested by: @pm
+- Status: DONE
+- Priority: P0
+- Depends on: T-015
+- Reviewers: @senior-underwriter, @compliance
+- Acceptance criteria:
+  - [x] Missing required fields listed
+  - [x] Request text names those fields and does not decline the account
+- Output: underwriting_pipeline/ai/prepare.py
+- Notes: D-006. Drafts go to simulation/pending-approval/. Only the user moves a file to simulation/to-producer/. Restaurant requests ask the five industry items.
+
+## Later pipeline steps
+
+### T-017 — Step 4: Risk score and reason codes
+- Owner: @data-scientist
+- Requested by: @pm
+- Status: IN_REVIEW
+- Priority: P1
+- Depends on: T-007
+- Reviewers: @actuary, @model-risk, @responsible-ai
+- Acceptance criteria:
+  - [ ] Interpretable score and reason codes an underwriter can override
+  - [x] Score cannot decline, bind, or set a price
+- Output: deliverables/data-scientist/reason-codes.md, underwriting_pipeline/models/
+- Notes: Fixed points, not a fit. Waiting on reviewers. No gradient boosting. 2026-10-11, @pm, round wrap-up, recorded as the reviewers wrote it: @actuary, REVIEW, "Verdict: REJECT. Criterion 2 is met", "Criterion 1 is not met." @model-risk, OBJECTION, "Verdict: NOT APPROVED. Veto on production use of the point score." "Criterion 1 (interpretable, underwriter can override): NOT MET." @responsible-ai, OBJECTION, "Verdict: NOT APPROVED. Fairness and contestability veto on marking T-017 DONE." "Criterion 2 passes", "Criterion 1 fails." Box 1 is unticked for that reason. Both vetoes are open. The fix is to be written as proposal P-015 (D-031 item 5, D-033 item 3): T-084. It is not written, not approved, and not built. This task stays IN_REVIEW until P-015 is approved and built and all three reviewers have looked again. Medium and Low findings: team/BACKLOG.md B-018 to B-028 and B-061 to B-070. Claim extraction is parked by the user (B-149). Line 5 of team/DEMO-BLOCKERS.md. @pm gives no verdict.
+
+### T-018 — Step 5: Appetite and carrier matching (A/B/C)
+- Owner: @head-of-underwriting
+- Requested by: @pm
+- Status: DONE
+- Priority: P1
+- Depends on: —
+- Reviewers: @senior-underwriter, @actuary, @compliance
+- Acceptance criteria:
+  - [x] Placeholder appetite for Carrier A, B, and C
+  - [x] Match is a recommendation; the underwriter chooses
+- Output: deliverables/head-of-underwriting/carrier-match.md
+- Notes: Accepted 2026-10-09. Carrier B writes restaurants and light contractors with 3 clean loss years. Bars, nightclubs, and fireworks are no-match, not a producer decline. The underwriter still chooses.
+
+### T-019 — Step 6: Underwriter workbench
+- Owner: @software-engineer
+- Requested by: @pm
+- Status: IN_REVIEW
+- Priority: P0
+- Depends on: T-014, T-015, T-016
+- Reviewers: @senior-underwriter, @compliance
+- Acceptance criteria:
+  - [ ] Page shows each submission, extracted fields with citations, conflicts, missing items, score with reason codes, and carrier match
+  - [x] Underwriter can approve, edit, or decline
+  - [x] No path records a decision without an underwriter id and a reason on decline
+- Output: deliverables/software-engineer/workbench-ux.md, underwriting_pipeline/app/workbench.py
+- Notes: Started 2026-10-09 under D-009. Does not bind. The React page in frontend/ was not changed. 2026-10-11, @pm, round wrap-up, recorded as the reviewers wrote it: @compliance, REVIEW, "Verdict: CHANGES REQUIRED. Not a veto", "Do not mark DONE." "High-1, criterion 1 not met (A-02)." "High-2, criterion 3 met in wording only (A-03)." @senior-underwriter, REVIEW, "Verdict: REJECT. I agree with @compliance's High-1 and High-2." Box 1 is unticked for that reason. Boxes 2 and 3 are left as they were: @compliance wrote "met in wording only" for box 3, and @senior-underwriter's High-2 ("edit" corrects nothing) names no box; whether they hold is for the two reviewers to say when they look again. Where each High finding went: the cited text (@compliance High-1, @senior-underwriter High-1) is T-081; the carrier match (@senior-underwriter High-3) is T-082 and T-083, line 4 of team/DEMO-BLOCKERS.md; @compliance High-2 and @senior-underwriter High-2 are not on the D-033 list and are team/BACKLOG.md B-138 and B-139, marked High. Medium and Low: B-029 to B-032 and B-071 to B-084. Stays IN_REVIEW. @pm gives no verdict.
+
+### T-020 — Step 7: Carrier-ready package and quote tracking
+- Owner: @software-engineer
+- Requested by: @pm
+- Status: IN_REVIEW
+- Priority: P0
+- Depends on: T-019
+- Reviewers: @senior-underwriter, @compliance
+- Acceptance criteria:
+  - [x] A package can be built for a submission
+  - [ ] Nothing is written to simulation/to-carrier/ unless all of these hold. (a) For every actor: "a carrier send requires a logged underwriter approve; a declined file can never be sent" (D-033 item 2). (b) For every actor: the file's saved status is not `extraction_failed` or `all_values_rejected` (D-021, D-024, P-010). (c) The sender is the simulated @account-manager, and the file is complete, in appetite, free of open conflicts, and free of unread pages, with a written reason (D-017); or the sender is the user, and the send carries the user's exact "send to carrier SUB-###" line, matched to the submission id and logged (D-017, D-035). No AI role sends
+  - [ ] Quote status tracked per placeholder carrier: "a status per submission and carrier from the carrier replies, including open subjectivities" (D-035)
+- Output: underwriting_pipeline/app/package.py
+- Notes: D-009. No package was sent this round. Quote tracking waits on a carrier reply. 2026-10-11, @pm, round wrap-up, recorded as the reviewers wrote it: @senior-underwriter, REVIEW, "Verdict: REJECT." @compliance, OBJECTION, "VETO (A-02 misrepresentation to a carrier; D-021, D-024, D-033)." "(1) package can be built: met, as free text only. (2) no write without the user's typed line: NOT met. (3) quote status per carrier: NOT met, not built." Box 2 is unticked for that reason. Criterion 2 is restated by @pm to match D-017 and D-033, as @compliance asked (B-091) and @senior-underwriter noted (B-034); the old wording was "Nothing is written to simulation/to-carrier/ unless the user types send to carrier SUB-###". Criterion 3 now carries D-035's words. The veto is open. What resolves it, as @compliance wrote, and its task: (a) the send reads the decision log itself, T-079; (b) the send loads the saved run itself and takes no report from the caller, T-070 and T-071 (P-010); (c) the user's exact line, T-086; (d) the package built from the saved reviewed file, T-085; (e) the status per submission and carrier, T-087; (f) one self-check per gate, in each of those tasks. "Then send it back to me." The in-appetite gate calls `route()`, so T-083 applies here too. Lines 1, 2, 6, 7, and 8 of team/DEMO-BLOCKERS.md. Medium and Low: B-033, B-034, and B-085 to B-097. Stays IN_REVIEW until the veto is lifted by @compliance and @senior-underwriter has looked again. @pm gives no verdict.
+
+### T-021 — Step 8: Feedback loop from underwriter decisions
+- Owner: @ml-engineer
+- Requested by: @pm
+- Status: IN_REVIEW
+- Priority: P0
+- Depends on: T-019
+- Reviewers: @data-scientist, @model-risk
+- Acceptance criteria:
+  - [ ] Every decision stored with actor, action, reason, and the AI version it corrected
+  - [ ] Corrections can be counted for the "no corrections" metric
+- Output: deliverables/ml-engineer/feedback-loop.md, underwriting_pipeline/app/workbench.py
+- Notes: D-014. The workbench log stores approve, edit, and decline. Edit and decline require a reason. The self-check counts them. Not a training set and not a production model. 2026-10-11, @pm, round wrap-up, recorded as the reviewers wrote it: @data-scientist, REVIEW, "Verdict: REJECT. Both criteria are ticked and neither holds." @model-risk, REVIEW, "Verdict: REJECT. Not a production approval. Criterion 1 is not met; criterion 2 is partly met." Both boxes are unticked: both reviewers say box 1 fails, and @data-scientist shows box 2 fails while @model-risk writes "partly met". The three High findings are not on the D-033 fix order, so they are team/BACKLOG.md B-140, B-141, and B-142, marked High, with no fix task yet. P-015 (T-084) is to cover points, codes, and points version on the decision row; the rest has no proposal. Medium and Low: B-057 to B-060 and B-098 to B-111. Stays IN_REVIEW with two unanswered REJECTs. While they are unanswered, @pm does not quote the "no corrections" metric from this log in the demo guide. @pm gives no verdict.
+
+### T-033 — Sprinkler field and carrier loss-run rules
+- Owner: @software-engineer
+- Requested by: @user
+- Status: DONE
+- Priority: P0
+- Depends on: T-019
+- Reviewers: @senior-underwriter, @model-risk
+- Acceptance criteria:
+  - [x] Habitational sprinklers are read from the application sprinkler field
+  - [x] A carrier loss-run date wins over a no-known-loss letter in the same folder
+  - [x] Tests cover both rules
+  - [x] The model prompt and OCR were not changed for this task
+- Output: underwriting_pipeline/ai/prepare.py, underwriting_pipeline/app/workbench.py
+- Notes: D-014. SUB-013 now routes to Carrier C and was not sent. SUB-005 reads sprinklers yes and stays hold because operations and sales still conflict.
+
+### T-034 — Email wording and square-foot conflicts on the development set
+- Owner: @ai-engineer
+- Requested by: @user
+- Status: DONE
+- Priority: P0
+- Depends on: T-032
+- Reviewers: @model-risk
+- Acceptance criteria:
+  - [x] "They cook <food>" keeps the food word and restaurant
+  - [x] "Joisted masonry" is not shortened to masonry
+  - [x] Two different square-foot figures become a conflict
+  - [x] Checked on development files, not by editing the SUB-037 score
+- Output: underwriting_pipeline/ai/prepare.py
+- Notes: D-014. SUB-030 and SUB-034 were the development check. A year on the line above "Square feet:" is not a square-foot figure.
+
+### T-035 — Gold answers for hold-out SUB-047 through SUB-056
+- Owner: @senior-underwriter
+- Requested by: @user
+- Status: DONE
+- Priority: P0
+- Depends on: T-034
+- Reviewers: @model-risk
+- Acceptance criteria:
+  - [x] One expected answer per submission, written before the score ran
+  - [x] None of the answers is an automatic decline
+- Output: deliverables/senior-underwriter/gold-set/SUB-047.md through SUB-056.md
+- Notes: Written 2026-10-10 before eval_holdout_047.py ran.
+
+### T-036 — Score hold-out SUB-047 through SUB-056
+- Owner: @model-risk
+- Requested by: @user
+- Status: DONE
+- Priority: P0
+- Depends on: T-034, T-035
+- Reviewers: @ai-engineer-assistant, @senior-underwriter
+- Acceptance criteria:
+  - [x] Scored without editing the scorer after the gold files existed
+  - [x] A null that matches missing is not counted as correct
+  - [x] Compared with the SUB-037 through SUB-046 score
+  - [x] The score comes from a successful model call
+- Output: deliverables/ai-engineer/evals/SUB-047-056-holdout.md, deliverables/model-risk/holdout-SUB-047-056.md
+- Notes: 2026-10-10. Calls succeeded. Not a production approval. Every field with a gold value is 10/10. Loss runs are 6 hit, 0 miss, 4 not credited. 2026-10-11: reviewer handle changed from the retired @ai-engineer to @ai-engineer-assistant (D-017). No other change. 2026-10-11, @pm, round wrap-up, recorded as the reviewers wrote it: @senior-underwriter, REVIEW, "Verdict: APPROVE. No High." "Read 'clears the 9/10 target' narrowly: eight of the nine extracted fields were scored, effective date was not, and a loss-run hit is a date." @ai-engineer-assistant, REVIEW, "Verdict: APPROVE. No High." "Criterion 1: no commit shows it (B-045)" Both reviewers approved, so this is closed. No box was shown to fail; the boxes stay as they were, with the reviewers' limits beside them. @senior-underwriter: "The limit in my T-053 review (High-2) applies": effective date was never scored. Wherever this score is quoted it says "8 of 9 fields scored; loss runs = date only" (D-033 item 5). Medium and Low findings are in team/BACKLOG.md (B-039 to B-052, B-056). Not a production approval. @pm gives no verdict.
+
+### T-037 — Normalize numbers before comparing
+- Owner: @software-engineer
+- Requested by: @user
+- Status: DONE
+- Priority: P0
+- Depends on: T-033
+- Reviewers: @senior-underwriter
+- Acceptance criteria:
+  - [x] 220k and 220000 are the same sales figure
+  - [x] $1.2M, commas, sq ft, and sf normalize
+  - [x] A sentence is not treated as a number
+  - [x] SUB-005 was rechecked
+- Output: underwriting_pipeline/ai/prepare.py
+- Notes: D-015. SUB-005 sales is 220000. The two operations lines are both 8-unit apartments and are not stored as a conflict. It routes to Carrier C and was not sent.
+
+### T-038 — Gold answers for the harder hold-out SUB-057 through SUB-066
+- Owner: @senior-underwriter
+- Requested by: @user
+- Status: DONE
+- Priority: P0
+- Depends on: T-037
+- Reviewers: @model-risk
+- Acceptance criteria:
+  - [x] One expected answer per submission, written before the score ran
+  - [x] None of the answers is an automatic decline
+- Output: deliverables/senior-underwriter/gold-set/SUB-057.md through SUB-066.md
+- Notes: Written 2026-10-10 before eval_holdout_057.py ran.
+
+### T-039 — Score hold-out SUB-057 through SUB-066
+- Owner: @model-risk
+- Requested by: @user
+- Status: IN_REVIEW
+- Priority: P0
+- Depends on: T-037, T-038
+- Reviewers: @ai-engineer-assistant, @senior-underwriter
+- Acceptance criteria:
+  - [x] Scored without editing the scorer after the gold files existed
+  - [x] A null that matches missing is not counted as correct
+  - [x] Failures are reported, including scans and refusals to pick
+  - [ ] The score comes from a successful model call
+- Output: deliverables/ai-engineer/evals/SUB-057-066-holdout.md, deliverables/model-risk/holdout-SUB-057-066.md
+- Notes: 2026-10-10. Not a production approval. Named insured 5/10. The four hard scans missed. SUB-063 and SUB-066 refused to pick and those fields are misses. 2026-10-11: reviewer handle changed from the retired @ai-engineer to @ai-engineer-assistant (D-017). No other change. 2026-10-11, @pm, round wrap-up, recorded as the reviewers wrote it: @senior-underwriter, REVIEW, "Verdict: APPROVE WITH CHANGES." @ai-engineer-assistant, REVIEW, "Verdict: APPROVE WITH CHANGES." "High-1: criterion 4 is ticked and the files do not show it for four of the ten rows." "The misses are real; the criterion is not." Box 4 is unticked for that reason. Both changes are dated lines that @model-risk adds to deliverables/model-risk/holdout-SUB-057-066.md: T-090. The published score file is not touched (D-025). Stays IN_REVIEW until T-090 is done and both reviewers have looked again. High findings: B-144, B-145. Quoted only with "8 of 9 fields scored; loss runs = date only" (D-033 item 5). @pm gives no verdict.
+
+### T-040 — Manager demo guide
+- Owner: @pm
+- Requested by: @user
+- Status: DONE
+- Priority: P0
+- Depends on: T-019
+- Reviewers: @senior-underwriter
+- Acceptance criteria:
+  - [x] A 10-minute step-by-step a manager can follow
+  - [x] It uses the workbench
+  - [x] It says the page does not bind and does not decline
+- Output: deliverables/pm/demo-guide.md
+- Notes: D-015. The demo serves SUB-009 only.
+
+### T-041 — Repair rotation and deskew before OCR
+- Owner: @ai-engineer
+- Requested by: @user
+- Status: DONE
+- Priority: P0
+- Depends on: T-039
+- Reviewers: @model-risk
+- Acceptance criteria:
+  - [x] Tesseract OSD corrects rotation, then the page is deskewed, before OCR
+  - [x] A low-confidence OSD guess is not applied
+  - [x] The Groq account was checked for a vision model
+  - [x] An unreadable page is marked needs human read and is not guessed
+  - [x] SUB-057, SUB-058, SUB-064, and SUB-065 were the development check
+- Output: underwriting_pipeline/ai/sources.py, underwriting_pipeline/ai/prepare.py, underwriting_pipeline/app/workbench.py
+- Notes: D-016. No vision model is on this Groq account. The four development scans now return a name. The official SUB-057 through SUB-066 score was not rerun.
+
+### T-042 — Score a correct refusal in its own column
+- Owner: @ai-engineer
+- Requested by: @user
+- Status: DONE
+- Priority: P0
+- Depends on: T-041
+- Reviewers: @model-risk
+- Acceptance criteria:
+  - [x] The column is correctly flagged for human
+  - [x] A refusal with both sides stored is not a hit and not a miss
+  - [x] Picking one side of a real disagreement is a miss
+  - [x] The file existed before SUB-067 through SUB-076
+- Output: underwriting_pipeline/ai/eval_holdout_067.py
+- Notes: D-016. A loop variable shadowed a helper. That name was changed before any score file existed. The scoring rules were not changed after that.
+
+### T-043 — Gold answers for hold-out SUB-067 through SUB-076
+- Owner: @senior-underwriter
+- Requested by: @user
+- Status: DONE
+- Priority: P0
+- Depends on: T-041, T-042
+- Reviewers: @model-risk
+- Acceptance criteria:
+  - [x] One expected answer per submission, written before the score ran
+  - [x] Same difficulty as SUB-057 through SUB-066, with new fictional risks
+  - [x] None of the answers is an automatic decline
+- Output: deliverables/senior-underwriter/gold-set/SUB-067.md through SUB-076.md
+- Notes: Written 2026-10-10 before the completed eval_holdout_067.py run.
+
+### T-044 — Score hold-out SUB-067 through SUB-076
+- Owner: @model-risk
+- Requested by: @user
+- Status: IN_REVIEW
+- Priority: P0
+- Depends on: T-042, T-043
+- Reviewers: @ai-engineer-assistant, @senior-underwriter
+- Acceptance criteria:
+  - [x] Scored after extraction was frozen
+  - [x] A null that matches missing is not counted as correct
+  - [x] Correct refusals are in the flagged column
+  - [x] Compared with the SUB-057 through SUB-066 baseline
+  - [x] The score comes from a successful model call
+- Output: deliverables/ai-engineer/evals/SUB-067-076-holdout.md, deliverables/model-risk/holdout-SUB-067-076.md
+- Notes: 2026-10-10. Not a production approval. Named insured 9/10. Premises 4 hit, 5 miss, 1 flagged. Loss runs 7 hit, 0 miss, 2 not credited, 1 flagged. 2026-10-11, @pm, round wrap-up, recorded as the reviewers wrote it: @senior-underwriter, REVIEW, "Verdict: APPROVE WITH CHANGES." "High-1: the same as T-039 High-1." @ai-engineer-assistant, REVIEW, "Verdict: APPROVE. No High." "Criterion 1: no commit shows the freeze (B-045); nothing I read contradicts it." No box was shown to fail. The change is a dated line that @model-risk adds to deliverables/model-risk/holdout-SUB-067-076.md: T-090. Stays IN_REVIEW until T-090 is done and @senior-underwriter has looked again. High finding: B-146. Medium and Low: B-042, B-053, B-054. Quoted only with "8 of 9 fields scored; loss runs = date only" (D-033 item 5). @pm gives no verdict.
+
+### T-045 — Account manager may approve when the rules pass
+- Owner: @software-engineer
+- Requested by: @user
+- Status: DONE
+- Priority: P0
+- Depends on: —
+- Reviewers: @senior-underwriter
+- Acceptance criteria:
+  - [x] approve() and send_to_carrier() accept account-manager
+  - [x] That actor must write a reason and pass complete, appetite, no open conflict, and no unread page
+  - [x] The user can still send without those checks
+  - [x] An AI role name is refused
+- Output: underwriting_pipeline/ai/prepare.py, underwriting_pipeline/app/package.py
+- Notes: D-017. Self-checks printed prepare ok and package ok. Nothing was sent.
+
+### T-046 — Premises miss analysis for SUB-067 through SUB-076
+- Owner: @ai-engineer-assistant
+- Requested by: @user
+- Status: DONE
+- Priority: P0
+- Depends on: T-044
+- Reviewers: @senior-underwriter, @model-risk
+- Acceptance criteria:
+  - [x] Each premises miss shows the gold address, the extracted value, the source document, and a likely cause
+  - [x] Causes are grouped
+  - [x] A proposal covers the largest group
+  - [x] No extraction, prompt, OCR, model, or eval file was edited for this task
+- Output: deliverables/ai-engineer/premises-misses-SUB-067-076.md
+- Notes: D-017. Four misses are OCR. One is two locations. P-001 was approved afterward as D-018.
+
+### T-047 — Drop a premises value that has no ZIP
+- Owner: @ai-engineer-assistant
+- Requested by: @user
+- Status: DONE
+- Priority: P0
+- Depends on: T-046
+- Reviewers: @model-risk, @senior-underwriter
+- Acceptance criteria:
+  - [x] A premises value with no five-digit ZIP is cleared
+  - [x] The source page is added to needs human read
+  - [x] A premises value that already has a five-digit ZIP is kept
+  - [x] The loss-run date in the self-check is unchanged
+  - [x] The published SUB-067 through SUB-076 score file was not rerun
+- Output: underwriting_pipeline/ai/prepare.py
+- Notes: D-018. Self-check printed prepare ok. The workbench already shows needs human read.
+
+### T-048 — Write proposals P-002 through P-005
+- Owner: @ai-engineer-assistant
+- Requested by: @user
+- Status: DONE
+- Priority: P0
+- Depends on: T-046
+- Reviewers: @senior-underwriter, @model-risk
+- Acceptance criteria:
+  - [x] Each proposal has a trade-off, the risk to the loss-run no-guess rule, and an expected score impact
+  - [x] None of P-002 through P-005 is implemented
+- Output: deliverables/ai-engineer/proposals-P-002-P-005.md
+- Notes: Waiting on the user to approve a P-id, or not.
+
+### T-049 — Store labeled locations with one primary
+- Owner: @ai-engineer-assistant
+- Requested by: @user
+- Status: DONE
+- Priority: P0
+- Depends on: T-048
+- Reviewers: @senior-underwriter, @model-risk
+- Acceptance criteria:
+  - [x] Main and second premises become a location list with one primary
+  - [x] That case does not leave a premises conflict
+  - [x] The primary address stays in the premises field
+  - [x] Two unlabeled addresses are not turned into locations
+  - [x] A loss-run date in the self-check is unchanged
+- Output: underwriting_pipeline/ai/prepare.py, underwriting_pipeline/app/workbench.py
+- Notes: D-019. Self-checks printed prepare ok and workbench ok.
+
+### T-050 — Compare EasyOCR with Tesseract
+- Owner: @ai-engineer-assistant
+- Requested by: @user
+- Status: DONE
+- Priority: P0
+- Depends on: T-048
+- Reviewers: @model-risk
+- Acceptance criteria:
+  - [x] One free local engine was timed against Tesseract
+  - [x] Accuracy and seconds per page are reported
+  - [x] The live reader was not switched
+- Output: deliverables/ai-engineer/ocr-compare-tesseract-easyocr.md
+- Notes: D-019. EasyOCR is slower. It is not a clear replacement. Tesseract stays.
+
+### T-051 — Rewrite the confidence proposal as P-003b
+- Owner: @ai-engineer-assistant
+- Requested by: @user
+- Status: DONE
+- Priority: P1
+- Depends on: —
+- Reviewers: @model-risk
+- Acceptance criteria:
+  - [x] OCR confidence is limited to scanned pages in the proposal
+  - [x] Typed PDF, Excel, and email keep the current path
+  - [x] The proposal is not implemented
+- Output: deliverables/ai-engineer/proposal-P-003b.md
+- Notes: D-019. Waiting on the user.
+
+### T-052 — Gold answers for hold-out SUB-077 through SUB-086
+- Owner: @senior-underwriter
+- Requested by: @user
+- Status: DONE
+- Priority: P0
+- Depends on: T-049, T-050
+- Reviewers: @model-risk
+- Acceptance criteria:
+  - [x] One expected answer per submission, written before the score ran
+  - [x] Same difficulty as the previous hard set, with new fictional risks
+  - [x] None of the answers is an automatic decline
+- Output: deliverables/senior-underwriter/gold-set/SUB-077.md through SUB-086.md
+- Notes: Written 2026-10-10 before eval_holdout_077.py ran.
+
+### T-053 — Score hold-out SUB-077 through SUB-086
+- Owner: @model-risk
+- Requested by: @user
+- Status: IN_REVIEW
+- Priority: P0
+- Depends on: T-052
+- Reviewers: @ai-engineer-assistant, @senior-underwriter
+- Acceptance criteria:
+  - [x] Scored after P-005 and the OCR report, with no further code changes
+  - [x] Compared with the SUB-067 through SUB-076 baseline
+  - [x] A null that matches missing is not counted as correct
+  - [x] The score comes from a successful model call
+- Output: deliverables/ai-engineer/evals/SUB-077-086-holdout.md, deliverables/model-risk/holdout-SUB-077-086.md
+- Notes: 2026-10-10. Not a production approval. Premises 5 hit, 4 miss, 1 flagged. Year built 7/10. Loss runs 6 hit, 1 miss, 2 not credited, 1 flagged. 2026-10-11, @pm, round wrap-up, recorded as the reviewers wrote it: @senior-underwriter, REVIEW, "Verdict: APPROVE WITH CHANGES." High-1 is the same memo line as T-039. "High-2: effective date is one of the nine extracted fields, completeness requires it, and no hold-out has ever scored it." @ai-engineer-assistant, REVIEW, "Verdict: APPROVE. No High." "Criterion 1: no commit shows it (B-045)." No box was shown to fail. High-1 is a dated line that @model-risk adds to deliverables/model-risk/holdout-SUB-077-086.md: T-090. High-2: the gold of the new 20-file hold-out gets an Effective date line and a claims line, T-092; the quoted-score wording is the user's, "8 of 9 fields scored; loss runs = date only" (D-033 item 5). Stays IN_REVIEW until T-090 is done and @senior-underwriter has looked again. High findings: B-147, B-148. Medium and Low: B-043, B-044, B-055. @pm gives no verdict.
+
+### T-054 — Regression of SUB-017 through SUB-076 before P-002 and P-003b
+- Owner: @ai-engineer-assistant
+- Requested by: @user
+- Status: DONE
+- Priority: P0
+- Depends on: T-049
+- Reviewers: @model-risk
+- Acceptance criteria:
+  - [x] Current code scored on SUB-017 through SUB-076
+  - [x] Compared with the published scores, field by field
+  - [x] Official score files were not overwritten
+- Output: deliverables/ai-engineer/evals/regression-SUB-017-076-before-P002-P003b.json, deliverables/ai-engineer/evals/regression-SUB-017-076.md
+- Notes: D-020. The process imported the code before P-002 and P-003b were saved.
+
+### T-055 — Implement P-003b
+- Owner: @ai-engineer-assistant
+- Requested by: @user
+- Status: DONE
+- Priority: P0
+- Depends on: T-054
+- Reviewers: @model-risk
+- Acceptance criteria:
+  - [x] Scanned pages use the Tesseract word score as the gate
+  - [x] Typed PDF, Excel, and email keep the model confidence
+  - [x] Both numbers show in the workbench
+  - [x] Self-checks passed
+- Output: underwriting_pipeline/ai/sources.py, underwriting_pipeline/ai/llm_extract.py, underwriting_pipeline/app/workbench.py
+- Notes: D-020. Frozen scorers were not edited.
+
+### T-056 — Implement P-002 as a flag only
+- Owner: @ai-engineer-assistant
+- Requested by: @user
+- Status: DONE
+- Priority: P0
+- Depends on: T-054
+- Reviewers: @senior-underwriter, @model-risk
+- Acceptance criteria:
+  - [x] A bad ZIP or a ZIP that does not match the city is marked address invalid
+  - [x] The original text is kept
+  - [x] No city is rewritten and no ZIP is invented
+  - [x] Self-check passed
+- Output: underwriting_pipeline/ai/prepare.py, underwriting_pipeline/ai/texas_zip_city.tsv
+- Notes: D-020. Texas rows are from GeoNames, CC-BY 4.0.
+
+### T-057 — Proposal P-006
+- Owner: @ai-engineer-assistant
+- Requested by: @user
+- Status: DONE
+- Priority: P1
+- Depends on: T-050
+- Reviewers: @model-risk
+- Acceptance criteria:
+  - [x] EasyOCR is described only as a fallback
+  - [x] Expected accuracy and speed are stated from the existing comparison
+  - [x] The live reader was not changed
+- Output: deliverables/ai-engineer/proposal-P-006.md
+- Notes: D-020. Waiting on "approve change P-006". Not implemented.
+
+### T-058 — Regression after P-002 and P-003b
+- Owner: @ai-engineer-assistant
+- Requested by: @user
+- Status: CANCELLED
+- Priority: P0
+- Depends on: T-055, T-056
+- Reviewers: @model-risk
+- Acceptance criteria:
+  - [ ] SUB-017 through SUB-076 scored again after the approved edits
+  - [ ] Any field whose hit count drops is reported
+  - [ ] The before file is kept
+- Output: deliverables/ai-engineer/evals/regression-SUB-017-076-after-P002-P003b.json
+- Notes: D-020, D-022. The full run was stopped. Under D-022 the check after a change is the quick set in T-064, and the full 60 run at the next milestone. Official hold-out files are not rewritten. 2026-10-11: cancelled by @pm. D-022 item 4 amended D-020 item 8, so the check after P-002 and P-003b is T-064. No after file was written. The before file from T-054 is kept. The full 60 gets a new task at the next milestone.
+
+### T-059 — Status "extraction_failed" for a failed or empty model call
+- Owner: @ai-engineer-assistant
+- Requested by: @user
+- Status: IN_REVIEW
+- Priority: P0
+- Depends on: —
+- Reviewers: @model-risk, @software-engineer, @account-manager
+- Acceptance criteria:
+  - [x] A failed call and a call with no fields both get the status and the error
+  - [x] The workbench shows it
+  - [ ] No send is allowed for that file, and no missing-information request is drafted
+  - [ ] Every scorer counts call failed apart from a miss
+  - [x] Self-checks passed
+- Output: underwriting_pipeline/ai/prepare.py, underwriting_pipeline/app/package.py, underwriting_pipeline/app/workbench.py, underwriting_pipeline/ai/eval_gold.py, underwriting_pipeline/ai/eval_holdout*.py
+- Notes: D-021. The scorers were edited only to add the call-failed count. No hit or miss rule was changed. 2026-10-11, @pm, recorded as the reviewers wrote it: @model-risk, OBJECTION, "Verdict: NOT APPROVED. Criteria 1 and 5 pass. Criteria 3 and 4 fail." @software-engineer, REVIEW, "Verdict: REJECT", criterion 3 fails. @account-manager, REVIEW, "Verdict: REJECT", criterion 3 fails. Boxes 3 and 4 are unticked for that reason. The veto is open. The fix is P-010, approved by the user in D-029 with G2, D1, S1, C1, no Low-2, and not built yet: T-069 (@data-engineer, the saved-file keys), T-070 (@ai-engineer-assistant, prepare.py and eval_holdout.py), T-071 (@software-engineer, package.py and workbench.py). This task stays IN_REVIEW until T-070 and T-071 are in and all three reviewers have looked again. P-010 uses a different mechanism from the one @model-risk wrote, so @model-risk must say whether it resolves the veto. @pm gives no verdict. 2026-10-11, @pm, round wrap-up: no new verdict. The veto and the two REJECTs are open. @compliance's T-020 finding H2 is the same gap seen from `package.py`. Line 1 of team/DEMO-BLOCKERS.md.
+
+### T-060 — Score SUB-077 through SUB-086 again with the retry
+- Owner: @ai-engineer-assistant
+- Requested by: @user
+- Status: IN_REVIEW
+- Priority: P0
+- Depends on: T-059
+- Reviewers: @model-risk
+- Acceptance criteria:
+  - [x] Scored again with the retry and no extraction change
+  - [x] The original score and the rerun are both in the memo
+  - [x] The original is replaced only if one of its calls failed
+- Output: deliverables/ai-engineer/evals/SUB-077-086-holdout-rerun.md, deliverables/ai-engineer/evals/SUB-077-086-holdout-original.md, deliverables/ai-engineer/evals/SUB-077-086-original-vs-rerun.md
+- Notes: D-021. The original run saved no error and every file returned a name, so the original stays the published score. The rerun finished 2026-10-10: 10 calls, 0 failed. Three files changed marks with no failed call (SUB-080, SUB-081 up, SUB-084 operations down). P-002 and P-003b were in the code for the rerun, so it is not a clean repeat. For @model-risk to review. 2026-10-11, after @model-risk's APPROVE WITH CHANGES and D-026: the memo and the rerun file are corrected. The rerun is labeled "with P-002 and P-003b, not a same-code comparison", is not an improvement, and the original is the official baseline. The count is 10 marks, 9 up and 1 down. The false @model-risk header is off the rerun file. "10 on the first attempt, 429: 0" is withdrawn: no saved file holds it. Criterion 1 is not met as worded ("no extraction change"); D-026 accepts the rerun as-is for this rerun only. Status left at IN_REVIEW for @model-risk and @pm. 2026-10-11, D-028: the Author line of the rerun .md now names @ai-engineer-assistant. The published file and its -original copy still name the retired handle and were not touched (D-025). 2026-10-11, @pm: @model-risk, REVIEW, "Verdict: APPROVE WITH CHANGES. No High." D-026 is the user's ruling on its Medium-1. The owner reports the corrections made. @model-risk has not looked again, so this is not closed. D-026 follow-ups: this task and T-073 (P-012). 2026-10-11, @pm, round wrap-up: @model-risk has not posted a second look. Not closed. T-062 (P-006) waits on it.
+
+### T-061 — Count failed calls by cause and pace the calls
+- Owner: @ai-engineer-assistant
+- Requested by: @user
+- Status: IN_PROGRESS
+- Priority: P0
+- Depends on: T-059, T-064
+- Reviewers: @model-risk, @ml-engineer
+- Acceptance criteria:
+  - [x] Each failed attempt is saved as rate limit 429, timeout, other, or reply_not_usable (fourth cause added by D-028)
+  - [x] Calls wait for the per-minute token budget, and a 429 waits as long as the host asks
+  - [ ] The counts from T-060 and from the quick-set run in T-064 are reported
+- Output: underwriting_pipeline/ai/llm_extract.py, underwriting_pipeline/ai/regression_dev.py
+- Notes: D-021. The host allows 8,000 tokens a minute, 200,000 tokens a day, and 1,000 requests a day. The daily token limit was reached on 2026-10-10. Pacing cannot raise a daily limit. T-060 count: 0 failed of 10. T-058 was stopped under D-022, so its count comes from T-064. 2026-10-11: @pm reworded the last criterion because T-058 is cancelled. The quick-set count is one count for each of the three runs in T-066. 2026-10-11: the T-060 count "0 failed of 10" is backed only at file level (every row `error: null`, `attempts: 1` in the rerun JSON). The count of 429s and retries inside those calls was not saved and is "not recorded" (D-026). P-012 is in the code: from now on every 429, timeout, other failed attempt, and retry is a row in `underwriting_pipeline/cache/token_log.jsonl`, and each reply row has `attempts`. The quick-set counts for T-066 will come from that file. 2026-10-11, D-028: `reply_not_usable` is now counted in the failure totals as its own cause. `regression_dev.py` prints and saves four counts, each shown even at 0: rate_limit_429, timeout, other, reply_not_usable. Self-check extended and passed, no model call. The first criterion's wording names three causes; there are now four. 2026-10-11, @pm: first criterion reworded for D-028. The token-log rows are reviewed under T-073 (P-012) and the fourth count under T-075 (D-028). The last criterion waits on T-066. 2026-10-11, @pm, D-030: P-006 now comes before the variance test, and D-021 item 4 wants this task done before P-006. So the last criterion now takes its quick-set count from T-064, which runs before P-006. The counts for the three variance runs are reported in T-066.
+
+### T-063 — Implement P-007, the extraction cache
+- Owner: @ai-engineer-assistant
+- Requested by: @user
+- Status: IN_REVIEW
+- Priority: P0
+- Depends on: T-059
+- Reviewers: @model-risk, @ml-engineer
+- Acceptance criteria:
+  - [x] The key is the file contents, the prompt version, the OCR settings, and the model name
+  - [x] The same key does not call the model twice
+  - [x] A failed or empty call is not saved and is called again
+  - [x] Tokens are logged for each call and each run
+  - [x] Self-check passed
+- Output: underwriting_pipeline/ai/llm_extract.py, underwriting_pipeline/ai/sources.py, underwriting_pipeline/cache/
+- Notes: D-022. The key also holds the text sent to the model, so a change in OCR output is a new key even if the OCR settings line was not updated. `python underwriting_pipeline/ai/llm_extract.py --budget` prints tokens for the last 24 hours. 2026-10-11: @model-risk APPROVE WITH CHANGES. Medium-1 is fixed by P-013 (D-027): the result is written to a temp file and renamed, and an unreadable saved file counts as not saved and is called again. Self-check extended and passed, no model call. Record: deliverables/ai-engineer/proposal-P-013.md. Medium-2 is in P-010, not approved, not touched. The Low points are open. Needs @model-risk to look again. 2026-10-11, D-028: leftover `.tmp` files are removed at the first extraction of each run, only files named `<key>.json.<process id>.tmp` in the cache folder in use, never a saved result; one under a minute old is left for the next run. Self-check extended and passed. @ml-engineer's review: APPROVE WITH CHANGES; its two Medium findings on the token log are P-014 (deliverables/ai-engineer/proposal-P-014.md), a proposal only, not implemented. 2026-10-11, @pm, recorded as written: @model-risk, REVIEW, "Verdict: APPROVE WITH CHANGES. Not a production approval. No High finding." @ml-engineer, REVIEW, "Verdict: APPROVE WITH CHANGES. No High." Neither has looked again, so this is not closed. @model-risk Medium-1 is P-013, built, reviewed under T-074. @model-risk Medium-2 is the D-024 case, in P-010 (T-070; the user chose C1, the reply stays in the cache). @ml-engineer Medium-1 and Medium-2 are P-014, which is a proposal only, not approved, and has no task. The Low points of both reviews are open with no owner decision. 2026-10-11, @pm, D-030: the Medium and Low findings of both reviews that no approved proposal covers are in team/BACKLOG.md, B-002 through B-013, for after the demo. Whether that changes a reviewer's verdict is the reviewer's to say. 2026-10-11, @pm, round wrap-up: neither reviewer has posted a second look. Not closed. This replaces "P-014 is not approved" above: the user approved P-014 in D-033 ("approve change P-014 with U1 R2 H1 O1 L1 T2 S1 G1"). The build is T-078.
+
+### T-064 — Quick regression set of 15 files
+- Owner: @ai-engineer-assistant
+- Requested by: @user
+- Status: IN_PROGRESS
+- Priority: P0
+- Depends on: T-065, T-078
+- Reviewers: @model-risk
+- Acceptance criteria:
+  - [x] 15 development files: text PDF, scan, Excel, email, Spanish, conflicts, and missing loss runs
+  - [ ] Scored once after P-002 and P-003b, and any field that drops is reported
+- Output: underwriting_pipeline/ai/regression_dev.py, deliverables/ai-engineer/evals/regression-quick-15-after-P002-P003b.json
+- Notes: D-022. SUB-027, 029, 038, 042, 044, 050, 051, 053, 056, 067, 070, 071, 073, 074, 076. Run with `--quick`. This replaces the full run for T-058. The full 60 run at the next milestone. 2026-10-11: not run. The token budget is free (20,950 of 200,000 used in 24 hours) but LLM_API_KEY, LLM_BASE_URL, and LLM_MODEL for Groq are not set in the shell. Needs the user. 2026-10-11, @pm: the user set the Groq variables (D-023). Runs after the provider guard, T-065. Its score is run 1 of T-066, the one run that is cached, because the code already holds P-002 and P-003b and already sends temperature 0. If T-065 or T-066 changes what the model returns, say so in the memo and do not use run 1 for this task. 2026-10-11, @pm, D-030: this is no longer run 1 of T-066, because the variance test now comes after P-006. Run it on its own, next, with its output path given on the command line. It is the baseline before P-006 that T-068 compares against, it is the quick-set check after P-012, P-013, and the D-028 follow-ups (D-022 item 4), and its results are saved so the checks after P-010 and P-011 need no new call. Report the four failure counts from the token log (T-061). 2026-10-11, @pm: D-031 item 2: P-014's "cache-key change lands before the T-064 baseline". So this run follows T-078, and "Depends on" now names T-078. T-063 is taken off "Depends on": the cache it built is in the code, and T-063 cannot close before P-014 is built, which would have been a circle. D-034: the code is committed before this run and the commit hash is written in the memo. The score file cannot carry the hash until P-017 (T-088) is approved and built; say so in the memo. Who makes the commit is not a role's to decide: ask @user. All 15 calls are fresh, because the new key does not reach the 13 saved results.
+
+### T-062 — Implement P-006
+- Owner: @ai-engineer-assistant
+- Requested by: @user
+- Status: BLOCKED
+- Priority: P0
+- Depends on: T-059, T-060, T-061, T-064, T-070, T-071, T-072
+- Reviewers: @model-risk, @senior-underwriter
+- Acceptance criteria:
+  - [ ] EasyOCR runs only on a scanned page whose address fails validation or whose Tesseract score is under 0.75
+  - [ ] The fallback cannot create a loss-run date that Tesseract did not show
+  - [ ] The regression runs again and any field that drops is reported (the run is T-068)
+- Output: underwriting_pipeline/ai/sources.py
+- Notes: D-021, D-022. Approved. Not started. Waits on T-060 and T-064. 2026-10-11, @pm: D-023 item 6 puts P-006 after the provider guard, the three runs, and the name-swap test. D-021 item 4 still holds: T-059, T-060, and T-061 must be done first, and T-059 and T-060 have no review verdict yet. 2026-10-11, @pm: T-059 has an open veto. It can be resolved only after T-070 and T-071 are built and the three T-059 reviewers have looked again. P-006 does not start before that. T-072 (P-011) also goes before this task, so the T-068 run writes to the scratch folder. 2026-10-11, @pm, D-030: "P-006, variance test, fairness test, then demo prep". T-066 and T-067 are no longer in front of this task; they follow it. 2026-10-11, @pm: T-072 added to "Depends on", as D-029's order and the note above already say. Priority raised to P0: it is the first goal in D-030 and T-066 (P0) waits on it. 2026-10-11, @pm, D-037: the new hold-out is scored only after extraction is frozen, so this task goes before the freeze (T-091 to T-093 follow it). It goes after the P-016 build, one extraction change at a time, so the quick set can tie a drop to one change (D-022 item 4). It is not a line in team/DEMO-BLOCKERS.md. D-034: commit before the T-068 run.
+
+### T-065 — Implement P-008, the provider guard
+- Owner: @ai-engineer-assistant
+- Requested by: @user
+- Status: IN_REVIEW
+- Priority: P0
+- Depends on: —
+- Reviewers: @model-risk, @compliance, @ml-engineer
+- Acceptance criteria:
+  - [x] The pipeline never loads `.env` for LLM settings
+  - [x] It prints the provider URL and the model name at the start of every eval or extraction run
+  - [x] It refuses to run if LLM_BASE_URL is not the expected Groq URL, unless the user sets ALLOW_PROVIDER=<name> (built as amended on D-023: Groq or localhost is allowed, any other host is refused unless ALLOW_PROVIDER is set)
+- Output: underwriting_pipeline/ai/llm_extract.py, underwriting_pipeline/ai/regression_dev.py
+- Notes: D-023 item 2. The user typed "approve change P-008". Runs first: no eval or extraction run starts before it. Never print or write a key (D-011). Today `endpoint_settings()` falls back to a local Ollama URL when LLM_BASE_URL is unset, and the self-check removes LLM_BASE_URL. Report how both behave under the guard. Do not widen the rule. Frozen scorers are not edited. Not a production approval. 2026-10-11, @ai-engineer-assistant: built to the user's amendment on D-023. `provider_guard()` in `llm_extract.py` runs at the start of every extraction, before the cache, and at the start of `regression_dev.py`. A refusal stops the run with exit 1; it is not stored as extraction_failed. `endpoint_settings()` and its Ollama default are unchanged and allowed. The old self-check lines still pass. Self-check: `python underwriting_pipeline/ai/llm_extract.py` prints `llm gate ok`. No model call was made. The prompt version is unchanged (82be09bd42f7), so the cache keys are unchanged. Open for the reviewers and the user: any non-empty ALLOW_PROVIDER value allows any host, the name is printed but not matched to the URL; a run from saved results only is refused too on another host; the workbench server uses threads, so a refusal there ends the request, not the server (not tested); `prepare.py` line 4 still names OPENAI_API_KEY in a comment, no code reads it. Not a production approval. 2026-10-11, @ai-engineer-assistant, second amendment on D-023 ("ALLOW_PROVIDER must name the exact allowed host; cache-only runs with zero model calls skip the guard"): built. This replaces the two open points above about ALLOW_PROVIDER and saved results. ALLOW_PROVIDER lets a host through only when it equals the host name in LLM_BASE_URL (for `https://api.openai.com/v1` that is `api.openai.com`); any other value is refused. The refusal now happens inside `llm_extract()` just before the model call, after the cache lookup, so a result that is saved is used and a result that is not saved stops the run with exit 1 before the call. `regression_dev.py` still prints the host and model first and no longer refuses at the start. A refused host with no key or no model still stops with the refusal. Groq and localhost are unchanged. Self-check `python underwriting_pipeline/ai/llm_extract.py` prints `llm gate ok` and covers: exact host allowed, five wrong values refused, cache-only on a refused host with 0 model calls, an uncached file on a refused host stopped. No model call was made; prompt version 82be09bd42f7 and the cache keys, token log, and 13 saved results are unchanged. Left open by the wording, for the user: (a) the value is matched to the host name only, so a port, the scheme, or the full URL in ALLOW_PROVIDER is refused, and one allowed host name covers any port and path on it; (b) the match is case-sensitive against the lower-case host name; (c) a run that is partly cached uses the saved results and stops at the first file that needs a call, and the full 60 run has by then written its finished bands to its report file. Mistake this turn, fixed: to show a cache-only run I ran `regression_dev.py --holdout eval_holdout_077` on a refused test host; it made 0 model calls but the scorer wrote over the published `SUB-077-086-holdout.json` and `.md`. I restored both from the last commit and they match it again. That scorer writes to the published path on every run; that is not changed here. Not a production approval.
+
+### T-066 — P-009: temperature 0 and three runs of the quick set
+- Owner: @ai-engineer-assistant
+- Requested by: @user
+- Status: TODO
+- Priority: P0
+- Depends on: T-065, T-062, T-068, T-093
+- Reviewers: @model-risk, @data-scientist
+- Acceptance criteria:
+  - [ ] Temperature is 0
+  - [ ] The quick 15-file set runs 3 times on openai/gpt-oss-120b with fresh calls
+  - [ ] Only the first run is cached
+  - [ ] Each field's mean and min–max are reported
+- Output: deliverables/ai-engineer/evals/variance-quick-15-run1.json, deliverables/ai-engineer/evals/variance-quick-15-run2.json, deliverables/ai-engineer/evals/variance-quick-15-run3.json, deliverables/ai-engineer/evals/variance-quick-15.md
+- Notes: D-023 item 4. The user typed "approve change P-009". R-014. `llm_extract.py` already sends `"temperature": 0`, so confirm it on every call path and say in the memo whether P-009 changed any code. The cache key holds the prompt version, the model, and the files, not the temperature, and a saved result is not a fresh call: all 45 calls must reach the model. A failed call is counted apart in each run and is not a miss (D-021). About 1,600 tokens a call so far, so about 73,000 of the 200,000 a day. Run 1 is also the T-064 score. Frozen scorers are not edited. No published hold-out score is rewritten. Not a production approval. 2026-10-11, @pm, D-030: the variance test now runs after P-006 (T-062) and its quick-set rerun (T-068). Run 1 is not the T-064 score; T-064 runs on its own before P-006. The three runs measure the code with P-006, P-010, P-011, P-012, and P-013 in it; say so in the memo. Report the four failure counts for each run from the token log. Give every output file its own path; do not run a scorer's main against a published path (D-025). 2026-10-11, @pm: the three runs follow the new hold-out score (T-093), so the code they measure is the frozen code the demo shows, P-016 included if the user approves it. T-063 is taken off "Depends on" for the reason given on T-064. D-034: commit first; the hash goes in each run file and the memo. Every quoted field says "8 of 9 fields scored; loss runs = date only" (D-033 item 5).
+
+### T-067 — Name-swap counterfactual test on cached extractions
+- Owner: @data-scientist
+- Requested by: @user
+- Status: TODO
+- Priority: P0
+- Depends on: T-066, T-083
+- Reviewers: @responsible-ai, @model-risk, @compliance
+- Acceptance criteria:
+  - [ ] The test runs on cached extractions
+  - [ ] No model calls
+  - [ ] The risk score does not change
+  - [ ] The carrier match does not change
+- Output: deliverables/data-scientist/name-swap-test.py, deliverables/data-scientist/name-swap-test.md
+- Notes: D-023 item 5. R-002. Uses the extractions saved by run 1 of T-066. The memo lists every name swapped and the score and match before and after, file by file. If either one changes, report the file and the cause and stop: do not edit `underwriting_pipeline/models/points.py`, the match rules, the extraction, or a scorer. A fix would need a decision. Synthetic data only. Not a production approval. 2026-10-11, @pm, D-030: this is the fairness test in the user's order. It still follows T-066, which now follows P-006. 2026-10-11, @pm: @responsible-ai's veto on T-017 asks for a response "before T-067". This test measures the score and the match, so it runs after the carrier match rules (T-083) and after the P-015 build, if the user approves P-015; its build task is made on approval and is then added here. If P-015 is not approved when this task is reached, stop and ask @user. @responsible-ai, B-065: "The T-067 name-swap test should include a name that contains a trigger word."
+
+### T-068 — Quick-set rerun after P-006
+- Owner: @ai-engineer-assistant
+- Requested by: @user
+- Status: TODO
+- Priority: P0
+- Depends on: T-062
+- Reviewers: @model-risk, @senior-underwriter
+- Acceptance criteria:
+  - [ ] The quick 15-file set is rerun after P-006
+  - [ ] Any field whose hit count drops is reported
+- Output: deliverables/ai-engineer/evals/regression-quick-15-after-P006.json, deliverables/ai-engineer/evals/regression-quick-15-after-P006.md
+- Notes: D-023 item 6, D-022 item 4, D-020 item 8. Compare with run 1 of T-066 and show each field against the T-066 min–max. This is the run T-062's third criterion names. The T-066 files are not overwritten. Not a production approval. 2026-10-11, @pm, D-030: T-066 now runs after this task, so there is no run 1 and no min–max to compare with yet. Compare with the T-064 baseline, field by field. The spread comes later from T-066. Priority raised to P0 with T-062. 2026-10-11, @pm: D-034: commit before this run and write the hash in the memo. Compare with the last quick-set run before P-006, which is the one after the P-016 build if there is one, otherwise T-064.
+
+### T-069 — Saved extraction file: keys for status, error, and the file hash
+- Owner: @data-engineer
+- Requested by: @user
+- Status: TODO
+- Priority: P0
+- Depends on: —
+- Reviewers: @compliance, @software-engineer
+- Acceptance criteria:
+  - [ ] @data-engineer says yes or no to new keys in `deliverables/data-engineer/extractions/SUB-xxx.json`: `status`, `error`, the hash saved with the status, and the rest of the report that the G2 gate reads
+  - [ ] If the answer is no, another place is named
+  - [ ] @compliance is consulted
+  - [ ] The data model document lists the keys and says who writes them
+- Output: deliverables/data-engineer/data-model.md, and an ANSWER in team/DISCUSSION.md
+- Notes: D-029, D-024. The proposal's "Files and owners" table: "@data-engineer says yes or names another place". The file is written by `prepare.write_drafts()`. The schema is @data-engineer's decision; record it in team/DECISIONS.md if it names another place. D-029: "G2 must also compare the file's current hash with the hash saved with its status and refuse if they differ." No code is changed in this task. Synthetic data only. T-070 waits on this answer.
+
+### T-070 — Implement P-010, the ai part: send gate in prepare.py, all_values_rejected, and the SUB-017–026 scorer
+- Owner: @ai-engineer-assistant
+- Requested by: @user
+- Status: TODO
+- Priority: P0
+- Depends on: T-069
+- Reviewers: @model-risk, @software-engineer, @account-manager, @compliance
+- Acceptance criteria:
+  - [ ] `prepare.approve()` and the command line `--approve` refuse `extraction_failed` and `all_values_rejected` "for every actor including user"
+  - [ ] G2: the gate reads "the file's current status" itself from the last saved run, never trusts a passed-in report, and refuses when nothing is saved
+  - [ ] "G2 must also compare the file's current hash with the hash saved with its status and refuse if they differ"
+  - [ ] D1: when a run ends in either status, the old draft in `simulation/pending-approval/` is removed, the conflict file is kept, and the status and the error are saved
+  - [ ] D-024: a reply whose values are all rejected gets file status `all_values_rejected`, gets no missing-information request, goes to human review, and is never sendable. A call that failed or returned nothing stays `extraction_failed`
+  - [ ] S1: an all_values_rejected file is scored with the rules already in each scorer. Only `eval_holdout.py` is edited: the call-failed count, and failed files out of the denominator. No hit rule and no gold file changes
+  - [ ] C1: an all-rejected reply stays in the cache. `llm_extract.py` is not changed by this task
+  - [ ] Low-2 is not added
+  - [ ] "a self-check for each case", as listed in Part 4 of the proposal for the ai files, with no model call and no score file written
+  - [ ] The quick set of 15 is run after the change to a scratch path, and any field that drops is reported
+- Output: underwriting_pipeline/ai/prepare.py, underwriting_pipeline/ai/eval_holdout.py, deliverables/ai-engineer/proposals-P-010-P-011.md (what was built)
+- Notes: D-029, D-024. The user typed "approve change P-010 with G2 D1 S1 C1, no Low-2". Covers the `underwriting_pipeline/ai/` files only. Goes before T-071, because the status reader lives in `prepare.py` and the two app files call it. If "the file's current hash" leaves a choice of what is hashed, state the choice in the memo and ask the user; do not pick silently. Published scores are not recounted. No scorer's main is run against its published path (D-025). No prompt, model, OCR, or gate rule changes. No send is authorized. T-059's veto is not resolved by this task alone. Not a production approval. 2026-10-11, @pm: line 1 of team/DEMO-BLOCKERS.md. D-034: commit before the quick-set run in the last box and write the hash in the memo.
+
+### T-071 — P-010, the app part: package.py and workbench.py
+- Owner: @software-engineer
+- Requested by: @user
+- Status: TODO
+- Priority: P0
+- Depends on: T-070
+- Reviewers: @model-risk, @account-manager, @senior-underwriter, @compliance
+- Acceptance criteria:
+  - [ ] `send_to_carrier()` and `agency_problem()` call the status reader in `prepare.py` and refuse `extraction_failed` and `all_values_rejected` "for every actor including user"
+  - [ ] No passed-in report is trusted for the status. The send is refused when the status cannot be read, when nothing is saved, or when the hash differs
+  - [ ] "workbench hides approve on failed files": the card for either status shows no approve option, no Missing list, no carrier match, and no score
+  - [ ] `record_decision()` reads the status itself and refuses an approve for either status
+  - [ ] Edit and decline on such a card are decided by @software-engineer with @senior-underwriter and the choice is written in the notes
+  - [ ] "a self-check for each case", with no model call. `package ok` and `workbench ok` still pass
+- Output: underwriting_pipeline/app/package.py, underwriting_pipeline/app/workbench.py
+- Notes: D-029: "The `package.py` and `workbench.py` parts of P-010 are @software-engineer's and need a task from @pm." Proposal: deliverables/ai-engineer/proposals-P-010-P-011.md, Part 1 points 1, 2 and 4, Part 2, and Part 4. The user's override stays for every other block (D-017); there is none for these two statuses. No auto-decline: the card keeps the file for a person. No send is authorized. When this and T-070 are in, @model-risk, @software-engineer, and @account-manager look at T-059 again. Not a production approval. 2026-10-11, @pm: line 1 of team/DEMO-BLOCKERS.md. This is item (b) of what resolves @compliance's T-020 veto: the send "takes no report from the caller". Five more tasks follow in the same two files, in this order: T-079, T-081, T-083, T-085, T-086, T-087.
+
+### T-072 — Implement P-011: published score files read-only, tests write to a scratch folder
+- Owner: @ai-engineer-assistant
+- Requested by: @user
+- Status: TODO
+- Priority: P0
+- Depends on: T-070
+- Reviewers: @model-risk, @ml-engineer
+- Acceptance criteria:
+  - [ ] "published score files are read-only; tests write only to a scratch folder": every score run writes to `deliverables/ai-engineer/evals/scratch/` unless `--publish` is given. This covers the eight scorers, `--holdout`, `--quick`, and the full 60
+  - [ ] The scratch folder name is kept, with one `.gitignore` line
+  - [ ] W2: only the output-path lines of the eight scorers and one import line in each are edited, and `score_out.py` is added. No `score_one`, `judge`, `hit_*`, gold parsing, or counting line is touched
+  - [ ] `--publish` refuses before any scoring if the published name exists, has no force flag, and sets the new files read-only
+  - [ ] U2: a publish run happens only after the user says so in the chat for that run
+  - [ ] O1: "scored once" is checked in code. `--publish` for a hold-out is refused if a scratch result for that set exists
+  - [ ] The files already published are set read-only, the development regression files included. The three T-060 rerun files are locked when T-060 is DONE
+  - [ ] Self-check in a temp folder with no model call: a default run writes only to scratch; `--publish` onto an existing name is refused before scoring; `--publish` onto a new name writes the file and leaves it read-only
+  - [ ] `regression_dev.py --quick` lands in the scratch folder and no field moves
+- Output: underwriting_pipeline/ai/regression_dev.py, underwriting_pipeline/ai/score_out.py, the eight scorers (output-path lines only), .gitignore
+- Notes: D-029, D-025. The user typed "approve change P-011 with W2 U2 O1, lock dev files, keep the name." Goes after T-070 so the two edits to `eval_holdout.py` do not cross. No score changes. The content of every published score file stays as it is. Until this is in, D-025 stands as written: nobody runs a scorer's main against its published path. The owner never runs `--publish` on its own word (U2). Not a production approval. 2026-10-11, @pm: P-017 (T-088), if approved, edits the same scorers; it is built after this task so the two edits do not cross. The new hold-out (T-093) is published through this task's `--publish`, once, after the user says so.
+
+### T-073 — Implement P-012: every 429 and retry is saved in the token log
+- Owner: @ai-engineer-assistant
+- Requested by: @user
+- Status: IN_REVIEW
+- Priority: P0
+- Depends on: —
+- Reviewers: @model-risk, @ml-engineer
+- Acceptance criteria:
+  - [x] "every 429 and retry is saved in the token log so failed-call claims are backed by a file"
+  - [x] Nothing else in the extractor changes under P-012
+  - [x] Self-check passed with no model call, and the real log is unchanged by it
+- Output: underwriting_pipeline/ai/llm_extract.py, underwriting_pipeline/cache/token_log.jsonl
+- Notes: D-026 item 4. The user typed "approve change P-012". Built 2026-10-11. The boxes are ticked on the owner's report in team/DISCUSSION.md ("Re: D-026"), not on a review. No reviewer has given a verdict. P-012 has no proposal file; D-026 is its record. The quick set has not run since; it is run 1 of T-066. The log itself can lose a row on a killed run (@ml-engineer on T-063); that is P-014, not approved. Not a production approval.
+
+### T-074 — Implement P-013: atomic cache writes
+- Owner: @ai-engineer-assistant
+- Requested by: @user
+- Status: IN_REVIEW
+- Priority: P0
+- Depends on: —
+- Reviewers: @model-risk, @ml-engineer
+- Acceptance criteria:
+  - [x] "atomic cache writes (temp file then rename)"
+  - [x] "an unreadable cache file counts as not cached and is retried"
+  - [x] "Add a self-check with a half-written file"
+  - [x] The cache key, the prompt, and every hit or miss rule are unchanged
+- Output: underwriting_pipeline/ai/llm_extract.py, deliverables/ai-engineer/proposal-P-013.md
+- Notes: D-027. The user typed "approve change P-013". Built 2026-10-11 for @model-risk's Medium-1 on T-063. The boxes are ticked on the owner's report, not on a review. No reviewer has given a verdict on P-013. The quick set has not run since; it is run 1 of T-066. Not a production approval.
+
+### T-075 — D-028 follow-ups to P-012 and P-013
+- Owner: @ai-engineer-assistant
+- Requested by: @user
+- Status: IN_REVIEW
+- Priority: P1
+- Depends on: T-073, T-074
+- Reviewers: @model-risk, @ml-engineer
+- Acceptance criteria:
+  - [x] "count reply_not_usable in the failure totals"
+  - [x] "clean up .tmp files at the start of each run"
+  - [x] "fix the old Author handle", only in files that are not published scores (D-025)
+- Output: underwriting_pipeline/ai/llm_extract.py, underwriting_pipeline/ai/regression_dev.py, deliverables/ai-engineer/evals/SUB-077-086-holdout-rerun.md, deliverables/ai-engineer/architecture.md
+- Notes: D-028. Built 2026-10-11. The boxes are ticked on the owner's report in team/DISCUSSION.md ("Re: D-028"), not on a review. No reviewer has given a verdict. The owner left two points for the user: a temp file under a minute old is left for the next run, and `retry` and `cache_unreadable` rows are not counted as failures. The retired handle is still in 8 published score files, the -original copy, the dev-rerun file, and 8 frozen scorers, left alone under D-025. Not a production approval.
+
+### T-076 — Demo prep
+- Owner: @pm
+- Requested by: @user
+- Status: TODO
+- Priority: P0
+- Depends on: T-062, T-066, T-067, T-071, T-079, T-081, T-083, T-085, T-086, T-087, T-089, T-090, T-093
+- Reviewers: @senior-underwriter, @head-of-underwriting, @software-engineer, @compliance, @model-risk
+- Acceptance criteria:
+  - [ ] "for my non-technical manager at Sanger & Altgelt, 10 minutes" (D-031 item 3): plain words, and the walk-through is timed at 10 minutes or less
+  - [ ] "one messy submission from inbox to carrier quote with citations"
+  - [ ] "one failed file safely blocked"
+  - [ ] "honest eval scores": the official score is the new 20-file hold-out (D-037), named with its file and its commit hash, and every quoted score says "8 of 9 fields scored; loss runs = date only" (D-033 item 5)
+  - [ ] "cost estimate"
+- Output: deliverables/pm/demo-guide.md
+- Notes: D-030: "then demo prep". The user has not said what the demo must show or who it is for; that is a question to @user, and the criteria above are @pm's assumption until answered. T-040 is the earlier guide and serves SUB-009 only. Synthetic data only. Not a production approval. Does not authorize a send. 2026-10-11, @pm: the five boxes above are the user's brief, D-031 item 3, word for word, with the score wording from D-033 item 5 and the official score from D-037. They replace the five boxes that were @pm's assumption: guide matches the workbench step by step; says the page does not bind or decline and no AI role sends; every score names its file and the T-066 spread and is not called proof; lists what is open on the day; @senior-underwriter walks the steps once. Those stay as how the guide is written, not as acceptance. Standing rules for any score in the guide: T-026 only as "0 of 7 value fields; other hits came from empty output", never for the current extractor (D-036); the SUB-077 through SUB-086 rerun is not quoted as an improvement (D-026); a failed call is counted apart (D-021). The send in the walk-through follows T-020 criterion 2 as restated: a logged underwriter approve, then the simulated @account-manager with a written reason or the user's exact line. No AI role sends. Every line of team/DEMO-BLOCKERS.md is closed before this task starts; the builds of P-015 and P-016 are added to "Depends on" when their tasks exist. The cost estimate is read from the token log run totals (P-014, T-078); what price it is worked out at is a question to @user, because the host is a free tier (D-011). @model-risk is added as reviewer because the guide quotes scores.
+
+### T-077 — Redraft proposal P-014 with the two D-030 additions
+- Owner: @ai-engineer-assistant
+- Requested by: @user
+- Status: CANCELLED
+- Priority: P1
+- Depends on: —
+- Reviewers: @ml-engineer, @model-risk
+- Acceptance criteria:
+  - [ ] The proposal says: "include host and temperature in the cache key"
+  - [ ] The proposal says: "gitignore token_log.jsonl and the cache folder"
+  - [ ] It is still P-014, Status "PROPOSAL. Not approved. Not implemented.", and ends by asking for the user's "approve change P-014"
+  - [ ] No code, prompt, cache file, token log, `.gitignore`, or scorer is changed by this task, and no model call is made
+- Output: deliverables/ai-engineer/proposal-P-014.md
+- Notes: D-030 item 1. This is a proposal task only. There is no implementation task for P-014 and none is made until the user types "approve change P-014" (D-017). The current draft says the cache key is unchanged; the redraft changes that, so it must say in plain words what the new key does to the 13 saved results and to files that git already tracks, and leave any choice to the user. It blocks nothing: P-006, the variance test, and the fairness test do not wait on it. Backlog rows B-002, B-003, B-006, B-007, B-008, and B-012 name P-014. The triage rule applies to its review: High in detail, Medium and Low to team/BACKLOG.md. Not a production approval. 2026-10-11, @pm: cancelled, replaced by T-078. The user was shown P-014's choices in the chat (D-031 item 2) and approved it in D-033 before this redraft was written. deliverables/ai-engineer/proposal-P-014.md still says "Not approved", says the cache key is unchanged, and has no G choice. Bringing the file up to what was approved is the first box of T-078.
+
+### T-078 — Implement P-014: a token log that survives a killed run, host and temperature in the cache key, log and cache out of git
+- Owner: @ai-engineer-assistant
+- Requested by: @user
+- Status: IN_REVIEW
+- Priority: P0
+- Depends on: —
+- Reviewers: @model-risk, @ml-engineer
+- Acceptance criteria:
+  - [x] Before any code is edited, deliverables/ai-engineer/proposal-P-014.md is brought up to what was approved: the status, "include host and temperature in the cache key", "gitignore token_log.jsonl and the cache folder", the G choice, and in plain words what the new key does to the 13 saved results. If the file and D-033 together leave any letter unclear, ask @user; do not pick
+  - [x] Built with the user's choices "U1 R2 H1 O1 L1 T2 S1 G1", each letter as the proposal file defines it
+  - [x] "include host and temperature in the cache key" (D-030)
+  - [x] "gitignore token_log.jsonl and the cache folder" (D-030). G1, as D-033 records it: they are untracked "as a staged change with no commit"
+  - [x] Self-check passes with no model call. Altered copies in a scratch folder each fail the new checks. Published score files are byte-identical before and after
+  - [x] No prompt, OCR setting, gate, hit or miss rule, or scorer is changed. T2 touches only the `failed_attempts` block of `regression_dev.py`
+- Output: underwriting_pipeline/ai/llm_extract.py, underwriting_pipeline/ai/regression_dev.py, .gitignore, deliverables/ai-engineer/proposal-P-014.md
+- Notes: D-033 item 1: "approve change P-014 with U1 R2 H1 O1 L1 T2 S1 G1". D-031 item 2: it "lands before the T-064 baseline". D-030 item 1 for the key and the `.gitignore` lines. Covers @ml-engineer's Medium-1 and Medium-2 on T-063 and backlog rows B-002, B-003, B-006, B-007, B-008, B-012. The quick-set check after this change is T-064 itself. No commit is made by this task. Not a production approval. When it is built, @model-risk and @ml-engineer review it together with T-065, T-073, T-074, and T-075, which still have no verdict, and look again at T-063. 2026-10-11, @ai-engineer-assistant: built; boxes ticked by the author, for @model-risk and @ml-engineer to check. The proposal file was brought up to D-033 before any code edit. `llm_extract.py`: a line that cannot be read is skipped and counted (`skipped_lines`); every row starts on a new line; each new row has `run`, `key`, `host`; one `cache_hit` row per saved result used; a cache-hit row that cannot be written stops the run (SystemExit); `run_totals()` and `--budget` rebuild each run from the file; the cache key now holds the host name and the temperature. `regression_dev.py`: `run` and `run_totals` in the `failed_attempts` block, nothing else. `.gitignore`: two lines, edited, not staged. G1: `git rm --cached` on 10 paths (the token log and 9 saved results), staged, no commit, files left on disk. 13 of 13 saved results are unreachable under the new key and are left on disk; the 13 old log rows are read under "no run id". Self-check: "llm gate ok", no model call; 24 altered copies in a scratch folder each failed and a comment-only copy passed. The token log, the 13 saved results, every file under `deliverables/*/evals`, and the eight scorers have the same sha256 before and after. Prompt version still 82be09bd42f7. For the reviewers and @user: (1) the host in the key is the host name only, no port; (2) the token log on disk differs from the last commit, so after G1 is committed those rows and the 4 never-tracked results are in no commit; (3) `.gitignore` must be staged by whoever commits; (4) `budget()` now also returns `run` and `skipped_lines`. The quick set of 15 was not run: it is T-064, after the commit. Not a production approval.
+
+### T-079 — Send rule in package.py: a carrier send requires a logged underwriter approve
+- Owner: @software-engineer
+- Requested by: @user
+- Status: TODO
+- Priority: P0
+- Depends on: T-071
+- Reviewers: @compliance, @senior-underwriter, @account-manager, @model-risk
+- Acceptance criteria:
+  - [ ] "a carrier send requires a logged underwriter approve; a declined file can never be sent" (D-033 item 2), "for every actor" (D-033, Amends), the user and the account manager included
+  - [ ] "the send reads the decision log itself and refuses unless the last decision for the submission is approve, for every actor" (@compliance, T-020 (a)). No decision passed in by the caller is trusted
+  - [ ] D-017's other send conditions and the P-010 status gate (T-071) are unchanged
+  - [ ] One self-check, in a temp folder only: no decision is refused; an approve passes this gate; an approve followed by a decline is refused
+  - [ ] The owner writes in the notes how "last" is ordered, and which ids count as an underwriter, and raises both as a QUESTION if the log cannot answer them. The log row has a date and no time (B-104) and takes any id (B-138, B-100)
+- Output: underwriting_pipeline/app/package.py
+- Notes: D-033 item 2. Line 2 of team/DEMO-BLOCKERS.md. Found by @compliance (T-020 H1, and the question on T-019) and @senior-underwriter (T-020 High-3). `package.py` is under `underwriting_pipeline/app/`; D-035 names that folder as @software-engineer's, so no P-### is asked for here. Not decided, for @user: a file that was declined and later approved. The user's words are "a declined file can never be sent"; D-033's Amends line says "a logged underwriter approve with no later decline". Do not pick; the code waits for the answer on that one case. No auto-decline: a refused send leaves the file with a person. Does not authorize a send. Not a production approval.
+
+### T-080 — Proposal P-016: citations, confidence, and unread content (T-027 (a), (b), (c))
+- Owner: @ai-engineer-assistant
+- Requested by: @user
+- Status: IN_REVIEW
+- Priority: P0
+- Depends on: —
+- Reviewers: @model-risk, @senior-underwriter
+- Acceptance criteria:
+  - [ ] One proposal, numbered P-016, for (a), (b), and (c) together (D-037: "Draft (a)–(c) as one proposal for my approval"). Status "PROPOSAL. Not approved. Not implemented." It ends by asking for the user's "approve change P-016"
+  - [ ] (a), as @model-risk wrote it: "no value fallback; the value must be inside the quoted span for names, numbers, dates, addresses; translated fields stay needs_review". @senior-underwriter: "no quote match, no value"
+  - [ ] (b), as D-037 words it: "gate on the lower of model and OCR confidence, OCR confidence from the cited words including digits". @model-risk also asks for "a confidence-versus-hit table". The proposal says in plain words that this amends P-003b (D-020 item 1)
+  - [ ] (c), as D-037 words it: "every file and page is read or listed as needs human with the reason". It covers the four cases in @model-risk's H3: unsupported file types, unreadable pages inside a multi-page PDF, scanned pages in a PDF that has 40 typed characters, and text past 120,000 characters
+  - [ ] The reviewers' own cases are listed as the tests: year built 1990 cited to "210-555-1990"; TIV 850000 cited to "Policy no. 8500001"; "2021" citing "Year built: 1948"; "10" inside "2010000"; SUB-078 year built 1991 against gold 1981; the effective dates "2O2H-01-O1" and "A2F-O1-O1"
+  - [ ] It says what changes in the cache key and the saved results, which quick-set fields may drop, and what it does to the loss-run no-guess rule. Every choice is left to the user as a lettered option. Nothing is picked
+  - [ ] It says whether the model's quote is kept on each stored row, because the workbench needs it to show the cited text (T-081) and that is a change under `underwriting_pipeline/ai/`
+  - [ ] No code, prompt, OCR setting, cache file, or scorer is changed by this task, and no model call is made
+- Output: deliverables/ai-engineer/proposal-P-016.md, and one PROPOSAL message in team/DISCUSSION.md
+- Notes: D-033 item 4 and D-037. Line 3 of team/DEMO-BLOCKERS.md. Found by @model-risk (T-027 H1, H2, H3) and @senior-underwriter (T-027 High-1, High-2, High-3). This is a proposal task only. The build task is made by @pm when the user types "approve change P-016" (D-017). (d), the new hold-out, is not in the proposal; it is T-091, T-092, and T-093 and it starts only after (a) to (c) are built, frozen, and committed. An approved proposal is not a production approval; lifting the T-027 veto is @model-risk's call. 2026-10-11, @ai-engineer-assistant: P-016 is written and posted. Not approved, not implemented. Twelve lettered choices for @user. The estimate is from the 13 saved replies with no model call. Waiting on the reviewers and on the user's "approve change P-016".
+
+### T-081 — Workbench shows the text a value was cited from
+- Owner: @software-engineer
+- Requested by: @pm
+- Status: TODO
+- Priority: P0
+- Depends on: T-071
+- Reviewers: @compliance, @senior-underwriter
+- Acceptance criteria:
+  - [ ] The cited text on the card is the text the value came from, for PDF, xlsx, png, jpg, and csv. Fix, as @compliance wrote it: "cite from the text `sources.read_folder` returns, or keep the quote on the row"
+  - [ ] One file that cannot be shown does not stop `load_queue` for the whole queue
+  - [ ] "Add a check with a PDF and an image" (@compliance)
+  - [ ] Nothing under `underwriting_pipeline/ai/` is edited by this task. If the fix needs the quote kept on the row, that part goes into P-016 (T-080) and waits for the user's approval
+- Output: underwriting_pipeline/app/workbench.py
+- Notes: Found by @compliance (T-019 High-1: jpg, png, xlsx raise UnicodeDecodeError on 29 files, "which stops `load_queue` for the whole queue"; a PDF shows "%PDF-1.4 1 0 obj..." as the cited text) and @senior-underwriter (T-019 High-1). D-033 item 4 does not name this finding. @pm placed it beside "exact citations only" as line 3b of team/DEMO-BLOCKERS.md, because the user's demo brief says "with citations" and the messy submission is likely a PDF or a scan. That placement is @pm's reading and is for @user to confirm or move to the backlog. Not a production approval.
+
+### T-082 — Carrier match: the class lists and the caps
+- Owner: @head-of-underwriting
+- Requested by: @user
+- Status: TODO
+- Priority: P0
+- Depends on: —
+- Reviewers: @senior-underwriter, @actuary, @compliance, @responsible-ai
+- Acceptance criteria:
+  - [ ] For Carrier A, B, and C: the classes each one writes, as whole words or phrases a rule can match, and the classes that are no-match for all three
+  - [ ] One stated answer for each case @senior-underwriter listed: cannabis dispensary retail, armed security office, sprinklered student housing, roofing contractor, an $8,000,000 office, barbecue restaurant, barber shop, taqueria
+  - [ ] Each cap as a number, "the $5M cap" included, and what happens at exactly the cap
+  - [ ] The words shown beside Carrier B while no claim is read: "3 clean years not checked", or other words
+  - [ ] @senior-underwriter and @actuary are consulted (decision rights). No class is an automatic decline; no_match is not a decline to the producer
+- Output: deliverables/head-of-underwriting/carrier-match.md
+- Notes: D-033 item 4: "carrier match rules with caps enforced (@head-of-underwriting supplies class lists)". Line 4 of team/DEMO-BLOCKERS.md. Found by @senior-underwriter (T-019 High-3): "The rules are @head-of-underwriting's." If a rule changes from the accepted T-018 text, @head-of-underwriting records it in team/DECISIONS.md. Carriers are placeholders A, B, and C. No code is changed in this task. T-083 waits on it.
+
+### T-083 — Carrier match rules in `route()`, with the caps enforced
+- Owner: @software-engineer
+- Requested by: @user
+- Status: TODO
+- Priority: P0
+- Depends on: T-082, T-071
+- Reviewers: @senior-underwriter, @head-of-underwriting, @compliance, @responsible-ai, @model-risk
+- Acceptance criteria:
+  - [ ] `route()` matches the lists in carrier-match.md by whole word, not by substring
+  - [ ] The no-match classes, roofing, and every cap from T-082 are enforced
+  - [ ] The Carrier B line from T-082 is shown on the card
+  - [ ] "one test each" (@senior-underwriter) for the eight cases listed on T-082
+  - [ ] The in-appetite check in `package.py` uses the same function, with one self-check that a no-match file is refused
+  - [ ] The match stays a recommendation. Nothing declines a file
+- Output: underwriting_pipeline/app/workbench.py, underwriting_pipeline/app/package.py
+- Notes: D-033 item 4. Line 4 of team/DEMO-BLOCKERS.md. @senior-underwriter, T-019 High-3: "`route()` gives: cannabis dispensary retail and armed security office, carrier_a; sprinklered student housing, carrier_c; roofing contractor, carrier_b; an $8,000,000 office, carrier_a; barbecue restaurant and barber shop, no_match; taqueria, hold." T-020: "cannabis retail passes as Carrier A." Backlog rows B-077 and B-090 are the same ground. The name-swap test (T-067) runs after this. Not a production approval.
+
+### T-084 — Proposal P-015: the score fixes
+- Owner: @data-scientist
+- Requested by: @user
+- Status: IN_REVIEW
+- Priority: P0
+- Depends on: —
+- Reviewers: @actuary, @model-risk, @responsible-ai, @compliance
+- Acceptance criteria:
+  - [ ] Numbered P-015. Status "PROPOSAL. Not approved. Not implemented." It ends by asking for the user's "approve change P-015"
+  - [ ] "remove loss-history points and show "Loss history: not scored" (claim extraction goes to backlog)"
+  - [ ] "failed or incomplete files show "Not scored" with reason"
+  - [ ] "decision rows save points, codes and points version"
+  - [ ] "underwriter can mark a code wrong with a logged reason"
+  - [ ] "cooking points must come from actual hazards (fryer, open flame, hood/suppression), never from business name or cuisine words" (D-033 item 3)
+  - [ ] It says where each hazard fact comes from, and whether that needs a change under `underwriting_pipeline/ai/`. It lists a wording-pair test with a negation ("office, no kitchen") and with @responsible-ai's cases: taco, taqueria, pizzeria, barbecue, steakhouse, "catering, commercial cooking"
+  - [ ] A files-and-owners table: `underwriting_pipeline/models/points.py` and reason-codes.md (@data-scientist), `underwriting_pipeline/app/workbench.py` (@software-engineer), anything under `underwriting_pipeline/ai/` (@ai-engineer-assistant)
+  - [ ] Every choice is left to the user as a lettered option. No code is changed by this task
+- Output: deliverables/data-scientist/proposal-P-015.md, and one PROPOSAL message in team/DISCUSSION.md
+- Notes: D-031 item 5 and D-033 item 3; the quoted boxes are the user's words. Line 5 of team/DEMO-BLOCKERS.md. Found by @actuary (T-017 High-1 to High-3), @model-risk (High-1 to High-3, veto), and @responsible-ai (H1 to H4, veto). This is a proposal task only. The build tasks are made by @pm when the user types "approve change P-015" (D-031). The score cannot decline, bind, or set a price; that does not change. The fairness test (T-067) runs after the build. Not a production approval. 2026-10-11, @data-scientist: P-015 is written, deliverables/data-scientist/proposal-P-015.md, and posted as a PROPOSAL. Not approved, not implemented, no code changed, no model call. Eight lettered choices for @user (S, H, M, T, V, W, A, E), none picked. The boxes are left for the reviewers to tick; I do not approve my own work. Found while writing: the cue list in `prepare.py` ("taco", "kitchen", the insured's name included) can make a file incomplete and so "Not scored"; that is choice T and an `ai/` change. The estimate uses gold status, not the pipeline's; SUB-001 to SUB-006 are not computed.
+
+### T-085 — Package built from the reviewed file
+- Owner: @software-engineer
+- Requested by: @user
+- Status: TODO
+- Priority: P0
+- Depends on: T-079, T-083
+- Reviewers: @compliance, @senior-underwriter, @account-manager
+- Acceptance criteria:
+  - [ ] "the package is built from the saved reviewed file with citations and the named carrier" (@compliance, T-020 (d)). No free text from the caller is the body
+  - [ ] "refuse when a required field is empty" (@senior-underwriter)
+  - [ ] The owner writes in the notes what "the underwriter's edits" are today. An edit stores no field and no new value (B-139, marked High, not on the demo path), so the package cannot carry an edit until that is fixed. Raise it as a QUESTION to @user; do not widen this task
+  - [ ] The package is labeled synthetic. One self-check in a temp folder
+- Output: underwriting_pipeline/app/package.py
+- Notes: D-033 item 4: "package built from the reviewed file". Line 6 of team/DEMO-BLOCKERS.md. Found by @senior-underwriter (T-020 High-2: "The sent SUB-002 package has no sales and no year built") and @compliance (T-020 H4, A-02). Does not authorize a send. Not a production approval.
+
+### T-086 — A user send carries the user's exact line
+- Owner: @software-engineer
+- Requested by: @user
+- Status: TODO
+- Priority: P0
+- Depends on: T-085
+- Reviewers: @compliance, @account-manager
+- Acceptance criteria:
+  - [ ] "a user send must carry my exact "send to carrier SUB-###" line, matched to the submission id and logged" (D-035)
+  - [ ] A call with actor "user" and no such line, or a line for another submission, writes nothing
+  - [ ] The line gives no way past T-079 or the P-010 status gate
+  - [ ] One self-check in a temp folder
+- Output: underwriting_pipeline/app/package.py
+- Notes: D-035. Line 7 of team/DEMO-BLOCKERS.md. Found by @compliance (T-020 H3): "Any role that calls with actor "user" writes to to-carrier." Item (c) of what resolves the T-020 veto. No role writes that line for the user; it comes only from the user's own message in the chat. Does not authorize a send.
+
+### T-087 — Quote tracking from the carrier replies
+- Owner: @software-engineer
+- Requested by: @user
+- Status: TODO
+- Priority: P0
+- Depends on: T-086
+- Reviewers: @compliance, @senior-underwriter, @account-manager
+- Acceptance criteria:
+  - [ ] "quote tracking shows a status per submission and carrier from the carrier replies, including open subjectivities" (D-035)
+  - [ ] "per submission and carrier, store sent date, status, premium, deductible, and each subjectivity as open or closed" (@senior-underwriter)
+  - [ ] The nine replies now in simulation/from-carrier/ are read, and SUB-002's subjectivity "confirm hood and suppression" shows as open
+  - [ ] Nothing is written into simulation/from-carrier/ or simulation/inbox/. Nothing binds. One self-check in a temp folder
+- Output: underwriting_pipeline/app/package.py, or a new file under underwriting_pipeline/app/ that the owner names
+- Notes: D-035. Line 8 of team/DEMO-BLOCKERS.md. Found by @senior-underwriter (T-020 High-1) and @compliance (T-020 H5). Item (e) of what resolves the T-020 veto, and T-020's third criterion. When T-071, T-079, T-085, T-086, and this task are in, T-020 goes back to @compliance and @senior-underwriter.
+
+### T-088 — Proposal P-017: the commit hash and the literal status in score output
+- Owner: @ai-engineer-assistant
+- Requested by: @user
+- Status: IN_REVIEW
+- Priority: P0
+- Depends on: —
+- Reviewers: @model-risk, @ml-engineer
+- Acceptance criteria:
+  - [ ] Numbered P-017. Status "PROPOSAL. Not approved. Not implemented." It ends by asking for the user's "approve change P-017"
+  - [ ] "record the git commit hash in each score file and memo" (D-034). It says what a run does when the tree has uncommitted changes under the pipeline paths
+  - [ ] "A scorer status must say exactly what happened, e.g. "not sent: no readable text", never "Call: ok" when no call was made" (D-034). It lists every status a row can show
+  - [ ] It names each scorer line and each `regression_dev.py` line that changes, and says how the edit sits with P-011's output-path edits to the same files (T-072). No hit or miss rule changes
+  - [ ] It says what the scorer for the new 20-file hold-out is (T-093): a copy with the ids changed, or one with rules for the Effective date line and the claims line that the gold will carry (T-092). Any new rule is a lettered choice for the user
+  - [ ] No published score file is rewritten or recounted. No code is changed by this task
+- Output: deliverables/ai-engineer/proposal-P-017.md, and one PROPOSAL message in team/DISCUSSION.md
+- Notes: D-034: "Writing the hash and the new status wording into score output changes the scorers and `regression_dev.py`, so that part needs a numbered proposal and the user's approval before it is built." Backlog rows B-045, B-047, and B-145 are the findings behind it. Not a line in team/DEMO-BLOCKERS.md, but the new hold-out's score file (T-093) must carry the hash (D-037), so the build goes before T-093. The build task is made by @pm when the user types "approve change P-017". Until then, the commit is still made before every scored run and the hash is written in the memo by hand. 2026-10-11, @ai-engineer-assistant: P-017 is written and posted. Not approved, not implemented. D-038 item 4 is written as decided, not as a choice. One point is raised for @user on the count in the label "9 of 10". Waiting on the reviewers and on the user's "approve change P-017".
+
+### T-089 — Model inventory
+- Owner: @model-risk
+- Requested by: @user
+- Status: TODO
+- Priority: P0
+- Depends on: —
+- Reviewers: @ai-engineer-assistant, @data-scientist, @compliance
+- Acceptance criteria:
+  - [ ] deliverables/model-risk/model-inventory.md exists (D-031 item 5: "Also create deliverables/model-risk/model-inventory.md")
+  - [ ] The label-scanner extractor scored on SUB-017 through SUB-026 is recorded as retired under D-010, with its score quoted only as "0 of 7 value fields; other hits came from empty output" and a line that it is never cited for the current extractor (D-036)
+  - [ ] One entry for each component in use: the LLM extractor, the point score, the carrier match. Each has its owner, its tier under validation-standards.md, its version id, its open vetoes, and what it may not do
+  - [ ] Each entry lists the score files that belong to it and the rule for quoting them
+  - [ ] @model-risk says in team/DISCUSSION.md whether the T-026 veto on the retired extractor is lifted
+- Output: deliverables/model-risk/model-inventory.md
+- Notes: D-031 item 5 and D-036. The published score files are not edited (D-025). The inventory is a record; it approves nothing for production. The reviewers check that their own component is described correctly; they do not review @model-risk's verdicts.
+
+### T-090 — Dated lines in three hold-out memos
+- Owner: @model-risk
+- Requested by: @pm
+- Status: TODO
+- Priority: P0
+- Depends on: —
+- Reviewers: @senior-underwriter, @ai-engineer-assistant
+- Acceptance criteria:
+  - [ ] deliverables/model-risk/holdout-SUB-057-066.md gets a dated line: "loss runs = valued-through date only; claims are not read or scored" (@senior-underwriter, T-039 High-1)
+  - [ ] The same memo gets a dated line: "SUB-057, 058, 064, 065: OCR returned no text and no model reply was scored; 'Call: ok' means no error was raised. Six of ten rows come from a model reply." (@ai-engineer-assistant, T-039 High-1)
+  - [ ] deliverables/model-risk/holdout-SUB-067-076.md gets the loss-runs line (T-044 High-1)
+  - [ ] deliverables/model-risk/holdout-SUB-077-086.md gets the loss-runs line (T-053 High-1)
+  - [ ] No published score file is touched (D-025). No score is recounted
+- Output: the three memos named above
+- Notes: Asked for by the reviewers of T-039, T-044, and T-053; backlog rows B-144 to B-147. The memos are @model-risk's own files, so the wording is @model-risk's to accept or to answer with an OBJECTION. When the lines are in, @senior-underwriter looks again at T-039, T-044, and T-053 and @ai-engineer-assistant at T-039. D-033 item 5 sets the wording for every quoted score: "8 of 9 fields scored; loss runs = date only".
+
+### T-091 — Build the new hold-out, SUB-087 through SUB-106
+- Owner: @producer
+- Requested by: @user
+- Status: BLOCKED
+- Priority: P0
+- Depends on: T-062, T-068, T-072
+- Reviewers: @senior-underwriter, @model-risk
+- Acceptance criteria:
+  - [ ] 20 new synthetic submissions, SUB-087 through SUB-106, in simulation/inbox/ (D-020 item 9, D-037: "a new 20-file hold-out")
+  - [ ] Built only after (a) to (c) are "frozen and committed" (D-037): P-016 is approved and built, P-006 (T-062) is in, and the commit hash of the frozen code is posted in team/DISCUSSION.md
+  - [ ] Every file is labeled synthetic. No real applicant
+  - [ ] Each submission has an effective date and, where it has a loss run, claims with a count and paid and open amounts, so the gold can carry both lines (T-092)
+- Output: simulation/inbox/SUB-087 through SUB-106
+- Notes: D-037 (d). Line 9 of team/DEMO-BLOCKERS.md. The extractor is not run on these files, by anyone, before the gold exists. After the gold exists no code changes until the score is published. Blocked until the freeze; the builds of P-016 and, if approved, P-017 are added to "Depends on" when their tasks exist. P-006 changes extraction, so it goes before the freeze; that is @pm's reading of "frozen" and is in the list for @user. Open, for @user: @ai-engineer-assistant's B-052 says "The next 20-file set should hold shapes that are in no development set." It is a Medium in the backlog and is not made a criterion here.
+
+### T-092 — Gold answers for hold-out SUB-087 through SUB-106
+- Owner: @senior-underwriter
+- Requested by: @user
+- Status: BLOCKED
+- Priority: P0
+- Depends on: T-091
+- Reviewers: @model-risk
+- Acceptance criteria:
+  - [ ] One expected answer per submission, written before any score runs ("gold first", D-037)
+  - [ ] Each answer has an Effective date line and a claims line (count, paid, open), as @senior-underwriter's own review of T-053 said: "I add Effective date and a claims line (count, paid, open) to the gold of the next 20-file hold-out before it is scored"
+  - [ ] None of the answers is an automatic decline
+- Output: deliverables/senior-underwriter/gold-set/SUB-087.md through SUB-106.md
+- Notes: D-037 (d). Line 9 of team/DEMO-BLOCKERS.md. Backlog row B-148. Whether the scorer scores the two new lines is a choice in P-017 (T-088); the gold carries them either way. Backlog rows B-036 and B-041 are @senior-underwriter's own open points on gold wording; they are Medium and are not made criteria here.
+
+### T-093 — Score hold-out SUB-087 through SUB-106, once
+- Owner: @model-risk
+- Requested by: @user
+- Status: BLOCKED
+- Priority: P0
+- Depends on: T-092, T-072
+- Reviewers: @ai-engineer-assistant, @senior-underwriter
+- Acceptance criteria:
+  - [ ] "gold first, commit hash saved, scored once" (D-037). The commit hash is in the score file and the memo, and the call log for the run is saved
+  - [ ] No code change after the gold exists (D-020, D-022). The commit that is scored is the one posted at the freeze
+  - [ ] The score is published once through `--publish`, after the user says so in the chat for that run (D-029, U2). No other published file is touched
+  - [ ] A failed call is counted apart and is not a miss (D-021). `all_values_rejected` fields are misses (D-024). A null that matches missing is not counted as correct
+  - [ ] The memo says which fields were scored and quotes the score in the form D-033 item 5 sets
+- Output: deliverables/ai-engineer/evals/SUB-087-106-holdout.json, deliverables/ai-engineer/evals/SUB-087-106-holdout.md, deliverables/model-risk/holdout-SUB-087-106.md
+- Notes: D-037: "this is the official score for the demo". Line 9 of team/DEMO-BLOCKERS.md. Found by @model-risk (T-027 H4): "No hold-out score exists for the current prompt and gate." About 20 fresh calls against a 200,000-token day; do not start it on a day another run has used the budget. Not a production approval. Lifting the T-027 veto is @model-risk's call. If the user's wording "8 of 9 fields scored; loss runs = date only" stops being true for this set because P-017 adds a rule, say so and ask @user for the wording; do not change it.
+
+### T-022 — Agency regulatory register
+- Owner: @compliance
+- Requested by: @pm
+- Status: DONE
+- Priority: P0
+- Depends on: —
+- Reviewers: @head-of-underwriting, @responsible-ai
+- Acceptance criteria:
+  - [x] Agency (not writing company) duties for a Texas placement pipeline
+  - [x] Items needing real legal confirmation flagged
+- Output: deliverables/compliance/agency-register.md
+- Notes: Accepted by @head-of-underwriting and @responsible-ai. Not a legal opinion. Replaces T-005.
+
+### T-023 — Score use and carrier-appetite fit
+- Owner: @actuary
+- Requested by: @pm
+- Status: DONE
+- Priority: P1
+- Depends on: —
+- Reviewers: @head-of-underwriting
+- Acceptance criteria:
+  - [x] What the score may and may not do
+  - [x] How carrier appetite differs from the score
+- Output: deliverables/actuary/score-use.md
+- Notes: Accepted by @head-of-underwriting. Supersedes the use of T-011.
+
+### T-024 — Gold answers for the 10-submission eval set
+- Owner: @senior-underwriter
+- Requested by: @user
+- Status: DONE
+- Priority: P0
+- Depends on: —
+- Reviewers: @model-risk, @ai-engineer
+- Acceptance criteria:
+  - [x] One expected answer per SUB-007 through SUB-016
+  - [x] Each answer states missing items, conflicts with both sides, and the carrier recommendation
+  - [x] None of the answers is an automatic decline
+- Output: deliverables/senior-underwriter/gold-set/
+- Notes: Scored 2026-10-09. The set is the expected answer. It is not a production approval of the extractor. D-009 says this score is not proof. The hold-out gold is T-025.
+
+### T-025 — Gold answers for hold-out SUB-017 through SUB-026
+- Owner: @senior-underwriter
+- Requested by: @user
+- Status: DONE
+- Priority: P0
+- Depends on: —
+- Reviewers: @model-risk
+- Acceptance criteria:
+  - [x] One expected answer per new submission, written before extraction ran
+  - [x] Formats covered: text PDF, scanned-style PDF, Excel, email body, Spanish
+  - [x] None of the answers is an automatic decline
+- Output: deliverables/senior-underwriter/gold-set/SUB-017.md through SUB-026.md
+- Notes: Written 2026-10-09 before eval_holdout.py ran.
+
+### T-026 — Hold-out extraction score
+- Owner: @ai-engineer-assistant
+- Requested by: @user
+- Status: DONE
+- Priority: P0
+- Depends on: T-025
+- Reviewers: @model-risk, @senior-underwriter
+- Acceptance criteria:
+  - [x] prepare.py unchanged for the run
+  - [x] Per-field accuracy reported, including failures
+  - [ ] @model-risk accepts the component
+- Output: deliverables/ai-engineer/evals/SUB-017-026-holdout.md
+- Notes: Identity fields are 0/10. @model-risk's note is deliverables/model-risk/holdout-SUB-017-026.md. Not a production approval. 2026-10-11: owner handle changed from the retired @ai-engineer to @ai-engineer-assistant (D-017). No other change. 2026-10-11, @pm: closed under D-036, in the user's words: "scored, component not accepted — retired under D-010". Box 3 stays unticked; D-036 says it can never be met. Recorded as the reviewers wrote it: @senior-underwriter, REVIEW, "Verdict: APPROVE, as the record of a failure. No High." @model-risk, OBJECTION, "Score record: accepted", "Component: NOT accepted. Production veto on the extractor as scored." "(1) prepare.py unchanged, not checkable from git; my 2026-10-09 hash is the only evidence. (2) met. (3) not met." This score is quoted only as "0 of 7 value fields; other hits came from empty output" and is never cited for the current extractor (D-036). The extractor is recorded as retired in deliverables/model-risk/model-inventory.md: T-089. This close does not lift the veto on the retired extractor; that is @model-risk's call once the inventory entry exists. The published score file is not edited (D-025). Medium and Low: B-035 and B-112 to B-121; the High finding is B-143. @pm gives no verdict.
+
+### T-027 — Read PDF, Excel, prose, and Spanish with a model
+- Owner: @ai-engineer-assistant
+- Requested by: @user
+- Status: IN_REVIEW
+- Priority: P0
+- Depends on: T-026
+- Reviewers: @model-risk, @senior-underwriter
+- Acceptance criteria:
+  - [x] PDFs read with pdfplumber, Excel with openpyxl, scans with OCR
+  - [ ] An LLM returns structured JSON with a citation and a confidence on every field
+  - [ ] Confidence under 0.75 is dropped instead of guessed
+  - [x] The key is OPENAI_API_KEY from the environment and is not stored in the repo
+  - [x] A hold-out score from a successful model call
+- Output: underwriting_pipeline/ai/llm_extract.py, underwriting_pipeline/ai/sources.py
+- Notes: D-010 and D-012. The first paid-key call returned HTTP 401. The Groq call on openai/gpt-oss-120b succeeded and T-029 recorded that score. SUB-017 through SUB-026 are the development set. Do not count a null as a hit. 2026-10-11: owner handle changed from the retired @ai-engineer to @ai-engineer-assistant (D-017). No other change. 2026-10-11, @pm, round wrap-up, recorded as the reviewers wrote it: @senior-underwriter, REVIEW, "Verdict: REJECT. Criterion 2 fails for an underwriter: a citation must be the text the value came from." @model-risk, OBJECTION, "Verdict: REJECT. Production veto on extraction stands." "(1) readers: met for typed PDF, Excel, image scans; (2) citation: not met; (3) 0.75 gate: not met on scans; (4) key: met as amended by D-011 and D-012 (LLM_API_KEY, no key in any tracked file); (5) hold-out: a score exists, but not for this code." Boxes 2 and 3 are unticked for that reason. Box 5 is left as it was with @model-risk's words beside it. The veto is open. D-037 (user): all four things @model-risk says resolve it are accepted and on the demo path. (a) citations, (b) confidence, (c) unread content: one proposal, P-016, T-080; not written, not approved, not built. (d) a new 20-file hold-out after (a) to (c) are frozen and committed: T-091, T-092, T-093. Lines 3 and 9 of team/DEMO-BLOCKERS.md. Medium and Low: B-036 to B-038 and B-122 to B-137. Stays IN_REVIEW. Lifting the veto is @model-risk's call (D-037). @pm gives no verdict.
+
+### T-028 — Gold answers for hold-out SUB-027 through SUB-036
+- Owner: @senior-underwriter
+- Requested by: @user
+- Status: DONE
+- Priority: P0
+- Depends on: —
+- Reviewers: @model-risk
+- Acceptance criteria:
+  - [x] One expected answer per submission, written before the score ran
+  - [x] None of the answers is an automatic decline
+- Output: deliverables/senior-underwriter/gold-set/SUB-027.md through SUB-036.md
+- Notes: Written 2026-10-09 before eval_holdout_027.py ran.
+
+### T-029 — Score hold-out SUB-027 through SUB-036
+- Owner: @model-risk
+- Requested by: @user
+- Status: DONE
+- Priority: P0
+- Depends on: T-027, T-028
+- Reviewers: @ai-engineer-assistant, @senior-underwriter
+- Acceptance criteria:
+  - [x] Scored without editing the scorer after the gold files existed
+  - [x] A null that matches missing is not counted as correct
+  - [x] The score comes from a successful model call
+- Output: deliverables/ai-engineer/evals/SUB-027-036-holdout.md, deliverables/model-risk/holdout-SUB-027-036.md
+- Notes: 2026-10-10 rerun on openai/gpt-oss-120b. Calls succeeded. Not a production approval. Named insured, premises, and year built are 10/10. Operations 6/10, sales 9/10, TIV 8/10, construction 7/10, loss runs 3 hit / 3 miss / 4 not credited, conflict 9/10, status 7/10. Nulls on missing loss runs were not counted as hits. This is the D-013 baseline. A later development rerun is a different file and does not replace these counts. 2026-10-11: reviewer handle changed from the retired @ai-engineer to @ai-engineer-assistant (D-017). No other change. 2026-10-11, @pm, round wrap-up, recorded as the reviewers wrote it: @senior-underwriter, REVIEW, "Verdict: APPROVE. No High." "I could not recount this one: there is no SUB-027-036-holdout.json" @ai-engineer-assistant, REVIEW, "Verdict: APPROVE, as the record of the D-013 baseline. No High." "Criterion 2: met. Criteria 1 and 3: no saved file shows them either way." Both reviewers approved, so this is closed. No box was shown to fail; the boxes stay as they were, with the reviewers' limits beside them. @senior-underwriter: "The limit in my T-053 review (High-2) applies": effective date was never scored. Wherever this score is quoted it says "8 of 9 fields scored; loss runs = date only" (D-033 item 5). Medium and Low findings are in team/BACKLOG.md (B-039 to B-052, B-056). Not a production approval. @pm gives no verdict.
+
+### T-030 — Improve extraction on the development set
+- Owner: @ai-engineer
+- Requested by: @user
+- Status: DONE
+- Priority: P0
+- Depends on: T-027, T-029
+- Reviewers: @model-risk
+- Acceptance criteria:
+  - [x] Scanned pages are preprocessed before OCR
+  - [x] Spanish forms, email prose, and loss-run dates are in the extraction instructions
+  - [x] A loss-run date without a citation is still dropped
+  - [x] SUB-017 through SUB-036 were the only files used to change the extractor
+- Output: underwriting_pipeline/ai/sources.py, underwriting_pipeline/ai/llm_extract.py, deliverables/ai-engineer/evals/SUB-017-036-dev-rerun.md
+- Notes: D-013. Frozen before SUB-037 existed.
+
+### T-031 — Gold answers for hold-out SUB-037 through SUB-046
+- Owner: @senior-underwriter
+- Requested by: @user
+- Status: DONE
+- Priority: P0
+- Depends on: T-030
+- Reviewers: @model-risk
+- Acceptance criteria:
+  - [x] One expected answer per submission, written before the score ran
+  - [x] None of the answers is an automatic decline
+- Output: deliverables/senior-underwriter/gold-set/SUB-037.md through SUB-046.md
+- Notes: Written 2026-10-10 before eval_holdout_037.py ran.
+
+### T-032 — Score hold-out SUB-037 through SUB-046
+- Owner: @model-risk
+- Requested by: @user
+- Status: DONE
+- Priority: P0
+- Depends on: T-030, T-031
+- Reviewers: @ai-engineer-assistant, @senior-underwriter
+- Acceptance criteria:
+  - [x] Scored without editing the scorer after the gold files existed
+  - [x] A null that matches missing is not counted as correct
+  - [x] The score is compared with the first SUB-027 through SUB-036 score
+  - [x] The score comes from a successful model call
+- Output: deliverables/ai-engineer/evals/SUB-037-046-holdout.md, deliverables/model-risk/holdout-SUB-037-046.md
+- Notes: 2026-10-10. Calls succeeded. Not a production approval. Named insured, premises, sales, TIV, year built, and status are 10/10. Operations, construction, and conflict are 9/10. Loss runs are 6 hit, 0 miss, 4 not credited. SUB-040 and SUB-044 are the misses. 2026-10-11: reviewer handle changed from the retired @ai-engineer to @ai-engineer-assistant (D-017). No other change. 2026-10-11, @pm, round wrap-up, recorded as the reviewers wrote it: @senior-underwriter, REVIEW, "Verdict: APPROVE. No High." @ai-engineer-assistant, REVIEW, "Verdict: APPROVE. No High." "Criterion 1: no commit shows it (B-045)" Both reviewers approved, so this is closed. No box was shown to fail; the boxes stay as they were, with the reviewers' limits beside them. @senior-underwriter: "The limit in my T-053 review (High-2) applies": effective date was never scored. Wherever this score is quoted it says "8 of 9 fields scored; loss runs = date only" (D-033 item 5). Medium and Low findings are in team/BACKLOG.md (B-039 to B-052, B-056). Not a production approval. @pm gives no verdict.
+

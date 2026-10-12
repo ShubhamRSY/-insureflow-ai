@@ -1,0 +1,69 @@
+{
+  "submission": "SUB-009",
+  "fields": [
+    {
+      "field_id": "named_insured",
+      "value": "Frio Paper Wholesale LLC",
+      "source": "application.md",
+      "start": 15,
+      "end": 39
+    },
+    {
+      "field_id": "premises_address",
+      "value": "1800 Factor St, San Antonio, TX 78208",
+      "source": "application.md",
+      "start": 58,
+      "end": 95
+    },
+    {
+      "field_id": "effective_date",
+      "value": "2027-03-01",
+      "source": "application.md",
+      "start": 112,
+      "end": 122
+    },
+    {
+      "field_id": "operations",
+      "value": "light wholesale, paper goods, no cold storage",
+      "source": "application.md",
+      "start": 150,
+      "end": 195
+    },
+    {
+      "field_id": "sales_or_payroll",
+      "value": "2400000",
+      "source": "application.md",
+      "start": 214,
+      "end": 221
+    },
+    {
+      "field_id": "tiv_building",
+      "value": "4100000",
+      "source": "application.md",
+      "start": 236,
+      "end": 243
+    },
+    {
+      "field_id": "construction",
+      "value": "noncombustible",
+      "source": "application.md",
+      "start": 258,
+      "end": 272
+    },
+    {
+      "field_id": "year_built",
+      "value": "1995",
+      "source": "application.md",
+      "start": 285,
+      "end": 289
+    },
+    {
+      "field_id": "loss_run_valued_through",
+      "value": "2026-08-31",
+      "source": "loss-runs.md",
+      "start": 56,
+      "end": 66
+    }
+  ],
+  "conflicts": []
+}

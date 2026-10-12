@@ -1,0 +1,294 @@
+[
+  {
+    "submission": "SUB-007",
+    "extracted_operations": "office tenants, accounting and law, no cooking",
+    "hits": {
+      "named_insured": true,
+      "premises_address": true,
+      "operations": true,
+      "loss_run_valued_through": true,
+      "schedule_request": true,
+      "conflict_fields": true,
+      "conflict_values": null,
+      "resolution": null,
+      "status": true,
+      "restaurant_questions": null,
+      "citation": true,
+      "carrier_route": true
+    },
+    "routed": "carrier_a",
+    "expected_route": "carrier_a",
+    "conflicts": [],
+    "missing": [],
+    "extra": []
+  },
+  {
+    "submission": "SUB-008",
+    "extracted_operations": "dry retail, gifts, no cooking, no liquor",
+    "hits": {
+      "named_insured": true,
+      "premises_address": true,
+      "operations": true,
+      "loss_run_valued_through": true,
+      "schedule_request": true,
+      "conflict_fields": true,
+      "conflict_values": null,
+      "resolution": null,
+      "status": true,
+      "restaurant_questions": null,
+      "citation": true,
+      "carrier_route": true
+    },
+    "routed": "carrier_a",
+    "expected_route": "carrier_a",
+    "conflicts": [],
+    "missing": [],
+    "extra": []
+  },
+  {
+    "submission": "SUB-009",
+    "extracted_operations": "light wholesale, paper goods, no cold storage",
+    "hits": {
+      "named_insured": true,
+      "premises_address": true,
+      "operations": true,
+      "loss_run_valued_through": true,
+      "schedule_request": true,
+      "conflict_fields": true,
+      "conflict_values": null,
+      "resolution": null,
+      "status": true,
+      "restaurant_questions": null,
+      "citation": true,
+      "carrier_route": true
+    },
+    "routed": "carrier_a",
+    "expected_route": "carrier_a",
+    "conflicts": [],
+    "missing": [],
+    "extra": []
+  },
+  {
+    "submission": "SUB-010",
+    "extracted_operations": "light contractor, interior painting, no roofing",
+    "hits": {
+      "named_insured": true,
+      "premises_address": true,
+      "operations": true,
+      "loss_run_valued_through": true,
+      "schedule_request": true,
+      "conflict_fields": true,
+      "conflict_values": null,
+      "resolution": null,
+      "status": true,
+      "restaurant_questions": null,
+      "citation": true,
+      "carrier_route": true
+    },
+    "routed": "carrier_b",
+    "expected_route": "carrier_b",
+    "conflicts": [],
+    "missing": [],
+    "extra": []
+  },
+  {
+    "submission": "SUB-011",
+    "extracted_operations": "restaurant, tacos, fryer",
+    "hits": {
+      "named_insured": true,
+      "premises_address": true,
+      "operations": true,
+      "loss_run_valued_through": true,
+      "schedule_request": true,
+      "conflict_fields": true,
+      "conflict_values": null,
+      "resolution": null,
+      "status": true,
+      "restaurant_questions": true,
+      "citation": true,
+      "carrier_route": true
+    },
+    "routed": "hold",
+    "expected_route": "hold",
+    "conflicts": [],
+    "missing": [
+      "loss_run_valued_through"
+    ],
+    "extra": [
+      "cooking equipment",
+      "hood and fire suppression",
+      "sprinklers",
+      "liquor sales",
+      "hours"
+    ]
+  },
+  {
+    "submission": "SUB-012",
+    "extracted_operations": "light contractor, interior electrical, no roofing",
+    "hits": {
+      "named_insured": true,
+      "premises_address": true,
+      "operations": true,
+      "loss_run_valued_through": true,
+      "schedule_request": true,
+      "conflict_fields": true,
+      "conflict_values": null,
+      "resolution": null,
+      "status": true,
+      "restaurant_questions": null,
+      "citation": true,
+      "carrier_route": true
+    },
+    "routed": "hold",
+    "expected_route": "hold",
+    "conflicts": [],
+    "missing": [],
+    "extra": [
+      "location schedule (building values, construction, year built, sprinklers)"
+    ]
+  },
+  {
+    "submission": "SUB-013",
+    "extracted_operations": "habitational, 6 units, sprinklers yes",
+    "hits": {
+      "named_insured": true,
+      "premises_address": true,
+      "operations": true,
+      "loss_run_valued_through": true,
+      "schedule_request": true,
+      "conflict_fields": true,
+      "conflict_values": null,
+      "resolution": null,
+      "status": true,
+      "restaurant_questions": null,
+      "citation": true,
+      "carrier_route": true
+    },
+    "routed": "hold",
+    "expected_route": "hold",
+    "conflicts": [],
+    "missing": [
+      "loss_run_valued_through"
+    ],
+    "extra": []
+  },
+  {
+    "submission": "SUB-014",
+    "extracted_operations": "office, accounting, no cooking",
+    "hits": {
+      "named_insured": true,
+      "premises_address": true,
+      "operations": true,
+      "loss_run_valued_through": true,
+      "schedule_request": true,
+      "conflict_fields": true,
+      "conflict_values": true,
+      "resolution": true,
+      "status": true,
+      "restaurant_questions": null,
+      "citation": true,
+      "carrier_route": true
+    },
+    "routed": "hold",
+    "expected_route": "hold",
+    "conflicts": [
+      {
+        "field": "premises_address",
+        "values": [
+          {
+            "value": "12 Nogal St, San Antonio, TX 78212",
+            "source": "application.md"
+          },
+          {
+            "value": "120 Nogal St, San Antonio, TX 78212",
+            "source": "schedule.csv"
+          }
+        ],
+        "resolution": "unresolved",
+        "resolved_value": null,
+        "resolved_by": null
+      }
+    ],
+    "missing": [],
+    "extra": []
+  },
+  {
+    "submission": "SUB-015",
+    "extracted_operations": "dry retail, home goods, no cooking, no liquor",
+    "hits": {
+      "named_insured": true,
+      "premises_address": true,
+      "operations": true,
+      "loss_run_valued_through": true,
+      "schedule_request": true,
+      "conflict_fields": true,
+      "conflict_values": true,
+      "resolution": true,
+      "status": true,
+      "restaurant_questions": null,
+      "citation": true,
+      "carrier_route": true
+    },
+    "routed": "hold",
+    "expected_route": "hold",
+    "conflicts": [
+      {
+        "field": "sales_or_payroll",
+        "values": [
+          {
+            "value": "880000",
+            "source": "application.md"
+          },
+          {
+            "value": "300000",
+            "source": "email.md"
+          }
+        ],
+        "resolution": "unresolved",
+        "resolved_value": null,
+        "resolved_by": null
+      },
+      {
+        "field": "square_feet",
+        "values": [
+          {
+            "value": "3000",
+            "source": "application.md"
+          },
+          {
+            "value": "4500",
+            "source": "schedule.csv"
+          }
+        ],
+        "resolution": "unresolved",
+        "resolved_value": null,
+        "resolved_by": null
+      }
+    ],
+    "missing": [],
+    "extra": []
+  },
+  {
+    "submission": "SUB-016",
+    "extracted_operations": "retail sale of fireworks and explosives",
+    "hits": {
+      "named_insured": true,
+      "premises_address": true,
+      "operations": true,
+      "loss_run_valued_through": true,
+      "schedule_request": true,
+      "conflict_fields": true,
+      "conflict_values": null,
+      "resolution": null,
+      "status": true,
+      "restaurant_questions": null,
+      "citation": true,
+      "carrier_route": true
+    },
+    "routed": "no_match",
+    "expected_route": "no_match",
+    "conflicts": [],
+    "missing": [],
+    "extra": []
+  }
+]
