@@ -128,6 +128,13 @@ def record_decision(payload: dict, log_path: Path) -> dict:
         raise ValueError("action must be approve, edit, or decline")
     if action in {"edit", "decline"} and not reason:
         raise ValueError("edit and decline require a reason")
+    if action == "approve":
+        submission = (payload.get("submission") or "").strip()
+        # T-071: read the file's status from the last saved run itself. An approve is refused on either
+        # refused status, and when nothing is saved or the run cannot be read (current_status raises).
+        status = prepare.current_status(submission)
+        if status in prepare.REFUSED_STATUSES:
+            raise ValueError(f"this file's status is {status}; an approve is refused for it")
     row = {
         "submission": payload.get("submission"),
         "action": action,
@@ -158,6 +165,7 @@ def render(queue: list[dict], counts: dict | None = None) -> str:
     blocks = []
     for item in queue:
         report = item["report"]
+        refused = report.get("status") in prepare.REFUSED_STATUSES
         field_rows = []
         for row in report["fields"]:
             field_rows.append(
@@ -186,33 +194,46 @@ def render(queue: list[dict], counts: dict | None = None) -> str:
         extraction = "ok"
         if report.get("status") == "extraction_failed":
             extraction = f"FAILED — {report['error']}. No field was read. This is not a missing-data file. Sends are blocked."
-        missing = report["missing"] + report.get("extra", [])
-        blocks.append(
-            f"""<article id="{html.escape(item['id'])}">
-<h2>{html.escape(item['id'])}</h2>
-<p>Files: {html.escape(', '.join(item['files']) or 'none')}</p>
-<p>Not read by extraction: {html.escape(', '.join(item['ignored']) or 'none')}</p>
-<p>Score: {item['score']['points']} · {html.escape(', '.join(item['score']['reason_codes']) or 'none')} · not a price</p>
-<p>Carrier match: {html.escape(item['route'])} · recommendation only</p>
-<p>Extraction: {html.escape(extraction)}</p>
-<p>Needs human read: {html.escape(', '.join(report.get('needs_human') or []) or 'none')}</p>
-<p>Address check: {html.escape(address_check)}</p>
-<p>Locations: {html.escape('; '.join(('primary ' if row.get('primary') else 'other ') + row['address'] for row in report.get('locations') or []) or 'one premises')}</p>
-<h3>Extracted fields</h3>
-<table><tr><th>Field</th><th>Value</th><th>Confidence</th><th>Source</th><th>Cited text</th></tr>{''.join(field_rows)}</table>
-<h3>Conflicts</h3>{conflict_html}
-<h3>Missing</h3>
-<p>{html.escape(', '.join(missing) or 'none')}</p>
-<form method="post" action="/decision">
+        elif report.get("status") == "all_values_rejected":
+            reason = report.get("status_reason") or "every value was rejected by the gate"
+            extraction = f"REJECTED — {reason}. No field was accepted. This is not a missing-data file. Sends are blocked."
+        lines = [
+            f"<h2>{html.escape(item['id'])}</h2>",
+            f"<p>Files: {html.escape(', '.join(item['files']) or 'none')}</p>",
+            f"<p>Not read by extraction: {html.escape(', '.join(item['ignored']) or 'none')}</p>",
+        ]
+        if not refused:
+            lines += [
+                f"<p>Score: {item['score']['points']} · {html.escape(', '.join(item['score']['reason_codes']) or 'none')} · not a price</p>",
+                f"<p>Carrier match: {html.escape(item['route'])} · recommendation only</p>",
+            ]
+        lines += [
+            f"<p>Extraction: {html.escape(extraction)}</p>",
+            f"<p>Needs human read: {html.escape(', '.join(report.get('needs_human') or []) or 'none')}</p>",
+            f"<p>Address check: {html.escape(address_check)}</p>",
+            f"<p>Locations: {html.escape('; '.join(('primary ' if row.get('primary') else 'other ') + row['address'] for row in report.get('locations') or []) or 'one premises')}</p>",
+            "<h3>Extracted fields</h3>",
+            f"<table><tr><th>Field</th><th>Value</th><th>Confidence</th><th>Source</th><th>Cited text</th></tr>{''.join(field_rows)}</table>",
+            f"<h3>Conflicts</h3>{conflict_html}",
+        ]
+        if not refused:
+            missing = report["missing"] + report.get("extra", [])
+            lines += ["<h3>Missing</h3>", f"<p>{html.escape(', '.join(missing) or 'none')}</p>"]
+        # T-071: on a refused card there is no approve option. Edit and decline stay so a person decides.
+        options = "<option>edit</option><option>decline</option>" if refused else "<option>approve</option><option>edit</option><option>decline</option>"
+        lines.append(
+            f"""<form method="post" action="/decision">
 <input type="hidden" name="submission" value="{html.escape(item['id'])}">
 <label>Underwriter id <input name="underwriter_id" required></label>
 <label>Action
-<select name="action"><option>approve</option><option>edit</option><option>decline</option></select>
+<select name="action">{options}</select>
 </label>
 <label>Reason <input name="reason"></label>
 <button type="submit">Record decision</button>
-</form>
-</article>"""
+</form>"""
+        )
+        blocks.append(
+            f'<article id="{html.escape(item["id"])}">\n' + "\n".join(lines) + "\n</article>"
         )
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><title>Underwriter workbench</title>
@@ -269,41 +290,134 @@ if __name__ == "__main__":
         chosen = next((arg for arg in sys.argv if arg.startswith("SUB-")), None)
         serve(only=chosen)
     else:
+        def save(ext: Path, submission: str, status: str) -> None:
+            """A saved run shaped like prepare.write_drafts() writes, no model call. The hash is the reader's."""
+            payload = {
+                "submission": submission,
+                "status": status,
+                "error": "model call failed: HTTP 429 rate limit" if status == "extraction_failed" else None,
+                "complete": status == "complete",
+                "conflicts": [],
+                "needs_human": [],
+                "sprinklers": None,
+                "fields": [],
+            }
+            payload["hash_algorithm"] = prepare.HASH_ALGORITHM
+            payload["saved_hash"] = prepare.hash_payload(payload)
+            ext.mkdir(parents=True, exist_ok=True)
+            (ext / f"{submission}.json").write_text(json.dumps(payload))
+
         with tempfile.TemporaryDirectory() as tmp:
-            check = Path(tmp) / "decisions.jsonl"
+            tmp = Path(tmp)
+            check = tmp / "decisions.jsonl"
+            ext = tmp / "extractions"
+            saved_dir = prepare.EXTRACT_DIR
+            prepare.EXTRACT_DIR = ext
             try:
-                record_decision({"action": "decline"}, check)
-                raise SystemExit("missing id should fail")
-            except ValueError:
-                pass
-            try:
+                try:
+                    record_decision({"action": "decline"}, check)
+                    raise SystemExit("missing id should fail")
+                except ValueError:
+                    pass
+                try:
+                    record_decision(
+                        {"underwriter_id": "UW-1", "action": "decline", "submission": "SUB-000"},
+                        check,
+                    )
+                    raise SystemExit("decline without reason should fail")
+                except ValueError:
+                    pass
+
+                # T-071 (4): an approve with nothing saved is refused.
+                try:
+                    record_decision(
+                        {"underwriter_id": "UW-TEST", "action": "approve", "submission": "SUB-000", "reason": "self-check"},
+                        check,
+                    )
+                    raise SystemExit("an approve with no saved run should fail")
+                except ValueError:
+                    pass
+
+                # A normal file: the approve is recorded.
+                save(ext, "SUB-000", "complete")
                 record_decision(
-                    {"underwriter_id": "UW-1", "action": "decline", "submission": "SUB-000"},
+                    {
+                        "underwriter_id": "UW-TEST",
+                        "action": "approve",
+                        "submission": "SUB-000",
+                        "reason": "self-check",
+                    },
                     check,
                 )
-                raise SystemExit("decline without reason should fail")
-            except ValueError:
-                pass
-            record_decision(
-                {
-                    "underwriter_id": "UW-TEST",
-                    "action": "approve",
-                    "submission": "SUB-000",
-                    "reason": "self-check",
+                logged = json.loads(check.read_text().splitlines()[-1])
+
+                # T-071 (4): an approve is refused on either refused status; edit and decline are still recorded.
+                for sub, status in (("SUB-010", "extraction_failed"), ("SUB-011", "all_values_rejected")):
+                    save(ext, sub, status)
+                    try:
+                        record_decision(
+                            {"underwriter_id": "UW-TEST", "action": "approve", "submission": sub, "reason": "self-check"},
+                            check,
+                        )
+                        raise SystemExit(f"an approve on {status} should fail")
+                    except ValueError:
+                        pass
+                    record_decision(
+                        {"underwriter_id": "UW-TEST", "action": "edit", "submission": sub, "reason": "corrected by hand"},
+                        check,
+                    )
+                    record_decision(
+                        {"underwriter_id": "UW-TEST", "action": "decline", "submission": sub, "reason": "not bindable as read"},
+                        check,
+                    )
+                record_decision(
+                    {"underwriter_id": "UW-TEST", "action": "edit", "submission": "SUB-000", "reason": "square feet were 4500"},
+                    check,
+                )
+                assert correction_counts(check) == {"approve": 1, "edit": 3, "decline": 2}, correction_counts(check)
+            finally:
+                prepare.EXTRACT_DIR = saved_dir
+
+        # T-071 (3): the refused card hides approve, Missing, the carrier match, and the score.
+        def card(status: str, status_reason: str | None = None, needs_human=None, fields=None) -> dict:
+            return {
+                "id": f"SUB-{status}",
+                "report": {
+                    "status": status,
+                    "status_reason": status_reason,
+                    "error": "model call failed: HTTP 429 rate limit" if status == "extraction_failed" else None,
+                    "complete": status == "complete",
+                    "fields": fields or [{"field_id": "operations", "value": None}],
+                    "conflicts": [],
+                    "needs_human": needs_human or [],
+                    "missing": ["named_insured"],
+                    "extra": [],
+                    "locations": [],
                 },
-                check,
-            )
-            logged = json.loads(check.read_text().splitlines()[-1])
-            record_decision(
-                {
-                    "underwriter_id": "UW-TEST",
-                    "action": "edit",
-                    "submission": "SUB-000",
-                    "reason": "square feet were 4500",
-                },
-                check,
-            )
-            assert correction_counts(check) == {"approve": 1, "edit": 1, "decline": 0}
+                "files": ["application.md"],
+                "ignored": [],
+                "route": "hold",
+                "score": {"points": 12, "reason_codes": ["COOKING"]},
+                "snippets": {},
+            }
+
+        for item in (
+            card("extraction_failed"),
+            card("all_values_rejected", status_reason=prepare.REJECT_REASON, needs_human=["scan.jpg"]),
+        ):
+            page = render([item], {"approve": 0, "edit": 0, "decline": 0})
+            assert "<option>approve</option>" not in page
+            assert "<h3>Missing</h3>" not in page
+            assert "Carrier match:" not in page
+            assert "Score:" not in page
+            assert "<option>edit</option>" in page and "<option>decline</option>" in page
+        assert "REJECTED" in render([card("all_values_rejected", status_reason=prepare.REJECT_REASON)], None)
+        normal = card("complete", fields=[{"field_id": "operations", "value": "accounting office"}])
+        normal["report"]["missing"] = []
+        page_ok = render([normal], None)
+        assert "<option>approve</option>" in page_ok
+        assert "<h3>Missing</h3>" in page_ok and "Carrier match:" in page_ok and "Score:" in page_ok
+
         assert logged["sent_to_carrier"] is False
         assert logged["reason"] == "self-check"
         assert logged["ai_version"].endswith("+rules-d015")
