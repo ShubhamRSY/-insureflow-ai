@@ -8,6 +8,7 @@ Run: python underwriting_pipeline/ai/eval_holdout.py
 import json
 import re
 import sys
+import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -141,7 +142,7 @@ def score_one(sid: str) -> dict:
         "conflicts": [c["field"] for c in report["conflicts"]],
         "checks": checks,
         "correct": sum(ok is True for ok in checks.values()),
-        "scored": len(checks),
+        "scored": 0 if report.get("error") else len(checks),
     }
 
 
@@ -151,8 +152,9 @@ def main() -> None:
     for row in rows:
         for field, ok in row["checks"].items():
             totals[field] += ok is True
-    n = len(rows)
-    payload = {"submissions": rows, "per_field": totals, "n": n}
+    call_failed = sum(1 for row in rows if "call_failed" in row["checks"].values())
+    n = len(rows) - call_failed  # S1: a file whose call failed is counted apart, not scored as misses
+    payload = {"submissions": rows, "per_field": totals, "n": n, "call_failed": call_failed}
     OUT_JSON.write_text(json.dumps(payload, indent=2) + "\n")
     lines = [
         "# Hold-out extraction score — SUB-017 through SUB-026",
@@ -164,6 +166,7 @@ def main() -> None:
         "- Command: `python underwriting_pipeline/ai/eval_holdout.py`",
         "",
         "A hit means the unchanged extractor matched that gold line. PDF and Excel files are ignored by prepare.process_submission, which only reads .md and .csv.",
+        f"Call failed, not scored: {call_failed}",
         "",
         "## Per-field accuracy",
         "",
@@ -190,5 +193,74 @@ def main() -> None:
         print(f"{field} {totals[field]}/{n}")
 
 
+def _self_check() -> None:
+    """S1 self-check: a failed file leaves the denominator and shows in the count. Writes to a temp folder only."""
+    out_md, out_json = OUT_MD, OUT_JSON
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp = Path(tmp)
+        globals()["OUT_MD"] = tmp / "out.md"
+        globals()["OUT_JSON"] = tmp / "out.json"
+        real_one = score_one
+        try:
+
+            def make(sid: str, failed: bool) -> dict:
+                checks = dict.fromkeys(FIELDS, "call_failed") if failed else dict.fromkeys(FIELDS, True)
+                return {
+                    "submission": sid,
+                    "format": "md",
+                    "ignored_files": [],
+                    "extracted_named_insured": None,
+                    "complete": False,
+                    "missing": [],
+                    "conflicts": [],
+                    "checks": checks,
+                    "correct": 0 if failed else len(FIELDS),
+                    "scored": 0 if failed else len(FIELDS),
+                }
+
+            rows = {sid: make(sid, sid == "SUB-018") for sid in IDS}
+
+            def stubbed(sid: str) -> dict:
+                return rows[sid]
+
+            globals()["score_one"] = stubbed
+            main()
+            data = json.loads((tmp / "out.json").read_text())
+            assert data["call_failed"] == 1
+            assert data["n"] == len(IDS) - 1
+            assert data["per_field"]["named_insured"] == len(IDS) - 1
+            text = (tmp / "out.md").read_text()
+            assert "Call failed, not scored: 1" in text
+            assert f"| named_insured | {len(IDS) - 1}/{len(IDS) - 1} |" in text
+            assert rows["SUB-018"]["scored"] == 0
+        finally:
+            globals()["score_one"] = real_one
+            globals()["OUT_MD"] = out_md
+            globals()["OUT_JSON"] = out_json
+    # the real score_one marks a raised call as scored 0 and every check call_failed, with no model call
+    real_ps = prepare.process_submission
+    try:
+
+        def failed(_folder):
+            return {
+                "error": "model call failed: HTTP 429 rate limit",
+                "complete": False,
+                "missing": [],
+                "conflicts": [],
+                "fields": [{"field_id": field, "value": None} for field in prepare.FIELDS],
+            }
+
+        prepare.process_submission = failed
+        row = real_one("SUB-017")
+        assert row["scored"] == 0
+        assert set(row["checks"].values()) == {"call_failed"}
+    finally:
+        prepare.process_submission = real_ps
+
+
 if __name__ == "__main__":
-    main()
+    if sys.argv[1:2] == ["--self-check"]:
+        _self_check()
+        print("eval_holdout ok")
+    else:
+        main()
