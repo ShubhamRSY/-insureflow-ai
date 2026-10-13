@@ -24,6 +24,8 @@ HASH_ALGORITHM = "sha256"
 # P-010 part 1: these two statuses are refused for every actor, including the user. There is no override.
 REFUSED_STATUSES = ("extraction_failed", "all_values_rejected")
 REJECT_REASON = "the model answered but every value was rejected by the gate"
+# G2 (D-029): the reader accepts only this closed set. A missing, empty, or unknown status is refused, not allowed.
+STATUSES = ("complete", "incomplete", "extraction_failed", "all_values_rejected")
 
 FIELDS = (
     "named_insured",
@@ -656,7 +658,9 @@ def hash_payload(payload: dict, algorithm: str = HASH_ALGORITHM) -> str:
 def read_saved_run(submission: str, extract_dir: Path | None = None) -> dict:
     """G2 (D-029). Read the last saved run, verify its hash, and refuse when anything is off.
 
-    Fail closed: no file, no usable hash, an unknown algorithm, or a digest that does not match all refuse.
+    Fail closed: no file, no usable hash, an unknown algorithm, a digest that does not match, or a status
+    outside the closed set (`complete`, `incomplete`, `extraction_failed`, `all_values_rejected`) all refuse.
+    A status that is missing, empty, or unknown is refused, not allowed, so a caller that branches on it fails closed.
     The gate reads the file itself and never trusts a report a caller passes in.
     """
     directory = Path(extract_dir) if extract_dir is not None else EXTRACT_DIR
@@ -673,12 +677,15 @@ def read_saved_run(submission: str, extract_dir: Path | None = None) -> dict:
         raise ValueError(f"the saved run for {submission} has no usable hash; refusing")
     if hash_payload(payload, algorithm) != stored:
         raise ValueError(f"the saved run for {submission} changed since it was saved; refusing")
+    status = payload.get("status")
+    if not isinstance(status, str) or status not in STATUSES:
+        raise ValueError(f"the saved run for {submission} has status {status!r}, outside the closed set; refusing")
     return payload
 
 
 def current_status(submission: str, extract_dir: Path | None = None) -> str:
-    """The status of the last saved run, read and hash-checked by the gate itself (G2)."""
-    return read_saved_run(submission, extract_dir).get("status") or ""
+    """The status of the last saved run, read, hash-checked, and validated by the gate itself (G2)."""
+    return read_saved_run(submission, extract_dir)["status"]
 
 
 def _saved_payload(report: dict) -> dict:
@@ -1137,7 +1144,29 @@ if __name__ == "__main__":
                     raise SystemExit("a changed saved run must be refused")
                 except ValueError:
                     pass
+                # Medium-1 fail-closed: a hash-valid run whose status is empty, unknown, or missing is refused by the reader,
+                # so a caller that branches on the status fails closed instead of receiving "".
+                for sub, label, bad in (
+                    ("SUB-194", "empty", ""),
+                    ("SUB-195", "unknown", "banana"),
+                    ("SUB-196", "missing", None),
+                ):
+                    _save_run(ext, sub, "incomplete", None)
+                    raw = json.loads((ext / f"{sub}.json").read_text())
+                    if bad is None:
+                        raw.pop("status")
+                    else:
+                        raw["status"] = bad
+                    raw["saved_hash"] = hash_payload(raw)
+                    (ext / f"{sub}.json").write_text(json.dumps(raw, indent=2) + "\n")
+                    for reader in (read_saved_run, current_status):
+                        try:
+                            reader(sub)
+                            raise SystemExit(f"a {label} status must be refused")
+                        except ValueError:
+                            pass
                 _save_run(ext, "SUB-192", "incomplete", None)
+                assert current_status("SUB-192") == "incomplete", "an in-set status still reads"
                 sent = approve(draft_for("SUB-192"), "user", out)
                 assert "Approved-by: user (override)" in sent.read_text()
                 _save_run(ext, "SUB-193", "incomplete", None)
