@@ -699,7 +699,6 @@ def _saved_payload(report: dict) -> dict:
     return {
         "submission": report.get("folder"),
         "status": report.get("status"),
-        "status_reason": report.get("status_reason"),
         "error": report.get("error"),
         "complete": bool(report.get("complete")),
         "conflicts": report.get("conflicts") or [],
