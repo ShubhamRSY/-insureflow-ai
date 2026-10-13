@@ -290,3 +290,53 @@ The self-check above, then `python underwriting_pipeline/ai/regression_dev.py --
 5. The scratch folder name, if you want another.
 
 P-011 is not implemented until the user replies "approve change P-011".
+
+---
+
+# T-070 — what was built (2026-10-13)
+
+- Author: @ai-engineer-assistant
+- Task: T-070, the `underwriting_pipeline/ai/` part of P-010 and its Part 3 `eval_holdout.py` edit.
+- Approved by: the user typed exactly `approve change P-010` (D-043). Choices taken from D-029: **G2, D1, S1, C1**; Low-2 not added.
+- Synthetic data only. Not a production approval. No send is authorized. @model-risk can still block production.
+- Published scores are not recounted. No scorer's `main` was run against its published path (D-025).
+
+## Commits (D-034)
+
+- `fde95b7` — the code: `prepare.py` (status, gate, drafts, saved run) and `eval_holdout.py` (call-failed count). Made before the quick-set run.
+- `57bd138` — one follow-up: drop the in-memory `status_reason` from the saved payload so the saved key set stays exactly the closed `ExtractionRun` set. The quick-set result below was re-run on this commit (byte-identical; the cache served every file).
+
+## What changed, by file
+
+### `underwriting_pipeline/ai/prepare.py`
+
+- New `ROOT`, `EXTRACT_DIR = deliverables/data-engineer/extractions/`, `HASH_ALGORITHM = "sha256"`, `REFUSED_STATUSES = ("extraction_failed", "all_values_rejected")`, `REJECT_REASON`.
+- `process_submission()`: an answered reply whose values the gate rejected now gets `status = "all_values_rejected"` (D-024) with `error` empty, no request, `complete = False`, and `status_reason` on the in-memory report. A raised call and an empty reply stay `extraction_failed` with the error. The report also now carries the run metadata (model, prompt version, OCR settings, host, temperature).
+- New `_run_metadata()`, `hash_payload()` (the `data-model.md` canonical bytes), `read_saved_run()` (the G2 reader: no file, no usable hash, an unknown algorithm, or a digest mismatch all raise), `current_status()`, `_saved_payload()`.
+- `write_drafts()`: writes the full `ExtractionRun` payload (every key in the data-model table) with `saved_hash`/`hash_algorithm`; on either refused status it removes the old draft (D1) and keeps the conflict file. It no longer writes nine null fields with no status.
+- `approve()`: reads the last saved run and verifies its hash itself (G2) **before the actor is read**; refuses the two statuses for every actor, including the user and the CLI `--approve`; refuses when nothing is saved; the account manager's `agency_problem()` uses the self-read report, never the passed-in one. The `report` argument is kept for callers but is no longer a source of truth.
+- Self-check: `python underwriting_pipeline/ai/prepare.py`. Every case above, plus the standing demo. No model call, temp dirs only.
+
+### `underwriting_pipeline/ai/eval_holdout.py` (S1 — the one frozen scorer edited)
+
+- `main()`: counts the files whose checks are `call_failed`, sets `n = files − that count`, adds a `call_failed` key to the JSON, and adds the line `Call failed, not scored: k` to the Markdown; the table prints `hits/n`.
+- `score_one()`: a failed file reports `scored: 0`, not `10`.
+- No `hit_*` rule and no gold file changed.
+- Self-check: `python underwriting_pipeline/ai/eval_holdout.py --self-check`. A stubbed failed file leaves the denominator and shows in the count; the real `score_one` marks a raised call `scored: 0`. Writes to a temp folder only.
+
+## The hash reading — please confirm
+
+"Reads the file's current status" is implemented as: load `deliverables/data-engineer/extractions/SUB-xxx.json`, drop `saved_hash` and `hash_algorithm`, re-serialize with `json.dumps(sort_keys=True, separators=(",", ":"), ensure_ascii=True)`, UTF-8, sha256, compare to `saved_hash`; then read `status` from that same object. **It is not a hash of the inbox source documents.** This matches the `data-model.md` reader contract and H1/H2. If you meant the digest of the source documents instead, say so and I will change it.
+
+## Quick set of 15 (D-022, D-025)
+
+Command: `python underwriting_pipeline/ai/regression_dev.py --quick deliverables/ai-engineer/evals/scratch/quick-15-after-T-070.json` (a scratch path, so no published file is written).
+
+- All 15 files: no failure, no `call_failed`, no `all_values_rejected`.
+- **No field's hit count moved.** Re-running the same 15 on the pre-change code (`d5750fd`) against the warm cache gives byte-identical counts, so this change moves nothing on the set: `named_insured 13, premises 12, operations 13, sales 13, tiv 14, construction 14, year_built 15, loss_runs 9, conflict 13, status 13` of 15.
+- Any dropped field: none.
+
+## Open items for you
+
+1. **`error` enum.** `data-model.md` makes `error` a closed enum (`rate_limit_429`, `timeout`, `reply_not_usable`, `call_error`), non-null only on `extraction_failed`. The extractor raises a free-text safe message, P-010 does not normalize it, and C1 keeps `llm_extract.py` unchanged, so the saved file carries the safe text, not the enum value. Mapping the failure kind to the enum is a small `prepare.py` change but is outside P-010; say if you want it as a follow-up proposal.
+2. **`status_reason`.** The reason for `all_values_rejected` is on the in-memory report but not in the saved file, because the saved key set is closed and `saved_hash` covers it. G2 stops at the status and the reason is derivable from it. Confirm you are content with this.
