@@ -1,18 +1,18 @@
 # Next session
 
-Written 2026-10-14 by the orchestrator at wrap-up. Wrap-up commit: `b77ffa9` on `ai-team`, pushed to `origin/ai-team` (private). **The weekly usage limit was hit (resets 2026-10-17, 5pm Central).** Budget rule 8 applies: demo blockers only. Standing rules: D-065 (backend + UI), D-069 (sandbox only).
+Written 2026-10-14 by the orchestrator at wrap-up. Wrap-up commit: `2a3882f` on `ai-team`, pushed to `origin/ai-team` (private). The weekly usage limit was hit earlier (resets 2026-10-17); later reviews still ran. Budget rule 8: demo blockers only. Standing rules: D-065 (backend + UI), D-069 (sandbox only). The frontend/ files are the user's and are never staged.
 
 ## Where we stopped
 
-- D-070: B-260 accepted (identical re-save keeps the approval). B-264 (suggested market only on senior referrals), B-265 (footer shows the saved run's model and prompt version), B-266 (stale card lists changed fields old → new) built; screenshots `deliverables/software-engineer/screenshots/D-070-*.png` (sandbox).
-- B-222 confidence-vs-hit table (`deliverables/ai-engineer/confidence-vs-hit.md`): 15 cached files, 115 values. Scans sort by confidence (0.90+ 15/0, 0.75–0.89 5/2, 0.50–0.74 3/2); typed values all at 0.90+, including all 5 typed errors. @model-risk: **APPROVE**; the T-027 table condition is met.
-- P-015 built (S3 H1 M1 T2 V3 W1 A1 E2): `prepare.cooking_facts` (labelled lines, cited), cuisine words out of the cue list, name removed before cue matching; `points.score_run` ("Not scored — reason"; LOSS_HISTORY out, range 0–80; POINTS_VERSION hash + "git:not-recorded"); workbench uses it, mark-wrong per code (W1, `code_marks.jsonl`), decision rows save points/codes/version/model/prompt (E2; cache key null).
-- T-067 name-swap (`deliverables/data-scientist/name-swap-T-067.md`): 0 of 56 pairs changed score, match or status, on 7 cached files (1 scored). Thin.
-- @model-risk on P-015: **APPROVE WITH CHANGES**. **High B-268:** "no" tested only at line start; "Cooking equipment: no fryer; gas grill and charbroiler" reads "stated none", scores 0, no quote. Fix: negate per clause, show the quote, self-check. **T-017 veto stands** until fixed (other T-017 conditions met).
-- **Not run:** @responsible-ai fairness check of P-015 (weekly limit; nothing written) and the @senior-underwriter UI check of D-070 (B-270).
-- B-271: only 15 of 60 development files are in the extraction cache; the P-016 drop analysis said 60 of 60 — reconcile.
+- Cooking rule settled: P-031 (D-074) — no negation word: hazards present; any negation word: "Cooking: needs review", score "Provisional — cooking not scored" until a listed underwriter records present/none (B-278 control, logged with the run hash). @model-risk APPROVE; its T-017 veto lifted.
+- P-028 (D-075): each saved run stores its extraction cache key; footer shows it. B-284 self-check ties it to a real cache file. @model-risk APPROVE.
+- D-076: cache filled for SUB-017..076 (45 calls, 70,640 tokens, 0 failures; 76 results). B-271 drop-analysis correction recorded. Demo runs SUB-009, SUB-010, SUB-029 re-saved from cache with keys.
+- D-077: B-222 table rebuilt on 62 files / 464 values. Name swaps: no change (36 business-swap files, 2 person-swap files; coverage gap recorded, B-288).
+- D-078 (amends D-060): carrier class from generic restaurant evidence only (restaurant, food service, kitchen, eatery, café, catering, Spanish translations, or stated cooking equipment); all cuisine words removed. Cuisine swap rerun: 0 findings. Screenshot D-078-B-286-cuisine-no-class.png.
+- @responsible-ai on P-015, P-031, B-286: **APPROVE WITH CHANGES; T-017 fairness veto lifted on its side.** **High B-290:** PROHIBITED "bar" lets a cuisine word decide ("bar-b-q restaurant", "sushi/taco/oyster/salad bar restaurant" → non-overridable no_match; "bbq/pho/sushi restaurant" → carrier_b).
+- @senior-underwriter UI check D-070..D-078: **APPROVE WITH CHANGES.** **High B-294:** What's new promises a no_match override the card does not have. **High B-295:** an extraction_failed card says "no cooking equipment stated".
 - Self-checks at wrap-up (no model host): llm_extract, prepare, intake, package, workbench, points all ok.
-- Not committed, left alone: `src/insureflow/`, `tests/`, `docs/rag/`, `scripts/`.
+- Not committed, left alone: `src/insureflow/`, `tests/`, `docs/`, `scripts/`, `frontend/`.
 
 ## Approved, not built
 
@@ -26,27 +26,28 @@ Written 2026-10-14 by the orchestrator at wrap-up. Wrap-up commit: `b77ffa9` on 
 
 ## Pending decisions for the user
 
-1. B-268: fix the cooking negation as a P-015 build fix, or number it P-027.
-2. B-269: save the extraction cache key in the saved run (E2) — an `ai/` change needing a P-###.
-3. Start the new 20-file hold-out (T-091 to T-093), gold first, scored once — the last T-027 condition.
-4. Parked: P-018, P-019/T-099, T-100. OCR price basis: $10.00 or $1.50 per 1,000 pages.
+1. B-290: how "bar" is read near food words (the reviewer's two options: not inside bar-b-q / after a food word, or "bar" with restaurant wording → senior referral/hold). @user or @head-of-underwriting.
+2. B-294: build the no_match override control (after-demo B-258) now, or remove the claim from What's new.
+3. B-291: add more negation words (ningún, ni, nada, tampoco, w/o, zero, nor) — needs a P-###.
+4. B-293: bakery and coffee shop now no_match; confirm or add generic words.
+5. Start the new 20-file hold-out (T-091 to T-093), gold first — the last T-027 condition.
 
 ## Open vetoes and what resolves each
 
 | Task | Holder | Resolves when |
 |---|---|---|
-| T-017 | @model-risk (and @responsible-ai, not yet re-checked) | B-268 fixed; @responsible-ai checks P-015 fairness |
-| T-027 | @model-risk (production) | The new 20-file hold-out (T-091 to T-093), gold first, scored once (the table condition is met) |
-| T-082 | @responsible-ai (fairness) | As written in its veto message in `team/DISCUSSION.md` |
+| T-017 | none open (@model-risk lifted after P-031; @responsible-ai lifted on 2026-10-14) | — (not a production approval) |
+| T-027 | @model-risk (production) | The new 20-file hold-out (T-091 to T-093), gold first, scored once |
+| T-082 | @responsible-ai (fairness) | As written in its veto message in `team/DISCUSSION.md`; B-290 is in the same class lists |
 
-## First 3 tasks next session (after the limit resets)
+## First 3 tasks next session
 
-1. @responsible-ai fairness check of P-015 (fresh dispatch, D-070 criteria) and @senior-underwriter UI check of D-070.
-2. B-268 once @user decides, then @model-risk re-check of the High.
-3. B-271 cache coverage reconcile; then T-091 gold for the new hold-out if @user says so.
+1. B-295 (failed-extraction cooking line, small, points.py) and B-294 (override claim) once @user decides.
+2. B-290 once @user decides, then the cuisine swap rerun with "bar-b-q" and "… bar" words.
+3. T-091 gold for the new hold-out if @user says so.
 
 ## For the AI Engineer
 
-- Pending proposals: none numbered. B-268 and B-269 need your call.
-- Latest eval scores (quick-15, P-025-fix, cached; hit / hit (needs review)): named_insured 13/0, operations 12/1, sales 13/0, construction 13/1, year_built 15/0, premises 12/0, tiv 14/0, loss_runs 8/1, conflict 10/3, status 12/1. No extraction-value change this session.
-- Top failure to fix next: B-268 (a stated cooking line with "no" at the start hides a fryer/grill).
+- Pending proposals: none numbered. B-290, B-291, B-294 need your call.
+- Latest eval scores (quick-15, D-076, cached; hit / hit (needs review)): named_insured 13/0, operations 12/1, sales 13/0, construction 13/1, year_built 15/0, premises 12/0, tiv 14/0, loss_runs 8/1, conflict 10/3, status 12/1.
+- Top failure to fix next: B-290 (a cuisine word can still decide the carrier through "bar").
