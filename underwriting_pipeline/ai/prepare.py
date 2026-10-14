@@ -321,39 +321,21 @@ ITEM_SPLIT = re.compile(r"[;,/]|\b(?:and|or|y|o|with|con)\b")  # P-027: a negati
 NONE_AFTER = re.compile(r":\s*(none|no|not|n/a|ninguno|ninguna)\s*$")  # "fryer: none"
 
 
-NEG_WORD = re.compile(r"(?<![\w/])(no|none|not|without|sin|ninguno|ninguna|n/a)(?![\w/])")  # P-030 (D-073), whole words
-MODIFIER = re.compile(r"^(\s+[a-záéíóúñ]+){0,2}\s+$")  # only words between ("no gas grill", "not a fryer"); no punctuation
-CONNECTORS = {"and", "or", "with", "y", "o", "con", "but", "pero", "nor", "ni"}
-REASON_COOKING = "a negation word that does not directly precede the hazard it denies (P-030 rule 3)"
+NEG_WORD = re.compile(r"(?<![\w/'’])(no|none|not|without|never|don't|don’t|dont|n/a|sin|nunca|ninguno|ninguna)(?![\w/'’])")  # P-031 (D-074)
+REASON_COOKING = "the cooking line contains a negation word (P-031): the underwriter records present or none"
 
 
 def equipment_fact(value: str) -> tuple[str, list[str], list[str]]:
-    """P-030 (D-073), replacing the P-029 rule. (state, present terms, negated terms).
-    (1) no negation word: every hazard term is present ("yes"), or "other" if there is none.
-    (2) every hazard term has a negation word directly before it, only modifiers between, and every negation word is used
-        that way: those hazards are "none".
-    (3) any other line with a negation word, in any position or language ("fryer, none", "none", "N/A"): "needs_review",
-        no points until the underwriter records the call."""
-    v = value.lower().strip()
+    """P-031 (D-074), replacing P-029/P-030. (state, present terms, negated terms). Two rules, one line at a time:
+    (1) a line with no negation word: every hazard term is present ("yes"), or "other" if there is none;
+    (2) a line with any negation word: "needs_review", no points until the underwriter records present or none (B-278).
+    A newline ends a line: only the first line of the value is read."""
+    v = (value.splitlines() or [""])[0].lower().strip()
+    if NEG_WORD.search(v):
+        return "needs_review", [], []
     hits = sorted((m.start(), m.end(), t) for t in HAZARD_TERMS for m in re.finditer(rf"\b{re.escape(t)}\b", v))
-    hits = [h for k, h in enumerate(hits) if not any(o[0] <= h[0] and h[1] <= o[1] and o != h for o in hits)]  # "grill" inside a longer term
-    negs = list(NEG_WORD.finditer(v))
-    if not negs:
-        return ("yes" if hits else "other"), [h[2] for h in hits], []
-    used = set()
-    for start, _end, _term in hits:
-        before = [n for n in negs if n.end() <= start]
-        if not before:
-            break
-        n = before[-1]
-        gap = v[n.end():start]
-        if not MODIFIER.match(gap if gap.endswith(" ") else gap + " ") or set(gap.split()) & CONNECTORS:
-            break
-        used.add(n.start())
-    else:
-        if hits and used == {n.start() for n in negs}:
-            return "none", [], [h[2] for h in hits]
-    return "needs_review", [], []
+    hits = [h for h in hits if not any(o[0] <= h[0] and h[1] <= o[1] and o != h for o in hits)]
+    return ("yes" if hits else "other"), [h[2] for h in hits], []
 
 
 def _items(value: str) -> list[tuple[str, bool]]:
@@ -1439,23 +1421,28 @@ if __name__ == "__main__":
         f = cf[key]
         assert ("Notes\n" + kitchen)[f["start"] : f["end"]] == f["quote"], "the citation points at the stated text"
     assert cooking_facts({"a.md": "Cooking equipment: none\n"})["equipment"]["state"] == "needs_review"  # P-030 rule 3
-    assert cooking_facts({"a.md": "Cooking equipment: sin freidora\n"})["equipment"]["state"] == "none", "negated hazard gives no yes"
+    assert cooking_facts({"a.md": "Cooking equipment: sin freidora\n"})["equipment"]["state"] == "needs_review", "negated hazard gives no yes (P-031)"
     assert cooking_facts({"a.md": "Cooking equipment: freidora y parrilla\n"})["equipment"]["terms"] == ["freidora", "parrilla"]
     assert cooking_facts({"a.md": "Cooking equipment: microwave\n"})["equipment"]["state"] == "other"
-    # P-030 (D-073): (1) no negation -> present; (2) negation directly before each hazard, only modifiers between -> none;
-    # (3) any other line with a negation word -> needs review, no points.
+    # P-031 (D-074): (1) no negation word -> hazards present; (2) any negation word -> needs review, no points. Every line used so far.
     eq = lambda line: cooking_facts({"a.md": f"Cooking equipment: {line}\n"})["equipment"]
     for line in ("no hood and gas grill", "sin campana con parrilla", "fryer, none", "no hood with grill", "no hood y parrilla",
                  "no fryer but charbroiler", "no fryer. gas grill", "no fryer & grill", "no fryer - grill", "sin freidora pero parrilla",
                  "no fryer or grill", "no fryer; gas grill and charbroiler", "fryer: none", "fryer (none)", "fryer - none",
-                 "fryer not used", "grill, no fryer", "none", "N/A", "no microwave, fryer"):
+                 "fryer not used", "grill, no fryer", "none", "N/A", "no microwave, fryer", "no open flame", "no gas grill",
+                 "not a fryer", "sin freidora", "no fryer, no grill", "dont use fryer", "don't use fryer", "never a fryer",
+                 "no fryer plus grill", "no fryer only grill", "no fryer except grill", "sin freidora más parrilla",
+                 "no microwave plus grill", "nunca freidora", "ninguna parrilla", "without fryer"):
         f = eq(line)
         assert f["state"] == "needs_review" and f["terms"] == [] and f["quote"] and f["reason"] == REASON_COOKING, (line, f)
-    for line, neg in (("no open flame", ["open flame"]), ("no gas grill", ["grill"]), ("not a fryer", ["fryer"]),
-                      ("sin freidora", ["freidora"]), ("no fryer, no grill", ["fryer", "grill"])):
-        assert eq(line)["state"] == "none" and eq(line)["negated"] == neg, (line, eq(line))
-    assert eq("freidora y parrilla")["terms"] == ["freidora", "parrilla"] and eq("gas grill and charbroiler")["state"] == "yes"
-    assert eq("notable grill")["state"] == "yes" and eq("microwave")["state"] == "other"
+    for line, terms in (("freidora y parrilla", ["freidora", "parrilla"]), ("gas grill and charbroiler", ["grill", "charbroiler"]),
+                        ("notable grill", ["grill"]), ("two floor fryers", ["fryers"]), ("knot-free grill", ["grill"])):
+        assert eq(line)["state"] == "yes" and eq(line)["terms"] == terms, (line, eq(line))
+    assert eq("microwave")["state"] == "other" and eq("nonstick griddle")["state"] == "other"
+    two = lambda text: cooking_facts({"a.md": text})["equipment"]
+    assert two("Cooking equipment: fryer\nno grill on site\n")["state"] == "yes", "a newline ends the line: the next line is not read"
+    assert two("Cooking equipment: no fryer\ngas grill\n")["state"] == "needs_review"
+    assert equipment_fact("fryer\nno grill") == ("yes", ["fryer"], [])
     assert cooking_facts({"a.md": "Hood: N/A\n"})["hood_suppression"]["state"] == "not_stated"
     assert cooking_facts({"a.md": "Hood: without hood\n"})["hood_suppression"]["state"] == "none"
     assert cooking_facts({"a.md": "Hood: without hood; Ansul suppression\n"})["hood_suppression"]["state"] == "stated"

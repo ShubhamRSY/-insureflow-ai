@@ -1592,3 +1592,8 @@ Blocked: No.
 - Done: P-030/B-278 re-check (D-073). REJECT. B-278 closed (provisional score, logged cooking call per run hash). B-276 not closed: one negation still reaches across a hazard term or an unlisted connector ("no fryer plus grill", "sin freidora más parrilla" → none). T-017 veto stands.
 - Next: re-check only after @user approves a fix that makes the code match D-073 rule 2.
 - Blockers: needs @user (prepare.py change; D-073 says stop on a second reject).
+
+### 2026-10-14 — @model-risk
+- Done: P-031 (B-279, B-280) re-check, D-074. APPROVE. B-279 and B-280 closed; no equipment line can read "none" any more. T-017 veto lifted on my side. Not a production approval; no send authorized.
+- Next: 4 Lows to backlog (slash before "no", unlisted absence words, items on next line, stale docstring).
+- Blockers: none on my side.

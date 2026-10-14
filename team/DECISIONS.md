@@ -825,3 +825,14 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: built in the main session (budget rule 3; weekly usage limit); @model-risk re-check. Orchestrator's reading, stated to @user: (2) applies only when every hazard term on the line is directly negated; a bare "none" or "N/A" equipment line falls under (3) (needs review), which replaces B-273 for the equipment line.
 - Status: ACCEPTED
 - Amends: D-072 (P-029 rule replaced). Not a production approval. No send is authorized.
+
+## D-074 — P-031 approved (B-279, B-280): cooking rule simplified to two rules
+- Date / Owner: 2026-10-14 / @user
+- Context: @model-risk REJECT on P-030: the rule-2 build let one negation reach later hazards (B-279); "dont use fryer", "never a fryer", newline scope (B-280). T-017 veto stands.
+- Options considered: none. The user's words.
+- Decision: In the user's words. "approve change P-031 (B-279 and B-280), a simplification, not a new variant: remove rule (2). The cooking rule is now only: (1) a line with no negation word: hazards present; (2) a line with any negation word: "Cooking: needs review" with the quote, no points until the underwriter records present or none with the existing B-278 control. Negation words: no, none, not, without, never, don't, dont, n/a, sin, nunca, ninguno, ninguna. A newline ends a line. Self-checks: every line used so far plus "dont use fryer", "never a fryer", "no fryer plus grill", "sin freidora más parrilla", and a two-line case. Sandbox screenshot. One @model-risk re-check, High only. If rejected, stop and tell me. Commit, no wrap-up."
+- Rationale: The user typed this in this Claude Code session on 2026-10-14.
+- Dissent: none
+- Follow-up tasks: built in the main session (budget rule 3; weekly usage limit); @model-risk re-check.
+- Status: ACCEPTED
+- Amends: D-073 (rule 2 removed; P-030 rule 3 becomes rule 2). Not a production approval. No send is authorized.

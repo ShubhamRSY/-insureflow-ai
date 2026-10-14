@@ -33,7 +33,7 @@ NOT_SCORED = {
 
 def _hash_version() -> str:
     """V3 today = V2: a hash of the table, the fact word lists and the cooking term list, as PROMPT_VERSION is hashed."""
-    rules = [TABLE, HABITATIONAL_WORDS, CONTRACTING_WORDS, prepare.HAZARD_TERMS, prepare.NO_WORDS.pattern, prepare.ITEM_SPLIT.pattern, prepare.NONE_AFTER.pattern, prepare.NEG_WORD.pattern, prepare.MODIFIER.pattern, sorted(prepare.CONNECTORS)]  # P-027, P-030: the rules move the version
+    rules = [TABLE, HABITATIONAL_WORDS, CONTRACTING_WORDS, prepare.HAZARD_TERMS, prepare.NO_WORDS.pattern, prepare.ITEM_SPLIT.pattern, prepare.NONE_AFTER.pattern, prepare.NEG_WORD.pattern, prepare.REASON_COOKING]  # P-027, P-031: the rules move the version
     return hashlib.sha256(json.dumps(rules, sort_keys=True).encode()).hexdigest()[:12]
 
 
