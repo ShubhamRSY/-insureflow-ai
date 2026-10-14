@@ -40,3 +40,6 @@ premises_address was also dropped on SUB-067 (0.00) and SUB-074 (0.21), but no v
 ## Note on P-024 (same run)
 
 With P-024 in, the recomputed run also shows more flagged values: scan numbers on SUB-038, SUB-053, SUB-067, SUB-074, and "translated or reworded" operations on SUB-050, SUB-051, SUB-074. No stored value changed from P-016 beyond the drops above. Conflict sides on SUB-042, SUB-073, SUB-076 now carry quote and flag.
+
+---
+Correction, 2026-10-14 (orchestrator, D-076, B-271): line 5's "60 of 60 cache hits" is wrong as a count of files. This analysis recomputed the 15 quick-set submissions only (its scratch outputs before.json and after.json hold exactly 15 submissions each), and only 31 extraction files existed in the cache at the time. "60" counted cache lookups across the before and after runs, not development files. The 15-of-60 figure in confidence-vs-hit.md and name-swap-T-067.md is correct. The findings above are about the quick set, as the task asked, and are not changed by this correction. Line 5 is left as written.

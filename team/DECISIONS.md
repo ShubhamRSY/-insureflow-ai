@@ -847,3 +847,14 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: built in the main session (budget rule 3; weekly usage limit); @model-risk check. Note: P-028 was skipped in D-072 and never used, so this is its first use, not a reuse. The existing `llm_extract.cache_key` already hashes file name, sha256, OCR settings, needs-human flag, text, prompt version, model, host and temperature; it is stored as is, so the extraction cache is not invalidated.
 - Status: ACCEPTED
 - Amends: P-015 E2 (the cache key is now recorded). Not a production approval. No send is authorized.
+
+## D-076 — B-271 reconcile; fill the development cache; demo re-save with keys; B-284
+- Date / Owner: 2026-10-14 / @user
+- Context: The P-016 drop analysis said 60 of 60 development files were cached; the B-222 table and T-067 said 15 of 60 (B-271). Saved demo runs lack the P-028 cache key. B-284: the key self-check does not compare with a real cache file name.
+- Options considered: none. The user's words.
+- Decision: In the user's words. "1. B-271: reconcile the earlier "60 of 60 cached" claim with the recent "15 of 60". Find which report is wrong and why, and correct that report with a dated correction line (do not edit history). 2. Fill the cache for the remaining development files (SUB-017 to SUB-076) using Groq gpt-oss-120b, one model only, within the daily token limit; report tokens used and any failed calls by type. Do not touch hold-out files beyond SUB-076. 3. Re-save the 3 demo runs (SUB-009, SUB-010, SUB-029) from the cache, no model calls, so they carry cache keys. 4. B-284: the self-check also confirms a stored key matches an actual cache file name. Rerun the quick set of 15 from cache and confirm no field changed. No reviewer needed unless something fails. Commit, no wrap-up."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-14 (D-032).
+- Dissent: none
+- Follow-up tasks: main session (budget rule 3; weekly usage limit).
+- Status: ACCEPTED
+- Amends: nothing. Model calls are on the free Groq host only (D-011). No send is authorized.

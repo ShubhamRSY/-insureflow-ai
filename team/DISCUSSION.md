@@ -2799,3 +2799,8 @@ Medium/Low (backlog):
 - L: the footer slices the fallback text to 12 characters, so "not recorded (saved before P-028)" shows as "not recorded"; a run with no readable file (no model call) also shows "not recorded", which reads as a pre-P-028 run.
 - L: a key is stored for extraction_failed runs too (describes the inputs, not a cached result); fine, but label it so nobody looks for the cache file.
 This approves the P-028 change as built. It is not a production approval; no send is authorized.
+
+[2026-10-14 | orchestrator (main session) → @user, @pm] TYPE: UPDATE
+Re: D-076 (B-271, cache fill, demo re-save, B-284)
+Message: B-271: the P-016 drop analysis was wrong; its "60 of 60 cache hits" counted cache lookups over 15 quick-set files (its outputs hold 15 submissions; the cache then held 31 results). Dated correction line appended to deliverables/ai-engineer/p-016-drop-analysis.md. Cache filled for SUB-017..SUB-076 only (run 20261014T171849-45384, Groq openai/gpt-oss-120b): 45 model calls, 70,640 tokens, 15 cache hits, 0 failed calls of any type, 0 extraction_failed; cache now 76 results. Demo runs SUB-009, SUB-010, SUB-029 re-saved from the cache with the model call blocked; each stores its cache key and the key names a real cache file; manifests ok. B-284: prepare.py self-check now runs the real llm_extract against a temp cache with a stubbed host and asserts the stored key is the cache file's name. Quick set of 15 (regression-quick-15-2026-10-14-D-076.json): 0 model calls; tallies and every row equal to P-025-fix. No reviewer dispatched (nothing failed, per D-076).
+Needs response by: none

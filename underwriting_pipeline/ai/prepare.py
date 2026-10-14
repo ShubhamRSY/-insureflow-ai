@@ -1487,6 +1487,20 @@ if __name__ == "__main__":
             assert again == llm_extract.cache_key(sources.read_folder(sub), "key-check-model")
             (sub / "application.md").write_text("Named insured: Other LLC\n")
             assert llm_extract.key_for(sources.read_folder(sub)) != run["cache_key"], "a changed file is another key"
+            # B-284 (D-076): through the real llm_extract and a stubbed host, the stored key is the name of the cache file written.
+            llm_extract.llm_extract = real_extract
+            real_post, real_cache, real_key = llm_extract._post, llm_extract.CACHE, os.environ.get("LLM_API_KEY")
+            reply = {"fields": [{"field_id": "named_insured", "value": "Other LLC", "source": "application.md", "quote": "Other LLC", "confidence": 0.95}]}
+            llm_extract._post = lambda *_a, **_k: {"choices": [{"message": {"content": json.dumps(reply)}}], "usage": {"total_tokens": 10}}
+            llm_extract.CACHE, os.environ["LLM_API_KEY"] = tmp / "cache", "stub-not-sent"
+            try:
+                write_drafts(tmp / "inbox", tmp / "pending", tmp / "data" / "conflicts")
+                run = read_saved_run("SUB-403", tmp / "data" / "extractions")
+                written = sorted(p.stem for p in (tmp / "cache" / "extractions").glob("*.json"))
+                assert written == [run["cache_key"]], (written, run["cache_key"])
+            finally:
+                llm_extract._post, llm_extract.CACHE = real_post, real_cache
+                os.environ.pop("LLM_API_KEY", None) if real_key is None else os.environ.__setitem__("LLM_API_KEY", real_key)
         finally:
             llm_extract.llm_extract = real_extract
             for k, v in saved_env.items():

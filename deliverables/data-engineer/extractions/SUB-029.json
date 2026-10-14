@@ -7,11 +7,30 @@
   "needs_human": [],
   "unread": [],
   "sprinklers": "yes",
+  "cooking": {
+    "equipment": {
+      "state": "not_stated",
+      "terms": [],
+      "source": null,
+      "start": null,
+      "end": null,
+      "quote": null
+    },
+    "hood_suppression": {
+      "state": "not_stated",
+      "terms": [],
+      "source": null,
+      "start": null,
+      "end": null,
+      "quote": null
+    }
+  },
   "model_version": "openai/gpt-oss-120b",
   "prompt_version": "82be09bd42f7",
   "ocr_settings": "tesseract psm6; osd turn; deskew +-12; rule lift; x2 lanczos; pdf 200dpi",
   "host": "api.groq.com",
   "temperature": 0,
+  "cache_key": "7acb64932683182a11d00fba1ca3ade2a09c04e449df8afa59a18282a966b6df",
   "fields": [
     {
       "field_id": "named_insured",
@@ -124,5 +143,5 @@
     }
   ],
   "hash_algorithm": "sha256",
-  "saved_hash": "806f5b45dd389c857fbae1fc5599740185be2c7a560f2fa9d6b4fcc1c0e6ace5"
+  "saved_hash": "24da5a507c1a5ebe3f148c18a23c06d7dc14ee44140d1f8b1617eecbc7b4eca7"
 }
