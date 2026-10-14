@@ -1439,3 +1439,18 @@ Blocked: No.
 - Done: T-083 TIV review, APPROVE (no High); B-209, B-210 to backlog.
 - Doing next: nothing on T-083.
 - Blocked by / need from: none.
+
+### 2026-10-14 — @ai-engineer-assistant
+- Done: P-023 (no default host or model) and P-016 `ai/` part built; self-checks pass; 15 of 15 quick cache keys still hit.
+- Doing next: quick set of 15 rerun and field comparison when a model host is set; @model-risk High-only review.
+- Blocked by / need from: @software-engineer for R1 display and the acknowledgment (rows `needs_review`, `reason`, `quote`; report `unread`).
+
+### 2026-10-14 — @software-engineer
+- Done: P-016 `app/` part: R1 display (reason, quote, unread rows) and needs-review acknowledgment at approve, logged.
+- Doing next: nothing; ready for the @model-risk High-only review.
+- Blocked by / need from: none.
+
+### 2026-10-14 — @model-risk
+- Done: independent review of the P-016 build and P-023. APPROVE WITH CHANGES; one High (conflict "all sides agree" path in prepare.py drops needs_review, so a scan value skips S2 and the D-039 acknowledgment). Self-checks, T-080 cases, SUB-078, SUB-067 recomputed with no model call.
+- Doing next: re-check High-1 when fixed. T-027 production veto stands.
+- Blocked by / need from: @user on whether the High-1 fix is inside P-016 or a new P-###.

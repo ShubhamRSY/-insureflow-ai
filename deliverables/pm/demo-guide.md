@@ -4,6 +4,8 @@ Synthetic data only. Nothing on this page binds coverage or declines an applican
 
 Use one submission so the page opens in seconds: Frio Paper Wholesale LLC, SUB-009. It is already packaged and quoted.
 
+Two more saved runs are ready if asked (D-063): SUB-029, development-set file, missing information (effective date, loss-run date), held with a missing-info draft; and SUB-010, TIV of 0, held "TIV missing or unreadable".
+
 ## 0:00 — What you are looking at
 
 Sanger & Altgelt prepares small commercial submissions for a carrier panel. The system reads the file, cites what it found, and recommends a carrier. An underwriter approves, edits, or declines. The system does not bind.

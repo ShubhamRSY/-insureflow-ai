@@ -715,3 +715,14 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: P-022 build and self-checks (@ai-engineer-assistant for `ai/`; B-209 in `workbench.py` main session, budget rule 3); re-save 3 demo submissions; quick set of 15, one run; @compliance review of P-022, High only.
 - Status: ACCEPTED
 - Amends: nothing. An approved proposal is not a production approval; @model-risk can still block production. No send is authorized.
+
+## D-064 — P-023 approved (B-214); build P-016; quick set of 15 rerun; SUB-029 label
+- Date / Owner: 2026-10-14 / @user
+- Context: B-214: with LLM_* unset, extraction fell back to localhost Ollama and made 16 failed calls (D-063 session). P-016 was approved in D-039 (N2 H2 D2 R1 Q1 C3 S2 G2 L1 E1 P1 K1, plus the needs-review acknowledgment at approve) and not built. SUB-029 (development set) is a demo submission (D-063).
+- Options considered: none. The user's words.
+- Decision: In the user's words. "1. B-214 as P-023: if LLM_BASE_URL or LLM_MODEL is unset, extraction refuses with a clear error; no default to localhost. Ollama runs only when LLM_BASE_URL explicitly points to localhost. approve change P-023. Self-check: unset settings → refused, zero calls. 2. Build P-016 (honest citations, scan confidence, unread pages flagged) as approved in D-039, including the needs-review acknowledgment at approve. No prompt change, so re-score on cached results where possible. 3. Rerun the quick set of 15 and compare field by field with today's run, with special attention to SUB-074 and SUB-067. 4. Label SUB-029 in the demo guide as "development-set file". One @model-risk review of P-016, High only."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-14 (D-032).
+- Dissent: none
+- Follow-up tasks: P-023 and the P-016 `ai/` part (@ai-engineer-assistant); the P-016 acknowledgment at approve and the R1 flag display in `underwriting_pipeline/app/` (@software-engineer, D-039); quick set of 15 rerun compared with `regression-quick-15-2026-10-14-P-022.json`; demo-guide label; @model-risk review of P-016, High only.
+- Status: ACCEPTED
+- Amends: nothing. An approved proposal is not a production approval; lifting the T-027 veto is @model-risk's call. No send is authorized.

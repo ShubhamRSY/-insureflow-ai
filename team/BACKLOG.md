@@ -232,3 +232,15 @@ Also open from T-097, already in the register's Section D so not repeated as row
 | B-212 | P-022 | @software-engineer | Low: `workbench.facts()` keeps only the TIV digits for `points.score` (display only): "50,000 sq ft" → 50000, "$1.2M" → 12. | 2026-10-14 |
 | B-213 | P-022 | @ai-engineer-assistant | Low: manifest hashes files apart from the read, so a file changed and changed back during extraction is not detected. | 2026-10-14 |
 | B-214 | D-063 | @ai-engineer-assistant | Low: with LLM_* unset, extraction falls back to localhost Ollama instead of refusing; a dry run logged 16 failed rows (run 20261014T143300-63126). | 2026-10-14 |
+| B-215 | P-016 | @ai-engineer-assistant | High (model-risk, open): a conflict whose sides agree drops each side's needs_review/reason/quote; value stored unflagged, so no acknowledgment at approve. Fix needs @user: P-016 fix or new P-###. | 2026-10-14 |
+| B-216 | P-016 | @ai-engineer-assistant | Medium: name/address check is substring, not word-bounded ("100 Main St" in "2100 Main St"). | 2026-10-14 |
+| B-217 | P-016 | @ai-engineer-assistant | Medium: H2 catches only digit joins; 1990 passes in "PL-1990", "AB1990", "210 555 1990". | 2026-10-14 |
+| B-218 | P-016 | @ai-engineer-assistant | Medium: operations/construction keep a flagged value for any quote found anywhere ("masonry" from "Masonry Mutual"). | 2026-10-14 |
+| B-219 | P-016 | @ai-engineer-assistant | Medium: amounts with cents ("$850,000.00") fail amount_value; right TIVs dropped. | 2026-10-14 |
+| B-220 | P-016 | @software-engineer | Medium: acknowledgment logs field ids only, not value and quote; survives a re-save that changes the value. | 2026-10-14 |
+| B-221 | P-016 | @ai-engineer-assistant | Medium: per-page PDF OCR path untested end to end (no pdftoppm); typed page with a scanned table under 50% reads as typed. | 2026-10-14 |
+| B-222 | P-016 | @ai-engineer-assistant | Medium: confidence-versus-hit table (T-027 (b)) not built in regression_dev.py. | 2026-10-14 |
+| B-223 | P-016 | @ai-engineer-assistant | Low: effective date "20260101" accepted and stored non-ISO. | 2026-10-14 |
+| B-224 | P-016 | @software-engineer | Low: workbench ai_version logs "local-default" when LLM_MODEL is unset. | 2026-10-14 |
+| B-225 | P-016 | @ai-engineer-assistant | Low: the "no known loss" drop returns no reason. | 2026-10-14 |
+| B-226 | P-016 | @ai-engineer-assistant | Low: as-built memo says quick-15 not run; the P-016 score file exists. | 2026-10-14 |

@@ -211,15 +211,27 @@ def record_decision(payload: dict, log_path: Path) -> dict:
         submission = (payload.get("submission") or "").strip()
         # T-071: read the file's status from the last saved run itself. An approve is refused on either
         # refused status, and when nothing is saved or the run cannot be read (current_status raises).
-        status = prepare.current_status(submission)
+        saved = prepare.read_saved_run(submission)
+        status = saved["status"]
         if status in prepare.REFUSED_STATUSES:
             raise ValueError(f"this file's status is {status}; an approve is refused for it")
+        # D-039: every value flagged needs-review is listed at approve; each must be acknowledged, and is logged.
+        listed = needs_review_ids(saved)
+        unacked = [f for f in listed if f not in (payload.get("ack") or [])]
+        if unacked:
+            raise ValueError(f"acknowledge every needs-review value before approving: {', '.join(unacked)}")
+        payload = {**payload, "acknowledged": listed}
     with _LOG_LOCK:
         if action == "approve" and not reason:
             # D-053: an approve after a decline needs a written reason; refused here, not only at the send.
             if any(r.get("action") == "decline" for r in package.decisions(submission, log_path)):
                 raise ValueError("an approve after a decline needs a written reason")
         return _append(payload, action, actor, reason, log_path)
+
+
+def needs_review_ids(report: dict) -> list[str]:
+    """Field ids of the rows the underwriter must acknowledge at approve: needs_review with a value."""
+    return [r["field_id"] for r in report.get("fields") or [] if r.get("needs_review") and r.get("value")]
 
 
 def _append(payload: dict, action: str, actor: str, reason: str, log_path: Path) -> dict:
@@ -239,6 +251,7 @@ def _append(payload: dict, action: str, actor: str, reason: str, log_path: Path)
         "action": action,
         "underwriter_id": actor,
         "reason": reason,
+        **({"acknowledged": payload["acknowledged"]} if payload.get("acknowledged") else {}),
         **({"field_id": payload["field_id"].strip(), "new_value": payload["new_value"].strip()} if (payload.get("field_id") or "").strip() else {}),
         "date": date.today().isoformat(),
         "ai_version": ai_version(),
@@ -268,13 +281,19 @@ def render(queue: list[dict], counts: dict | None = None) -> str:
         refused = report.get("status") in prepare.REFUSED_STATUSES
         field_rows = []
         for row in report["fields"]:
+            note = ""
+            if row.get("needs_review") and row.get("value"):
+                note = "NEEDS REVIEW: " + (row.get("reason") or "flagged")
+            elif row.get("reason") and not row.get("value"):
+                note = row["reason"]
             field_rows.append(
-                "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
+                "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
                     html.escape(row["field_id"]),
                     html.escape(row["value"] or "—"),
                     html.escape(_confidence(row)),
                     html.escape(row.get("source") or "—"),
-                    html.escape(item["snippets"].get(row["field_id"]) or "—"),
+                    html.escape(row.get("quote") or item["snippets"].get(row["field_id"]) or "—"),
+                    html.escape(note or "—"),
                 )
             )
         conflicts = report["conflicts"] or []
@@ -297,6 +316,15 @@ def render(queue: list[dict], counts: dict | None = None) -> str:
         elif report.get("status") == "all_values_rejected":
             reason = report.get("status_reason") or "every value was rejected by the gate"
             extraction = f"REJECTED — {reason}. No field was accepted. This is not a missing-data file. Sends are blocked."
+        unread = report.get("unread") or []
+        unread_html = "<p>Not read: none</p>" if not unread else "<p>Not read:</p><ul>" + "".join(
+            "<li>{}, {}: {}</li>".format(
+                html.escape(u["file"]),
+                "whole file" if u.get("page") is None else f"page {u['page']}",
+                html.escape(u["reason"]),
+            )
+            for u in unread
+        ) + "</ul>"
         lines = [
             f"<h2>{html.escape(item['id'])}</h2>",
             f"<p>Files: {html.escape(', '.join(item['files']) or 'none')}</p>",
@@ -309,11 +337,12 @@ def render(queue: list[dict], counts: dict | None = None) -> str:
             ]
         lines += [
             f"<p>Extraction: {html.escape(extraction)}</p>",
+            unread_html,
             f"<p>Needs human read: {html.escape(', '.join(report.get('needs_human') or []) or 'none')}</p>",
             f"<p>Address check: {html.escape(address_check)}</p>",
             f"<p>Locations: {html.escape('; '.join(('primary ' if row.get('primary') else 'other ') + row['address'] for row in report.get('locations') or []) or 'one premises')}</p>",
             "<h3>Extracted fields</h3>",
-            f"<table><tr><th>Field</th><th>Value</th><th>Confidence</th><th>Source</th><th>Cited text</th></tr>{''.join(field_rows)}</table>",
+            f"<table><tr><th>Field</th><th>Value</th><th>Confidence</th><th>Source</th><th>Cited text</th><th>Review note</th></tr>{''.join(field_rows)}</table>",
             f"<h3>Conflicts</h3>{conflict_html}",
             quotes.html_for(item["id"]),
         ]
@@ -322,9 +351,21 @@ def render(queue: list[dict], counts: dict | None = None) -> str:
             lines += ["<h3>Missing</h3>", f"<p>{html.escape(', '.join(missing) or 'none')}</p>"]
         # T-071: on a refused card there is no approve option. Edit and decline stay so a person decides.
         options = "<option>edit</option><option>decline</option>" if refused else "<option>approve</option><option>edit</option><option>decline</option>"
+        acks = "".join(
+            '<label><input type="checkbox" name="ack" value="{0}"> I checked {0}: {1} (cited: {2})</label><br>'.format(
+                html.escape(row["field_id"]), html.escape(row["value"]), html.escape(row.get("quote") or "—")
+            )
+            for row in report["fields"]
+            if row.get("needs_review") and row.get("value")
+        )
+        if acks and not refused:
+            acks = f"<fieldset><legend>Needs-review values: acknowledge each to approve</legend>{acks}</fieldset>"
+        else:
+            acks = ""
         lines.append(
             f"""<form method="post" action="/decision">
 <input type="hidden" name="submission" value="{html.escape(item['id'])}">
+{acks}
 <label>Underwriter id <input name="underwriter_id" required></label>
 <label>Action
 <select name="action">{options}</select>
@@ -371,7 +412,9 @@ def serve(port: int = 8765, only: str | None = None) -> None:
                 self.send_error(404)
                 return
             size = int(self.headers.get("Content-Length", "0"))
-            payload = {k: v[0] for k, v in parse_qs(self.rfile.read(size).decode()).items()}
+            form = parse_qs(self.rfile.read(size).decode())
+            payload = {k: v[0] for k, v in form.items()}
+            payload["ack"] = form.get("ack", [])
             try:
                 if self.path == "/decision":
                     record_decision(payload, LOG)
@@ -396,7 +439,7 @@ if __name__ == "__main__":
         chosen = next((arg for arg in sys.argv if arg.startswith("SUB-")), None)
         serve(only=chosen)
     else:
-        def save(ext: Path, submission: str, status: str) -> None:
+        def save(ext: Path, submission: str, status: str, fields=None) -> None:
             """A saved run shaped like prepare.write_drafts() writes, no model call. The hash is the reader's."""
             payload = {
                 "submission": submission,
@@ -406,7 +449,7 @@ if __name__ == "__main__":
                 "conflicts": [],
                 "needs_human": [],
                 "sprinklers": None,
-                "fields": [],
+                "fields": fields or [],
             }
             payload["hash_algorithm"] = prepare.HASH_ALGORITHM
             payload["saved_hash"] = prepare.hash_payload(payload)
@@ -457,6 +500,21 @@ if __name__ == "__main__":
                 )
                 logged = json.loads(check.read_text().splitlines()[-1])
 
+                # D-039: needs-review values must each be acknowledged at approve; the log names them.
+                nr = lambda extra: {"field_id": "year_built", "value": "1942", "needs_review": True, "quote": "Built 1942", "reason": "number or date read from a scan", **extra}
+                save(ext, "SUB-020", "complete", [nr({}), {"field_id": "operations", "value": "office", "needs_review": False}, {"field_id": "roof", "value": None, "needs_review": True}])
+                ap = {"underwriter_id": "UW-001", "action": "approve", "submission": "SUB-020", "reason": "checked"}
+                for ack in (None, []):
+                    try:
+                        record_decision({**ap, "ack": ack}, check)
+                        raise SystemExit("an approve without the acknowledgment should fail")
+                    except ValueError:
+                        pass
+                n = len(check.read_text().splitlines())
+                assert record_decision({**ap, "ack": ["year_built"]}, check)["acknowledged"] == ["year_built"]
+                assert len(check.read_text().splitlines()) == n + 1
+                assert "acknowledged" not in logged  # a report with no needs-review value approves as before
+
                 # T-071 (4): an approve is refused on either refused status; edit and decline are still recorded.
                 for sub, status in (("SUB-010", "extraction_failed"), ("SUB-011", "all_values_rejected")):
                     save(ext, sub, status)
@@ -480,7 +538,7 @@ if __name__ == "__main__":
                     {"underwriter_id": "UW-001", "action": "edit", "submission": "SUB-000", "reason": "square feet were 4500"},
                     check,
                 )
-                assert correction_counts(check) == {"approve": 1, "edit": 3, "decline": 2}, correction_counts(check)
+                assert correction_counts(check) == {"approve": 2, "edit": 3, "decline": 2}, correction_counts(check)
 
                 # D-055: seq rises by one per entry; an unlisted id or an AI role cannot log.
                 seqs = [json.loads(line)["seq"] for line in check.read_text().splitlines()]
@@ -562,6 +620,13 @@ if __name__ == "__main__":
         page_ok = render([normal], None)
         assert "<option>approve</option>" in page_ok
         assert "<h3>Missing</h3>" in page_ok and "Carrier match:" in page_ok and "Score:" in page_ok
+        # P-016 R1/D-039: the card shows reason, quote, unread rows, and a checkbox per needs-review value.
+        flagged = card("complete", fields=[{"field_id": "year_built", "value": "1942", "needs_review": True, "quote": "Built 1942", "reason": "number or date read from a scan"}])
+        flagged["report"]["unread"] = [{"file": "a.pdf", "page": 2, "reason": "blank"}, {"file": "b.docx", "page": None, "reason": "file type .docx is not read"}]
+        pf = render([flagged], None)
+        assert "NEEDS REVIEW: number or date read from a scan" in pf and "Built 1942" in pf and 'name="ack" value="year_built"' in pf
+        assert "a.pdf, page 2: blank" in pf and "b.docx, whole file:" in pf
+        assert 'name="ack"' not in page_ok
         # T-087: the card shows the quote status per carrier and SUB-002's open subjectivity.
         sub2 = card("complete", fields=[{"field_id": "operations", "value": "restaurant"}])
         sub2["id"] = "SUB-002"
