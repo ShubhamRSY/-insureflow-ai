@@ -858,3 +858,14 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: main session (budget rule 3; weekly usage limit).
 - Status: ACCEPTED
 - Amends: nothing. Model calls are on the free Groq host only (D-011). No send is authorized.
+
+## D-077 — Fairness swap tests and the B-222 table on all cached files (no model calls)
+- Date / Owner: 2026-10-14 / @user
+- Context: T-067 name-swap tested 7 files (1 scored) and B-222 used 15 files, because only 15 development files were cached. D-076 filled the cache.
+- Options considered: none. The user's words.
+- Decision: In the user's words. "Only this task, all from cache, no model calls: 1. Name-swap test on all cached files: swap owner names and business names across a varied set (different genders and cultural origins), keeping everything else identical. Score, carrier match, status and needs-review flags must not change. Report how many files were tested and how many carry a score. 2. Cuisine-word swap: for every restaurant file, swap cuisine or business-type words (e.g. Taqueria, Panadería, Pho, Diner, Pizzeria) while keeping equipment lines identical. Score and cooking result must not change. 3. Rebuild the B-222 confidence-versus-hit table on all 76 cached files (scans and typed separately), so it is no longer based on only 15. Report any change as a finding with the exact file and field. Commit, no wrap-up."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-14 (D-032).
+- Dissent: none
+- Follow-up tasks: main session (budget rule 3; weekly usage limit). The @responsible-ai fairness check of P-015 (B-270) is still owed and is not replaced by this test.
+- Status: ACCEPTED
+- Amends: nothing. No send is authorized.

@@ -59,15 +59,19 @@ def cached_items(folder: Path):
 
 def collect() -> tuple[dict, list]:
     llm_extract._post = no_call
-    rows, hit_subs = [], []
-    for n in range(17, 77):
+    rows, hit_subs, no_gold, skipped_lines = [], [], [], []
+    for n in range(1, 77):  # D-077: every cached file up to SUB-076; nothing past it (hold-outs)
         sid = f"SUB-{n:03d}"
         got = cached_items(ROOT / "simulation" / "inbox" / sid)
         if not got:
             continue
         docs, parsed = got
+        try:
+            gold = sc.parse_gold((sc.GOLD / f"{sid}.md").read_text())
+        except (OSError, KeyError, ValueError) as exc:
+            no_gold.append(f"{sid} ({type(exc).__name__})")
+            continue
         hit_subs.append(sid)
-        gold = sc.parse_gold((sc.GOLD / f"{sid}.md").read_text())
         by_name = {d["name"]: d["text"] for d in docs}
         ocr_conf = {d["name"]: d["ocr_confidence"] for d in docs if d.get("ocr_confidence") is not None}
         ocr_words = {d["name"]: d["ocr_words"] for d in docs if d.get("ocr_words")}
@@ -80,6 +84,9 @@ def collect() -> tuple[dict, list]:
             if fid not in JUDGE or raw is None or str(raw).strip().lower() in ("", "null"):
                 continue
             gkey, fn = JUDGE[fid]
+            if gkey not in gold:  # D-077: an older gold file (SUB-007..016) has no line for this field; not judged
+                skipped_lines.append(f"{sid}:{fid}")
+                continue
             if fid == "premises_address" and gold["premises"].lower().startswith("both"):
                 continue
             acc = llm_extract.accept_field(dict(it, field_id=fid), by_name, ocr_conf, ocr_words)
@@ -88,7 +95,7 @@ def collect() -> tuple[dict, list]:
                 "kept": "stored" if acc["value"] else "dropped", "bin": bin_of(acc["confidence"]),
                 "correct": bool(fn(gold[gkey], str(raw).strip())),
             })
-    return {"files_hit": hit_subs}, rows
+    return {"files_hit": hit_subs, "cached_without_gold": no_gold, "values_without_gold_line": skipped_lines}, rows
 
 
 def tabulate(rows: list) -> dict:
@@ -102,9 +109,12 @@ def tabulate(rows: list) -> dict:
 
 def markdown(meta: dict, table: dict, rows: list) -> str:
     L = ["# Confidence versus hit (B-222)", "",
-         "- Author: @ai-engineer-assistant. 2026-10-14. D-070 item 3. Synthetic. Not a production approval.",
+         "- Author: @ai-engineer-assistant (rebuild: orchestrator, main session). 2026-10-14. D-070 item 3, D-077 item 3. Synthetic. Not a production approval.",
          "- A report, not a UI change. No model call (`_post` raised), no code, prompt, scorer, or score file changed. Cache read from a scratch copy.",
-         f"- Files: {len(meta['files_hit'])} of 60 development files (SUB-017 to SUB-076) hit the cache: {', '.join(s[4:] for s in meta['files_hit'])}.",
+         "- Rebuilt 2026-10-14 under D-077 on every cached file up to SUB-076. The first version (15 files, 115 values) is in git at b77ffa9.",
+         f"- Files judged: {len(meta['files_hit'])} (cached and with a gold file): {', '.join(s[4:] for s in meta['files_hit'])}.",
+         f"- Cached but not judged (no usable gold file): {len(meta.get('cached_without_gold') or [])}" + (f": {', '.join(meta['cached_without_gold'])}." if meta.get('cached_without_gold') else "."),
+         f"- Values not judged because the gold file has no line for that field: {len(meta.get('values_without_gold_line') or [])}.",
          f"- Values judged: {len(rows)} (stored {sum(r['kept']=='stored' for r in rows)}, dropped {sum(r['kept']=='dropped' for r in rows)}).",
          "- Confidence: the gate's own number: the model's, or for a scan the lower of the model's and the OCR score of the cited words.",
          "- Stored: the gate kept the value. Dropped: the gate removed it (low confidence, quote not found, or value not in the quote); the raw model value is judged anyway. Each side of a model-reported conflict counts as a value.",

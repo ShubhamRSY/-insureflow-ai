@@ -1,22 +1,84 @@
 {
   "files_hit": [
+    "SUB-009",
+    "SUB-010",
+    "SUB-017",
+    "SUB-018",
+    "SUB-019",
+    "SUB-020",
+    "SUB-021",
+    "SUB-022",
+    "SUB-023",
+    "SUB-024",
+    "SUB-025",
+    "SUB-026",
     "SUB-027",
+    "SUB-028",
     "SUB-029",
+    "SUB-030",
+    "SUB-031",
+    "SUB-032",
+    "SUB-033",
+    "SUB-034",
+    "SUB-035",
+    "SUB-036",
+    "SUB-037",
     "SUB-038",
+    "SUB-039",
+    "SUB-040",
+    "SUB-041",
     "SUB-042",
+    "SUB-043",
     "SUB-044",
+    "SUB-045",
+    "SUB-046",
+    "SUB-047",
+    "SUB-048",
+    "SUB-049",
     "SUB-050",
     "SUB-051",
+    "SUB-052",
     "SUB-053",
+    "SUB-054",
+    "SUB-055",
     "SUB-056",
+    "SUB-057",
+    "SUB-058",
+    "SUB-059",
+    "SUB-060",
+    "SUB-061",
+    "SUB-062",
+    "SUB-063",
+    "SUB-064",
+    "SUB-065",
+    "SUB-066",
     "SUB-067",
+    "SUB-068",
+    "SUB-069",
     "SUB-070",
     "SUB-071",
+    "SUB-072",
     "SUB-073",
     "SUB-074",
+    "SUB-075",
     "SUB-076"
   ],
-  "n_values": 115,
+  "cached_without_gold": [
+    "SUB-002 (FileNotFoundError)"
+  ],
+  "values_without_gold_line": [
+    "SUB-009:sales_or_payroll",
+    "SUB-009:tiv_building",
+    "SUB-009:construction",
+    "SUB-009:year_built",
+    "SUB-009:loss_run_valued_through",
+    "SUB-010:sales_or_payroll",
+    "SUB-010:tiv_building",
+    "SUB-010:construction",
+    "SUB-010:year_built",
+    "SUB-010:loss_run_valued_through"
+  ],
+  "n_values": 464,
   "bins": [
     "<0.50",
     "0.50-0.74",
@@ -28,31 +90,39 @@
       "named_insured": {
         "stored": {
           "0.90-1.00": {
-            "correct": 10,
-            "incorrect": 1
+            "correct": 46,
+            "incorrect": 2
           }
         }
       },
       "ALL": {
         "stored": {
           "0.90-1.00": {
-            "correct": 80,
-            "incorrect": 5
+            "correct": 344,
+            "incorrect": 11
+          },
+          "0.75-0.89": {
+            "correct": 1,
+            "incorrect": 0
           }
         }
       },
       "premises_address": {
         "stored": {
           "0.90-1.00": {
-            "correct": 10,
-            "incorrect": 1
+            "correct": 42,
+            "incorrect": 2
           }
         }
       },
       "operations": {
         "stored": {
           "0.90-1.00": {
-            "correct": 10,
+            "correct": 45,
+            "incorrect": 0
+          },
+          "0.75-0.89": {
+            "correct": 1,
             "incorrect": 0
           }
         }
@@ -60,15 +130,15 @@
       "sales_or_payroll": {
         "stored": {
           "0.90-1.00": {
-            "correct": 11,
-            "incorrect": 1
+            "correct": 46,
+            "incorrect": 2
           }
         }
       },
       "tiv_building": {
         "stored": {
           "0.90-1.00": {
-            "correct": 11,
+            "correct": 46,
             "incorrect": 0
           }
         }
@@ -76,24 +146,24 @@
       "construction": {
         "stored": {
           "0.90-1.00": {
-            "correct": 10,
-            "incorrect": 1
+            "correct": 44,
+            "incorrect": 2
           }
         }
       },
       "year_built": {
         "stored": {
           "0.90-1.00": {
-            "correct": 11,
-            "incorrect": 0
+            "correct": 46,
+            "incorrect": 1
           }
         }
       },
       "loss_run_valued_through": {
         "stored": {
           "0.90-1.00": {
-            "correct": 7,
-            "incorrect": 1
+            "correct": 29,
+            "incorrect": 2
           }
         }
       }
@@ -102,70 +172,86 @@
       "named_insured": {
         "stored": {
           "0.90-1.00": {
-            "correct": 2,
+            "correct": 5,
             "incorrect": 0
           },
           "0.50-0.74": {
             "correct": 0,
-            "incorrect": 1
+            "incorrect": 2
           },
           "0.75-0.89": {
-            "correct": 1,
+            "correct": 5,
             "incorrect": 0
+          }
+        },
+        "dropped": {
+          "<0.50": {
+            "correct": 1,
+            "incorrect": 1
           }
         }
       },
       "ALL": {
         "stored": {
           "0.90-1.00": {
-            "correct": 15,
+            "correct": 58,
             "incorrect": 0
           },
           "0.75-0.89": {
-            "correct": 5,
-            "incorrect": 2
+            "correct": 17,
+            "incorrect": 3
           },
           "0.50-0.74": {
-            "correct": 3,
-            "incorrect": 2
+            "correct": 8,
+            "incorrect": 4
           }
         },
         "dropped": {
           "<0.50": {
-            "correct": 0,
-            "incorrect": 3
+            "correct": 6,
+            "incorrect": 12
           }
         }
       },
       "premises_address": {
         "stored": {
           "0.75-0.89": {
-            "correct": 0,
+            "correct": 1,
             "incorrect": 1
           },
           "0.90-1.00": {
-            "correct": 1,
+            "correct": 4,
             "incorrect": 0
+          },
+          "0.50-0.74": {
+            "correct": 0,
+            "incorrect": 1
           }
         },
         "dropped": {
           "<0.50": {
             "correct": 0,
-            "incorrect": 2
+            "incorrect": 7
           }
         }
       },
       "operations": {
         "stored": {
           "0.90-1.00": {
-            "correct": 2,
+            "correct": 10,
             "incorrect": 0
+          },
+          "0.75-0.89": {
+            "correct": 0,
+            "incorrect": 2
           },
           "0.50-0.74": {
             "correct": 1,
             "incorrect": 0
-          },
-          "0.75-0.89": {
+          }
+        },
+        "dropped": {
+          "<0.50": {
             "correct": 0,
             "incorrect": 1
           }
@@ -174,44 +260,64 @@
       "sales_or_payroll": {
         "stored": {
           "0.90-1.00": {
-            "correct": 2,
+            "correct": 9,
             "incorrect": 0
           },
           "0.75-0.89": {
+            "correct": 1,
+            "incorrect": 0
+          },
+          "0.50-0.74": {
             "correct": 1,
             "incorrect": 0
           }
         },
         "dropped": {
           "<0.50": {
-            "correct": 0,
-            "incorrect": 1
+            "correct": 1,
+            "incorrect": 2
           }
         }
       },
       "tiv_building": {
         "stored": {
           "0.90-1.00": {
-            "correct": 2,
+            "correct": 9,
             "incorrect": 0
           },
           "0.75-0.89": {
-            "correct": 1,
+            "correct": 2,
             "incorrect": 0
           },
           "0.50-0.74": {
             "correct": 0,
             "incorrect": 1
           }
+        },
+        "dropped": {
+          "<0.50": {
+            "correct": 2,
+            "incorrect": 0
+          }
         }
       },
       "construction": {
         "stored": {
           "0.90-1.00": {
-            "correct": 2,
+            "correct": 7,
             "incorrect": 0
           },
           "0.50-0.74": {
+            "correct": 3,
+            "incorrect": 0
+          },
+          "0.75-0.89": {
+            "correct": 2,
+            "incorrect": 0
+          }
+        },
+        "dropped": {
+          "<0.50": {
             "correct": 1,
             "incorrect": 0
           }
@@ -219,29 +325,39 @@
       },
       "year_built": {
         "stored": {
-          "0.75-0.89": {
-            "correct": 1,
+          "0.90-1.00": {
+            "correct": 9,
             "incorrect": 0
           },
-          "0.90-1.00": {
-            "correct": 3,
+          "0.75-0.89": {
+            "correct": 4,
+            "incorrect": 0
+          },
+          "0.50-0.74": {
+            "correct": 1,
             "incorrect": 0
           }
         }
       },
       "loss_run_valued_through": {
         "stored": {
-          "0.50-0.74": {
-            "correct": 1,
+          "0.75-0.89": {
+            "correct": 2,
             "incorrect": 0
           },
-          "0.75-0.89": {
-            "correct": 1,
+          "0.50-0.74": {
+            "correct": 2,
             "incorrect": 0
           },
           "0.90-1.00": {
-            "correct": 1,
+            "correct": 5,
             "incorrect": 0
+          }
+        },
+        "dropped": {
+          "<0.50": {
+            "correct": 1,
+            "incorrect": 1
           }
         }
       }
