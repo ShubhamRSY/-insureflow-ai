@@ -1602,3 +1602,13 @@ Blocked: No.
 - Done: P-028 (B-269) review — APPROVE, no High findings. Four self-checks pass; independent re-run confirms the stored key equals the real llm_extract cache key.
 - Next: Medium (self-check tied to the real cache file) and two Lows to backlog.
 - Blocked: nothing.
+
+### 2026-10-14 — @responsible-ai
+- Done: B-270 fairness review of P-015, P-031, B-286 fix (D-078 item 3). Verdict APPROVE WITH CHANGES; T-017 fairness veto lifted on my side (all four resolve conditions met; self-checks re-run, no model calls, no files written).
+- Open: High-1 — PROHIBITED "bar" lets cuisine decide a non-overridable no_match ("bar-b-q restaurant", "sushi/taco/oyster bar restaurant" vs "bbq/pho restaurant" → carrier_b); B-289 should be High. Mediums: Spanish negation gaps (ningún, ni, nada, tampoco), no override control on the card.
+- T-082 veto basis unchanged. Blocked: none.
+
+### 2026-10-14 — @senior-underwriter
+- Done: D-065 item 3 UI check of workbench D-070 to D-078. APPROVE WITH CHANGES. D-065 item 2 (plain reasons) holds.
+- Open: High-1 no override control for no_match though What's-new says there is one; High-2 failed-file card says "no cooking equipment stated" when nothing was read. Mediums in DISCUSSION.
+- Blockers: none.

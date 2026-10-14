@@ -132,3 +132,10 @@
 - SUB-075 (business): name only in a scan or PDF
 - SUB-075 (person): no person name in md/csv text
 - SUB-076 (person): no person name in md/csv text
+
+## Known gap: name-swap coverage (added 2026-10-14, D-078)
+
+- The synthetic files name no owner. The only person names are email senders on "From:" lines, in 2 of 63 cached files, so the person-name swap covers almost nothing.
+- In 27 of 63 cached files the business name appears only in a scan or PDF and cannot be swapped without a model call.
+- So "no change" from the name swaps is evidence for the rules after the model on 36 files (business names) and 2 files (persons), not for the whole set, and says nothing about how the model itself reads a name.
+- Backlog B-288: add owner-name fields (and owner names in typed text) to future synthetic files so a person-name swap can be run on them.

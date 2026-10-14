@@ -869,3 +869,14 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: main session (budget rule 3; weekly usage limit). The @responsible-ai fairness check of P-015 (B-270) is still owed and is not replaced by this test.
 - Status: ACCEPTED
 - Amends: nothing. No send is authorized.
+
+## D-078 — B-286: carrier class from generic restaurant evidence only, never cuisine or ethnic words (amends D-060)
+- Date / Owner: 2026-10-14 / @user
+- Context: D-077 cuisine swap: SUB-002 routed carrier_b for "Taqueria/Panadería/Diner/Pizzeria/Kosher Deli" but no_match for "Pho House/Soul Food Kitchen/Curry House" (B-286). Also the name-swap coverage gap (B-287) and the owed @responsible-ai (B-270) and @senior-underwriter checks.
+- Options considered: none. The user's words.
+- Decision: In the user's words. "1. B-286 decision: carrier class is decided from generic restaurant evidence only (restaurant, food service, kitchen, eatery, café, catering, cooking equipment present, or a class code), never from cuisine or ethnic words. Remove all cuisine words from the class lists. Record as a decision amending D-060, build it, and rerun the cuisine swap: every cuisine must give the same carrier result. Update the workbench if the display changes, one sandbox screenshot. 2. Record the name-swap coverage limit in the fairness report as a known gap, with a backlog item to add owner-name fields to future synthetic files. 3. @responsible-ai fairness review of P-015, P-031 and the B-286 fix, using fairness-swaps-D-077.md, High only. State whether the T-017 fairness veto is lifted. 4. @senior-underwriter UI check of today's workbench changes, High only. Then /wrap-up and push ai-team."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-14 (D-032).
+- Dissent: none
+- Follow-up tasks: build in `workbench.py` (main session, budget rule 3); cuisine swap rerun; fairness report gap + backlog; @responsible-ai review; @senior-underwriter UI check; wrap-up and push. Note: the saved runs carry no class-code field, so "a class code" has nothing to read yet; Spanish translations of the generic words stay (D-060).
+- Status: ACCEPTED
+- Amends: D-060 (Carrier B class list: cuisine and food-type words removed; a file named only by a cuisine word is no_match, overridable with a reason under D-057). Not a production approval. No send is authorized.

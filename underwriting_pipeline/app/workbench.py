@@ -43,6 +43,7 @@ MESSAGES: dict[str, tuple[bool, str]] = {}  # submission -> (ok, plain-words res
 WHATS_NEW = (
     ("2026-10-14", "P-015/B-264/B-265/B-266", "D-070", "The score shows \"Not scored — reason\" when a file is failed, incomplete or empty, and the cooking and hood lines; each code has a mark-wrong control (logged; the number does not change); the footer names the model and prompt version of the saved run; Suggested market shows only on senior referrals; a stale card lists the changed fields, old to new."),
     ("2026-10-14", "P-027 (B-268)", "D-071", "The cooking line names what was stated as not present (\"no fryer; gas grill\" counts the grill, not the fryer) and shows the quote, including on \"stated none\". Superseded by P-029, then P-030."),
+    ("2026-10-14", "B-286", "D-078", "The carrier class for a restaurant comes only from generic evidence (restaurant, food service, kitchen, eatery, café, catering, or stated cooking equipment), never from a cuisine or ethnic word. A file named only by a cuisine word shows no_match with that reason and can be overridden with a reason."),
     ("2026-10-14", "P-028 (B-269)", "D-075", "Each saved run stores its extraction cache key (files, prompt version, OCR settings, model, host, temperature); the footer shows it in short form, and decision rows save it."),
     ("2026-10-14", "P-031 (B-279, B-280)", "D-074", "Cooking has two rules: a line with no negation word counts the hazards it names; a line with any negation word (no, none, not, without, never, don't, n/a, sin, nunca, ninguno, ninguna) is \"Cooking: needs review\" and the score stays provisional until you record present or none. Only the labelled line itself is read."),
     ("2026-10-14", "P-030 (B-276), B-278", "D-073", "Cooking: a negation directly before a hazard (\"no gas grill\") means none; any other line with a negation word (\"fryer, none\", \"none\", \"N/A\") is \"needs review\". While it is, the score reads \"Provisional — cooking not scored\"; an underwriter records present or none with a reason, logged with the run hash, and only then do points apply. The negation rule was simplified by P-031."),
@@ -84,9 +85,10 @@ PROHIBITED = ("bar", "bars", "nightclub", "nightclubs", "tavern", "taverns", "ca
 CLASSES = {
     "a": ("office", "offices", "oficina", "oficinas", "retail", "retail store", "dry retail", "storefront", "comercio minorista",
           "tienda minorista", "wholesale", "light wholesale", "mayoreo", "mayorista"),
-    "b": ("restaurant", "restaurants", "restaurante", "restaurantes", "cafe", "café", "cafeteria", "cafetería", "coffee shop", "diner", "deli",
-          "bakery", "panaderia", "panadería", "pizzeria", "pizzería", "pizza", "steakhouse", "barbecue", "bbq", "taqueria", "taquería",
-          "tacos", "taco"),
+    # D-078 (B-286): generic restaurant evidence only, never a cuisine or ethnic word; Spanish only as translations (D-060).
+    "b": ("restaurant", "restaurants", "restaurante", "restaurantes", "food service", "foodservice", "servicio de alimentos",
+          "kitchen", "kitchens", "cocina", "eatery", "eateries", "comedor", "cafe", "café", "cafeteria", "cafetería",
+          "catering", "banquetes"),
     "contractor": ("contractor", "contractors", "contratista", "roofing", "roofer", "techado", "techador", "handyman", "painter", "painting",
                    "pintor", "pintura", "carpenter", "carpentry", "carpintero", "carpintería", "flooring", "drywall", "plumbing", "electrician"),
     "habitational": ("habitational", "habitacional", "apartment", "apartments", "apartamento", "apartamentos", "flats", "multifamily",
@@ -128,8 +130,10 @@ def match(report: dict) -> dict:
     if tiv is None or tiv <= 0:
         return out("hold", "TIV missing or unreadable")  # D-061, B-203 (D-062): never read as 0 or negative
     hit = [k for k, words in CLASSES.items() if _has(ops, words)]
+    if "b" not in hit and ((report.get("cooking") or {}).get("equipment") or {}).get("state") == "yes":
+        hit.append("b")  # D-078: stated cooking equipment is generic restaurant evidence
     if not hit:
-        return out("no_match", "readable class on no carrier list", overridable=True)
+        return out("no_match", "readable class on no carrier list; a restaurant needs generic evidence (restaurant, food service, kitchen, eatery, café, catering or stated cooking equipment), never a cuisine word (D-078)", overridable=True)
     if len(hit) > 1:
         return out("senior_referral", "class matches more than one carrier: " + ", ".join(hit))
     kind = hit[0]
@@ -1094,7 +1098,13 @@ if __name__ == "__main__":
                     "50,000 sq ft", "50000 SF", "12,000 square feet", "8,000 sq. ft.", "9000sqft", "1 square foot"):  # B-209
             m = match(r("office", bad))
             assert m == {"route": "hold", "note": "TIV missing or unreadable", "suggested": "", "overridable": False}, (bad, m)
-        assert route(r("taqueria")) == "carrier_b" and route(r("oficina")) == "carrier_a" and route(r("")) == "hold"
+        assert route(r("oficina")) == "carrier_a" and route(r("")) == "hold"
+        # D-078 (B-286): cuisine and ethnic words never decide the class. Alone they give the same no_match; with generic evidence the same carrier_b.
+        cuisines = ("taqueria", "panadería", "pho house", "diner", "pizzeria", "soul food", "curry house", "kosher deli", "bbq")  # "sushi bar" hits PROHIBITED "bar" (B-289)
+        assert {route(r(c)) for c in cuisines} == {"no_match"} and all(match(r(c))["overridable"] for c in cuisines)
+        assert {route(r(f"{c} restaurant")) for c in cuisines} == {"carrier_b"}
+        assert {route(r(f"{c}, food service")) for c in cuisines} == {"carrier_b"} and route(r("catering kitchen")) == "carrier_b"
+        assert route(r("pho house", cooking={"equipment": {"state": "yes"}, "hood_suppression": {"state": "not_stated"}})) == "carrier_b", "stated cooking equipment is generic evidence"
         assert route(r("sprinklered apartments", "$4,000,000")) == "carrier_c"
         assert match(r("sprinklered apartments", "$6,000,000"))["note"] == OUT_TIV
         assert route(r("office")) == "carrier_a" and route(r("barley mill")) == "no_match"

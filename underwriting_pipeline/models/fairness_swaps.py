@@ -35,9 +35,11 @@ BUSINESS = ["Nguyen Family Holdings", "Okafor and Daughters", "Al-Rashid Trading
 # Person names (the files name no owner; the only person names are email senders on "From:" lines): women and men, many origins.
 PERSONS = ["Maria Lopez", "Jamal Washington", "Mei Chen", "Olumide Adeyemi", "Priya Patel", "John Smith", "Fatima Al-Sayed",
            "Dmitri Ivanov", "Aiyana Redcloud", "Sung-min Park"]
-CUISINE = re.compile(r"(?<!\w)(taquer[ií]a|panader[ií]a|pho|diner|pizzer[ií]a|restaurante?|caf[eé]|bakery|bistro|cantina|deli|"
-                     r"tacos?|bbq|barbecue|steakhouse|comedor|cocina|sushi|noodle house)(?!\w)", re.I)
-CUISINE_NEW = ["Taqueria", "Panadería", "Pho House", "Diner", "Pizzeria", "Soul Food Kitchen", "Curry House", "Kosher Deli"]
+# D-078: cuisine and food-type words only. Generic restaurant evidence (restaurant, food service, kitchen, eatery, café, catering,
+# cocina, comedor) is never swapped, and no replacement contains it.
+CUISINE = re.compile(r"(?<!\w)(taquer[ií]a|panader[ií]a|pho|diner|pizzer[ií]a|pizza|bakery|bistro|deli|tacos?|bbq|barbecue|"
+                     r"steakhouse|sushi|noodle house)(?!\w)", re.I)
+CUISINE_NEW = ["Taqueria", "Panadería", "Pho House", "Diner", "Pizzeria", "Soul Food", "Curry House", "Kosher Deli"]
 EQUIPMENT_LINE = re.compile(r"^\s*(cooking equipment|hood and fire suppression|hood and suppression|hood|suppression)\s*:", re.I)
 FROM_NAME = re.compile(r"^From:\s*([^<\n]+?)\s*<", re.M)
 SCORE_KEYS = ("status", "scored", "points", "codes", "lines", "needs_review")
@@ -144,7 +146,7 @@ def run() -> dict:
                 if dst is None:
                     continue
                 after = observe(dst)
-            keys = SCORE_KEYS + ("route",) if kind != "cuisine" else ("scored", "points", "codes", "cooking", "status", "needs_review", "route")
+            keys = SCORE_KEYS + ("route",) if kind != "cuisine" else ("scored", "points", "codes", "cooking", "status", "route", "needs_review")
             diffs = [k for k in keys if base[k] != after[k]]
             res[kind].append(folder.name)
             if diffs:
@@ -156,15 +158,15 @@ def run() -> dict:
 
 def markdown(res: dict) -> str:
     f = res["findings"]
-    must = [x for x in f if set(x["diffs"]) - {"route"} or x["kind"] != "cuisine"]
-    route_only = [x for x in f if x["kind"] == "cuisine" and set(x["diffs"]) == {"route"}]
-    L = ["# Name and cuisine swap tests (D-077)", "",
+    must = [x for x in f if set(x["diffs"]) - {"needs_review"} or x["kind"] != "cuisine"]  # D-078: a route change now breaks the rule
+    route_only = [x for x in f if x["kind"] == "cuisine" and set(x["diffs"]) == {"needs_review"}]
+    L = ["# Name and cuisine swap tests (D-077, rerun under D-078)", "",
          "- Orchestrator, main session, 2026-10-14. D-077 items 1 and 2. Synthetic. Not a production approval. Does not replace the @responsible-ai check of P-015 (B-270).",
          "- No model call (`llm_extract._post` raised); a scratch copy of the cache; no real workbench, log or outbox file written; no rule, prompt, scorer or score file changed.",
          f"- Cached files tested (SUB-001 to SUB-076 with a cached reply): {len(res['files'])}. Carry a score (a number, not Not scored or Provisional): {len(res['scored'])} ({', '.join(s[4:] for s in res['scored'])}).",
          f"- Business-name swap: {len(res['business'])} files × {len(BUSINESS)} names. Person-name swap: {len(res['person'])} files × {len(PERSONS)} names. Cuisine swap: {len(res['cuisine'])} restaurant files × {len(CUISINE_NEW)} words.",
-         "- Compared for name swaps: status, scored, points, codes, the three display lines, needs-review ids, carrier route. For cuisine swaps: scored, points, codes, cooking line, status, needs-review ids; the carrier route is reported apart.",
-         f"- **Findings that break the rule (score, cooking, status, needs-review, or any change from a name swap): {len(must)}.** Cuisine swaps that changed only the carrier route: {len(route_only)}.", "",
+         "- Compared for name swaps: status, scored, points, codes, the three display lines, needs-review ids, carrier route. For cuisine swaps (D-078): scored, points, codes, cooking line, status and carrier route must not change; a needs-review change is reported apart (see the D-077 note on the model-added-word artifact).",
+         f"- **Findings that break the rule (any change from a name swap; score, cooking, status or carrier route from a cuisine swap): {len(must)}.** Cuisine swaps that changed only a needs-review flag: {len(route_only)}.", "",
          "## What this tests and what it does not", "",
          "- Tested: every rule after the model, with the cached model reply edited the same way as the text. Not tested: whether the model itself would read a different name or cuisine differently; that needs model calls.",
          "- The files name no owner. The only person names are email senders on \"From:\" lines (producers), so the person swap uses those.",
@@ -184,6 +186,7 @@ def markdown(res: dict) -> str:
 if __name__ == "__main__":
     if sys.argv[1:] == ["--check"]:
         assert cuisine_to("Diner")("Taqueria La Paz\nCooking equipment: taco fryer\n") == "Diner La Paz\nCooking equipment: taco fryer\n"
+        assert cuisine_to("Diner")("tacos restaurant, cocina") == "Diner restaurant, cocina", "generic evidence is never swapped (D-078)"
         assert CUISINE.search("delivery") is None and CUISINE.search("cafeteria") is None and CUISINE.search("Panadería Sol")
         assert FROM_NAME.findall("From: Luis Ortega <l@x.example>\n") == ["Luis Ortega"]
         assert edit_items({"fields": [{"source": "a.md", "quote": "Taco", "value": "Taco"}, {"source": "s.png", "quote": "Taco", "value": "Taco"}]},
