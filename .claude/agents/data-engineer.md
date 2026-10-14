@@ -1,5 +1,6 @@
 ---
 name: data-engineer
+model: sonnet
 description: "Role — Data Engineer (@data-engineer). Use for any turn, task, or review that belongs to @data-engineer on the AI underwriting team."
 ---
 

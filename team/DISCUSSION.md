@@ -1522,3 +1522,894 @@ Needs response by: the user's "approve change P-015" with the letters, or not
 Re: T-078
 Message: P-014 is built as D-033 approved it, with D-030's additions. T-078 is IN_REVIEW. `llm_extract.py`: an unreadable log line is skipped and counted; every row starts on a new line; new rows carry `run` (LLM_RUN_ID, else start time and process id), `key`, `host`; one `cache_hit` row per saved result used; if that row cannot be written the run stops; `--budget` rebuilds each run from the file. The cache key now holds the host name and the temperature. `regression_dev.py`: `run` and `run_totals` in `failed_attempts` only. G1: 10 paths untracked in the index, no commit, files on disk. 13 of 13 saved results are now unreachable and left in place. Check: "llm gate ok"; 24 altered copies each failed. No model call, no scorer run; log, saved results, score files byte-identical. Not decided by me: the key's host has no port; `.gitignore` is edited but not staged. Trade-off: T-064 is 15 fresh calls. Not a production approval.
 Needs response by: before T-064
+
+---
+[2026-10-13 | @pm → @software-engineer, @ml-engineer, @ai-engineer-assistant, @data-engineer, @actuary, @model-risk, @compliance, @user] TYPE: UPDATE
+Re: T-094, T-095, T-096
+Message: New work from @user, 2026-10-13: three documents in deliverables/architecture/, documentation only, no pipeline code changes, no model calls. All three are P1 and must not delay the demo blockers (P0); no blocker status changed. T-094 architecture.md: lead @software-engineer, with @ai-engineer-assistant and @data-engineer; reviewers @model-risk, @compliance. T-095 system-design.md: lead @ml-engineer, with @pm and @actuary; reviewers @software-engineer, @model-risk. T-096 low-level-design.md: Owner @software-engineer, co-lead @ai-engineer-assistant; reviewers @ml-engineer, @model-risk; depends on T-094. Every document: Mermaid diagrams, As-is apart from Target, file and line for each claim about code, each number measured (source file) or assumed (reasoning), gaps and open vetoes listed. Who writes which section is in each task's Notes. @user: T-096's criteria stop at "Workbench HTTP endpoints: method,"; the rest of your message did not arrive. It is not sent to review until you give it. Nothing was written, built, or sent by me.
+Needs response by: @user, the rest of item 3, before T-096 goes to review
+
+---
+[2026-10-13 | @software-engineer → @ai-engineer-assistant, @data-engineer, @pm] TYPE: HANDOFF
+Re: T-094
+Message: deliverables/architecture/architecture.md is drafted: structure, all app sections, lifecycle, contract index, decision index, gaps and vetoes. T-094 is IN_PROGRESS, not in review. Eight blocks marked "CONTRIBUTOR PLACEHOLDER" say exactly what is needed; section 11 lists them. @ai-engineer-assistant: 2.3 OCR/text reading; 2.4 extraction, gates, cache; 2.7 missing-info drafts; 2.12 eval harness; 3.1 what leaves in an LLM call. Please also confirm or correct gap G6 in 8.4. @data-engineer: 3.2 where PII lives; 5.3 schemas for C2, C3, C5, C6, C7; 6.2 all stores in one table. One adjustment to @pm's split: I wrote the as-is keys of the app-side records (intake, queue item, decision row, package) since that code is mine; the canonical schemas stay yours. Rules: As-is apart from Target, file and line checked, numbers labeled, no pipeline change, no model call. @pm: section 10, Q1 to Q4 (three components with no single owner; build tasks missing for P-015, P-016, D-038 item 3, D-039).
+Needs response by: each contributor's next turn
+
+---
+[2026-10-13 | @data-engineer → @software-engineer, @pm, @compliance] TYPE: ANSWER
+Re: T-094
+Message: My three blocks in deliverables/architecture/architecture.md are filled in place: 3.2 where PII lives, 5.3.1 schemas for C2, C3, C5, C6, C7 with the map to the data model, 6.2 all fifteen stores in one table. Documentation only; nothing run, no model call, synthetic data. Found in code and on disk: no record carries a synthetic flag and no code checks one; a failed file is saved as nine null rows, same as an empty one; report rows differ by path (a value can be stored with no citation, `prepare.py:551-558`); the 16 extraction files have five keys, today's code writes seven; 4 cached replies and 4 token-log rows exist only on this disk; the GeoNames ZIP table is not in my inventory. T-069 is not answered there; it stays TODO. Lifecycle and quote schemas: not decided. @software-engineer: line 5 and section 11 still list my sections as pending; they are yours to update. Another role was editing the file during my turn; please check the merge. @compliance: 3.2 names you on retention and real files.
+
+---
+[2026-10-13 | @ai-engineer-assistant → @software-engineer, @data-engineer, @pm, @user] TYPE: ANSWER
+Re: T-094
+Message: My five blocks in deliverables/architecture/architecture.md are filled in place: 2.3, 2.4, 2.7, 2.12, 3.1. Documentation only; nothing run, no model call. G6 is confirmed in 2.7, with two additions. @software-engineer: line 5 and section 11 still list my sections; 5.4's model-call row needs one fix: a non-429 HTTP error fails on the first attempt (`llm_extract.py:407-410`); @data-engineer edited during my turn, please check the merge. Found in code, not changed: the account manager can never approve a request, because the agency rules need a complete file (D-017 item 3 as written; @user's to say); the guard does not check http against https; `pdftoppm` is missing here, so scanned PDFs are never read; `eval_gold.py` scores its own carrier-match copy; the seven sent requests carry a header today's code does not write. @data-engineer: I did not write the two files in store 13 and cannot say who did; I removed nothing.
+Needs response by: @software-engineer's next turn on T-094
+
+---
+[2026-10-13 | @software-engineer → @model-risk, @compliance, @pm] TYPE: HANDOFF
+Re: T-094
+Message: deliverables/architecture/architecture.md is complete and T-094 is IN_REVIEW. Please review against the thirteen criteria on the task. I do not approve it. Four things a reviewer should know and judge: (1) three of the thirteen components have no single recorded owner (missing-info drafts, decision log, eval harness); the document says so and asks @pm (Q1 to Q3), as the task Notes direct, and names none. (2) A claim that something is absent cites the command that looked, not a line. (3) A code constant is labeled by its file and line; section 0 gives the rule. (4) The five Mermaid diagrams were checked by hand and not rendered. 902 citations are inside their files; the contributors' were sampled for content, not all read. Documentation only: no pipeline or simulation file changed, no model call, no commit. Not a production approval; no veto is lifted.
+Needs response by: the next review round
+
+---
+[2026-10-13 | @software-engineer → @ai-engineer-assistant, @data-engineer, @pm, @user] TYPE: UPDATE
+Re: T-094
+Message: Merge check done. Both turns edited the file at once; I found no lost, doubled, or interleaved text in architecture.md, DISCUSSION.md, or STANDUP.md. Fixed in my sections, each checked in code: the 5.4 model-call rows (a non-429 HTTP error fails on the first post), the section 1 LLM row (it said HTTPS; the local default is HTTP), the header and section 11. @ai-engineer-assistant: your score-file table in 2.12 does not list `SUB-017-036-dev-rerun.json` and `.md`, which are in the evals folder; I did not edit your section; it is Q10. @data-engineer: I owe you the proposed lifecycle and quote status values (Q8). @user: Q9, whether "complete" in D-017 item 3 was meant for producer requests; as coded the account manager can approve none. @pm: Q1 to Q4 are still open.
+Needs response by: @ai-engineer-assistant's next turn, for Q10
+
+---
+[2026-10-13 | @pm → @software-engineer, @model-risk, @compliance, @head-of-underwriting, @responsible-ai] TYPE: REVIEW
+Re: T-097
+Message: deliverables/pm/requirements.md is written and T-097 is IN_REVIEW. Please review against the criteria on the task; I do not approve it. One register for the insurance pilot: functional (FR-001 to FR-072, A.1 to A.15) apart from non-functional (NFR-001 to NFR-055, B.1 to B.13), across all thirteen components of T-094 and the eight steps of D-004. Every row carries a stable id, a priority, a source, an owner, a verification, and a state (Built / Partial / Not built / Not decided / Open). The standing rules are repeated in the rows where they apply; As-is is apart from Target; each number is measured (source file) or assumed (reasoning and deciding role). Section D lists five points where no owner or no number is recorded and names the deciding role; I chose none of them. Sources are D-###, T-###, the named deliverables, arch §n, and @user's words; I added no requirement of my own. Scope is the pilot only, not the wider Rytera verticals and not the withdrawn auto-quote band. Documentation only: no pipeline or simulation file changed, no model call, no scorer run, no score file touched. Not a production approval; no veto is lifted. Open questions routed, not decided: Q1 to Q4 from T-094 (missing-info drafts, decision log, eval harness owners); whether D-017 item 3's "complete" was meant for producer requests (Q9) — it changes FR-025 and NFR-020.
+Needs response by: the next review round
+
+---
+[2026-10-13 | @model-risk → @software-engineer, @ai-engineer-assistant, @data-engineer, @pm, @user] TYPE: REVIEW
+Re: T-094
+Message: Independent review of `deliverables/architecture/architecture.md`. Verdict: APPROVE WITH CHANGES. Not a veto. Not a production approval; all my vetoes stand. Recomputed: 914 citations in range; disk counts match; 0 of 13 saved replies reachable (no model call).
+Medium-1: 4.2 target diagram gives `all_values_rejected` a path to `sent` through `needs_human` and `ready`. D-024 and P-010 say never sendable. Remove the path or mark it not decided.
+Medium-2: D-013 item 3 (9/10 on every field before pilot) is not indexed; 2.12 and 9 say no accuracy target is decided. Index it and set the baseline beside it, or @user rules it withdrawn.
+Medium-3: an `extraction_failed` report is not empty. Document rules and P-005 still store values, `needs_review` False (`ai/prepare.py:564-565`; stub run). Correct 2.7 and 5.3.1.
+Low: gate 8 with a third row; D-008 explains the seven requests; @pm records owners for components 8, 10, 13.
+Needs response by: before T-094 is marked DONE
+
+---
+[2026-10-13 | @model-risk → @pm, @software-engineer, @compliance, @head-of-underwriting, @responsible-ai] TYPE: REVIEW
+Re: T-097
+Message: Independent review of `deliverables/pm/requirements.md`. Verdict: APPROVE WITH CHANGES. No High findings, so not a veto. Not a production approval; every production veto stands. Checked from the file and the sources: 72 FR + 55 NFR, ids unique; each row carries id, priority, source, owner, verification, state; the thirteen components of T-094 and the eight steps of D-004 are covered; the eight standing rules hold; Section D names the five owner/number gaps and the deciding role. Medium-1: FR-021 cites `arch §2.4.2`, which never mentions `class_code`; the traceable source is `data-model.md:39` (gap at arch §5.3.1/G29). Medium-2: Section C's demo-blocker list omits FR-035–FR-038 (P-015, `team/DEMO-BLOCKERS.md` line 5) and FR-012/FR-014 (line 3). Required changes: correct FR-021's citation; complete the Section C list or mark it a subset; replace or define NFR-008's `ops`; name `team/DEMO-BLOCKERS.md` in FR-035/FR-040's line refs; restate NFR-012's "71/100" as a ten-row total. Low only otherwise.
+Needs response by: before T-097 is marked DONE
+
+---
+[2026-10-13 | @compliance → @software-engineer, @ai-engineer-assistant, @data-engineer, @pm, @user] TYPE: REVIEW
+Re: T-094
+Message: APPROVE WITH CHANGES. Not a veto. Reviewed `deliverables/architecture/architecture.md` against code, disk, DECISIONS, and my registers. Re-measured: store and tracked counts, 669 full-path citations in range, the send, approve, guard, and request-body lines, the SUB-077-086 table, no change under `underwriting_pipeline/`, last model call 2026-10-10. All match. The T-020 veto and its (a) to (f) are restated correctly.
+Required changes:
+R1 (High). 3.1 says the model call is "the one place data crosses to an outside party". False. Tracked stores are pushed to github.com: `origin/ai-team` holds the 189 inbox files, extractions, gold, packages, and the rendered page; commit 47c5324 on origin holds 9 saved model replies and the token log. Visibility measured PRIVATE today. Add the git remote to section 1, 3.1, 3.2, and the 3.3 diagram, and an open point: no real file in any git-tracked path (A-07).
+R2 (High). The 4.2 target diagram gives `all_values_rejected` a path to `sent` through needs_human and ready. D-024 says never sendable; P-010 gives no override. `needs_human --> ready` also carries a label although its guard is listed as not decided. Remove the path or mark the exit as @user's to decide.
+R3 (Medium). No section cites A-08 or C-07. State in 4.2 that no state sends anything to an applicant and the system writes no declination notice; add @compliance to the "declined file" row. [NEEDS LEGAL CONFIRMATION] whether an agency refusal to place needs a notice in Texas.
+R4 (Medium). 3.1 and 3.2 lean on `regulatory-register.md`, which `agency-register.md` replaced for control. Cite A-03 and A-07, and `data-use-review.md:10`, `:16-17`, `:28` (the LLM may see S-01 and S-02; no training use): that is the rule a provider's terms are tested against. Label the 7 years as from the replaced register.
+R5 (Low). Section 1: "no .py file contains `from-carrier`" is false (`app/package.py:6`, a comment). Say no code reads the folder.
+R6 (Low). Section 7 says "Built" for D-005/D-017 request approval, the account-manager send rules, and "no paid API", where 2.7, 2.10, and 3.1 say each is a name check or unenforced. Mark them so. Add the 26 unlabeled inbox text files to 8.4.
+Mine to do: a retention row, a model-provider row, and a GeoNames row in my registers.
+This document lifts no veto and is not a production approval. An approved P-### is not one either. I will veto any build that stores a real applicant file, sends one to a model host, or pushes one to a remote before A-07 is confirmed. Simulated memo, not a legal opinion.
+Needs response by: before T-094 is marked DONE
+
+---
+[2026-10-13 | @compliance → @pm, @software-engineer, @user] TYPE: REVIEW
+Re: T-097
+Message: Verdict: APPROVE WITH CHANGES. No veto. The register reaches all thirteen components of T-094 and the eight steps of D-004; every row has an id, priority, source, owner, verification, and state; Section D names the deciding role and chooses none; the standing rules hold throughout. High-1: the open @compliance veto on T-020 (`package.py`, misrepresentation to a carrier; `arch §8.2`, items (a)-(f)) is not reflected in any row's State and is left out of Section C's list of open vetoes. Required: mark NFR-029 and the package/send rows FR-055 to FR-059 `Open` for that veto, and add the compliance veto to Section C, noting D-035 moved (c) and (e) onto the demo path. Medium-1: NFR-035 labels the separate, still-draft `regulatory-register.md` (C-01 to C-12) `Built`; T-022 accepted `agency-register.md` only. Medium-2: no row cites `data-use-review.md`; NFR-032 understates the S-08 bans. Low-1: NFR-005/NFR-055 volume numbers are unlabeled. Medium and Low also filed as B-150 to B-152. Documentation fixes only; no change under `underwriting_pipeline/`.
+Needs response by: before T-097 is marked DONE
+
+---
+[2026-10-13 | @responsible-ai → @pm, @software-engineer, @model-risk, @compliance, @head-of-underwriting] TYPE: REVIEW
+Re: T-097
+Message: Independent review of `deliverables/pm/requirements.md`. Verdict: APPROVE WITH CHANGES. No High findings, so no veto; my fairness/contestability veto on T-017 stands and this file lifts nothing. Judged the file against the seven criteria and my mandate, not any author case. Criteria 1–4 and 6–7 hold: 72 FR + 55 NFR, ids unique; every row has id, priority, source, owner, verification, state; the thirteen T-094 components and eight D-004 steps are reached; the eight standing rules are carried; Section D names the deciding role and chooses none; documentation only — no change under `underwriting_pipeline/`, `simulation/`, or the scorers/scores; the SUB-077-086 baseline re-adds to 71/100 (9+5+8+8+8+9+7+6+6+5). Medium-1: NFR-027's State "Built (rule)" overstates — the no-collection rule exists, but the "separate, access-controlled extract" it names does not, and the fairness test (NFR-037) has not run, so it has no code citation for the register's own "Built". Its wording also reads as if a protected-class extract is used, while `deliverables/responsible-ai/fairness-test-plan.md` says the test will not collect or infer race/religion/sex and uses region/occupancy/name-swap only. Medium-2: no row carries the proxy analysis (`proxy-review.md`) or the name-swap counterfactual test (D-023 item 5, T-067) as pre-pilot fairness gates; B.8 has only NFR-036/037/038. Required changes: (1) restate NFR-027's State as Partial/Not built and align its wording with `data-model.md:45` and the fairness test plan; (2) add a fairness requirement row (or two) naming the proxy review and the name-swap counterfactual as gates before pilot, owner @responsible-ai, state Not done; (3) add `fairness-test-plan`, `proxy-review`, and `data-model` to the Source legend in "How to read this register". Low: NFR-036 drops the "contestability" half of my T-017 veto (`arch §8.2`), though FR-038 carries the mechanism; FR-037 and NFR-038 restate one requirement. Documentation fixes only. Not a production approval; an approved P-### is not one either.
+Needs response by: before T-097 is marked DONE
+
+---
+
+[2026-10-13 | @software-engineer → @pm, @model-risk, @compliance, @head-of-underwriting, @responsible-ai] TYPE: REVIEW
+Re: T-097
+Message: Independent review of `deliverables/pm/requirements.md`, from the application/API/UI mandate and as owner of the T-094 document it cites. Verdict: APPROVE WITH CHANGES. One High finding; not an approval, and no veto is lifted. Criteria hold: 72 FR + 55 NFR, ids unique; every row has id, priority, source, owner, verification, state; the thirteen T-094 components (`arch §0`) and the eight D-004 steps are reached; the eight standing rules hold; documentation only. High-1: the open @compliance veto on T-020 (`arch §8.2`, `package.py`) is in no row's State and is missing from Section C; by the register's own State rule, NFR-029 and FR-055 to FR-059 should read `Open`. Required changes: (1) mark NFR-029 and FR-055–FR-059 `Open` for the T-020 veto and add it to Section C; (2) FR-045's `gaps G5, G9` are not the cited-text defect — cite `arch §2.8` and `team/DEMO-BLOCKERS.md` line 3b (T-081); (3) add `api-spec` and `workbench-ux` to the Source legend and cite them on the workbench and contract rows; (4) FR-030's `P-012 (D-027)` should be D-026 (D-027 is P-013); (5) FR-021 cites `arch §2.4.2`, which never mentions `class_code` (source `data-model.md:39`, gap `arch §5.3.1`/G29); (6) Section C's demo-blocker list omits FR-012/FR-014 (line 3) and FR-035–FR-038 (line 5). Low only otherwise.
+Needs response by: before T-097 is marked DONE
+
+---
+
+[2026-10-13 | @head-of-underwriting → @pm, @model-risk, @compliance, @software-engineer, @responsible-ai] TYPE: REVIEW
+Re: T-097
+Message: Independent review of `deliverables/pm/requirements.md` from the appetite, underwriting-rules, referral-threshold, and go/no-go mandate. Verdict: APPROVE WITH CHANGES. One High finding; this is not a production approval and lifts no veto. Criteria 1–5 and 7 hold: 72 FR + 55 NFR, ids unique and stable; each row carries id, priority, source, owner, verification, state; the thirteen T-094 components and the eight D-004 steps are reached; the standing rules are carried; Section D names the deciding role and chooses none; documentation only. High-1: the register's own State rule requires `Open` where a veto blocks, but the @compliance T-020 veto (`arch §8.2`, `package.py`, misrepresentation to a carrier) is named in no State and is not in Section C; NFR-029 and FR-055–FR-059 (my send/authority path) must read `Open` and Section C must name that veto. Medium-1: only NFR-001 carries a success metric. "Carrier first-pass acceptance" and "quote turnaround" (`roadmap.md:29-30`) have no row, "auto-prepared with no corrections" appears only as a feedback count (FR-053), and no pilot go/no-go gate exists — my mandate. Add rows, owner @head-of-underwriting, State `Not decided` where no number exists. Medium-2: FR-039's State describes the withdrawn auto-quote band, not the requirement; the code's only appetite test is `route()` against `carrier-appetite.md` (`workbench.py:38-52`, `package.py:48`), so the guide's knock-out rules are unbuilt. Medium-3: FR-071's Source `authority-matrix` points to a file that still contains the withdrawn auto-quote band; add "as constrained by D-004". Low: NFR-033, FR-070, and NFR-043 read `Built` on the absence of code, unlike the "(rule)" rows (FR-019, FR-054, NFR-022); make them consistent. Documentation fixes only.
+Needs response by: before T-097 is marked DONE
+
+---
+[2026-10-13 | @pm → @compliance] TYPE: ANSWER
+Re: T-097
+Message: Applied to `deliverables/pm/requirements.md`. High-1: NFR-029 and FR-055–FR-059 now read `Open` for your T-020 veto (misrepresentation to a carrier, `arch §8.2` items (a)–(f), `package.py`), and Section C names that veto and notes D-035 moved (c) and (e) onto the demo path. Medium-1: NFR-035 now cites the accepted `agency-register.md` (T-022) and records the draft `regulatory-register.md` (C-01 to C-12) as not accepted, with its open `[NEEDS LEGAL CONFIRMATION]` rows. Medium-2: `data-use-review` is cited on NFR-022, 024, 027, 031, 032, and NFR-032 now carries the S-08 bans. Low-1: NFR-005 and NFR-055 volume numbers are labeled ASSUMED. Please confirm the changes; lifting the veto stays your call.
+Needs response by: before T-097 is marked DONE
+
+---
+[2026-10-13 | @pm → @model-risk] TYPE: ANSWER
+Re: T-097
+Message: Applied to `deliverables/pm/requirements.md`. Medium-1: FR-021 now cites `data-model.md:39` and gap `arch §5.3.1`/G29, not `arch §2.4.2`. Medium-2: Section C's demo-blocker list is now complete by line, including FR-012/FR-014 (line 3) and FR-035–FR-038 (line 5). Low: NFR-008's `ops` is replaced with `test (planned)`; FR-035 and FR-040 now name `team/DEMO-BLOCKERS.md` in their line refs; NFR-012's "71/100" is restated as 71 cell-hits across the ten scored row types (9+5+8+8+8+9+7+6+6+5). Please confirm these five are resolved.
+Needs response by: before T-097 is marked DONE
+
+---
+[2026-10-13 | @pm → @responsible-ai] TYPE: ANSWER
+Re: T-097
+Message: Applied to `deliverables/pm/requirements.md`. Medium-1: NFR-027 is restated as Partial — the no-collection rule is `data-model.md:45` (rule only); the separate access-controlled extract does not exist and NFR-037 has not run; wording realigned to `fairness-test-plan` (region, occupancy, name swap; no protected-class column). Medium-2: added NFR-056 (proxy review, `proxy-review.md`) and NFR-057 (name-swap counterfactual, D-023 item 5, T-067) as pre-pilot gates, owner @responsible-ai, state Not done. Source legend now lists `fairness-test-plan`, `proxy-review`, `data-model`. NFR-036 now reads "fairness and contestability". Please confirm. Lifting the T-017 veto stays your call.
+Needs response by: before T-097 is marked DONE
+
+---
+[2026-10-13 | @pm → @software-engineer] TYPE: ANSWER
+Re: T-097
+Message: Applied to `deliverables/pm/requirements.md`. High-1: NFR-029 and FR-055–FR-059 now read `Open` for the T-020 veto and Section C names it. Medium-1: FR-045's State now cites `arch §2.8` and `team/DEMO-BLOCKERS.md` line 3b (T-081), not gaps G5/G9. Medium-2: `api-spec` and `workbench-ux` are in the Source legend and cited on FR-001, FR-044, and NFR-053. Low: FR-030's `P-012 (D-027)` is now D-026; FR-021 cites `data-model.md:39`; Section C's demo-blocker list includes lines 3 and 5. Please confirm these six.
+Needs response by: before T-097 is marked DONE
+
+---
+[2026-10-13 | @pm → @head-of-underwriting] TYPE: ANSWER
+Re: T-097
+Message: Applied to `deliverables/pm/requirements.md`. High-1: NFR-029 and FR-055–FR-059 now read `Open` for the T-020 veto and Section C names it. Medium-1: added NFR-058 (carrier first-pass acceptance), NFR-059 (quote turnaround), NFR-060 (auto-prepared with no corrections), and NFR-061 (go/no-go gate) in new section B.14, owner @head-of-underwriting, state Not decided where no number exists. Medium-2: FR-039's State now describes the requirement (guide knock-out rules unbuilt; only `route()` against `carrier-appetite.md` in code). Medium-3: FR-071's Source is `authority-matrix` (as constrained by D-004). Low: FR-070 and NFR-043 now read `Built (rule)`; NFR-033 `Built (rule — no rating engine exists)`. Please confirm; the numbers remain yours to set.
+Needs response by: before T-097 is marked DONE
+
+---
+[2026-10-13 | @pm → @compliance, @model-risk, @responsible-ai, @software-engineer, @head-of-underwriting] TYPE: UPDATE
+Re: T-097
+Message: Re-request for confirmation. `deliverables/pm/requirements.md` is revised against all five T-097 reviews (every finding was APPROVE WITH CHANGES; no veto on T-097). Changed rows: NFR-029, FR-055–FR-059 (Open, T-020 veto); FR-021, FR-030, FR-035, FR-040, FR-045 (citations); NFR-005, NFR-008, NFR-012 (labels); NFR-022, NFR-024, NFR-027, NFR-031, NFR-032, NFR-035, NFR-036 (compliance/fairness); FR-039, FR-070, FR-071, NFR-033, NFR-043 (authority wording); new NFR-056, NFR-057, NFR-058–NFR-061; Section C and the Source legend. Q9 (D-017 item 3 "complete" for producer requests) stays open and routed to @user. Status stays IN_REVIEW; I do not self-approve.
+Needs response by: the next review round
+
+---
+[2026-10-13 | @model-risk → @pm] TYPE: REVIEW
+Re: T-097
+Message: Confirmation pass on `deliverables/pm/requirements.md`. Verdict: APPROVE. No High findings; no veto on T-097, and this is not a production approval — every production veto stands. Re-checked each change I required from the file, not the author's case. Medium-1 resolved: FR-021 now cites `data-model.md:39` and gap `arch §5.3.1`/G29, not `arch §2.4.2`. Medium-2 resolved: Section C's demo-blocker list is complete by line and now carries FR-012/FR-014 (line 3) and FR-035–FR-038 (line 5). Low resolved: NFR-008's verification is `test (planned)`; FR-035 and FR-040 name `team/DEMO-BLOCKERS.md` in their line refs; NFR-012's figure is restated as 71 cell-hits across the ten scored row types (9+5+8+8+8+9+7+6+6+5). No new findings. Register now 72 FR + 61 NFR. T-097 clears my review; closing it stays @pm's call.
+Needs response by: none from me
+
+---
+[2026-10-13 | @compliance → @pm] TYPE: REVIEW
+Re: T-097
+Message: Confirmation pass on `deliverables/pm/requirements.md`, judging the deliverable itself against my earlier T-097 review, not any author case. Verdict: APPROVE. No High findings; no veto on T-097, and this is not a production approval — my T-020 and T-017 vetoes and every register row stand. High-1 resolved: NFR-029 and FR-055–FR-059 now read `Open` for the T-020 veto (`package.py`, `arch §8.2` items (a)–(f)), and Section C names it, noting D-035 moved (c) the user's exact send line and (e) quote tracking onto the demo path. Medium-1 resolved: NFR-035 now reads `Partial`, cites the accepted `agency-register.md` (T-022), and records the draft `regulatory-register.md` (C-01 to C-12) as not accepted. Medium-2 resolved: `data-use-review` is cited on NFR-022, 024, 027, 031, and 032, and NFR-032's S-08 list matches the review ("credit, criminal history, social-media, vendor business-health scores, web scrape"). Low-1 resolved: NFR-005 and NFR-055 volumes are labeled ASSUMED. No new findings. Lifting the T-020 veto is not requested and is not done here; it stays mine to lift after the package/send build is checked against `arch §8.2` (a)–(f). Closing T-097 stays @pm's call.
+Needs response by: none from me
+
+---
+
+[2026-10-13 | @responsible-ai → @pm, @software-engineer, @model-risk, @compliance, @head-of-underwriting] TYPE: REVIEW
+Re: T-097
+Message: Confirmation pass on `deliverables/pm/requirements.md`, judging the deliverable itself. Verdict: APPROVE. No High findings; no veto on T-097, and this is not a production approval — my fairness/contestability veto on T-017 stands and lifts nothing. All required changes from my earlier review are made.
+
+Medium-1 resolved: NFR-027 is now `Partial`, with wording aligned to `data-model.md:45` and `fairness-test-plan.md` (region, occupancy, name swap; no protected-class column); it correctly notes the no-collection rule exists but the separate access-controlled extract does not and NFR-037 has not run.
+
+Medium-2 resolved: added NFR-056 (proxy review, `deliverables/responsible-ai/proxy-review.md`) and NFR-057 (name-swap counterfactual, D-023 item 5, T-067) as pre-pilot gates, both Not done, owner @responsible-ai (with @data-scientist for NFR-057).
+
+Source legend now includes `fairness-test-plan`, `proxy-review`, and `data-model`. No new findings. Closing T-097 stays @pm's call.
+Needs response by: before T-097 is marked DONE
+
+---
+[2026-10-13 | @software-engineer → @pm] TYPE: REVIEW
+Re: T-097
+Message: Confirmation pass on `deliverables/pm/requirements.md`, judging the deliverable itself against my earlier T-097 review, not any author case. Verdict: APPROVE. No High findings; no veto on T-097, and this is not a production approval — my T-094 findings and every register row stand. High-1 resolved: NFR-029 and FR-055–FR-059 now read `Open` for the T-020 veto (`package.py`, `arch §8.2`), and Section C names that veto and notes D-035 moved (c) the user's exact send line and (e) quote tracking onto the demo path. Medium-1 resolved: FR-045 cites `arch §2.8` and `team/DEMO-BLOCKERS.md` line 3b (T-081), not gaps G5/G9. Medium-2 resolved: `api-spec` and `workbench-ux` are in the Source legend and cited on FR-001, FR-044, and NFR-053. Low resolved: FR-030 now cites `P-012 (D-026)`; FR-021 cites `data-model.md:39`/`arch §5.3.1` (gap G29); Section C's demo-blocker list carries line 3 (FR-012, FR-014) and line 5 (FR-035–FR-038). All six required changes made; no new findings. T-097 clears my review; closing it stays @pm's call.
+Needs response by: none from me
+
+---
+[2026-10-13 | @head-of-underwriting → @pm, @software-engineer, @model-risk, @compliance, @responsible-ai] TYPE: REVIEW
+Re: T-097
+Message: Confirmation pass on `deliverables/pm/requirements.md`, judging the deliverable itself against my earlier T-097 review. Verdict: APPROVE. No High findings; no veto on T-097, and this is not a production approval — the @compliance T-020 veto stands and I lift nothing. High-1 resolved: NFR-029 and FR-055–FR-059 now read `Open` for the T-020 veto (`package.py`, `arch §8.2`), and Section C names that veto and notes D-035 moved (c) the user's exact send line and (e) quote tracking onto the demo path. Medium-1 resolved: new B.14 adds NFR-058 (carrier first-pass acceptance, `roadmap.md:29`), NFR-059 (quote turnaround, `roadmap.md:30`), NFR-060 (auto-prepared with no corrections, `roadmap.md:28`), NFR-061 (pilot go/no-go gate), owner @head-of-underwriting, State `Not decided`; D-2 lists them as mine. Medium-2 resolved: FR-039's State now describes the requirement — the guide's target/restricted/prohibited and knock-out rules are unbuilt and the only appetite test is `route()` against `carrier-appetite.md` (`workbench.py:38-52`, `package.py:48`). Medium-3 resolved: FR-071 Source is `authority-matrix` (as constrained by D-004). Low resolved: NFR-033 is `Built (rule — no rating engine exists)`; FR-070 and NFR-043 are `Built (rule)`. All seven required changes made; no new findings. The success-metric numbers remain mine to set. T-097 clears my review; closing it stays @pm's call.
+Needs response by: before T-097 is marked DONE
+
+---
+[2026-10-13 | @pm → @user, @compliance, @head-of-underwriting] TYPE: UPDATE
+Re: T-097
+Message: T-097 is closed DONE. All five reviewers returned a confirmation TYPE: REVIEW with verdict APPROVE on the current `deliverables/pm/requirements.md` (no High, none a veto, none a production approval): @model-risk, @compliance, @responsible-ai, @software-engineer, @head-of-underwriting. All seven acceptance criteria are ticked; none was shown to fail, and the deliverable was not changed by the close. The five approvals lift no veto — T-020 (@compliance), T-017 (@model-risk, @responsible-ai), T-027 (@model-risk), and the retired T-026 extractor (@model-risk) all stand. Open follow-ups, not decided by me: Q9 (D-017 item 3 "complete" for producer requests) stays with @user (register D-5); the NFR-058–NFR-061 numbers are @head-of-underwriting's (register D-2); lifting the T-020 veto is @compliance's (team/BACKLOG.md B-153). No reviewer was run and no @user question was decided.
+Needs response by: none
+
+---
+[2026-10-13 | @data-engineer → @compliance] TYPE: ANSWER
+Re: T-069
+Message: For T-069: Yes to new keys in deliverables/data-engineer/extractions/SUB-xxx.json: `status` (enum), `error` (string|null), `saved_hash` (sha256 of canonical JSON at save time), and `hash_algorithm`. Also include provenance: `model_version`, `prompt_version`, `ocr_settings`, `host`, `temperature`. The G2 gate must compare the file's current hash to `saved_hash` and refuse if they differ (D-029). Writer: `prepare.write_drafts()` writes these at save time; readers: `package.py` and `workbench.py` read them. No code changes in this task. Requesting compliance review on this metadata schema and any PII constraints. Needs response by: end of round.
+
+---
+[2026-10-13 | @data-engineer → @compliance, @software-engineer] TYPE: REVIEW
+Re: T-069
+Message: T-069 deliverable ready: deliverables/data-engineer/data-model.md adds "ExtractionRun (saved extraction report)" documenting required keys, types, nullability, ownership, and G2 hash comparison. No code changes. Acceptance criteria: (1) keys named and documented (status/error/saved_hash/hash_algorithm + metadata) — yes. (2) if no, named alternative — n/a, answer is yes. (3) compliance consulted — yes. (4) data model lists keys and says who writes them — yes. Request verdicts on this documentation.
+
+---
+[2026-10-13 | @head-of-underwriting → @senior-underwriter, @actuary] TYPE: QUESTION
+Re: T-082
+Message: Class lists and caps are in deliverables/head-of-underwriting/carrier-match.md, and the rule changes from the accepted T-018 text are recorded as D-041. Risk appetite and underwriting rules are mine; you are consulted. The eight cases now answer: cannabis dispensary retail, armed security office, sprinklered student housing → no_match; roofing contractor and an $8,000,000 office → carrier_c; barbecue restaurant and taqueria → carrier_b with "3 clean years not checked"; barber shop → carrier_a. Caps: A $5,000,000, B $2,000,000, C $10,000,000, each inclusive. @actuary: the B and C caps are placeholder working caps — confirm or correct, and say if naming Carrier C "higher price" without a filing is acceptable. @senior-underwriter: I adopted your T-019 High-3 list and wording.
+Needs response by: before T-083 builds
+
+---
+[2026-10-13 | @head-of-underwriting → @senior-underwriter, @actuary, @compliance, @responsible-ai] TYPE: REVIEW
+Re: T-082
+Message: T-082 is IN_REVIEW. Please review deliverables/head-of-underwriting/carrier-match.md against the acceptance criteria on the task: whole-word / exact-phrase class lists per carrier and the no-match classes; one stated answer for each of the eight cases; each cap as a number with the at-cap behaviour; the Carrier B wording "3 clean years not checked"; @senior-underwriter and @actuary consulted (decision rights); no class an automatic decline and `no_match` not a producer decline. The changes from T-018 are recorded as D-041. Documentation only: no code changed, no model call, nothing sent. Not a production approval. T-083 waits on this and on T-071.
+Needs response by: before T-083 builds
+
+---
+[2026-10-13 | @model-risk → @ai-engineer-assistant, @data-scientist, @compliance] TYPE: HANDOFF
+Re: T-089
+Message: T-089 is done: deliverables/model-risk/model-inventory.md. It is a record, not an approval; no component is approved for production. C-1 LLM extractor (Tier 2; version `82be09bd42f7` + `openai/gpt-oss-120b`; open vetoes T-027 and T-059; may not reach a carrier package as a Tier 1 input, guess a value, read a loss run as zero claims, or treat a failed call as empty data). C-2 point score (Tier 2; no version id recorded; open T-017 vetoes @model-risk and @responsible-ai plus @actuary REJECT). C-3 carrier match (Tier 2; D-041 class lists; no open veto). R-1 label-scanner extractor recorded retired under D-010; its SUB-017 through SUB-026 score is quoted only as "0 of 7 value fields; other hits came from empty output" and is never cited for the current extractor (D-036). Each entry lists its score files and the rule for quoting them. No published score file was edited or recounted (D-025).
+T-026 veto: **lifted** (2026-10-13). The label-scanner extractor is retired under D-010, so a production veto on it has no subject; the entry D-036 asked for now exists. This is not a validation pass and does not lift T-027 or T-059 on the current extractor. Please review your own component only; the reviewers check that their component is described correctly and do not review my verdicts.
+Needs response by: the next review round
+
+---
+[2026-10-13 | @model-risk → @senior-underwriter, @ai-engineer-assistant] TYPE: HANDOFF
+Re: T-090
+Message: T-090 is done. Dated lines added; no score recounted and no published score file touched (D-025). holdout-SUB-057-066.md gets "loss runs = valued-through date only; claims are not read or scored" (@senior-underwriter, T-039 High-1) and "SUB-057, 058, 064, 065: OCR returned no text and no model reply was scored; 'Call: ok' means no error was raised. Six of ten rows come from a model reply." (@ai-engineer-assistant, T-039 High-1). holdout-SUB-067-076.md and holdout-SUB-077-086.md get the loss-runs line (T-044 and T-053 High-1). Each memo now also carries D-033 item 5's standing "8 of 9 fields scored; loss runs = date only". The wording is accepted as written; no OBJECTION. These memos are my own files, so the wording is mine to accept or to answer.
+@senior-underwriter: please look again at T-039, T-044, and T-053. @ai-engineer-assistant: please look again at T-039.
+Needs response by: the next review round
+
+---
+[2026-10-13 | @compliance → @data-engineer, @pm] TYPE: REVIEW
+Re: T-069
+Message: Verdict: APPROVE WITH CHANGES. Criterion 4 passes: data-model.md lists every G2 key and names `prepare.write_drafts()` as writer, `package.py`/`workbench.py` as readers. Criterion 3: complied with by this review. Criterion 1: yes — the keys belong in `extractions/SUB-xxx.json`. Criterion 2: N/A. (H1) `saved_hash` is defined as SHA-256 "of the canonical JSON content of this file", yet the file contains `saved_hash` and `hash_algorithm`; hashed bytes cannot include the hash. The doc never defines the canonical form (key order, UTF-8, separators) or which keys are excluded, so writer and gate can disagree and G2 either always refuses or always passes — the audit-integrity control fails. Required: state the exact bytes. (M1) `error` is written with "e.g." and reads as free text; make it a closed enum, never model/document text (S-01 minimization). Low: retention/access control unstated; `unreadable_cache` as `extraction_failed` sits against P-013's retry. Not a production approval.
+Needs response by: before T-070 lands.
+
+---
+[2026-10-13 | @software-engineer → @data-engineer, @pm] TYPE: REVIEW
+Re: T-069
+Message: Verdict: APPROVE WITH CHANGES; no veto. Judged from the application/integration mandate — whether `prepare.write_drafts()` can write this and `package.py`/`workbench.py` can read and check it per D-029 (G2 reads the status and hash itself). Criteria 3 and 4 pass (keys listed; writer and readers named). Criterion 1 is only partly met. High-1: the table omits the gate inputs the reader actually branches on — `complete`, open `conflicts`, `needs_human`, `sprinklers` — so the saved run alone cannot feed the send gate; `agency_problem()` (`package.py:33-50`) and `route()` (`workbench.py:38-52`) need them, not only `fields`. D-029/G2 makes the gate read the last saved run itself (the exact gap @compliance T-020 H2 named), so list those keys and say `write_drafts()` writes them. High-2 (same root as @compliance H1): `saved_hash` over "this file" is circular and the canonical bytes are undefined, so T-070 cannot compute it and T-071 cannot reproduce it — G2 either always refuses or always passes. State the exact bytes: the object with `saved_hash` and `hash_algorithm` removed, UTF-8, `json.dumps(sort_keys=True, separators=(",",":"))`, hashed once before write. Medium-1: the `status` enum is not mapped to the writer's current values (`complete`/`incomplete`, `prepare.py:596`) and reuses `needs_human` — already a top-level list key — as a status value; define the mapping or rename. Medium-2: name the reader path and say the readers read the saved run, not `process_submission()` (`workbench.py:86`), and define the rule for an unknown/mismatched `hash_algorithm`. Low: `unreadable_cache` as `extraction_failed` sits against P-013's retry (D-027); retention/access control of the file is unstated. Not a production approval; lifts no veto.
+Needs response by: before T-070 lands.
+
+---
+[2026-10-13 | @senior-underwriter → @head-of-underwriting, @actuary, @pm, @compliance, @responsible-ai] TYPE: REVIEW
+Re: T-082
+Message: Verdict: APPROVE WITH CHANGES. Judged the class lists, the eight cases, the caps, and the Carrier B wording from underwriting practice, not the author's case. All eight cases I listed in T-019 High-3 are now answered as I asked: cannabis dispensary retail, armed security office, sprinklered student housing → `no_match`; roofing contractor and an $8,000,000 office → `carrier_c`; barbecue restaurant and taqueria → `carrier_b` + "3 clean years not checked"; barber shop → `carrier_a`. Caps A $5,000,000 / B $2,000,000 / C $10,000,000, each inclusive, and criterion 4 ("3 clean years not checked") is met exactly. Two High findings to close before T-083.
+High-1: the no-match branch is undefined for a readable class on no list. Line 17 routes to `no_match` only "if it is over every cap," and the no-match section lists only the prohibited classes and >$10M. A readable, under-cap class on no carrier's list (e.g. "manufacturing", "auto repair", a trade not in B's list) has no stated answer; T-083 will code that hole and it can fall to `hold` or blank, which a person reads as a decline. Required: state that any readable class matching no carrier list, not prohibited, within every cap, is `no_match` (not a decline) — or name the residual bucket and its owner.
+High-2: `kitchen` in Carrier B's food list is a facility word, not a class. The order checks Carrier B before Carrier A, so "office with kitchen" matches `office` (A) and `kitchen` (B) and returns `carrier_b` — the restaurant market for an office. Restaurants already match via restaurant/cafe/diner/deli/pizzeria/taqueria/etc., so `kitchen` adds no coverage and risks the misroute this task exists to fix (the family of @responsible-ai T-017 H3). Required: remove `kitchen`; and state that a file whose operations match class words of two carriers is a senior referral or `hold`, not silently the earlier carrier.
+Medium (parked in team/BACKLOG.md B-154 to B-158, D-030): bare `retail` matches more than "dry retail"; `warehouse` "(light storage only)" and `dry cleaner` "(drop-off and pickup only)" are not matchable tokens; unsprinklered habitational (sprinklers read `no`) has no stated outcome; whole-word under-match of plurals (bakeries, cafes, delis, pizzerias, taquerias, storefronts) falls into High-1. Low (B-159): the loss-gate trigger for "no claim has been read" is unstated. Consultation answer: my T-019 High-3 list and wording are adopted; @actuary's B/C caps are still to confirm or correct. Not a production approval.
+Needs response by: before T-083 builds.
+
+---
+[2026-10-13 | @ml-engineer → @pm, @actuary] TYPE: HANDOFF
+Re: T-095
+Message: deliverables/architecture/system-design.md is drafted: all thirteen sections, four Mermaid diagrams, stubbed tests run (35 cases: 24 pass, 11 fail as known gaps; results in deliverables/architecture/tests/results/). T-095 is IN_PROGRESS, not in review. Three blocks marked "CONTRIBUTOR PLACEHOLDER" say exactly what is needed; section 13 lists them. @pm: 1.1 the requirement ids this document must meet, with today's state; 2.1 the three volumes and the peak hour as the user set them, business days and hours, pages per real submission or who gives it. My tables use working assumptions until then (22 days, peak day 2x, peak hour 20 %). @actuary: 8.3 cost per submission and per month at each volume, on the D-038 item 5 price basis and label, each price dated and sourced; my measured token inputs are in the table under your block. Rules: As-is apart from Target, file and line checked, numbers labeled, no pipeline change, no model call. Section 12 holds ten open questions.
+Needs response by: before T-095 goes to review
+
+### TYPE: REVIEW — T-082 (carrier-match.md)
+Reviewer: @compliance
+Date: 2026-10-13
+Verdict: APPROVE WITH CHANGES
+
+Findings:
+
+- **High** (fair treatment / misrepresentation risk)
+  1. None. The deliverable explicitly states: "No class is an automatic decline, and `no_match` is not a decline to the producer." (line 9), requires hold for missing info (line 78), forbids emailing producer a decline (line 74), and keeps match as recommendation (line 9). Whole-word matching prevents false positives (bar vs barbecue). Prohibited classes are not saved by other words. These guardrails directly address misclassification/decline misrepresentation.
+
+- **Medium** (process/completeness)
+  1. Criterion 5 incomplete in effect: "consulted (decision rights)" — deliverable says consultation posted this turn and replies pending (line 107). The criterion requires @senior-underwriter and @actuary are consulted. As the deliverable stands, it documents intent/posting but not completion of consultation. 
+     - Change required: Do not mark criterion 5 complete until consultation replies are recorded in DISCUSSION.md and reflected (or explicitly note completion state). Update T-082 Notes/criteria state accordingly; do not weaken the guardrails.
+
+- **Low** (clarity/documentation)
+  1. "3 clean years not checked" is specified and present (line 43). Caps stated as inclusive with tables (lines 94-99). All eight cases mapped with "today wrong" notes (lines 84-91) — transparent. No change required, but worth keeping as-is.
+
+Required changes (specific):
+- Record consultation completion (replies from @senior-underwriter and @actuary) in DISCUSSION.md before closing criterion 5, and update T-082 status/notes to reflect completion. If either raises changes, capture in DECISIONS.md per protocol. (Medium-1)
+- Maintain the existing explicit non-decline language (no automatic decline; no_match not a decline to producer; hold not decline; match is recommendation). Any future edit must preserve these. (High guardrail)
+
+Notes: No code changed; deliverable is documentation only. The "higher price" note (no price set) is appropriate to avoid premature rate-setting. Changes from T-018 recorded as D-041. No veto — resolves Medium-1 by completing consultation and recording replies.
+
+---
+[2026-10-13 | @responsible-ai → @head-of-underwriting, @pm, @senior-underwriter] TYPE: REVIEW
+Re: T-082
+Verdict: APPROVE WITH CHANGES — fairness veto standing on High-1 and High-2 until resolved.
+Acceptance criteria met: whole-word / exact-phrase class lists for A, B and C; the no-match list; one answer for each of the eight cases; every cap as a number (the $5M cap included) with inclusive-at-cap behaviour; the "3 clean years not checked" wording; @senior-underwriter and @actuary consultation on file; no class is an automatic decline and no_match is not a producer decline. The class-vs-hazard boundary for food words (P-015) is correctly drawn.
+High-1 — proxy, language. The class lists are English whole-word only, while the pipeline reads Spanish (D-009, D-013). A Spanish class/operations string will not match A/B/C and lands in hold — or no_match if the class is unreadable — a differential burden by language, not by risk. My T-017 backlog already shows a Spanish-source point gap (n=11, 8.6 vs 7.0). Resolve: Spanish/variant synonyms or a normalized class code, plus a language counterfactual test in T-067 (same file, EN vs ES class text) proving the recommendation does not change.
+High-2 — protected-class proxy. `subsidized housing` (with student/fraternity/sorority housing) on the no-match list tracks race, national origin, familial status, disability and source of income. "Not a decline" lowers but does not remove the step-5 disparate-impact exposure. Pre-existing and owner-decided (D-003); I do not override it, but it cannot ship without the analysis. Resolve: a proxy-review entry with a neutral business rationale and a recommendation-mix test by housing class, or route subsidized housing to Carrier C with sprinklers. The wider-appetite trade-off is @actuary's and @head-of-underwriting's.
+Medium (D-030: to team/BACKLOG.md if not fixed here): cuisine/occupation tokens (`taqueria`, `tacos`, `barbecue`, `deli`) correlate with national origin; confine them to class, never hazard (already stated), and cover them in the culinary-spelling counterfactual.
+Low: whole-word match case-sensitivity is unstated; log the hold reason so the language gap stays measurable.
+Not a name/ZIP/credit match, so my standing veto line is not triggered; no production approval and no send is authorized.
+Needs response by: before T-083 codes the class lists.
+
+---
+[2026-10-13 | @pm → @ml-engineer, @head-of-underwriting, @senior-underwriter, @user] TYPE: ANSWER
+Re: T-095
+Message: My two blocks in deliverables/architecture/system-design.md are filled in place: 1.1 and 2.1. Documentation only; nothing run, no model call, no status changed. 1.1: your 28 ids confirmed, none removed, 8 NFR and 13 FR rows added (49), each with the register's state and line. Four of the user's criteria have no register row: metrics and alerts, dead-letter handling, backup and recovery, the load/failure/cost tests. 2.1: 300 / 1,000 / 3,000 a month and "a peak hour" are the user's (`team/TASKS.md:1256`); the user gave no peak number and no other load figure, and I set none. I kept your working values, each labeled assumed with who confirms it, so nothing needs a recompute. New: a producer reply is one more model call, with no recorded rate. @ml-engineer: line 6 and section 13 still list my sections; they are yours to update. @head-of-underwriting: real volume, business days, hours, peak pattern. @senior-underwriter: pages per real submission, share needing a producer round.
+Needs response by: before T-095 goes to review
+
+---
+[2026-10-13 | @ai-engineer-assistant → @model-risk, @pm, @data-scientist, @compliance] TYPE: REVIEW
+Re: T-089
+Message: Verdict: **APPROVE.** No High findings. I judged only C-1 (my component) and R-1, and the score-file list and quoting rule, not @model-risk's verdicts. C-1 is correct: owner @ai-engineer-assistant (`llm_extract.py`, `sources.py`, `prepare.py`); Tier 2 matches the validation-standards addendum; the version id checks out — `llm_extract.py:54` is `sha256(SYSTEM)[:12]` = `82be09bd42f7`, model `openai/gpt-oss-120b`, temperature 0, and the cache key (`llm_extract.py:71`) holds prompt version, model, host, temperature, and file contents (P-014); open vetoes T-027 and T-059 are open as written; "what it may not do" matches the standards. The C-1 score-file list matches `deliverables/ai-engineer/evals/` file for file — including `SUB-027-036-holdout.md` with no `.json`, the `SUB-077-086` `-original`/`-rerun`/`-original-vs-rerun` copies, the dev rerun, and the two regression files; no extractor file in that folder is missing and none listed is absent. Quoting rule matches D-033 item 5 and D-039, and the rerun is not an improvement (D-026). R-1 is correct: retired under D-010, score quoted only as "0 of 7 value fields; other hits came from empty output", never cited for the current extractor (D-036). Criterion 5 is met: the lift is stated at DISCUSSION.md:1729. Low (no change required): the version id names the model the published scores were run with, `openai/gpt-oss-120b`, while the code default is `qwen2.5:7b` and the live model is `LLM_MODEL` (D-011/D-012); a phrase "the model the scores were run with" would stop anyone reading 120b as a fixed code default. Low (no change required): the dev-rerun file is listed with the standing label, and the SUB-027-036 memo's "do not use as this baseline" note is not repeated. Both are documentation hygiene; neither blocks the inventory, which is a record and approves nothing.
+Needs response by: no change required; @pm may close T-089 as it stands.
+
+---
+[2026-10-13 | @data-scientist → @model-risk, @pm] TYPE: REVIEW
+Re: T-089
+Message: Verdict: **APPROVE WITH CHANGES.** One Low finding; no High. I judged only C-2 (the point score, my component), not @model-risk's verdicts. C-2 is otherwise correct: owner @data-scientist (`points.py`, `reason-codes.md`); Tier 2 per the validation-standards D-004 addendum (line 73), Tier 1 only if the score declines, binds, prices, or selects the carrier; version id **none recorded** — `points.py` has no version constant and `ai_version()` (`workbench.py:103-105`) is not a component version (T-021 High-1, B-140); the three T-017 opens are right — @model-risk production veto, @responsible-ai fairness veto, @actuary REJECT; "what it may not do" matches T-017 criterion 2 and the standards; no score file, no numeric score quotable. Low-1 (required): line 50 says "P-015 (T-084), if approved, stores the points version". P-015 is already approved (D-040, "approve change P-015 with S3 H1 M1 T2 V3 W1 A1 E2") and not built. Change it to "approved (D-040), not built". It does not block the record.
+Needs response by: before T-089 closes.
+
+---
+[2026-10-13 | @actuary → @ml-engineer, @user, @senior-underwriter, @head-of-underwriting] TYPE: ANSWER
+Re: T-095
+Message: Section 8.3 of deliverables/architecture/system-design.md is filled in place; nothing else edited. I recounted the token log (13 calls: 8,355 in, 12,595 out, 20,950 total, 8,192 reasoning) and it agrees with your figures. No repo file records a price and no network call was allowed, so all five prices (Gemini 2.5 Flash $0.30/$2.50 and Pro $1.25/$10.00 per million tokens, Document AI layout $10 per 1,000 pages) are assumed, from memory (2025), not verified; D-038's label is carried with that caveat. Per submission: $0.005 Flash, $0.013 Pro at synthetic size (measured tokens); $0.068 and $0.092 at assumed real size; $20 to $276 a month across 300 to 3,000. OCR is 88 % of the Flash figure; scan share and pages move cost most. One caveat on 2.2: output held at 969 is untested, since 65 % is reasoning; shown at × 3. @ml-engineer: line 6 and section 13 are yours. @user: D-038 names no Gemini version, and the prices need reading from the list. @senior-underwriter: scan share, pages, producer-round rate.
+Needs response by: before T-095 goes to review
+
+---
+[2026-10-13 | @compliance → @model-risk, @pm] TYPE: REVIEW
+Re: T-089
+Message: Verdict: **APPROVE**. Judges the deliverable only, from the legal/regulatory and permitted-use mandate. It is a non-approving record: it introduces no prohibited data (S-08 absent; S-01/S-02 underwriting-only), and it authorizes no send or decline. All five acceptance criteria are met on the face of the file, and the score-quoting labels ("8 of 9 fields scored; loss runs = date only"; "9 of 9 extracted fields scored; claims not read; loss runs = date only"; R-1's "0 of 7 value fields; other hits came from empty output") match D-033 item 5, D-036, and D-039. No legal/regulatory blocker. No veto. No required changes.
+Findings (no High; Medium/Low routed to team/BACKLOG.md per D-030):
+- **Medium (governance/record retention, C-02/C-09):** each component entry records an owner and version but no revalidation date or monitoring metric — evidence validation-standards.md requires for Tier 2 and the AI-governance/retention rows expect.
+- **Medium (permitted use, C-08):** C-1 omits the permitted-use condition carried in data-use-review.md — S-01/S-02 text is approved for underwriting only, prohibited for training. Add a one-line pointer.
+- **Low (C-09):** no retention pointer (retain with the audit trail; 7-year working assumption).
+Note: acceptance criterion 5 asks @model-risk to say in team/DISCUSSION.md whether the T-026 veto is lifted; a reviewer may not read the thread before its verdict, so this is unverified here. Orchestrator must confirm that post exists.
+
+---
+[2026-10-13 | @senior-underwriter → @model-risk, @ai-engineer-assistant, @pm, @user] TYPE: REVIEW
+Re: T-090
+Message: Verdict: APPROVE WITH CHANGES. I publish these scores; I read all three memos and `git diff HEAD`. Met: the edits are append-only — every score table and number byte-identical to HEAD; no number changed, no score repeated in prose, no recount (no scorer run; `deliverables/ai-engineer/evals/` untouched); D-033 item 5 wording on all three; @model-risk's handoff is in team/DISCUSSION.md (line 1733). 057-066 names the person and the reason on both lines, the "Call: ok" clarification included.
+High-1: the criterion wants each of the three files to name the person. holdout-SUB-067-076.md and holdout-SUB-077-086.md name the finding id (T-044 High-1, T-053 High-1) and the reason but not the person. Required: add "@senior-underwriter" to both lines, as on 057-066. @pm: the board's T-090 wording names the person only for 057-066 — reconcile or keep the stricter form.
+Needs response by: before T-039, T-044, and T-053 close.
+
+---
+[2026-10-13 | @ml-engineer → @user, @actuary, @pm, @senior-underwriter, @head-of-underwriting] TYPE: UPDATE
+Re: T-095
+Message: Consistency pass on deliverables/architecture/system-design.md done. T-095 stays IN_PROGRESS: 15 of 16 criteria ticked, not sent to review. Missing, exactly: "list prices labeled with date". The five prices in 8.3 are from memory (2025), unread from any list, and D-038 item 5 names no Gemini version. @user: name the version and give the five list prices with the date read, or permit one read of the price pages; @actuary then updates 8.3. Checked: no placeholder left; 2.3 and 3.1 recomputed, no cell changed; all 96 dollar cells of 8.3 recomputed, all agree; 62 citations and every quoted test figure match the files; tests not rerun. Changed in my sections: throughput SLO 30 to 60 an hour (my error); producer-round factor and output-token caveat added; planned tests renamed PT1 to PT18 (8.3 uses P1 to P5); T-082 fairness veto added to 11.2. Contradictions left as written, in section 12: @actuary, Q13 ("under 7 CPU-hours" against 8.2's 7); @pm, Q14 (1.1 note 2 predates the T-082 veto; six vetoes on five tasks again). @senior-underwriter Q11, @head-of-underwriting Q1 and Q12.
+Needs response by: before T-095 goes to review
+
+---
+[2026-10-13 | @ai-engineer-assistant → @model-risk, @pm, @senior-underwriter] TYPE: REVIEW
+Re: T-090
+Message: Verdict: APPROVE WITH CHANGES. One High finding; no veto. I keep the eval files, so I checked them: `git diff HEAD` shows the three edits are pure appends — no table or number changed; `deliverables/ai-engineer/evals/` is untouched (empty diff) and no score recounted (D-025). Each memo's ten field rows agree with its eval file. Criteria 2–4 pass; @model-risk's handoff is at DISCUSSION line 1733; all three carry D-033 item 5's wording. High-1: criterion 1 wants each file to name the person and the reason. holdout-SUB-067-076.md (line 49) and holdout-SUB-077-086.md (line 39) cite T-044/T-053 High-1 and the reason but no name; only 057-066 names both. Required: add '@senior-underwriter' to both lines. Low: 057-066's 'Six of ten rows' is a row count, not the field score; it is the board-specified clarification. @pm: the board's literal T-090 wording names the person only for 057-066 — reconcile or keep the stricter form.
+Needs response by: before T-090, T-039, and T-053 close
+
+---
+[2026-10-13 | @data-engineer → @compliance, @software-engineer, @pm] TYPE: RESPONSE
+Re: T-069
+Message: Both review sets closed in `deliverables/data-engineer/data-model.md` (documentation only; no code/prompt/scorer, no model call, no score file; T-069 stays IN_REVIEW).
+High-1 — lines 58-61 add the gate keys the readers branch on: `complete` ("`agency_problem()` refuses when falsy", `package.py:46`), open `conflicts` ("`resolution != \"resolved\"`", `package.py:41-45`), `needs_human` ("non-empty blocks a send", `package.py:39-40`), `sprinklers` ("`workbench.route()` reads it", `workbench.py:45`); line 54 maps `status` to the writer's `complete`/`incomplete` (`prepare.py:596`) plus `extraction_failed`/`all_values_rejected`, and says "`needs_human` is **not** a status — it is the list key". H1/H2 — lines 71-79 define the bytes: "every key in the table above **except** `saved_hash` and `hash_algorithm`", `json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True)`, UTF-8, lowercase hex, "computed once, before the write"; "The on-disk file is **not** itself canonical".
+M1 — line 55: `error` is a closed enum `rate_limit_429`, `timeout`, `reply_not_usable`, `call_error`, non-null "**only** when `status` is `extraction_failed`"; `unreadable_cache` removed (P-013 retries it).
+M2 — lines 81-85: the gate reads the saved run at `extractions/SUB-xxx.json`, "not `process_submission()`"; `sha256` is the only accepted `hash_algorithm`, else refuse ("fail closed").
+Needs response by: re-review before T-070 lands.
+
+---
+[2026-10-13 | @head-of-underwriting → @senior-underwriter, @actuary, @compliance, @responsible-ai, @pm] TYPE: RESPONSE
+Re: T-082
+Message: Revised deliverables/head-of-underwriting/carrier-match.md (still IN_REVIEW; no code, prompt, or scorer changed, no model call, nothing sent). All four reviews addressed; the class-list / routing changes are recorded as D-042. @senior-underwriter High-1: residual branch defined — line 18 "a readable class that matches no Carrier A, B, or C list, is not prohibited, and is within every cap is `no_match` — not a decline", added to the no-match list at line 76. High-2: `kitchen` removed from Carrier B (line 39) and the collision rule added at line 16 ("match class words of two or more carriers → senior referral / `hold`"). @responsible-ai High-1: lists made language-neutral at line 14, Spanish/spelling variants added to every token (lines 26–29, 39–40, 54–55, 69–74), EN-vs-ES counterfactual required in T-067. High-2: housing proxy-review entry at lines 80–84 plus the recommendation-mix test routed to T-067; the veto stays open — routing `subsidized housing` to Carrier C is @actuary's and my trade-off and is not taken here. @actuary High-1: B and C caps marked provisional pending your signoff (lines 48, 61, 108–111) and Carrier C left unpriced until a filing; I confirmed no cap. High-2: loss gate now requires a read, verifiable loss run and says a no-known-loss letter never satisfies it (line 46). @compliance Medium-1: consultation record updated (lines 113–120); @senior-underwriter's reply is recorded, @actuary's cap reply still pending, so criterion 5 stays unticked. No veto lifted, and no decision recorded for @actuary or @responsible-ai.
+Needs response by: @actuary — confirm or correct the B and C caps and post the reply; @responsible-ai — say whether the two High findings are resolved.
+
+---
+[2026-10-13 | @software-engineer → @model-risk, @compliance] TYPE: ANSWER
+Re: T-094
+Message: `deliverables/architecture/architecture.md` is revised; T-094 stays IN_REVIEW. I checked every finding in code, decisions, or on disk first. All held; no OBJECTION. Section 12 lists each.
+@model-risk. Medium-1: the path to `sent` is removed; `all_values_rejected` has no exit; how a file leaves it is not decided (@user, Q12). Medium-2: D-013 item 3 indexed in 7, baseline beside it in 2.12 and 9 (2 of 8 scored fields at 9 hits); not ruled withdrawn (Q13). Medium-3: corrected by dated notes in 2.7 and 5.3.1. Low: gate 8 note in 2.4.2; D-008 cited; owners stay Q1 to Q3 for @pm.
+@compliance. R1: git remote added to 1, 3.1, 3.2, the 3.3 diagram; A-07 open point added. `origin/main` holds the same stores as `origin/ai-team` (local refs). PRIVATE is cited as your report; I ran no network command. R2: as Medium-1; the `needs_human --> ready` label is removed. R3: A-08 and C-07 cited in 4.2; legal confirmation listed (Q15). R4: A-03, A-07, `data-use-review.md` cited; 7 years labeled. R5, R6: fixed; G31 added.
+Also updated: T-026 lifted, T-082 fairness veto, D-041. Diagrams not rendered. Please look again. I do not approve it.
+Needs response by: the next review round
+
+---
+[2026-10-13 | @software-engineer → @ai-engineer-assistant, @data-engineer, @pm, @user] TYPE: HANDOFF
+Re: T-094
+Message: After the two T-094 reviews I added dated correction notes inside your sections of `deliverables/architecture/architecture.md`, each a plain fact I read in code or on disk; your original text is left as written. @ai-engineer-assistant: 2.4.2 (gate 8: a third row for a field in conflict is stored as its value, `ai/prepare.py:534-537`), 2.7 (a failed file can still hold document-rule and P-005 values at 0.95, `:564-565`; D-008 explains the seven requests), 2.12 (D-013 item 3 is a decided target), 3.1 (register citations). Reword if you wish; whether either behavior should change needs a P-### (Q16). @data-engineer: 3.2 and 5.3.1 notes; whether the git remote becomes a row of your store tables is yours (Q17). @pm: Q1 to Q4 still open. @user: Q12 (exit from `all_values_rejected`), Q13 (does D-013 item 3 stand as written), Q9. I decided none of them. No code changed.
+Needs response by: each role's next turn
+
+---
+[2026-10-13 | @model-risk → @software-engineer, @ai-engineer-assistant, @data-engineer, @pm, @user] TYPE: REVIEW
+Re: T-094
+Message: Second look at `deliverables/architecture/architecture.md` as revised. Verdict: APPROVE. No High or Medium open. Not a production approval; my vetoes on T-017, T-027, and T-059 stand. Recomputed: 976 citations in range, 0 out; five Mermaid blocks; `git status --short underwriting_pipeline simulation` empty; no model call made by me.
+Medium-1 resolved: 4.2 draws no exit from `all_values_rejected`; the exit is Q12, @user's.
+Medium-2 resolved: D-013 item 3 is in 7, 2.12, 9, G34; the baseline beside it matches `SUB-077-086-holdout.md` (two fields at 9, six under).
+Medium-3 resolved: 2.7 and 5.3.1 corrected; matches `ai/prepare.py:564-565`, `:334-343`.
+Lows resolved: gate 8 third row (`:534-537`, `:550`); D-008 and the seven files.
+Low still open, @pm's: one owner for components 8, 10, 13 (Q1 to Q3).
+New Low-1: D-042 (ACCEPTED, amends D-041) is not in section 7 or 2.6.
+New Low-2: about 20 citations use a bare file name (`agency-register.md:17`), against section 0's path rule.
+New Low-3: the three changed diagrams were not rendered.
+Needs response by: Lows before T-094 is marked DONE; none blocks.
+
+---
+[2026-10-13 | @compliance → @software-engineer, @ai-engineer-assistant, @data-engineer, @pm, @user] TYPE: REVIEW
+Re: T-094
+Message: Second look at `deliverables/architecture/architecture.md` as revised. Verdict: APPROVE. No veto on T-094. Judged from the file, code, disk, and DECISIONS, not the author's case.
+My six findings, each re-checked:
+R1 resolved. The git remote is in section 1 (table and diagram), 3.1 item 2, 3.2, the 3.3 diagram, and as an open point on A-07 (3.1, 3.2, Q14, G30). Re-measured on `origin/ai-team` and `origin/main`: 189, 8, 10, 10, 16, 3, 80, 25, 1; 9 replies and the log in `47c5324`, on both branches. Visibility still PRIVATE (`gh repo view`, today).
+R2 resolved. `all_values_rejected` has no exit in the 4.2 diagram; `needs_human --> ready` has no label; the exit is @user's (Q12). Matches D-024 and `proposals-P-010-P-011.md:41`.
+R3 resolved. 4.2 states no state sends to an applicant and no notice is written; grep for notice, applicant, adverse in the `.py` files: no match. A-08 cited at `agency-register.md:18`; @compliance is on the declined row; the Texas question carries [NEEDS LEGAL CONFIRMATION] (Q15).
+R4 resolved. A-03, A-07, and `data-use-review.md:10`, `:16-17`, `:28` are cited at the right lines; the 7 years is labeled as from the replaced register.
+R5 resolved. One hit, `app/package.py:6`, a comment.
+R6 resolved. The three section 7 cells are restated; G31 holds (26 of 140, all in SUB-001 to SUB-016).
+Also re-measured: 693 full-path citations in range, 0 out; five Mermaid blocks; `git status --short underwriting_pipeline simulation` empty; six open vetoes on five tasks, as 8.2 and 9 say.
+Low, none blocks:
+L1. D-042 (2026-10-13, ACCEPTED, amends D-041) is not in section 7, 8.1 line 4, or the T-082 row of 8.2. Add it; by its own text it does not lift the fairness veto.
+L2. 4.2 says the code writes "seven kinds of file" besides the cache and log. The scorers also write score files and memos (`ai/eval_holdout_077.py`, G22). The conclusion holds: none is addressed to an applicant. Fix the count or scope it to `prepare.py` and `app/`.
+L3. The remote is not a row of 6.2. The document says so (3.2, Q17). It stays @data-engineer's.
+L4. The status line says neither reviewer has looked again.
+Still mine: a retention row, a model-provider row, and a GeoNames row in `agency-register.md` (G35). Not done in this review.
+This lifts no veto. My T-020 veto stands with (a) to (f) unbuilt. It is not a production approval, and an approved P-### is not one either. I will veto any build that stores a real applicant file, sends one to a model host, or pushes one to a remote before A-07 is confirmed. Simulated memo, not a legal opinion.
+Needs response by: Lows before T-094 is marked DONE; none blocks.
+---
+[2026-10-13 | @model-risk → @senior-underwriter, @ai-engineer-assistant, @pm] TYPE: RESPONSE
+Re: T-090
+Message: High-1 addressed. Edited the dated lines in holdout-SUB-067-076.md and holdout-SUB-077-086.md to add "@senior-underwriter". No numbers changed, no scores recounted (D-025), no code/prompt/scorer changed. New lines:
+  - holdout-SUB-067-076.md: "- **loss runs = valued-through date only; claims are not read or scored** (@senior-underwriter, T-044 High-1). ..."
+  - holdout-SUB-077-086.md: "- **loss runs = valued-through date only; claims are not read or scored** (@senior-underwriter, T-053 High-1). ..."
+No other changes. T-090 stays IN_REVIEW.
+Needs response by: before T-039, T-044, and T-053 close.
+
+---
+[2026-10-13 | @software-engineer → @model-risk, @compliance, @pm, @data-engineer] TYPE: ANSWER
+Re: T-094
+Message: Both second reviews read; each Low checked before any edit. Done in `deliverables/architecture/architecture.md`: D-042 added to 2.6, section 7, 8.1 line 4, and the T-082 row of 8.2, with its own words that it lifts no veto and confirms no cap. The "seven kinds of file" count is scoped to `prepare.py` and `app/`; the scorers' files are named. Status line restated. Bare file names: I found 13, not about 20, and gave each its full path; 8 are inside contributor sections, where only the folder was added. Section 12.1 lists all of it. Not done: the diagrams are still not rendered. No renderer is on this machine and fetching one is a network call; it stays open. Not mine: L3 (@data-engineer, Q17); owners for components 8, 10, 13 (@pm, Q1 to Q3); the three register rows (@compliance, G35). T-094 stays IN_REVIEW; closing is @pm's.
+
+---
+[2026-10-13 | @software-engineer → @ai-engineer-assistant] TYPE: HANDOFF
+Re: T-096
+Message: `deliverables/architecture/low-level-design.md` has its first pass; T-096 is IN_PROGRESS, not in review. Yours are five blocks marked CONTRIBUTOR PLACEHOLDER, each saying exactly what is needed: P1 (1.3) the module and function map of `ai/` and `cache/`; P2 (2.2 to 2.5) C2 reader, C3 extraction and gates, C4 model call, C5 cache and token log; P3 (2.6, 2.7) `process_submission` and the report key by key, `write_drafts`; P4 (2.8) `approve`; P5 (2.15) the scorers. Section 7 has the rules: As-is copied from code with file and line, Target only what an approved P-### already requires, labeled as proposals. Reading and writing in deliverables/ needs no approval (D-017). Edit nothing under `underwriting_pipeline/`, run no scorer, make no model call. One thing I need from T-070: the name and signature of the saved-status reader (LQ3).
+
+---
+[2026-10-13 | @software-engineer → @user, @pm] TYPE: QUESTION
+Re: T-096
+Message: Your third bullet for the low-level design reached us as "Workbench HTTP endpoints: method," and stopped. Section 3 of `deliverables/architecture/low-level-design.md` is a heading and a note that it is pending; I wrote no endpoint and guessed nothing. Please send the rest of that bullet and any bullets after it. Until then the task cannot go to review. The two handler methods that exist today are described under contract C12 (2.12) because the second bullet asks for every contract; say if you want that moved.
+
+---
+[2026-10-13 | @actuary → @head-of-underwriting, @pm, @senior-underwriter] TYPE: REVIEW
+Re: T-082
+Verdict: **APPROVE WITH CHANGES — the caps are confirmed**; one required definition before T-083.
+Message: Read `deliverables/head-of-underwriting/carrier-match.md` from the pricing / loss-assumption / caps mandate, not the author's case. This reply is the @actuary consultation on the decision-rights row; it sets no price and authorizes none.
+
+**Caps — CONFIRMED.** I confirm, as placeholder **capacity (routing) caps**, **Carrier B $2,000,000** and **Carrier C $10,000,000**. Carrier A's **$5,000,000** is unchanged from T-018 and stands. The **inclusive at-cap behaviour is correct and I confirm it**: at exactly the cap the file still matches that carrier; one dollar over it does not. Rationale: a cap here is a per-risk capacity limit on the placeholder panel, not a price. B at $2M is deliberately tighter than A at $5M because B carries the higher-frequency classes — restaurants and light contractors, where the planning LR is 0.72, above the 0.65 permissible (`deliverables/actuary/pilot-assumptions.md:39`). C at $10M is the outer bound of the placeholder panel and is unpriced. There is no CAT/PML model (`pilot-assumptions.md:59`), so these are set on severity containment per risk, not a defensible PML. They remain provisional — not filed, not priced.
+
+**Gate wording — CONFIRMED.** "3 clean years not checked" while no claim is read is the correct card text, and the gate is satisfied only by a read, verifiable carrier loss run with a valued-through date; a no-known-loss letter is an assertion, not a run (my T-018 review, now stated at line 46). Confirm.
+
+Findings:
+- **High:** none. No cap number needs correcting on the placeholder panel.
+- **Medium-1 (cap unenforceable as written):** "TIV" is named but never defined. Required: state the cap base — physical-damage **total insured value (building + contents + business income) per location; liability limits excluded** — and that T-083 reads the same TIV field the points model reads. Without the base, `tiv <= 5_000_000` is a number T-083 cannot compute, so the cap is not enforced (the R-022 defect this task exists to fix).
+- **Medium-2 (cap vs pricing gate conflated):** the caps are routing capacity caps and must not be read as raising the pilot's **TIV ≤ $1M** auto-quote gate (`pilot-assumptions.md:34`). A $3M office matches Carrier A and is still a pricing referral. Required: one line stating the two are separate.
+- **Low-1:** the provisional caps carry no review trigger. Add: re-confirm when the real panel is named or at the pilot's first review, whichever is first.
+- **Low-2:** the loss-gate "read" flag/field is unnamed, so T-083 cannot trigger the wording; name it (same as @senior-underwriter B-159).
+
+Housing trade-off (@responsible-ai H2): I do not price `subsidized housing` into Carrier C now — no loss data, no filing; it stays `no_match`, and the recommendation-mix test is T-067's.
+
+This reply completes the @actuary consultation (@compliance Medium-1; the consultation half of criterion 5). It confirms no filing, sets no price, sends nothing, lifts no veto (the @responsible-ai veto stands), and is not a production approval.
+Needs response by: before T-083 codes the caps.
+
+---
+[2026-10-13 | @ai-engineer-assistant → @model-risk, @software-engineer, @account-manager, @compliance, @pm] TYPE: HANDOFF
+Re: T-070
+Message: Built the `underwriting_pipeline/ai/` part of P-010 (the user typed `approve change P-010`, D-043); choices G2, D1, S1, C1 from D-029, Low-2 not added. Only `underwriting_pipeline/ai/prepare.py` and `underwriting_pipeline/ai/eval_holdout.py` changed.
+- `prepare.approve()`, and the CLI `prepare.py --approve`, now read the last saved run and verify its sha256 themselves (G2) **before the actor is read**, and refuse `extraction_failed` and `all_values_rejected` for every actor, the user included; nothing saved is refused too; the passed-in report is no longer a source of truth.
+- `process_submission()`: an answered reply whose values the gate rejected is now `all_values_rejected` (D-024) — `error` empty, no missing-information request, human review, never sendable; a raised call or an empty reply stays `extraction_failed`.
+- `write_drafts()`: on either refused status the old draft in `simulation/pending-approval/` is removed (D1) and the conflict file is kept; the saved run now holds every `ExtractionRun` key of `deliverables/data-engineer/data-model.md`, with `saved_hash`/`hash_algorithm`.
+- `eval_holdout.py` alone (S1): call-failed count, failed files out of the denominator, `scored: 0` for a failed file; no hit rule and no gold file changed.
+Self-checks pass, no model call and no score file: `python underwriting_pipeline/ai/prepare.py` and `python underwriting_pipeline/ai/eval_holdout.py --self-check`.
+Commits (D-034): `fde95b7` (the code, before the scored run) and `57bd138` (one follow-up dropping the in-memory `status_reason` from the saved payload so the key set stays the closed schema; the run was re-done on this commit and is byte-identical). No force-push; nothing under `src/insureflow`.
+Quick set of 15 to a scratch path: all 15 OK, no failure; **no field's hit count moved** (re-run on the pre-change code `d5750fd` against the warm cache is byte-identical); any dropped field: none.
+Two open items in `deliverables/ai-engineer/proposals-P-010-P-011.md`, T-070 section: the `error` enum vs the extractor's free text (outside P-010), and confirming the hash is the saved run's canonical digest, not the source documents'.
+Requests: @model-risk — is Medium-1 resolved (the `all_values_rejected` status, D-024, and a gate that refuses every actor)? @software-engineer — does the saved-run key set and `read_saved_run()` match what `package.py`/`workbench.py` will read (T-071), and is the reader signature what you need (LQ3, T-096)? @account-manager — is reading the last saved run (G2) enough for "the current run"? @compliance — the hash reader and the free-text `error` against the closed enum.
+This is not a production approval and no send is authorized. T-070's status is not changed (that is @pm's). The two app files (`package.py`, `workbench.py`) are T-071 and are @software-engineer's.
+Needs response by: before T-071 reads the saved run and before @model-risk re-checks T-059 criterion 3.
+
+---
+[2026-10-13 | @pm → @model-risk, @software-engineer, @account-manager, @compliance, @data-engineer, @ai-engineer-assistant] TYPE: UPDATE
+Re: T-070, T-069
+Message: Board reconciliation only; no verdict, no deliverable or code touched, no commit, no push.
+1. T-070: set to IN_REVIEW. The owner built the `underwriting_pipeline/ai/` part of P-010 this turn (the user's `approve change P-010`, D-043) and committed it (`fde95b7`, `57bd138`, `449aabe`); handoff at team/DISCUSSION.md:1966. The owner's own status update did not land, so @pm set the status. No acceptance criterion is ticked — the handoff and the code are left for the reviewers. Reviewers: @model-risk, @software-engineer, @account-manager, @compliance. @model-risk also re-checks T-059 criterion 3 and whether P-010 resolves the T-059 veto; the T-020 veto stays open. T-071 waits on this. Not a production approval.
+2. T-069: stays IN_REVIEW. Its TYPE: RESPONSE is at team/DISCUSSION.md:1855 (both review sets closed in `deliverables/data-engineer/data-model.md`). @compliance and @software-engineer must re-review before T-070's saved-run reader is relied on.
+3. Status counts after the edit — TODO 12, IN_PROGRESS 4, BLOCKED 4, IN_REVIEW 25, DONE 44, CANCELLED 8. R-028 check: the only status line changed this edit is T-070; the unbuilt R-028 set (T-066, T-067, T-068, T-071, T-072, T-076, T-079, T-081, T-083, T-085, T-086, T-087) is still TODO, and T-095/T-096 are IN_PROGRESS from their own turns. No global edit ran; no unbuilt task flipped.
+Needs response by: the reviewers' next turn
+
+---
+[2026-10-13 | @ai-engineer-assistant → @pm, @user] TYPE: PROPOSAL
+Re: T-070, P-018
+Message: D-044 recorded, and a new proposal. (1) Hash basis confirmed: the T-070 memo (`deliverables/ai-engineer/proposals-P-010-P-011.md`, "The hash reading — CONFIRMED (D-044)") now states the G2 gate hashes the saved run's canonical digest — sha256 over the saved `ExtractionRun` payload excluding `saved_hash`/`hash_algorithm`, canonical JSON `json.dumps(sort_keys=True, separators=(",",":"), ensure_ascii=True)`, UTF-8, lowercase hex — NOT the source documents. Locked for T-071. (2) P-018 drafted, `deliverables/ai-engineer/proposal-P-018.md`: normalize the saved `error` written by the gate/extractor from free text to the closed `data-model.md` enum (`rate_limit_429`, `timeout`, `reply_not_usable`, `call_error`). It has the mapping table, choices K1/K2/K3 (how prepare learns the kind) and M1/M2 (enum only vs enum plus text), files, self-checks, and the standing note. @pm: number it and open a task if needed. @user: it needs your exact line `approve change P-018` before any build (D-017). Documentation only; no code changed, no task status changed, no send, not a production approval.
+Needs response by: when @user rules on P-018; @pm before a task is opened
+
+---
+[2026-10-13 | @compliance → @data-engineer, @pm] TYPE: REVIEW
+Re: T-069
+Message: Verdict: **APPROVE**. Earlier High (circular/undefined `saved_hash`) is **RESOLVED**. The doc now fixes the exact bytes: the payload of the key table minus `saved_hash`/`hash_algorithm`, `json.dumps(sort_keys=True, separators=(",",":"), ensure_ascii=True)`, sha256, lowercase hex, computed once before the write; it states the on-disk file is not itself canonical and the reader recomputes and refuses on mismatch. Re-verified against `prepare.py:647-653` (`hash_payload`) and `:656-676` (`read_saved_run`): the code matches the definition exactly. All four acceptance criteria are met — keys listed (`submission`, `status`, `error`, `saved_hash`, `hash_algorithm`, `complete`, `conflicts`, `needs_human`, `sprinklers`, metadata, `fields`); writer `prepare.write_drafts()` and readers `package.py`/`workbench.py` named. No new High. Medium-1 (doc accuracy): "As-is, `write_drafts()` writes only `submission`, `fields`, and `conflicts` — T-070 adds the remaining keys" is false against the landed T-070 code and contradicts this same doc's Reader contract; `write_drafts()` (`prepare.py:716-756`) writes every key. Medium-2 (minimization): `error` is documented as a closed enum that "never [carries] model or document text", but today it is free text (`prepare.py:526,536,606`) shown on the card (`workbench.py:188`); the enum is P-018 (D-044) and is not built. Mark it target/pending, not implemented. Low: `prepare.py:591` should be `:603` (sprinklers), `:596` should be `:613/616` (status literals), and `:651-657` is `hash_payload`, not `write_drafts`. Per D-030 the Medium/Low go to `team/BACKLOG.md` (B-163–B-165) and do not block. The persisted file's retention/access (C-08, C-09) is mine and stays open.
+Needs response by: after the demo.
+
+---
+[2026-10-13 | @ai-engineer-assistant → @software-engineer, @user, @account-manager, @pm] TYPE: ANSWER
+Re: T-096
+Message: All five placeholders in `deliverables/architecture/low-level-design.md` are filled in place (1.3, 2.2 to 2.8, 2.15). T-070 was built and committed during this turn (`fde95b7`, `57bd138`), so my sections cite `ai/prepare.py` and `ai/eval_holdout.py` at `449aabe`; nothing else under `underwriting_pipeline/` changed. LQ3 is answered in 2.6: `read_saved_run(submission: str, extract_dir: Path | None = None) -> dict` and `current_status(...) -> str` (`ai/prepare.py:656`, `:679`); T-070 is IN_REVIEW. @software-engineer, yours and not edited by me: the status lines, the 1.1 counts for those two files, sections 4.3, 5, and 7, and your `ai/prepare.py` line numbers (`:671-674` is now `:771-774`; `:501`, `:502-503`, `:661-667` moved too). Two points on your text: `ignored` labels PDFs, workbooks, and scans as not read (2.2); `_Reply` is in the self-check block, not nested in a function. QUESTION, @user and @account-manager: read in code, the account manager can never approve a missing-information request, because `agency_problem` needs a complete file (2.8). Is that intended? I changed no code and made no model call.
+Needs response by: @software-engineer before T-096 goes to review; @user and @account-manager when T-070 is reviewed.
+
+---
+[2026-10-13 | @software-engineer → @data-engineer, @pm] TYPE: REVIEW
+Re: T-069
+Message: Verdict: **APPROVE**; no veto, not a production approval, lifts nothing. Look-again from the application/integration mandate (can `prepare.write_drafts()` write it and can `package.py`/`workbench.py` read and check it per D-029). **Both earlier High findings are RESOLVED.** High-1 (gate keys): the table now lists `complete`, open `conflicts`, `needs_human`, `sprinklers` (`package.py:39-48`, `workbench.py:42-45`), and the landed `_saved_payload()` (`prepare.py:684-713`) writes exactly those keys, so the saved run alone feeds `agency_problem()`/`route()`. High-2 (circular/undefined `saved_hash`): "The `saved_hash` bytes" (lines 71-79) fixes the exact serialization and it matches `hash_payload()` (`prepare.py:647-653`) and `read_saved_run()` (`:656-676`) byte-for-byte; T-070 computes it once before the write. The key table matches what T-070 built — every key writer and reader use is present. No new High. Medium-1: the Reader contract (line 82) says the workbench *card* reads the saved run and does not call `process_submission()`, but `_saved_payload()` omits display keys `render()` uses — `missing` (direct-indexed, `workbench.py:189`), `extra` (:189), `locations` (:200), premises `address_check` (:185); a card built from the saved run alone would `KeyError` on `missing`. Resolve by narrowing the sentence to the gate decision or by adding the keys; it does not affect the G2 send gate. Medium-2 (stale "write_drafts writes only three keys") and Low (line-citation drift) are @compliance's B-163–B-165. Per D-030 Medium/Low do not block. The one required change: resolve or narrow Medium-1 before T-071 reads the saved run.
+Needs response by: before T-071 reads the saved run.
+
+---
+[2026-10-13 | @model-risk → @ai-engineer-assistant, @software-engineer, @account-manager, @compliance, @pm, @user] TYPE: REVIEW
+Re: T-070
+Message: Independent review of the `underwriting_pipeline/ai/` part of P-010 (G2 D1 S1 C1, no Low-2). Verdict: **APPROVE.** No High findings. Recomputed from the code myself, model stubbed, no model call, no published path written, no file changed. Both self-checks pass (`prepare.py` → "prepare ok"; `eval_holdout.py --self-check` → "eval_holdout ok"). `fde95b7`/`57bd138` touch only `prepare.py` and `eval_holdout.py`; `llm_extract.py` and the gold set are untouched (C1), and `git diff d5750fd..HEAD -- underwriting_pipeline/ai/` is exactly those two files.
+G2: `read_saved_run()` (`prepare.py:656`) fails closed on no file, no/unknown algorithm, or a digest mismatch, and `approve()` (:776) reads it **before** the actor and ignores the passed `report` entirely; the four-actor refusal and the current-hash-vs-saved-hash comparison hold in code and in the self-check. D1: on either status the old draft is removed, the conflict file is kept, `status`+`error` are saved (:728-755). D-024: an answered reply the gate rejects is `all_values_rejected` with empty `error` and no request; a raised call or an empty reply stays `extraction_failed` (`llm_extract.py:475` raises on an empty reply). S1: only the call-failed count and `n` changed in `eval_holdout.py`; no hit rule and no gold file is touched. Quick set of 15 to a scratch path: no field moved (named_insured 13, premises 12, operations 13, sales 13, tiv 14, construction 14, year_built 15, loss_runs 9, conflict 13, status 13); none dropped.
+Veto statement: **P-010 does NOT yet resolve the T-059 veto; the T-059 veto STAYS.** T-070 soundly fixes the `prepare.py`/`eval_holdout.py` half of my resolve-list, but T-059 criterion 3 names *both* send functions. `package.send_to_carrier()` still refuses `extraction_failed` only when a report is passed and sends with none (`package.py:64`), and `workbench.record_decision()` is not yet changed — both are T-071 (@software-engineer). When T-071 lands and the four-actor refusal plus its self-checks pass, the T-059 veto can lift.
+Findings (no change required to T-070; Medium/Low route to team/BACKLOG.md per D-030): Low-1 "byte-identical" — the two scratch quick-15 files differ only in `run`; the counts are identical, not the bytes. Low-2 the CLI `--approve` refusal is exercised only through `approve()`, not as a subprocess. Low-3 for a refused file the saved run's `conflicts` can read empty while the kept conflict file still holds rows — display only, the file is refused. Known and outside P-010: `error` is free text, not the `data-model.md` enum (D-044, P-018).
+An approved proposal is not a production approval; T-070's status is unchanged and no published score is recounted. Nothing is sendable from this review.
+Needs response by: T-071 (@software-engineer); no change to T-070 required.
+
+---
+[2026-10-13 | @software-engineer → @ai-engineer-assistant, @model-risk, @account-manager, @compliance, @pm] TYPE: REVIEW
+Re: T-070
+Message: Independent review of the `underwriting_pipeline/ai/` part of P-010 (G2 D1 S1 C1, no Low-2), judged from the application/integration mandate: is this exactly the interface `package.py`/`workbench.py` (T-071) must call, and does it fail closed? Recomputed from the code, model stubbed, no model call, no published path written, no file changed. Verdict: **APPROVE WITH CHANGES.**
+Interface T-071 must call (confirm): `read_saved_run(submission: str, extract_dir: Path | None = None) -> dict` and `current_status(submission, extract_dir=None) -> str` (`prepare.py:656`, `:679`); `REFUSED_STATUSES = ("extraction_failed", "all_values_rejected")` (`:25`); `hash_payload(payload) -> str` (`:647`); `EXTRACT_DIR`/`HASH_ALGORITHM` (`:22-23`). Both readers raise `ValueError` when there is no file, no/unknown `hash_algorithm`, or a digest mismatch — catchable by T-071 the same way `send_to_carrier`/`record_decision` raise `ValueError` today. The G2 digest is the saved run's canonical payload, not the source documents (D-044). `approve()` reads `read_saved_run(draft.stem)` before the actor is read and ignores the passed `report`; that is the pattern T-071 must copy: self-read the status and hash before the actor check and before any write.
+Medium-1 (change required — fail-closed): `read_saved_run()` does **not** validate `status` against the closed enum `data-model.md` now defines (`complete`, `incomplete`, `extraction_failed`, `all_values_rejected`). `current_status()` returns `payload.get("status") or ""` (`:681`), so a readable saved run whose `status` is missing/empty/unknown returns `""`, which is not in `REFUSED_STATUSES`; a T-071 caller written as `if current_status(sub) in REFUSED_STATUSES: refuse` would then **fail open**. Required: in `read_saved_run()`, after the hash check, refuse unless `status` is a string in that closed set (raise `ValueError`); then `current_status()` never returns `""` for a readable file. Until that lands, T-071 must treat any status not in the known-good set as refuse. No T-070 criterion is shown to fail by this — it is the interface's fail-closed gap.
+Medium-2 (T-071 constraint, no T-070 change): the saved payload carries only the gate keys (`submission`, `status`, `error`, `complete`, `conflicts`, `needs_human`, `sprinklers`, metadata, `fields`) — it omits `missing`, `extra`, `locations`, and the premises `address_check`. The card direct-indexes `missing` and reads `locations` (`workbench.py:189`, `:200`); a card built from the saved run alone would `KeyError`. T-071 must use `read_saved_run()` for the gate/status/hash and keep `process_submission()` for the displayed card, or the display keys must be added (my T-069 Medium-1; @data-engineer to resolve or narrow).
+Low-1: confirm @model-risk's Low-1 — the two scratch quick-15 files differ in `run` only; the counts are identical, not "byte-identical" (memo and handoff wording).
+Low-2: the CLI `--approve` refusal is exercised only through `approve()`, not as a subprocess.
+Low-3: for a refused file the saved run's `conflicts` can read `[]` while the kept conflict file still holds rows (display only; the file is refused).
+Low-4 (T-071 integration): `package.py` has no `sys.path` entry for `underwriting_pipeline/ai`; T-071 must add it (as `workbench.py:21` and `approve()` `:771-773` do) before `import prepare`.
+No High finding. T-070's ten criteria read as met: four-actor refusal, G2 self-read + hash compare, D1, D-024, S1, C1 (`llm_extract.py` untouched), no Low-2, both self-checks pass, quick-15 to scratch with no field dropped. On the T-059 veto I agree with @model-risk: T-070 does not resolve it alone; the second send function is T-071. Not a production approval; lifts no veto. T-070's status is @pm's to change; no published score recounted; no commit or push.
+Needs response by: before T-071 reads the saved run.
+
+---
+[2026-10-13 | @account-manager → @ai-engineer-assistant, @model-risk, @software-engineer, @compliance, @pm, @user] TYPE: REVIEW
+Re: T-070
+Message: Judged from my mandate — I am the only role that may approve a producer request or a carrier package, and nothing sends on a failed extraction. Verdict: **APPROVE WITH CHANGES**. I ran both self-checks myself: "prepare ok" and "eval_holdout ok".
+Producer-request path (`prepare.approve()`): I read the code. `read_saved_run()` runs before the actor is read, checks the saved hash, and refuses `extraction_failed` and `all_values_rejected` for user, user (override), and account-manager, and refuses when nothing is saved; D1 removes the old draft and keeps the conflict file; D-024 gives an all-rejected reply its own status with no request and `complete = False`. That half is fail-closed: **nothing can be approved on a failed or all-rejected file by any actor, and no draft remains to approve.**
+**But nothing is send-safe yet. `package.send_to_carrier()` is unchanged by T-070.** A carrier package still sends on a failed or all-rejected file whenever no report is passed (the user path, `package.py:64`), it never refuses `all_values_rejected` at all, and `workbench.record_decision()` is unchanged. **As the code stands a carrier package can still be sent on a failed or all-rejected file.** That is T-071 (@software-engineer), not a T-070 defect; the T-059 veto stands.
+Findings — **High-1 (T-071; it is the send hazard above):** no carrier package is blocked on a failed or all-rejected file until T-071 wires the reader into `send_to_carrier()`/`record_decision()`; until then I will not rely on the send gate and no package may be sent. **Medium-1 (change required, fail-closed):** `read_saved_run()` — and so `approve()` — accepts a saved run whose `status` is missing, empty, or outside the closed enum; it is not in `REFUSED_STATUSES`, so if the file otherwise passes my four rules `approve()` writes to `to-producer`. Require `status` to be a string in the closed set (`complete`, `incomplete`, `extraction_failed`, `all_values_rejected`) or raise; then an unknown status is never approvable. Same as @software-engineer Medium-1. **Medium-2 (answer to the QUESTION at DISCUSSION.md:2004; pre-existing, non-blocking):** yes — read in code, the account manager can never approve a missing-info request, because `agency_problem()` requires `complete` and a draft exists only for an incomplete file. My role's own rule ("the file is complete") cannot hold for a request whose purpose is to fill a gap. It fails closed, so not a safety risk, but the producer-request approval path is dead; the rule is @head-of-underwriting's with @pm. **Low-1:** G2 is only as current as the last `write_drafts()` run; a page added to the inbox after it is never read, so it is never marked needs-human and the gate can approve on the stale run — acceptable under the user's G2 choice (D-029), but the run must be re-made after any new document. **Low-2:** I agree with @model-risk's Low-1 (counts identical, not the bytes) and @software-engineer's Low-2, Low-3, and Low-4.
+On my seat's question: G2 is enough, because `write_drafts()` saves a run for every submission, the refused ones included (`prepare.py:751-755`), so a failed run overwrites the good one and the gate then refuses. The one required change before T-071 relies on the reader is Medium-1. Not a production approval; lifts no veto; T-070's status and its acceptance boxes are not mine to change.
+Needs response by: T-071 (@software-engineer); the Medium-1 reader change before T-071 relies on it.
+
+---
+[2026-10-13 | @compliance → @pm, @ai-engineer-assistant, @model-risk, @software-engineer, @account-manager, @user] TYPE: REVIEW
+Re: T-070
+Message: Independent review of the `underwriting_pipeline/ai/` part of P-010 (G2 D1 S1 C1, no Low-2), judged from my mandate — a carrier or a producer must not be misled and nothing sends on a failed extraction (D-021, D-024, D-033). Recomputed from the code and the scratch files; model stubbed; no model call; no published path written; no deliverable or code changed. Verdict: **APPROVE WITH CHANGES.** I do **not** veto T-070.
+Verified by re-running: `python underwriting_pipeline/ai/prepare.py` → "prepare ok"; `python underwriting_pipeline/ai/eval_holdout.py --self-check` → "eval_holdout ok"; both temp-only, no model call, no score file. `fde95b7`/`57bd138` touch only `prepare.py` and `eval_holdout.py`; `llm_extract.py` is unchanged (last change `ddb95ce`) and the gold set is unchanged (`2b5d084`) — C1 and S1 hold. The `eval_holdout.py` diff is exactly `scored: 0 if report.get("error")`, the `call_failed` count, and `n = len(rows) - call_failed`; no `hit_*` rule was touched. `quick-15-after-T-070.json` counts (named_insured 13, premises 12, operations 13, sales 13, tiv 14, construction 14, year_built 15, loss_runs 9, conflict 13, status 13 of 15) match the memo and match `quick-15-old-code.json` except the `run` id — no field moved, none dropped.
+On my seat (the `prepare.py` half): `approve()` calls `read_saved_run(draft.stem)` before the actor is read, verifies the saved sha256 (G2), refuses `extraction_failed`/`all_values_rejected` for user, user (override), and account-manager, and refuses when nothing is saved; the CLI `--approve` goes through the same call. D1 removes the old draft and keeps the conflict file; an answered all-rejected reply gets its own status with no request and `complete = False`; a raised or empty call stays `extraction_failed`. So **no producer request can be approved on a failed or all-rejected file by any actor**, and no draft remains to approve. **No High finding against T-070.**
+High-1 (not a T-070 defect; T-071): `package.send_to_carrier()` is unchanged — it refuses `extraction_failed` only `if report` and sends with none (`package.py:64`), and it never refuses `all_values_rejected`; `workbench.record_decision()` is unchanged. **A carrier package can still be sent on a failed or all-rejected file.** My T-020 veto and @model-risk's T-059 veto stay open; T-020 item (b) ("the send takes no report from the caller") needs both T-070 and T-071.
+Medium-1 (change required — fail-closed): `read_saved_run()` does not validate `status` against the closed set `data-model.md` defines (`complete`, `incomplete`, `extraction_failed`, `all_values_rejected`). `current_status()` returns `payload.get("status") or ""` (`prepare.py:681`), which is not in `REFUSED_STATUSES`; a T-071 caller written `if current_status(sub) in REFUSED_STATUSES: refuse` fails open, and `approve()` itself would treat an unknown status as not refused. Required: after the hash check, raise `ValueError` unless `status` is a string in that closed set.
+Medium-2 (T-071 constraint, no T-070 change): "goes to human review" is not verifiable here — the workbench card is T-071. The saved payload omits `missing`/`extra`/`locations`/`address_check`; the card cannot be built from `read_saved_run()` alone.
+Low-1: G2 is as current as the last `write_drafts()` run; a page added after it is never read and the gate can approve on the stale run (accepted G2 limitation, D-029).
+Low-2: the memo's "byte-identical" is inaccurate — the two scratch quick-15 files differ by `run` id; the counts are identical.
+Low-3: `error` is free text, not the `data-model.md` closed enum (D-044, P-018 — outside P-010).
+Low-4: a refused file's saved run `conflicts` can read `[]` while the kept conflict file holds rows (display only; the file is refused).
+Low-5: retention/access control of the persisted run holding the insured's name and address is unstated (C-08, C-09).
+No auto-decline, no auto-bind; nothing is sendable from this review. An approved proposal is not a production approval. The one required change is Medium-1. T-070's status and its acceptance boxes are not mine to change.
+Needs response by: @ai-engineer-assistant, the Medium-1 reader change; @software-engineer, T-071 (the carrier-send half).
+
+---
+[2026-10-13 | @ai-engineer-assistant → @software-engineer, @account-manager, @compliance, @model-risk, @pm, @user] TYPE: RESPONSE
+Re: T-070
+Message: Medium-1 (the one convergent REQUIRED change) is fixed. **Scope check — within P-010, not a new gate rule:** the refused set is unchanged (`extraction_failed`, `all_values_rejected`); what changed is that the G2 reader refuses to operate on a `status` it cannot interpret. That is fail-closed hardening of the P-010 reader the user already approved (D-043, G2/D-029), so I built it and did not stop. No prompt, model, OCR, or hit rule changed; `llm_extract.py` untouched; no scorer main run against a published path (D-025).
+**What changed — `underwriting_pipeline/ai/prepare.py` only:**
+- New constant (`:28`): `STATUSES = ("complete", "incomplete", "extraction_failed", "all_values_rejected")`.
+- In `read_saved_run()`, after the hash check (`:681-682`): `if not isinstance(status, str) or status not in STATUSES:` → `raise ValueError(f"the saved run for {submission} has status {status!r}, outside the closed set; refusing")`. A hash-valid run with an empty, unknown, or missing `status` now raises.
+- `current_status()` (`:688`) is now `return read_saved_run(submission, extract_dir)["status"]` — the `or ""` is gone, so for a readable file it can never return `""`.
+**Commit (D-034):** `140a373` (`underwriting_pipeline/ai/prepare.py` only), on `ai-team`, no force-push, `src/insureflow` left out. Not a production approval; lifts no veto; T-070's status and boxes are @pm's/reviewers'.
+**Self-check output (no model call, no score file):** `python underwriting_pipeline/ai/prepare.py` → `prepare ok`; `python underwriting_pipeline/ai/eval_holdout.py --self-check` → `eval_holdout ok`. The `prepare.py` self-check (`:1147-1169`) saves three hash-valid runs with `status` = `""`, `"banana"`, and missing, asserts both `read_saved_run` and `current_status` raise for each, and asserts an in-set `incomplete` still reads.
+**Lows:** the one that was mine and cheap — "byte-identical" (Low-1 @model-risk / Low-2 @software-engineer / Low-2 @compliance) — is corrected in the memo. The rest are display-only (saved-run `conflicts` vs kept file), a T-071 constraint (display keys / `sys.path`), outside P-010 (`error` free text → P-018), the accepted G2 stale-run window, or a reviewer's own seat (retention/access C-08/C-09) → `team/BACKLOG.md`.
+Requesting re-review from @software-engineer, @account-manager, @compliance, @model-risk.
+Needs response by: before T-071 reads the saved run.
+
+---
+[2026-10-13 | @software-engineer → @ai-engineer-assistant, @model-risk, @account-manager, @compliance, @pm] TYPE: REVIEW
+Re: T-070
+Message: LOOK-AGAIN from the application/integration mandate (is the reader the exact interface `package.py`/`workbench.py` must call, and does it fail closed), on `140a373`. Recomputed from the code; model stubbed; no model call; no scorer main run against any published path; no file changed. Verdict: **APPROVE.**
+**My Medium-1 (the one required change) is now RESOLVED.** It required the reader to refuse a missing/empty/unknown `status`. In `read_saved_run()`, after the hash check, `status = payload.get("status"); if not isinstance(status, str) or status not in STATUSES: raise ValueError(...)` (`prepare.py:680-682`), with `STATUSES = ("complete", "incomplete", "extraction_failed", "all_values_rejected")` (`:28`); `current_status()` is now `return read_saved_run(submission, extract_dir)["status"]` — the `or ""` is gone (`:688`). So a hash-valid run with an empty, unknown, or missing status raises a catchable `ValueError`, and for a readable file `current_status()` can only return an in-set status. A naive T-071 caller written `if current_status(sub) in REFUSED_STATUSES: refuse` can no longer fail open: an unknown status raises before the branch, and both refused statuses are still matched. The self-check is the right one: it saves three hash-valid runs with `status` = `""`, `"banana"`, and missing, recomputes `saved_hash`, and asserts **both** `read_saved_run` and `current_status` raise for each; it also asserts an in-set `incomplete` still reads (`:1147-1169`). Ran both self-checks myself: `python underwriting_pipeline/ai/prepare.py` → `prepare ok`; `python underwriting_pipeline/ai/eval_holdout.py --self-check` → `eval_holdout ok` (temp-only, no model call, no score file).
+Scope is clean: `140a373` is `prepare.py` only (32+/3-), on top of `fde95b7`/`57bd138`; `llm_extract.py` is untouched and the gold set is unchanged, so C1 and S1 still hold.
+No new High. My Medium-2 is unchanged and remains a **T-071 constraint, not a T-070 change**: the saved payload omits display keys (`missing` is direct-indexed at `workbench.py:189`, plus `extra`, `locations`, `address_check`), so T-071 must use `read_saved_run()`/`current_status()` for the gate/status/hash and keep `process_submission()` for the displayed card, or the keys must be added. Lows carry over: Low-1 the two scratch quick-15 files differ only by `run` (counts identical, not bytes — corrected in the memo, agree with @model-risk); Low-2 the CLI `--approve` refusal is exercised only through `approve()`; Low-3 a refused file's saved-run `conflicts` can read `[]` while the kept conflict file holds rows (display only); Low-4 T-071 must add the `ai/` `sys.path` before `import prepare` (`package.py` has none today).
+On the vetoes I agree with @model-risk and @account-manager: this APPROVE is the `prepare.py` half only. `package.send_to_carrier()` still sends on a failed/all-rejected file when no report is passed (`package.py:64`) and never refuses `all_values_rejected`, and `workbench.record_decision()` is unchanged — **T-071 is still the blocker; the T-059 and T-020 vetoes stand.** My prior "APPROVE WITH CHANGES" is now satisfied on the point it required; T-070's status and its acceptance boxes are not mine to change. Not a production approval; no published score recounted; no commit or push.
+Needs response by: none for T-070 from me; T-071 (@software-engineer) reads the now-fail-closed reader.
+
+---
+[2026-10-13 | @account-manager → @ai-engineer-assistant, @model-risk, @software-engineer, @compliance, @pm, @user] TYPE: REVIEW
+Re: T-070
+Message: LOOK-AGAIN on `140a373`, judged from my mandate — I am the only role that may approve a producer request or a carrier package, and nothing sends on a failed extraction (D-021, D-024). Recomputed from the code, model stubbed, no model call, no published path written, no file changed. Ran both self-checks myself: `python underwriting_pipeline/ai/prepare.py` → "prepare ok"; `python underwriting_pipeline/ai/eval_holdout.py --self-check` → "eval_holdout ok" (temp-only, no score file). Verdict: **APPROVE. My Medium-1 is now RESOLVED.**
+**Medium-1 (the one required change) — RESOLVED.** It required the reader to refuse a saved run whose `status` is missing, empty, or outside the closed enum, because `approve()` reads the status and an unknown value is not in `REFUSED_STATUSES`, so a file that otherwise passed my four rules could be written to `to-producer`. The fix does exactly that: `STATUSES = ("complete", "incomplete", "extraction_failed", "all_values_rejected")` (`prepare.py:28`); in `read_saved_run()`, after the hash check, `if not isinstance(status, str) or status not in STATUSES: raise ValueError(...)` (`:680-682`); `current_status()` is now `return read_saved_run(submission, extract_dir)["status"]` with the `or ""` removed (`:688`). Since `approve()` calls `read_saved_run(draft.stem)` as its first act (`:783`), an empty, unknown, or missing status now raises **before the actor is read and before any write**. The self-check (`:1147-1169`) saves three hash-valid runs with `status` = `""`, `"banana"`, and missing, recomputes `saved_hash`, asserts **both** readers raise for each, and asserts an in-set `incomplete` still reads. I re-read it and re-ran it; it does what it claims.
+**Explicitly, as the code stands: nothing at the producer-request level can be approved on a failed or all-rejected file, by any actor.** `read_saved_run()` refuses when nothing is saved and validates the status; `approve()` then refuses `extraction_failed` and `all_values_rejected` for `user`, `user (override)`, and `account-manager` (`:784-786`); D1 removes the old draft on either status and keeps the conflict file (`:740-742`); D-024 gives an all-rejected reply its own status with no request and `complete = False`. So there is no draft left to approve and no status path around the gate. This half is fail-closed.
+**High-1 (T-071, not a T-070 defect; unchanged):** `package.send_to_carrier()` is untouched — it refuses `extraction_failed` only when a report is passed and sends with none (`package.py:64`), never refuses `all_values_rejected`, and `workbench.record_decision()` is unchanged. **A carrier package can still be sent on a failed or all-rejected file.** I will not rely on the send gate and no package may be sent until T-071 wires the reader into both functions; **the T-059 veto stands.**
+**Medium-2 (T-071 constraint, no T-070 change):** the saved payload omits the display keys `missing` (direct-indexed, `workbench.py:189`), `extra`, `locations`, and premises `address_check`, so T-071 must gate/status/hash from `read_saved_run()` and keep `process_submission()` for the card. **Medium-3 (pre-existing, non-blocking; a rule question for @head-of-underwriting and @pm):** read in code, the account manager can never approve a missing-info request, because `agency_problem()` requires `complete` and a draft exists only for an incomplete file; it fails closed, so it is not a safety risk, but my role's "the file is complete" rule can never hold for a request whose purpose is to fill a gap.
+**Low-1:** G2 is as current as the last `write_drafts()` run; a page added after it is never read and the gate can approve on the stale run (accepted G2 limitation, D-029). **Low-2:** I agree with @model-risk Low-1 and @software-engineer Low-2/Low-3/Low-4 (counts identical not bytes; CLI `--approve` only transitive; a refused file's saved `conflicts` can read `[]`; T-071 must add the `ai/` `sys.path`). No new High against T-070. On the vetoes I agree with @model-risk and @software-engineer: this APPROVE is the `prepare.py` half only; T-070 does not resolve the T-059 veto alone. Not a production approval; lifts no veto; T-070's status and its acceptance boxes are not mine to change; no commit or push; no send.
+Needs response by: @software-engineer, T-071 (the carrier-send half); @head-of-underwriting and @pm, the Medium-3 rule question.
+
+---
+[2026-10-13 | @compliance → @ai-engineer-assistant, @software-engineer, @pm] TYPE: REVIEW
+Re: T-070
+Message: LOOK-AGAIN after `140a373`, judged on the deliverable and the landed code, not the author's case. Verdict: **APPROVE**; no veto on T-070.
+**My Medium-1 (the reader must fail closed on a missing, empty, or unknown `status`) is now RESOLVED.** `STATUSES` is the closed set at `prepare.py:28`; after the hash check `read_saved_run()` raises unless `status` is a string in that set (`:680-682`); `current_status()` returns `read_saved_run(...)["status"]` with the `or ""` gone (`:688`). It can no longer return `""`, so `if current_status(sub) in REFUSED_STATUSES` cannot fail open. I re-ran both self-checks myself ("prepare ok"; "eval_holdout ok"), temp-only, no model call, no published path written, and probed it independently: hash-valid runs with `status` = `""`, `"banana"`, missing, and JSON-null all raise in **both** readers, while an in-set `incomplete` still reads; and `approve()` refuses `extraction_failed` and `all_values_rejected` for user, user (override), and account-manager with the status message, before any write.
+Relevant T-070 criteria confirmed for my seat: the gate refuses both statuses for every actor (`:783-786`, read before the actor is looked at); G2 reads the status and the sha256 itself, over the saved-run canonical digest, not the source documents (D-044); D1 removes the old draft and keeps the conflict file (`:740-742`); D-024 gives an all-rejected reply `status = all_values_rejected`, empty `error`, no request, `complete = False`, never sendable.
+**High: none against T-070.**
+**Medium (T-071, no T-070 change):** the saved run omits the display keys (`missing`/`extra`/`locations`/`address_check`), so T-071 must gate from `read_saved_run()` and keep `process_submission()` for the card.
+**Low (route to team/BACKLOG.md per D-030):** G2 is as current as the last `write_drafts()`; counts identical, not bytes; CLI `--approve` only transitive; a refused file's saved `conflicts` can read empty; T-071 must add the `ai/` `sys.path`.
+**Veto unchanged, and not T-070's to resolve:** my T-020 veto (and @model-risk's T-059 veto) need T-071 — `package.send_to_carrier()` still sends on a failed/all-rejected file when no report is passed and never refuses `all_values_rejected`, and `record_decision()` is unchanged. As written, nothing at the producer-request level can be approved on a failed or all-rejected file by any actor, so the `prepare.py` half is fail-closed. Not a production approval; T-070's status is @pm's to change; no commit or push; no send.
+Needs response by: @software-engineer, T-071 (the carrier-send half that resolves the veto).
+---
+[2026-10-13 | @model-risk → @ai-engineer-assistant, @software-engineer, @account-manager, @compliance, @pm] TYPE: REVIEW
+Re: T-070
+Verdict: APPROVE.
+Findings. High: none. Medium: none open. My first-review Medium-1 (the status reader returned "" for a missing/empty/unknown status, so a caller written `if current_status(sub) in REFUSED_STATUSES: refuse` failed open) is closed by 140a373: after the hash check, `read_saved_run()` raises unless `status` is a string in `STATUSES = ("complete", "incomplete", "extraction_failed", "all_values_rejected")`, and `current_status()` returns that checked value, so it never returns "". I reproduced both self-checks (no model call): `prepare.py` → "prepare ok"; `eval_holdout.py --self-check` → "eval_holdout ok". I also read the T-070 scratch pair: they differ only in the run id, and the counts are identical (`named_insured 13, premises 12, operations 13, sales 13, tiv 14, construction 14, year_built 15, loss_runs 9, conflict 13, status 13` of 15) — no field moved. Low: (1) the quick set ran wholly from cache (`model_calls: 0, from_cache: 15, tokens: 0`), so it checks scoring only and not extraction; acceptable because extraction did not change; (2) `error` is still free text vs the data-model enum — P-018, noted, not T-070's to fix.
+Veto. My T-059 OBJECTION STAYS — it is not lifted. T-070 closes the `underwriting_pipeline/ai/` half (criterion 3's draft and approve paths), but the carrier send still fails open: `package.py:64 send_to_carrier()` refuses only `extraction_failed` and only `if report`, so it sends when no report is passed and never refuses `all_values_rejected` (`package.py:37` is the same). That file is T-071. The T-059 veto stands until T-071 lands and the three T-059 reviewers look again; this review does not resolve it.
+An approved P-010 (D-043) is not a production approval. No send is authorized. I did not edit the deliverables or code, change T-070's status, or run a scorer against a published path.
+Needs response by: when T-071 lands.
+
+---
+[2026-10-13 | @pm → @data-engineer, @ai-engineer-assistant, @software-engineer, @model-risk, @account-manager, @compliance, @user] TYPE: UPDATE
+Re: T-069, T-070, T-071
+Message: Board maintenance only; no verdict, no deliverable or code edit, no commit. (1) T-069 → DONE. Both reviewers returned APPROVE: @compliance at team/DISCUSSION.md:1996 (all four criteria met; earlier High `saved_hash` RESOLVED) and @software-engineer at :2008 (both earlier High findings RESOLVED; key table matches what T-070 built). All four criteria ticked. (2) T-070 → DONE. All four reviewers APPROVE after the fail-closed fix (`140a373`): @model-risk :2111, @software-engineer (look-again) :2079, @account-manager (look-again) :2089, @compliance (look-again) :2100; ten criteria ticked. **The T-059 veto STAYS** — it is not resolved by T-070 alone; `package.send_to_carrier()`/`record_decision()` are T-071, and @model-risk, @account-manager, @compliance, and @software-engineer all concur (:2115, :2094, :2108, :2085). @compliance's T-020 veto also stays. (3) T-071 left TODO for @software-engineer; not started; T-059 and T-020 can lift only when it lands and the T-059 reviewers look again. Residual Medium/Low parked in team/BACKLOG.md per D-030: T-069 @software-engineer Medium-1 is B-166 (same as T-070 Medium-2); T-070 findings are B-167–B-173. @compliance's three T-069 findings were already B-163–B-165. No verdict from @pm; nothing sendable; not a production approval.
+Needs response by: @software-engineer when T-071 starts; the T-059 reviewers when it lands.
+
+---
+[2026-10-13 | @software-engineer → @model-risk, @account-manager, @senior-underwriter, @compliance, @pm, @user] TYPE: HANDOFF
+Re: T-071
+Message: Built. Both files now read the saved run themselves; no report is trusted for the status. Self-checks pass, no model call, temp dirs only. Commit (D-034) `dd45467` (`package.py` and `workbench.py` only), on `ai-team`, no force-push, `src/insureflow` left out.
+
+**`underwriting_pipeline/app/package.py` (T-071, items 1 and 2).**
+- Top (`:20-22`): `ROOT` + `sys.path.insert` for `underwriting_pipeline/ai` before `import prepare` (B-169; the sys.path Low all four reviewers flagged).
+- `send_to_carrier(submission, actor, out_dir, body, reason="")` (`:82`): **the `report` parameter is removed** — T-020 item (b), "the send takes no report from the caller". Its first act is `prepare.read_saved_run(submission)` (`:90`), before the actor check and before any write (the pattern `prepare.approve()` uses). A status in `prepare.REFUSED_STATUSES` (`:92`) is refused for every actor. A missing/reread run, a changed hash, or a status outside the closed set makes `read_saved_run` raise `ValueError` — caught the same way the old refusals were. The actor, reason, `to-carrier`, and two-sentence gates follow.
+- `agency_problem(target)` (`:50`): reads the status itself from `prepare.read_saved_run` (`:60`); `target` is a submission id, or the saved-run dict that `prepare.approve()` still passes (`ai/prepare.py:798`, which is not mine to edit) — only `target["submission"]` is taken from a dict, never its `status`. Refuses both refused statuses (`:53-58`) plus the old `needs_human`/open-conflict/`complete`/appetite checks. A run that cannot be read becomes the refusal "the saved extraction run for this file cannot be read".
+
+**`underwriting_pipeline/app/workbench.py` (T-071, items 3 and 4).**
+- `render()` (`:162`): `refused = report.get("status") in prepare.REFUSED_STATUSES` (`:168`). A refused card shows no `<option>approve</option>`, no `<h3>Missing</h3>`, no `Carrier match:`, no `Score:`; the FAILED line stays and a REJECTED line names the reason for `all_values_rejected`. The card is built from `process_submission()` (kept); the gate is the saved run (the display-keys constraint B-166).
+- `record_decision()` (`:121`): for `approve` it reads `prepare.current_status(submission)` itself (`:135`) and refuses when the status is in `REFUSED_STATUSES` (`:136`); an unreadable or missing run raises, so an approve cannot be recorded on it. Edit and decline are unchanged and still recorded.
+
+**Item 5 — edit/decline on a refused card (my decision with @senior-underwriter, for confirmation):** keep **both** edit and decline. There is no approve. No auto-decline (D-021): the card keeps the file for a person to correct or decline by hand, and decline keeps its required reason. @senior-underwriter: confirm or name the other choice.
+
+**Self-checks (no model call; temp dirs only):** `python underwriting_pipeline/app/package.py` → `package ok`; `python underwriting_pipeline/app/workbench.py` → `workbench ok`; `python underwriting_pipeline/ai/prepare.py` → `prepare ok` (no regression). They cover: a role send refused; both refused statuses refused for user, `user (override)`, `@account-manager`, and an AI role; `agency_problem` refuses both from an id and from a saved-run dict; no saved run, a changed hash, and an unknown status all refused; the account-manager reason rule and an incomplete file refused; a good account-manager send and the user's override on an incomplete file. Workbench: approve refused for both statuses and with nothing saved; edit and decline still recorded (counts approve 1 / edit 3 / decline 2); the refused card hides approve/Missing/carrier match/score and keeps edit+decline.
+
+**Two notes for the reviewers.** (1) `send_to_carrier` no longer accepts `report`; the T-095 stubbed test `deliverables/architecture/tests/test_system_design_stubbed.py:546` and `:571` still pass `report=` — the lead's file, a separate task, not edited here; its as-is/target labels need a re-run. (2) This is item (b) of @compliance's T-020 veto. T-071's status is @pm's to set; no send is authorized; nothing binds; not a production approval.
+Needs response by: @model-risk, @account-manager, @senior-underwriter, @compliance (review of T-071) before T-059 and T-020 can lift.
+
+---
+[2026-10-13 | @model-risk → @software-engineer, @pm, @account-manager, @senior-underwriter, @compliance, @user] TYPE: REVIEW
+Re: T-071
+Message: Verdict: **APPROVE**; no High findings; no new veto. Judged the deliverable and the landed code (`dd45467`), not the author's case. Re-ran all three self-checks myself (`package ok`, `workbench ok`, `prepare ok`), no model call, temp dirs only, no published path, no file changed by me. Independently probed six cases (model not called): a forged `status` in a dict passed to `agency_problem()` is ignored (only its `submission` id is used, re-read from disk); a changed hash is refused though the status reads `complete`; both refused statuses are refused for every actor (user, `@account-manager`, an AI role, and empty); `record_decision()` refuses approve on both and still records edit/decline; the card hides approve/Missing/carrier-match/score for both statuses and keeps edit+decline; nothing saved is refused. All six acceptance criteria read as met. Criterion 5's note is @senior-underwriter's to confirm; the code keeps edit and decline and refuses approve (no auto-decline).
+
+Findings (per D-030, Medium and Low do not block; route to `team/BACKLOG.md`):
+- **Medium-1 (required follow-up, outside the two files):** `deliverables/architecture/tests/test_system_design_stubbed.py:546` and `:571` still call `package.send_to_carrier(..., report=report)`. The parameter is correctly removed (T-020 item (b)), so those cases now raise `TypeError`, not the intended `ValueError`; the design-check suite is stale. Update both calls to the new signature (the no-report target test is already at `:553`). Owner: the architecture task lead (@software-engineer). Not a T-071 acceptance-criterion failure.
+- **Medium-2 (fail-safe; ties to B-166):** the card's `refused` flag comes from the live `process_submission()` while `record_decision()`/`send_to_carrier()` gate on `read_saved_run()`. In the G2 stale-run window the card can offer approve where the saved run is refused (click → 400) or hide approve where the saved run is complete. The write is still refused, so it is not High. Recommend deriving the card's refused flag from the same saved run, or stating the accepted window.
+- **Low-1:** `agency_problem()` catches only `ValueError`; `_route()` imports `workbench` at call time, so an import/environment failure would surface as a non-`ValueError` on the account-manager send path instead of a clean refusal. **Low-2:** `send_to_carrier()` gates on `EXTRACT_DIR/<submission>.json` but does not check that the payload's own `submission` equals the id it read. **Low-3:** no self-check for the forged-dict and mismatched-`submission` paths (both behave correctly; add the cases).
+
+Veto position: no new veto. This P-010 app half closes R-016's carrier-send gap: my T-059 veto's remaining blocker (`send_to_carrier()`/`record_decision()` unguarded) is resolved in substance by T-071, on condition these two files do not change. Per D-029's order the formal lift is recorded at the T-059 re-look (the four T-059/T-020 reviewers reconvene there). An approved change (P-010) is not a production approval.
+
+For the AI Engineer: pending proposals — P-018 (normalize the saved `error` to the data-model enum) waits on your exact line `approve change P-018`; P-006 still waits in order. No new eval score this turn: I ran no scorer (D-025, D-034 respected). Top failure to fix next on the demo path: `team/DEMO-BLOCKERS.md` line 2, T-079 (a carrier send must read a logged underwriter approve).
+Needs response by: @pm to route the Medium/Low to `team/BACKLOG.md`; @software-engineer to update the architecture stub test; the T-059/T-020 reviewers to reconvene.
+
+---
+[2026-10-13 | @pm → @software-engineer, @ai-engineer-assistant, @ml-engineer, @actuary, @compliance, @model-risk, @account-manager, @senior-underwriter, @head-of-underwriting, @user] TYPE: UPDATE
+Re: T-094, T-095, T-096, T-098
+Message: Board update from the user's decisions D-045 to D-051. No verdict, no code, no model or network call, no commit; no status changed, no existing box ticked or unticked.
+- T-096 (@software-engineer, co-lead @ai-engineer-assistant): the missing text arrived (D-046). The cut-off bullet is replaced by the user's six bullets, plus the user's line that @software-engineer reconciles all citations in architecture.md and low-level-design.md to the current commit before review. Criteria are complete; finish and send to review.
+- T-094 (@software-engineer): the same citation criterion added, unticked. D-048, D-049, D-050, D-051 answer Q12, Q13, Q9, Q14; the owner updates the document. Not closed.
+- T-095 (@ml-engineer, @actuary): @compliance is now a reviewer (D-046). D-047 allows one read of the official price pages for 8.3; D-049 sets the accuracy floor.
+- New T-098 (@software-engineer, TODO, P1 below the blockers): the app-side account-manager rule for producer requests, criteria from D-050 only. Reviewers @compliance, @account-manager, @senior-underwriter.
+- D-045 to D-051: each has every field of the decision format and Status ACCEPTED. @pm confirms the form; the Decision lines are the user's words and were not edited.
+Needs response by: @software-engineer and @ml-engineer when T-096 and T-095 are ready for review.
+
+---
+[2026-10-13 | @actuary → @ml-engineer, @pm, @user] TYPE: ANSWER
+Re: T-095
+Message: The D-047 price read was made and returned no prices. One fetch each on 2026-10-13 of `https://cloud.google.com/vertex-ai/generative-ai/pricing` and `https://cloud.google.com/document-ai/pricing`: each returned its title and a truncation marker only (78 and 75 characters of text; the tables are drawn by script, which the fetch tool does not run). I did not try a second route; D-047 allows one read. So P1 to P5 in system-design.md 8.3 stay "assumed, from memory (2025), not verified" and no dollar figure changed: real size $0.068 (Flash) and $0.092 (Pro) a submission. 8.3 now records the attempt, the URLs, the date, that versions 2.5 are set by D-047, and that the token inputs are log rows 1 to 13 of 58. The cost criterion stays unticked. @user: either paste the five prices with the page date, or allow a second read with a browser that runs the page script. D-011 stands; no purchase proposed.
+Needs response by: before T-095 goes to review
+
+---
+[2026-10-13 | @actuary → @ml-engineer, @pm, @user] TYPE: ANSWER
+Re: T-095
+Message: system-design.md 8.3 now carries prices read on 2026-10-13 from the orchestrator's saved browser captures in `deliverables/architecture/sources/` (my own fetch returned nothing; no further network call). Standard tab, prompts up to 200K tokens: Gemini 2.5 Flash $0.30 in, $2.50 out; Gemini 2.5 Pro $1.25 in, $10.00 out; output row is "response and reasoning", so reasoning is billed as output (read). Layout Parser $10.00. All five equal the earlier assumed figures; no dollar figure changed: real size $0.068 (Flash), $0.092 (Pro) a submission. Still not read: Flex/Batch and Priority prices; "per 1M tokens" and "per 1,000 pages" are inferred from the same pages, not printed in those cells. For @user: the page lists Enterprise Document OCR at $1.50 against Layout Parser's $10.00; D-038 names layout, so I priced layout and show the other ($0.017 / $0.041). @ml-engineer: line 6 and section 12 Q2 still say "from memory"; the criterion tick is yours. D-011 stands; no purchase proposed.
+Needs response by: before T-095 goes to review
+
+---
+[2026-10-13 | @ml-engineer → @software-engineer, @model-risk, @compliance] TYPE: HANDOFF
+Re: T-095
+Message: T-095 is IN_REVIEW: `deliverables/architecture/system-design.md`. 16 of 16 criteria ticked by the owner; that is not an approval. Things a reviewer should know before reading. (1) As-is statements and citations are at commit `dd45467`; the draft was written at `d5750fd`. (2) Two test runs of one unchanged file are side by side in 10.1.1: run 1 (13:28, `d5750fd`) 24 pass, 11 known-gap fails; run 2 (18:30, `dd45467`) 22 pass, 7 known-gap fails, 1 as-is fail (the real token log grew), 5 errors (the test's calls predate T-071). So F15, F18, the missing decision-log check, and concurrent decision appends rest on reading the code at `dd45467`, not on a test (S14). I did not edit the test. (3) Prices in 8.3 are read from the dated captures in `sources/`; two units are inferred. (4) Token tables use log rows 1 to 13 of 58. Not a production approval; authorizes no send.
+Needs response by: your review turn
+
+---
+[2026-10-13 | @account-manager → @software-engineer, @pm, @model-risk, @senior-underwriter, @compliance, @user] TYPE: REVIEW
+Re: T-071
+Message: Verdict: **APPROVE** (my seat). Judged the deliverable and the code (`dd45467`), not the author's case; re-ran all three self-checks myself (no model call, temp dirs): `package ok`, `workbench ok`, `prepare ok`.
+
+**Can a carrier package still be sent on a failed or all-rejected file as the code now stands? No.** `send_to_carrier()` (`package.py:82`) takes no report from the caller, reads `prepare.read_saved_run(submission)` first (`:90`), and refuses `prepare.REFUSED_STATUSES` **before** the actor check (`:92`) — for user, `user (override)`, `@account-manager`, and AI roles alike; a missing run, an unknown status, or a changed hash raises. My seat's own rules run in `agency_problem()` and `send_to_carrier()`: a written reason for the account manager, file `complete`, no open conflict, no needs-human page, in appetite — and no AI role can send. The prior High-1 (a package sendable on a failed/all-rejected file when no report was passed) is RESOLVED. `prepare.approve()` reads the same saved run itself (`prepare.py:783`), so the producer-request path is closed too.
+
+Findings — **High: none.** **Medium-1 (required follow-up, outside the two files):** `deliverables/architecture/tests/test_system_design_stubbed.py:546` and `:571` still pass `report=`, now removed by T-020 item (b), so they raise `TypeError`, not the intended `ValueError`; the design suite is stale (owner: the architecture task lead, @software-engineer). **Medium-2 (from my seat; ties to B-166):** the workbench card's `refused` flag is the live `process_submission()` report (`workbench.py:168`) while the send/approve gate is the saved run; in the G2 stale window the card can offer approve where the saved run is refused (click → 400) or hide approve where it is complete. It is fail-safe — the write is still refused — so not High, but the UI can misstate sendability; derive the flag from the same saved run or state the accepted window. **Low:** (a) G2 is only as current as the last `write_drafts()`, so a page added later is never read and the gate can act on a stale run (accepted, D-029; re-make the run after any new document); (b) `agency_problem()` catches only `ValueError` while `_route()` imports `workbench` at call time, so an import/environment failure would surface on my send path instead of as a clean refusal; (c) no check that the saved payload's own `submission` equals the id read. Criterion 5's edit/decline choice is written in the notes (@software-engineer's handoff at DISCUSSION.md:2139) but @senior-underwriter's confirmation is pending — not mine to tick.
+
+Veto: **none new; no veto from my seat.** This closes the carrier-send half of R-016, and @compliance's T-020 veto item (b) ("the send takes no report from the caller") is met. The formal lift is at the T-020/T-059 re-look. An approved change (P-010) is not a production approval; no send is authorized; T-071's status and its boxes are @pm's to set.
+
+Needs response by: @senior-underwriter (criterion 5); @software-engineer (the architecture stub test).
+
+---
+[2026-10-13 | @senior-underwriter → @software-engineer, @pm, @model-risk, @account-manager, @compliance, @user] TYPE: REVIEW
+Re: T-071
+Message: Verdict: **APPROVE**. Judged the deliverable and the landed code (`dd45467`) from my seat — the real underwriter workflow, no auto-decline, a failed file kept in front of a person. I read the T-071 note in `team/TASKS.md` and the handoff at `team/DISCUSSION.md:2126`/`:2139`. I re-ran all three self-checks myself (`package ok`, `workbench ok`, `prepare ok`) and probed 29 cases on my own (temp dirs, no model call, no published path, no file changed): both refused statuses refused in `send_to_carrier()` for `user`, `user (override)`, `@account-manager`, and AI roles; `agency_problem()` refuses both from an id and from a forged dict (only the id is taken, status re-read from disk); a missing run, a changed hash, and an unknown status all raised; `record_decision()` refused approve on both but still recorded edit and decline; decline without a reason still refused; the card hid approve/Missing/carrier-match/score on both statuses and kept edit+decline. All six criteria read as met.
+
+**High: none.** Background (already carried, none blocks): I agree with the carried Medium-2 / B-166 — the card's refused flag is the live `process_submission()` report while the gate is the saved run; the stale window is fail-safe (a click on a refused saved run still returns 400). **My one Low, from the workflow seat:** on a refused card a human "decline" writes a decline row to `decisions.jsonl`; make the reason prompt/UX say plainly that this is a person's decision on an un-read file, so the feedback loop (T-021, already REJECTed) does not later read an operations failure as a risk decline. Route per D-030.
+
+**Criterion 5 — confirmed as built.** Keep BOTH edit and decline; no approve; no auto-decline. Edit lets a person correct by hand; decline is the underwriter's own final decision and still requires a human id and a written reason. Taking decline away would take back a decision right the person holds (D-017: the underwriter makes every final decision), and it is not an auto-decline because nothing is declined by the system — only by a named person, with a reason. The choice is written in the notes (`team/DISCUSSION.md:2139`). Correct.
+
+No veto from my seat. An approved P-010 is not a production approval; no send is authorized; T-071's status is @pm's.
+Needs response by: @pm to route the Low to `team/BACKLOG.md`; @software-engineer for the architecture stub test (`:546`, `:571`).
+
+---
+[2026-10-13 | @compliance → @software-engineer, @pm, @model-risk, @account-manager, @senior-underwriter, @user] TYPE: REVIEW
+Re: T-071
+Message: **Verdict: APPROVE**.
+
+Judged the deliverable and code itself (`dd45467`), strictly from the legal/regulatory mandate (adverse action/declination safeguards, auditability, consumer protection, AI governance). This is an independent review; I did not read the author's discussion thread or other reviews before writing this verdict.
+
+**Item (b) of T-020 veto (the send "takes no report from the caller").** `send_to_carrier()` in `package.py:89–121` reads the status directly from `prepare.read_saved_run(submission)` first (before actor check at `:92–112`), with no passed-in report trusted. Both refused statuses (`extraction_failed`, `all_values_rejected`) are refused for every actor, including the user (`:94–96`). `agency_problem()` reads the saved run itself (`:74–83`) and refuses those statuses (`:79–83`). `record_decision()` in `workbench.py:182–232` reads status via `prepare.current_status(submission)` on approve and refuses both (`:225–229`); edit/decline remain possible. Workbench render hides approve, Missing, carrier match, and score on both statuses (`:264–305`). No model call is made by these gates; self-checks pass in `package.py` and `workbench.py`. These satisfy all acceptance criteria for T-071.
+
+**Regulatory implications (from my seat).** The failure-closed gate prevents a carrier send on extraction failure or a file with every value rejected — this protects against unlawful sending/declining without a proper record and ensures no AI action can force a send. Requiring the saved run (with hash) and refusing tampered runs (verified in tests) supports auditability and non-repudiation. Edit/decline remaining available for a human on refused cards preserves the underwriter's decision rights without auto-decline. No send is authorized by any AI role.
+
+**Findings:**
+
+- **High: none.** The guardrails directly address the carrier send taking no report from the caller (T-020 item b).
+- **Medium: none.** 
+- **Low: none.**
+
+**Required changes: none.**
+
+**Veto: none.** This meets T-071's acceptance criteria. For T-071 alone, item (b) of what resolves the T-020 veto is now met. The formal veto re-check is a separate step; an approved change (P-010) is not a production approval. The T-020/T-059 re-look remains as scheduled.
+
+Needs response by: @pm to set T-071 status/boxes as appropriate. No code changes required from my seat.
+
+---
+[2026-10-13 | @model-risk → @ai-engineer-assistant, @software-engineer, @account-manager, @pm, @user] TYPE: REVIEW
+Re: T-059
+Message: **LOOK-AGAIN. Verdict: APPROVE. Criteria 3 and 4 are now met, and my T-059 veto is LIFTED.** Judged the criteria and the landed P-010 code (`dd45467`), recomputed from the code, model stubbed, no model call, no scorer against a published path (only `--self-check`, temp dirs), no file changed by me.
+
+**Criterion 3 — no send, no missing-information draft.** Both send paths now read the saved run themselves and refuse `REFUSED_STATUSES` before the actor, so no actor (user, user override, account manager, an AI role) can approve or send a failed or all-rejected file: `prepare.approve()` (`prepare.py:783-786`), `package.send_to_carrier()` (`package.py:90-93`), `package.agency_problem()` (`:60-67`), `workbench.record_decision()` through `current_status()` (`workbench.py:135-137`); the refused card hides approve (`workbench.py:223`). `process_submission()` sets `request = None` for both statuses (`prepare.py:621-623`), and `write_drafts()` writes no draft and removes a stale one (`:738-742`). Re-ran `prepare ok`, `package ok`, `workbench ok`.
+
+**Criterion 4 — every scorer counts call failed apart from a miss.** `eval_holdout.py` marks an `error` run `call_failed`, gives it `scored 0`, drops it from `n`, and prints the count (`:133-134`, `:145`, `:155-157`); `eval_gold.py` (`:160-161`) and the six frozen hold-out scorers do the same. Consistent with D-024: `extraction_failed` (error set) is call-failed; `all_values_rejected` (error `None`) is scored as misses. `eval_holdout ok`.
+
+Findings — **High: none.** Carried, no change required (route to `team/BACKLOG.md` per D-030): Medium—the G2 window, the card's flag is the live report while the gate is the saved run (B-166, fail-safe); Low—`error` free text vs the data-model enum (P-018), and the architecture stub test still passes the removed `report=` (`deliverables/architecture/tests/test_system_design_stubbed.py:546`, `:571`). None blocks T-059.
+
+Veto statement: **My T-059 veto is LIFTED.** T-071 (`dd45467`) closes the carrier-send half and T-070 the `ai` half; the four-actor refusal and the self-checks pass, the condition in my earlier review (`DISCUSSION.md:2018`) is met, and `package.py`/`workbench.py` have not changed since `dd45467`. An approved change (P-010) is **not** a production approval: this lifts no other veto (T-017, T-020, T-027), authorizes no send, and does not tick T-059's boxes or set its status — those are @pm's and @user's. T-059 stays in review until @software-engineer and @account-manager post their own look-again verdicts.
+Needs response by: @software-engineer and @account-manager (their own T-059 look-again verdicts); @pm to record the outcome.
+
+---
+[2026-10-13 | @software-engineer → @model-risk, @compliance] TYPE: UPDATE
+Re: T-094
+Message: `deliverables/architecture/architecture.md` changed after you both approved; please look again. Section 13 lists every change. (1) It now describes commit `dd45467`, not `d5750fd` (D-046). 1,105 citations, 0 out of range, by script; of the 473 that pointed into the four changed files, 315 were re-pointed as byte-identical lines and 90 were read and their statements rewritten. (2) As-is corrected where T-070 and T-071 changed it: four statuses, the send takes no report, the refused card, the saved run and its hash (13.3). In contributor sections I fixed facts only, with dated notes. (3) D-045, D-048, D-049, D-050, D-051 quoted; Q9, Q12, Q13, Q14 marked answered. Two drawing choices in 4.2 are mine and marked. (4) All five diagrams render, Mermaid CLI 12.0.0. (5) New gaps G36 to G42. Criterion ticked by me; that is not an approval. No veto is changed.
+Needs response by: the next review round
+
+---
+[2026-10-13 | @software-engineer → @ai-engineer-assistant] TYPE: HANDOFF
+Re: T-096
+Message: `deliverables/architecture/low-level-design.md` now describes `dd45467`; T-096 stays IN_PROGRESS. My parts for the D-046 criteria are written: sections 3, 9, 10, 11, 12, 13, 14. Yours are seven blocks marked CONTRIBUTOR PLACEHOLDER, each saying exactly what is needed: P6 (8) every validation gate; P7 (9.1) status readers under `ai/`; P7b (9.3) what a re-run does for an all-rejected file; P8 (10) errors and logging per `ai/` module; P9 (11) P-010 `ai/` part as built; P10 (12) the `ai/` changes for P-006, P-011, P-015, P-016, P-017, and my three points under 12.3; P11 (13) tests per gate and for C2 to C8, C15. In your sections I re-pointed 469 moved citations by script and 22 by hand, and marked the statements I found stale (14.3); the wording is yours. Edit nothing under `underwriting_pipeline/`, not the stubbed test file; no scorer, no model call.
+Needs response by: your next turn
+
+---
+[2026-10-13 | @software-engineer → @model-risk, @account-manager, @senior-underwriter, @ml-engineer, @pm] TYPE: ANSWER
+Re: T-071
+Message: On Medium-1, the stubbed test file (`deliverables/architecture/tests/test_system_design_stubbed.py:546`, `:571`): agreed, and not done this turn. My dispatch was documentation only and said not to edit that file, so the two saved runs stay runs of one unchanged file. What the edit needs is written in `low-level-design.md` 13.1: five cases stop with an error at `dd45467`, two for `report=` and three because they save no run before a send or an approve. Note also 13.3 row 8: the case that now passes is refused for "no saved run", not by the refused-status test; it should save the failed run first. @ml-engineer wrote the file and offered to fix it; I am named owner by @model-risk. @pm, please say which of us (LQ12). @senior-underwriter: your Low on the decline wording is noted for T-079 or the backlog, as @pm routes it.
+Needs response by: @pm, next board update
+
+---
+[2026-10-13 | @software-engineer → @ai-engineer-assistant, @model-risk, @account-manager, @pm, @user] TYPE: REVIEW
+Re: T-059
+Message: LOOK-AGAIN. Verdict: **APPROVE — my earlier REJECT (`team/DISCUSSION.md:1207`) is RESOLVED.** Judged the acceptance criteria and the landed P-010 code (`dd45467`; T-070 at `fde95b7`/`57bd138`/`140a373`), not the author's case. Recomputed from the code, model stubbed, no model call, no scorer against a published path (only `--self-check`, temp dirs), no code or deliverable changed by me. Re-ran all four self-checks myself: `package ok`, `workbench ok`, `prepare ok`, `eval_holdout ok`.
+
+Criterion 3 — no send, no missing-information draft. **MET.** My High-1 (the send block depended on an optional `report=` argument) and High-2 (`write_drafts` left the old draft in pending-approval) are both fixed. `package.send_to_carrier()` (`package.py:90-93`) reads `prepare.read_saved_run(submission)` first and refuses `REFUSED_STATUSES` **before** the actor, so user, `user (override)`, `@account-manager`, and AI roles are all refused; no saved run, a changed hash, or a status outside the closed set (`complete`, `incomplete`, `extraction_failed`, `all_values_rejected`; `prepare.py:681`) raises. `prepare.approve()` reads the same run itself (`:783-786`); `workbench.record_decision()` refuses approve through `current_status()` (`workbench.py:135-137`) and the refused card hides approve, Missing, carrier-match, and score (`:223`). `process_submission()` sets `request = None` for both statuses (`prepare.py:621-623`) and `write_drafts()` removes a stale draft and keeps the conflict file (`:735-742`). My Medium-1 (the all-null saved JSON with no status/error) and Medium-2 (the card listed nine Missing fields, matched a carrier, scored 0, and offered approve) are also fixed: the saved run now carries `status`/`error`/`saved_hash`, and the card is refused.
+
+Criterion 4 — every scorer counts call failed apart from a miss. **MET.** `eval_holdout.py` (S1) marks an `error` run `call_failed`, gives it `scored 0`, drops it from `n`, and prints the count; `eval_gold.py` and the six frozen hold-out scorers do the same. D-024 respected: `extraction_failed` (error set) is call-failed; `all_values_rejected` (error `None`) scores as misses.
+
+Findings — **High: none.** **Medium-1 (carried; not High, fail-safe; D-030 → `team/BACKLOG.md`):** the workbench card's `refused` flag is the live `process_submission()` report (`workbench.py:168`) while the gate is the saved run; in the G2 stale window the card can offer approve where the saved run is refused (click → 400). **Medium-2 (outside T-059's criteria; my own deliverable):** `deliverables/architecture/tests/test_system_design_stubbed.py:546` and `:571` still pass the now-removed `report=`, so they raise `TypeError`; I own the fix (LQ12). **Low-1:** `agency_problem()` catches only `ValueError` while `_route()` imports `workbench` at call time, so an import/environment failure would surface on the account-manager send path instead of a clean refusal. **Low-2:** `send_to_carrier()` gates on `EXTRACT_DIR/<submission>.json` but does not check the payload's own `submission` equals the id read. **Low-3:** no self-check for the forged-dict and mismatched-`submission` paths. **Low-4:** my earlier Low-2 stands — a folder whose only file has no readable text makes no call, gets `incomplete`, and still drafts a nine-field request; that is not a failed call, so it is outside criterion 3.
+
+Veto: none from my seat (I hold no veto). This is the `app` half of P-010. An approved change is **not** a production approval: it lifts no veto, authorizes no send, and does not tick T-059's boxes or set its status — those are @pm's and @user's. T-059 stays in review until @account-manager posts its own look-again verdict.
+Needs response by: @account-manager (its T-059 look-again verdict); @pm to record the outcome and route the Mediums to `team/BACKLOG.md` per D-030.
+
+---
+
+[2026-10-13 | @account-manager → @ai-engineer-assistant, @software-engineer, @model-risk, @pm, @user] TYPE: REVIEW
+Re: T-059
+Message: LOOK-AGAIN. Verdict: **APPROVE — my earlier REJECT (`team/DISCUSSION.md:1219`) is RESOLVED.** Judged the acceptance criteria and the landed P-010 code (`dd45467`, T-071; T-070 parts), not the author's case. Recomputed from code, model stubbed, no model call, no scorer against a published path (only `--self-check`, temp dirs), no code or deliverables changed by me.
+
+Criterion 3 — no send, no missing-information request drafted. **MET.** The gates now read the saved run themselves and refuse `REFUSED_STATUSES` (`extraction_failed`, `all_values_rejected`) for every actor. `package.send_to_carrier()` reads via `prepare.read_saved_run()` first and refuses before actor check (`package.py:90-93`); `package.agency_problem()` uses the same saved run (`:60-67`). `prepare.approve()` reads the status itself and refuses (`prepare.py:783-786`). `workbench.record_decision()` refuses approve on refused status (`workbench.py:135-137`), and the refused card hides approve, Missing, carrier-match, and score (`:223`). `process_submission()` sets `request = None` for both statuses (`prepare.py:621-623`), and `write_drafts()` removes stale drafts while keeping conflict files (`:735-742`). As account-manager, a failed file cannot be approved/sent under agency rules; the user's override is still possible only because the user is a separate actor and the gates block it only by status (the user can override incomplete files per protocol), but the critical point: no send is allowed for files with `extraction_failed` or `all_values_rejected` by any actor — confirmed by tests in `package.py`/`workbench.py` self-checks (lines 101-133 in package self-check, 265-287 in workbench). The specific High-1 from my earlier reject (trusting optional passed-in report) is fixed.
+
+Criterion 4 — every scorer counts call failed apart from a miss. **MET.** `eval_holdout.py` marks runs with `error` as `call_failed`, sets `scored 0`, drops from denominator `n`, and prints count (`eval_holdout.py:133-134,145,155-157`). `eval_gold.py` and the six frozen hold-out scorers do the same; `all_values_rejected` (error `None`) is scored as misses per D-024. This matches the "count call failed apart from a miss" requirement.
+
+Findings:
+- **High: none.** My earlier High-1 and High-2 are resolved by the G2 reads and draft removal.
+- **Medium: 1.** The workbench card's `refused` flag is computed from the live `process_submission()` report (`workbench.py:168`), while the gate is the saved run. A stale window could present an approve option that the gate rejects — fail-safe exists (gate blocks), but worth tracking (B-166 style). Route to `team/BACKLOG.md` per D-030.
+- **Low: 1.** `agency_problem()` catches only `ValueError`; `_route()` does a runtime import of `workbench`. Environment/import failures surface differently than a clean refusal. 2. `send_to_carrier()` checks `EXTRACT_DIR/<submission>.json` exists and validates hash/status, but does not assert payload's own `submission` matches the requested id — a defensive check could prevent cross-id confusion. 3. No self-check covering the mismatched-submission and forged-dict cases. These don't block T-059.
+
+Veto: none from my seat. This lifts no other vetoes (T-017, T-020, T-027). An approved change (P-010) is **not** a production approval; authorizes no send. T-059 stays in review until @pm records outcome and boxes; do not mark DONE from my seat.
+
+Needs response by: @pm to record the outcome and route Mediums to `team/BACKLOG.md` per D-030.
+
+---
+
+---
+[2026-10-13 | @compliance → @software-engineer, @pm, @senior-underwriter] TYPE: REVIEW
+Re: T-020
+Message: LOOK-AGAIN on my veto, judged on the deliverable and the landed code at `dd45467`, not the author's case. Verdict: **REJECT** — the T-020 veto stands. **Item (b) is now met.** The veto lifts only when all six are in; (a), (c), (d), and (e) are not.
+**Item (b) — MET (T-070 + T-071).** `send_to_carrier(submission, actor, out_dir, body, reason="")` has no `report` parameter; its first act is `prepare.read_saved_run(submission)` and it refuses `extraction_failed`/`all_values_rejected` before the actor is read, for every actor (`package.py:82-93`). `agency_problem(target)` takes only the id from a dict and reads the saved run itself (`package.py:43-79`). `approve` reads the saved run itself and refuses both statuses before the actor (`prepare.py:783-786`); `record_decision` reads `prepare.current_status` for an approve (`workbench.py:131-137`). No caller-supplied report is a source of truth.
+**Item (f) — MET for (b) only.** One self-check per gate in T-070 (`prepare.py`) and T-071 (`package.py`, `workbench.py`). I re-ran all three: "package ok", "workbench ok", "prepare ok"; temp-only, no model call, no published path written.
+**Findings.** High (open, = the remaining veto items): (a) the send reads no decision log — a declined file can still be sent when a caller passes actor "user"; nothing ties a send to a logged underwriter approve (T-079; A-02 misrepresentation; D-033 item 2, D-021). (c) any caller can pass actor "user" and write to `to-carrier` with no typed line; `send_to_carrier` checks no "send to carrier SUB-###" line (T-086; D-017, D-035). (d) the package body is free text from the caller, not built from the saved reviewed file; no carrier is named and no citation is enforced (T-085; A-02). (e) no status per submission and carrier from the carrier replies; not built (T-087; D-035, acceptance criterion 3).
+Medium/Low (parked per D-030): no log row per send (A-03), silent overwrite, no date, carrier not in the header, body check is two phrases, `_actor` label — B-033, B-034, B-085–B-097. New Low from (b): the send does not compare the saved run's own `submission` with the id it was asked for, and `agency_problem` catches only `ValueError` (G41/L15; @model-risk T-071 Low-1/2).
+**Status of each item:** (a) not in — T-079; (b) **MET**; (c) not in — T-086; (d) not in — T-085; (e) not in — T-087; (f) met for (b), not present for (a)/(c)/(d)/(e).
+**Veto statement: VETO STAYS.** It lifts only when (a), (c), (d), and (e) are in, each carrying one self-check per gate, so that (f) holds for all five tasks; then send T-020 back to me. An approved P-010 (D-043) is not a production approval, and this review authorizes no send.
+Needs response by: @software-engineer on T-079, T-085, T-086, T-087; before the demo.
+
+---
+[2026-10-13 | @pm → @software-engineer, @ai-engineer-assistant, @model-risk, @account-manager, @senior-underwriter, @compliance, @ml-engineer, @user] TYPE: UPDATE
+Re: T-071, T-059, T-020, T-079, T-085, T-086, T-087
+Message: Board maintenance only; no verdict, no deliverable or code edit, no model call, no commit. (1) **T-071 → DONE.** All four reviewers returned APPROVE on the landed code (`dd45467`, `package.py`/`workbench.py` only): @model-risk at :2148, @account-manager at :2193, @senior-underwriter at :2206 (criterion 5 confirmed as built at :2210), @compliance at :2218. All six criteria ticked. (2) **T-059 → DONE**, criteria 3 and 4 ticked, **the T-059 veto recorded as LIFTED** by @model-risk, its holder, at :2240 ("Criteria 3 and 4 are now met, and my T-059 veto is LIFTED"); the condition at :2018 is met. @software-engineer at :2272 and @account-manager at :2287 both APPROVE and their earlier REJECT is RESOLVED. (3) **T-020 stays IN_REVIEW.** @compliance re-checked at :2306: item (b) is met, "Verdict: REJECT — the T-020 veto stands"; it lifts only when (a), (c), (d), (e) are in with one self-check per gate. (4) The four remaining conditions are confirmed in place, not started: T-079 item (a), T-085 item (d), T-086 item (c), T-087 item (e) — each in `underwriting_pipeline/app/`, owner @software-engineer. (5) The stub-test finding is homed: `deliverables/architecture/tests/test_system_design_stubbed.py:546` and `:571` still pass the removed `report=` and now raise `TypeError`; recorded as B-174. It is **not on the demo path** (D-033 item 4 — the demo does not run the architecture stub suite), so no build task is made. (6) Carried Medium/Low routed to team/BACKLOG.md per D-030, no duplicates: B-174 (stub test), B-175 (`agency_problem` catches only `ValueError`), B-176 (no check that the saved payload's `submission` equals the id read), B-177 (no self-check for the forged-dict and mismatched-`submission` paths), B-178 (@senior-underwriter's refused-card decline-wording Low). The card-flag finding stays B-166/B-170 and the earlier Low-2 stays B-001; not duplicated. Open for @user: LQ12 (who edits the stub test — this row does not settle it). (7) Board status counts after the edits (R-028): 98 tasks — DONE 48, IN_REVIEW 23, TODO 12, BLOCKED 4, IN_PROGRESS 3, CANCELLED 8. No veto lifted except by its holder; nothing sendable; not a production approval.
+Needs response by: @software-engineer on T-079, T-085, T-086, T-087; @compliance and @senior-underwriter at the T-020 re-look; @user on LQ12.
+
+---
+[2026-10-13 | @ai-engineer-assistant → @software-engineer, @pm, @user] TYPE: ANSWER
+Re: T-096
+Message: All seven blocks in `deliverables/architecture/low-level-design.md` are filled in place at `dd45467`: P6 (section 8: 29 gates; 18 with an assert, 11 with none), P7 (9.1), P7b (9.3), P8 (10.6), P9 (11.5), P10 (12.6), P11 (13.4 to 13.6). The statements you marked stale are reworded. @software-engineer: (1) your script moved 139 `ai/llm_extract.py` citations in 2.2 to 2.5 by two lines, taking them for `ai/prepare.py`; I restored them, so 14.2 and 14.3 need your update, as do the top status, section 7, and the T-059/T-071 board lines in your sections. (2) 12.4 cites `needs_review` at `ai/prepare.py:700`; it is `:701`. (3) Row 4 of 13.3 cannot pass unchanged: its first assert pins today's cut. Row 2 is not closed by P-016. @user: 12.6 lists what each approved proposal leaves unset; P-006 most. I changed no code, ran nothing, and drafted no proposal.
+Needs response by: @software-engineer before T-096 goes to review
+
+---
+[2026-10-13 | @software-engineer → @ml-engineer, @model-risk, @ai-engineer-assistant, @pm, @user] TYPE: HANDOFF
+Re: T-096
+Message: `deliverables/architecture/low-level-design.md` is IN_REVIEW for @ml-engineer and @model-risk. It describes commit `dd45467`, which is `HEAD`. No placeholder block remains; I updated my out-of-date lines (board status, vetoes, section 7, 12.4, 13.3 rows 2 and 4, 14.2). Measured: 2,483 citations, 0 out of range, 0 naming a missing file, pipeline files read at `dd45467`; six diagrams, six rendered. I ticked the 15 boxes as my own check; I do not approve it. Limits, written in 14.6: the range check does not test meaning; I did not read the co-lead's seven new blocks line by line; 11 of 29 gates have no test; 12.6 lists what each approved proposal leaves unset. @pm and @user: `underwriting_pipeline/app/package.py` has an uncommitted edit in the working tree that names T-079. I did not make it or touch it; T-079 is TODO on the board. `architecture.md` (T-094) still shows T-071 TODO and the T-059 veto open.
+Needs response by: @ml-engineer and @model-risk, the next review round; @pm on the `package.py` edit and on T-094's stale lines
+
+---
+[2026-10-13 | @software-engineer → @compliance, @senior-underwriter, @account-manager, @model-risk, @pm, @user] TYPE: HANDOFF
+Re: T-079
+Message: `underwriting_pipeline/app/package.py` now makes a carrier send require a logged underwriter approve (D-033 item 2; line 2 of team/DEMO-BLOCKERS.md; item (a) of the remaining T-020 veto). Commit `db7cbb1`, branch `ai-team`, no push. The team files are left for the orchestrator's commit (D-038 item 6). No file under `src/insureflow/` touched; no model call; no scorer run; no send performed or authorized.
+
+**What I built.** The gate reads the decision log itself and refuses unless the last decision for the submission is approve, for every actor — user, `user (override)`, and `@account-manager` alike. No decision is passed in by the caller; the actor argument never changes the answer.
+- `DECISIONS_LOG` (`package.py:36`) = `deliverables/software-engineer/decisions.jsonl`, the same file `workbench.record_decision()` appends to.
+- `_submission_rows()` (`package.py:65`) reads every row for a submission in line order.
+- `_last_approve_decision()` (`package.py:83`) returns "" only when the last row is `approve`; `decline`/`edit`/other are refused (`:103-107`), and an empty or missing log is refused (`:91-93`).
+- `send_to_carrier()` (`package.py:145`) takes no decision argument; it calls the gate at `:160`, **before** the actor is read (`:161`), so the user and the account manager meet the same gate. `reason` is still required only for the account manager.
+- `agency_problem()` (`package.py:111`) is unchanged. I did not put the decision gate there: `prepare.approve()` (a producer request) also calls it, and T-079 is a carrier-send rule. This keeps the producer-request path out of the change.
+- T-071 is unchanged: the status is still read from the last saved run first (`:154-157`), and `extraction_failed`/`all_values_rejected` are refused before the decision gate, for every actor. D-017's other send conditions (complete, in appetite, no open conflicts, no unread pages, written reason) are unchanged.
+
+**File/line evidence.** `package.py:36, 65-79, 83-107, 160-163` for the gate; self-check `package.py:287-320` (no decision refused / approve passes / approve-then-decline refused), `:322-326` (account manager also needs an approve), `:349-355` (the undecided case waits).
+
+**Self-check output (temp folder only, no model call).** `python3 underwriting_pipeline/app/package.py` → `package ok`. I also re-ran the other two gates to confirm no regression: `python3 underwriting_pipeline/app/workbench.py` → `workbench ok`; `python3 underwriting_pipeline/ai/prepare.py` → `prepare ok`. The three required cases pass: no decision → refused ("no logged decision for this file"); approve → passes; approve followed by a later decline → refused ("the last logged decision is decline").
+
+**How "last" is ordered — and the QUESTION.** The log row has a date and no time (B-104). `_last_approve_decision()` therefore takes the **final matching line by insertion order (line number)** as the last decision, not a date comparison. Barring concurrent appends, append order is the only ordering the log carries. **QUESTION for @user/@data-engineer:** is line order the accepted tiebreak for "last", or should the log gain a timestamp or a monotonic sequence? A same-day approve-then-decline or decline-then-approve is decided by write order alone today.
+
+**Which ids count as an underwriter — and the QUESTION.** The gate does **not** filter ids: it trusts whatever id the row carries (B-138, B-100). `workbench.record_decision()` requires a non-empty id but accepts any string, including an AI handle. **QUESTION for @user:** which ids count as an underwriter, and should the log enforce a roster? B-138 asks for "real underwriter ids tied to my session"; building that roster is not in T-079's scope (it changes `workbench.py`) and is not done here.
+
+**QUESTION — the one case I did not decide (for @user).** A file declined and then later approved. D-033's Amends line reads "a logged underwriter approve with no later decline", while D-038 item 1 (2026-10-11) already says "Latest decision wins… an approve after a decline requires a reason". The T-079 Notes say this remains undecided for @user. I did not pick a side: `_last_approve_decision()` returns a distinct refusal when the last row is `approve` but an earlier row is `decline` (`package.py:96-102`, "declined and later approved; that case is not decided, waiting for @user"), so the send is refused and the file is left with a person (no auto-decline). **@user:** does the declined-then-approved case send (D-038 latest-wins, with a reason) or stay never-sendable (D-033 item 2 wording)? Until you rule, the code holds on exactly that case.
+
+**Scope/limits.** One self-check per the criterion, temp-only. The gate refuses by leaving the file with a person; it never declines, binds, or sends. `send_to_carrier()` still does not compare the saved payload's own `submission` with the id read (B-176) and `agency_problem()` still catches only `ValueError` (B-175); both are prior findings, not changed here. I adopted and rewrote the pre-existing uncommitted docstring in `package.py` that named T-079 (the edit the T-096 handoff flagged as not mine).
+
+**Requested review.** @compliance, @senior-underwriter, @account-manager, @model-risk: please review the deliverable against the T-079 acceptance criteria, not this case for it. I am not changing T-079's status; it stays TODO until @pm records the outcome.
+Needs response by: @compliance, @senior-underwriter, @account-manager, @model-risk (T-079 review); @user on the three QUESTIONs above.
+
+---
+[2026-10-13 | @pm → @ai-engineer-assistant, @ml-engineer] TYPE: HANDOFF
+Re: T-099, T-100
+Message: Two tasks opened from @user's request to migrate to GCP, scope "Hosting + Vertex/Document AI"; this turn opens the work only, nothing is built or approved. T-099 (@ai-engineer-assistant): draft proposal P-019 to move the model to Vertex AI (Gemini 2.5 Flash/Pro) and OCR to Document AI layout, replacing the Groq/OpenAI host and Tesseract. Proposal only, no code; it must state the unresolved D-011 conflict (no paid API; Vertex and Document AI are paid). T-100 (@ml-engineer): draft the hosting migration design, Railway → GCP, mapping each component (FastAPI api, Celery workers, Postgres+pgvector, Redis, ClamAV, object storage/audit, Prometheus/Grafana/OpenObserve, secrets) to a GCP service, leaving the pgvector-on-Cloud-SQL question open. Mirror infra/aws/ as reference. Design only — no Terraform applied, no GCP resource created. Drafting only, as authorized.
+Needs response by: next round — the T-099 and T-100 drafts posted to IN_REVIEW
+
+---
+[2026-10-13 | @ai-engineer-assistant → @model-risk, @compliance, @responsible-ai, @senior-underwriter, @user] TYPE: PROPOSAL
+Re: T-099
+Message: Drafted proposal P-019: switch model provider to Vertex AI (Gemini 2.5 Flash/Pro) and OCR to Document AI Layout Parser, replacing Groq/OpenAI host and Tesseract OCR. Proposal only, no code edited. States unresolved D-011 conflict (paid services vs no paid API), what changes/doesn't change, options table, exact approval gate, and open questions. See deliverables/ai-engineer/proposal-P-019.md. T-099 moved to IN_REVIEW.
+Needs response by: next round
+
+---
+[2026-10-13 | @ml-engineer → @software-engineer, @compliance, @model-risk] TYPE: PROPOSAL
+Re: T-100
+Message: Drafted the GCP hosting migration design: deliverables/ml-engineer/gcp-migration.md. Maps every compose component (api, worker, worker-large, Postgres+pgvector, Redis, ClamAV, storage/WORM audit, Prometheus/Grafana/OpenObserve, secrets) to a GCP service; flags Cloud SQL pgvector as an OPEN ITEM with an AlloyDB fallback; splits decided vs not decided and names the deciding role; states the unresolved constraints (D-011 vs paid GCP, region/residency, GCS WORM semantics, S3 presigned-POST → GCS); gives a labeled pilot cost estimate (~$210–$500/mo, replacing the $100–$300 allowance at system-design.md:930); proposes an infra/gcp/ layout in the file only. Design only — no Terraform applied, no resource created. Nothing decided: hosting move is @user's; the model/OCR change is P-019 (T-099). T-100 → IN_REVIEW; reviewers, please review the design, not this case for it.
+Needs response by: next round
+
+---
+[2026-10-13 | @model-risk → @ai-engineer-assistant] TYPE: REVIEW
+Re: T-099
+Message: Verdict: APPROVE WITH CHANGES. All four acceptance criteria are met: id P-019, change/trade-off/cost stated, the D-011 conflict is carried plainly, proposal only, and the exact gate line is required. I re-derived the price basis against the captured sources: Flash $0.30/$2.50, Pro $1.25/$10.00 per 1M tokens and Layout Parser $10.00/1000 pages all match; the per-submission figures ($0.00261 Flash, $0.01049 Pro, ~$0.01 OCR/page) are arithmetically correct. Code citations check out (EXPECTED_BASE, provider_guard, MIN_CONFIDENCE 0.75, OCR_SETTINGS). One required change: the "Estimated model cost per submission" section ships leaked, self-correcting "…Wait, per submission? No:…" working; replace it with the clean figures before this is put to the user. No code was edited. This is a proposal, not a production approval. A new provider is a new model: a fresh hold-out (20 files, gold first, scored once, D-020/D-022) is required before any production use. My production veto stays open until that validation is reviewed.
+Needs response by: 2026-10-14
+
+---
+[2026-10-13 | @compliance → @ai-engineer-assistant] TYPE: REVIEW
+Re: T-099
+Message: Verdict: APPROVE WITH CHANGES. All four criteria are met: next id P-019, change/trade-off/cost stated, the D-011 conflict is carried (only @user may authorize paid APIs), proposal only, and the exact gate line is required. I confirm the four cited prices match the captured sources. Two required changes, both before implementation, not before this reaches @user: (1) Add a named open question and precondition for a permitted-use and vendor review of Google Cloud as a processor for Vertex AI and Document AI — DPA and sub-processor terms, no-training-on-customer-data, retention and abuse-monitoring of uploaded pages, and the region/data-residency choice (your Q2). This is a new processing arrangement (C-02 vendor oversight, C-08 GLBA). (2) State that no real applicant PII may reach GCP until that review is on file and D-011 is lifted; synthetic-only stays. Mark it [NEEDS LEGAL CONFIRMATION]. I raise no veto and accept no decision owned by @user. This is a proposal, not a production approval. Also fix the leaked "Wait, per submission" text (Medium, D-030).
+Needs response by: 2026-10-14
+
+---
+[2026-10-13 | @responsible-ai → @ai-engineer-assistant] TYPE: REVIEW
+Re: T-099
+Message: Verdict: APPROVE WITH CHANGES. Criteria met: id P-019, plain change, trade-off, score/cost estimate, D-011 conflict stated plainly, proposal-only, and the exact "approve change P-019" gate. Human-in-the-loop and no-auto-decline are explicitly preserved; gates, citation rules, and status logic are unchanged. Fairness gap: a provider swap is a material change in model behavior, not outcome-neutral. The deliverable assumes "no score change expected" and open question 7 asks only for a fresh hold-out; it does not require re-validation of group-differentiated outcomes. A new OCR/model can read Spanish forms, handwriting, and regional formats differently (T-067 EN-vs-ES counterfactual, D-042). Required change before any production use: pair the fresh hold-out with the fairness tests — name-swap counterfactual, EN-vs-ES counterfactual, and completeness/missing-info rate by region and occupancy (n>=30) — and investigate any group-differentiated shift. Funding (D-011) is @user's to decide; my fairness veto holds for production until this is added. No decision recorded here.
+Needs response by: 2026-10-15
+
+---
+[2026-10-13 | @software-engineer → @ml-engineer] TYPE: REVIEW
+Re: T-100
+Message: Verdict: APPROVE WITH CHANGES. All four criteria are met, and the mapping tracks how the app really runs: worker/worker-large queues (docker-compose.yml:56-85), Celery routes (tasks/celery_app.py:36-40), pipeline-large (tasks/dispatch.py:37), Redis as broker+result+job store, ClamAV fail-closed (ingestion/intake.py:71-73), S3 presigned POST (storage/object_storage.py:90-104), Fernet ENCRYPTION_KEY (storage/encryption.py:14-41), Prometheus/Grafana/OpenObserve (deploy/observability/prometheus.yml). pgvector-on-Cloud-SQL is correctly left open (C2); nothing is decided and no @user decision is recorded. One required change: line 35 maps `observability/telemetry.py` as "OTel spans" for Cloud Trace. That module is a hand-rolled span tracer (stdlib only) shipping JSON to OpenObserve; the OTLP exporter sits only in the `eval` extra, not the runtime app. Cloud Trace needs application instrumentation — an @software-engineer change — so add it as a C-item like C5/C7, not a like-for-like map. Minor: C8 cites compose clamav:87-89, which is a comment; the fail-closed logic is intake.py:71-73 (compose start_period is 300s). No code or resource changed; I change no task status.
+Needs response by: next round
+
+---
+[2026-10-13 | @ai-engineer-assistant → @model-risk, @compliance, @responsible-ai] TYPE: UPDATE
+Re: T-099
+Message: Revised proposal P-019 (deliverables/ai-engineer/proposal-P-019.md) against the three reviews; proposal edit only, status stays IN_REVIEW. All three required changes are in: (1) the leaked "…Wait, per submission? No:…" working is replaced with clean single-pass cost figures, same final numbers (~$0.00261 Flash, ~$0.01049 Pro), label retained; (2) a "Vendor / permitted-use review (Google Cloud as data processor)" subsection under "Required pre-implementation items (not decisions)" — DPA, no-training-on-customer-data, retention/abuse-monitoring, region residency; no real PII to GCP until it is on file and D-011 is lifted by @user; named as precondition Q9; (3) a "Fairness re-validation required before production use" subsection — name-swap, EN-vs-ES, completeness by region/occupancy (n>=30), fairness veto holds for production until done. A "Review findings and disposition" section maps each finding to its fix. Not approved, not implemented.
+Needs response by: next round — reviewers to confirm
+
+---
+[2026-10-13 | @ml-engineer → @software-engineer] TYPE: UPDATE
+Re: T-100
+Message: Revised deliverables/ml-engineer/gcp-migration.md against your T-100 review; design edit only, no code/Terraform/resources, status stays IN_REVIEW. F1: item 10 no longer calls observability/telemetry.py "OTel spans" — it is a hand-rolled stdlib-only tracer (JSONL + openobserve.emit_traces); adopting OpenTelemetry + Cloud Trace is now C9, a proposed @software-engineer app change out of scope for this hosting design (verified pyproject.toml:57-70: OTLP exporter is eval-extra only). F2: C8 now cites intake.py:71-73 (fail-closed) and clamav:89-99 (start_period 300s). Section 7 "Review findings and disposition" added. Re-review when you can.
+Needs response by: next round

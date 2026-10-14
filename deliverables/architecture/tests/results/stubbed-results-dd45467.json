@@ -1,0 +1,780 @@
+{
+  "task": "T-095",
+  "run_at": "2026-10-13T18:30:57",
+  "command": ".venv/bin/python -B deliverables/architecture/tests/test_system_design_stubbed.py",
+  "python": "3.14.6",
+  "model_calls": 0,
+  "network_calls_attempted": 0,
+  "files_changed_under_underwriting_pipeline_simulation_or_other_deliverables": [],
+  "counts": {
+    "pass": 22,
+    "fail (known gap)": 7,
+    "error": 5,
+    "fail": 1
+  },
+  "results": [
+    {
+      "test": "six_429s_give_extraction_failed_and_nothing_cached",
+      "category": "failure",
+      "kind": "as-is",
+      "ref": "D-021; llm_extract.py:375-418; prepare.py:522-529,596-599",
+      "outcome": "pass",
+      "detail": "",
+      "seconds": 0.0,
+      "measured": {
+        "posts": 6,
+        "waits_seconds": [
+          1,
+          2,
+          4,
+          8,
+          16
+        ],
+        "waited_total_seconds": 31,
+        "status": "extraction_failed"
+      }
+    },
+    {
+      "test": "retry_after_one_hour_is_cut_to_max_wait_then_fails",
+      "category": "failure",
+      "kind": "as-is",
+      "ref": "llm_extract.py:31,398-403",
+      "outcome": "pass",
+      "detail": "",
+      "seconds": 0.0,
+      "measured": {
+        "posts": 6,
+        "waits_seconds": [
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0
+        ],
+        "waited_total_seconds": 300.0,
+        "max_wait": 60.0
+      }
+    },
+    {
+      "test": "two_timeouts_then_a_reply_is_one_good_extraction",
+      "category": "failure",
+      "kind": "as-is",
+      "ref": "llm_extract.py:411-417",
+      "outcome": "pass",
+      "detail": "",
+      "seconds": 0.0,
+      "measured": {
+        "posts": 3,
+        "waits_seconds": [
+          1,
+          2
+        ],
+        "status": "complete",
+        "missing": []
+      }
+    },
+    {
+      "test": "six_timeouts_fail_after_31_seconds_of_waits",
+      "category": "failure",
+      "kind": "as-is",
+      "ref": "llm_extract.py:388,411-417",
+      "outcome": "pass",
+      "detail": "",
+      "seconds": 0.0,
+      "measured": {
+        "posts": 6,
+        "waits_seconds": [
+          1,
+          2,
+          4,
+          8,
+          16
+        ],
+        "worst_case_wall_seconds_from_constants": 751
+      }
+    },
+    {
+      "test": "a_bad_reply_fails_is_not_cached_is_called_again_and_its_tokens_are_logged",
+      "category": "failure",
+      "kind": "as-is",
+      "ref": "D-022 item 3; llm_extract.py:472-479",
+      "outcome": "pass",
+      "detail": "",
+      "seconds": 0.0,
+      "measured": {
+        "statuses": [
+          "extraction_failed",
+          "extraction_failed",
+          "complete"
+        ],
+        "posts": 3,
+        "run_totals": {
+          "hosts": [
+            "localhost"
+          ],
+          "model_calls": 3,
+          "from_cache": 0,
+          "tokens": 2940,
+          "failed_attempts": {
+            "rate_limit_429": 0,
+            "timeout": 0,
+            "other": 0,
+            "reply_not_usable": 2
+          }
+        }
+      }
+    },
+    {
+      "test": "provider_outage_gives_extraction_failed_with_cause_other",
+      "category": "failure",
+      "kind": "as-is",
+      "ref": "llm_extract.py:411-417",
+      "outcome": "pass",
+      "detail": "",
+      "seconds": 0.01,
+      "measured": {
+        "posts": 18,
+        "waited_total_seconds": 93,
+        "waited_per_submission_seconds": 31.0,
+        "failure_counts": {
+          "rate_limit_429": 0,
+          "timeout": 0,
+          "other": 18,
+          "reply_not_usable": 0
+        }
+      }
+    },
+    {
+      "test": "a_refused_provider_host_marks_the_file_and_does_not_stop_the_process",
+      "category": "failure",
+      "kind": "target",
+      "ref": "G7; llm_extract.py:219-222; prepare.py:524",
+      "outcome": "fail (known gap)",
+      "detail": "SystemExit: the whole process stops, the workbench server included",
+      "seconds": 0.0,
+      "measured": {
+        "posts": 0,
+        "raised": "SystemExit",
+        "said": "refused: LLM_BASE_URL is https://example.test/v1, not https://api.groq.com/openai/v1 or localhost. To use this host on purpose, set ALLOW_PROVIDER=example.test."
+      }
+    },
+    {
+      "test": "the_api_key_is_in_no_log_row_and_no_error",
+      "category": "failure",
+      "kind": "as-is",
+      "ref": "llm_extract.py:168-172,392,408-409",
+      "outcome": "pass",
+      "detail": "",
+      "seconds": 0.0,
+      "measured": {}
+    },
+    {
+      "test": "a_blank_scan_is_marked_needs_human_and_is_not_sent_to_the_model",
+      "category": "failure",
+      "kind": "as-is",
+      "ref": "sources.py:125-127; prepare.py:518-520,578",
+      "outcome": "pass",
+      "detail": "",
+      "seconds": 1.5,
+      "measured": {
+        "posts": 0,
+        "status": "incomplete",
+        "needs_human": [
+          "scan.png"
+        ],
+        "request_drafted": true
+      }
+    },
+    {
+      "test": "a_folder_where_nothing_was_read_gets_no_missing_info_request",
+      "category": "failure",
+      "kind": "target",
+      "ref": "G6; prepare.py:518-520,596,602-606",
+      "outcome": "fail (known gap)",
+      "detail": "status incomplete: a request for all 9 fields is drafted, as if the producer had left them out",
+      "seconds": 0.0,
+      "measured": {
+        "posts": 0,
+        "status": "incomplete",
+        "request_drafted": true,
+        "missing_count": 9
+      }
+    },
+    {
+      "test": "a_file_that_cannot_be_opened_is_listed_for_a_person_and_the_rest_is_read",
+      "category": "failure",
+      "kind": "target",
+      "ref": "G14; sources.py:133,139,191-199; prepare.py:502",
+      "outcome": "fail (known gap)",
+      "detail": "the whole submission stops: {'scan.png': 'UnidentifiedImageError', 'application-2.pdf': 'PdfminerException', 'schedule.xlsx': 'BadZipFile'}",
+      "seconds": 0.64,
+      "measured": {
+        "result_by_file": {
+          "scan.png": "UnidentifiedImageError",
+          "application-2.pdf": "PdfminerException",
+          "schedule.xlsx": "BadZipFile"
+        }
+      }
+    },
+    {
+      "test": "text_past_120000_characters_is_listed_as_unread",
+      "category": "failure",
+      "kind": "target",
+      "ref": "G15; llm_extract.py:436",
+      "outcome": "fail (known gap)",
+      "detail": "the second file was cut off whole and nothing says so; status incomplete, and the producer is asked for ['loss_run_valued_through']",
+      "seconds": 0.04,
+      "measured": {
+        "characters_on_disk": 161347,
+        "characters_sent": 120000,
+        "status": "incomplete",
+        "needs_human": [],
+        "missing": [
+          "loss_run_valued_through"
+        ],
+        "request_drafted": true
+      }
+    },
+    {
+      "test": "the_same_files_in_two_folders_cost_one_model_call",
+      "category": "failure",
+      "kind": "as-is",
+      "ref": "D-022; llm_extract.py:69-71,445-460",
+      "outcome": "pass",
+      "detail": "",
+      "seconds": 0.01,
+      "measured": {
+        "posts": 1,
+        "statuses": [
+          "complete",
+          "complete"
+        ],
+        "linked": false
+      }
+    },
+    {
+      "test": "a_duplicate_submission_is_recognized",
+      "category": "failure",
+      "kind": "target",
+      "ref": "G1; intake.py:28",
+      "outcome": "fail (known gap)",
+      "detail": "the same bytes get two unrelated ids and nothing links them",
+      "seconds": 0.0,
+      "measured": {
+        "same_file_hashes": true,
+        "same_id": false,
+        "keys": [
+          "documents",
+          "submission_id",
+          "synthetic"
+        ]
+      }
+    },
+    {
+      "test": "a_run_killed_during_the_cache_write_leaves_no_result_and_the_next_run_calls_again",
+      "category": "failure",
+      "kind": "as-is",
+      "ref": "D-027; llm_extract.py:481-487",
+      "outcome": "pass",
+      "detail": "",
+      "seconds": 0.01,
+      "measured": {
+        "results_after_kill": 0,
+        "posts": 2,
+        "status": "complete",
+        "tokens_paid_twice": true
+      }
+    },
+    {
+      "test": "a_cut_line_in_the_token_log_is_skipped_and_the_next_row_is_whole",
+      "category": "failure",
+      "kind": "as-is",
+      "ref": "P-014; llm_extract.py:74-87,106-124",
+      "outcome": "pass",
+      "detail": "",
+      "seconds": 0.0,
+      "measured": {
+        "readable_rows": 1,
+        "skipped_lines": 1
+      }
+    },
+    {
+      "test": "a_run_killed_during_the_send_write_leaves_no_partial_package",
+      "category": "failure",
+      "kind": "target",
+      "ref": "package.py:77-80 (plain write_text)",
+      "outcome": "error",
+      "detail": "ValueError: no saved run for SUB-T0001; refusing to gate on nothing",
+      "seconds": 0.0,
+      "measured": {}
+    },
+    {
+      "test": "a_second_send_does_not_replace_the_first",
+      "category": "failure",
+      "kind": "target",
+      "ref": "G10; package.py:77,80",
+      "outcome": "error",
+      "detail": "ValueError: no saved run for SUB-T0001; refusing to gate on nothing",
+      "seconds": 0.0,
+      "measured": {}
+    },
+    {
+      "test": "a_changed_prompt_model_host_temperature_or_file_is_a_new_cache_key",
+      "category": "failure",
+      "kind": "as-is",
+      "ref": "llm_extract.py:54,69-71; sources.py:16,205-206",
+      "outcome": "pass",
+      "detail": "",
+      "seconds": 0.0,
+      "measured": {
+        "changed": {
+          "model": true,
+          "file": true,
+          "ocr settings": true,
+          "prompt": true,
+          "temperature": true,
+          "host": true
+        },
+        "port_is_in_key": false
+      }
+    },
+    {
+      "test": "a_saved_reply_400_days_old_is_served_with_no_call",
+      "category": "failure",
+      "kind": "as-is",
+      "ref": "G20; llm_extract.py:447-455 (no age check)",
+      "outcome": "pass",
+      "detail": "",
+      "seconds": 0.01,
+      "measured": {
+        "posts": 1,
+        "age_days": 400,
+        "status": "complete"
+      }
+    },
+    {
+      "test": "no_ai_role_can_send_or_approve",
+      "category": "send",
+      "kind": "as-is",
+      "ref": "D-017; package.py:61-63; prepare.py:676-678",
+      "outcome": "pass",
+      "detail": "",
+      "seconds": 0.0,
+      "measured": {}
+    },
+    {
+      "test": "a_failed_file_is_refused_for_the_user_and_the_account_manager_when_the_report_is_passed",
+      "category": "send",
+      "kind": "as-is",
+      "ref": "D-021; package.py:37-38,64-65",
+      "outcome": "error",
+      "detail": "TypeError: send_to_carrier() got an unexpected keyword argument 'report'",
+      "seconds": 0.0,
+      "measured": {}
+    },
+    {
+      "test": "a_failed_file_is_refused_when_the_caller_leaves_the_report_out",
+      "category": "send",
+      "kind": "target",
+      "ref": "DEMO-BLOCKERS line 1 (P-010, T-071); package.py:64",
+      "outcome": "pass",
+      "detail": "",
+      "seconds": 0.0,
+      "measured": {}
+    },
+    {
+      "test": "a_send_with_no_logged_underwriter_approve_is_refused",
+      "category": "send",
+      "kind": "target",
+      "ref": "DEMO-BLOCKERS line 2 (D-033 item 2, T-079); package.py:53-81 reads no decision log",
+      "outcome": "error",
+      "detail": "TypeError: send_to_carrier() got an unexpected keyword argument 'report'",
+      "seconds": 0.0,
+      "measured": {
+        "status": "complete",
+        "route": "carrier_a"
+      }
+    },
+    {
+      "test": "a_failed_file_gets_no_missing_info_draft",
+      "category": "send",
+      "kind": "as-is",
+      "ref": "D-021; prepare.py:597-599,624-625",
+      "outcome": "pass",
+      "detail": "",
+      "seconds": 0.0,
+      "measured": {
+        "drafts": [],
+        "saved_file_keys": [
+          "complete",
+          "conflicts",
+          "error",
+          "fields",
+          "hash_algorithm",
+          "host",
+          "model_version",
+          "needs_human",
+          "ocr_settings",
+          "prompt_version",
+          "saved_hash",
+          "sprinklers",
+          "status",
+          "submission",
+          "temperature"
+        ],
+        "saved_file_has_status": true
+      }
+    },
+    {
+      "test": "load_300_submissions_one_after_another_cold_then_from_the_cache",
+      "category": "traffic",
+      "kind": "as-is",
+      "ref": "prepare.py:501-607; llm_extract.py:421-511",
+      "outcome": "pass",
+      "detail": "",
+      "seconds": 1.78,
+      "measured": {
+        "local_milliseconds_per_submission": {
+          "cold": {
+            "n": 300,
+            "p50": 2.0009,
+            "p95": 2.9932,
+            "max": 42.5901,
+            "mean": 2.3982,
+            "posts_so_far": 300
+          },
+          "warm": {
+            "n": 300,
+            "p50": 1.6029,
+            "p95": 1.8125,
+            "max": 23.8722,
+            "mean": 1.7707,
+            "posts_so_far": 300
+          }
+        },
+        "run_totals": {
+          "hosts": [
+            "localhost"
+          ],
+          "model_calls": 300,
+          "from_cache": 300,
+          "tokens": 477200,
+          "failed_attempts": {
+            "rate_limit_429": 0,
+            "timeout": 0,
+            "other": 0,
+            "reply_not_usable": 0
+          }
+        },
+        "token_log_rows": 600,
+        "token_log_bytes": 180600,
+        "saved_replies": 300,
+        "note": "model latency is zero in this stub: this is the local cost only"
+      }
+    },
+    {
+      "test": "peak_hour_60_submissions_against_the_recorded_per_minute_limit",
+      "category": "traffic",
+      "kind": "as-is",
+      "ref": "llm_extract.py:338-360,386; bucket shape ASSUMED",
+      "outcome": "pass",
+      "detail": "",
+      "seconds": 0.16,
+      "measured": {
+        "submissions": 60,
+        "simulated_seconds": 677.1,
+        "submissions_per_hour": 319.0,
+        "seconds_per_submission": 11.29,
+        "posts": 60,
+        "minute_429s": 0,
+        "paced_waits": 56,
+        "longest_wait_seconds": 10.0,
+        "tokens_per_call": 1612,
+        "limit_tokens_per_minute": 8000,
+        "pace_reserve": "len(body)//4 + 2000 (llm_extract.py:386)"
+      }
+    },
+    {
+      "test": "one_day_of_150_submissions_against_the_recorded_daily_limit",
+      "category": "traffic",
+      "kind": "as-is",
+      "ref": "llm_extract.py:31,393-406; TASKS.md:715",
+      "outcome": "pass",
+      "detail": "",
+      "seconds": 0.32,
+      "measured": {
+        "submitted": 150,
+        "complete": 124,
+        "extraction_failed": 26,
+        "posts": 280,
+        "day_429s": 156,
+        "simulated_hours": 2.57,
+        "seconds_lost_per_failed_submission": 300.0,
+        "tokens_used": 199888,
+        "limit_tokens_per_day": 200000
+      }
+    },
+    {
+      "test": "four_workers_on_the_same_new_file_call_the_model_once",
+      "category": "traffic",
+      "kind": "target",
+      "ref": "G20; NFR-007; llm_extract.py:447-487 (no lock)",
+      "outcome": "fail (known gap)",
+      "detail": "4 model calls for one file, and 2 of 4 workers stopped with ['FileNotFoundError']",
+      "seconds": 0.06,
+      "measured": {
+        "workers_crashed": [
+          "FileNotFoundError",
+          "FileNotFoundError"
+        ],
+        "note": "threads share one process id, and the temp file name holds only the process id (llm_extract.py:482); separate processes were not tested",
+        "workers": 4,
+        "posts": 4,
+        "saved_replies": 1,
+        "temp_files_left": 0
+      }
+    },
+    {
+      "test": "eight_threads_appending_to_the_token_log_and_the_decision_log_lose_no_row",
+      "category": "traffic",
+      "kind": "as-is",
+      "ref": "llm_extract.py:81-86; workbench.py:142-143",
+      "outcome": "error",
+      "detail": "FileNotFoundError: [Errno 2] No such file or directory: '/var/folders/g4/nw3tvq1j6q7c8jjlxwf19c5c0000gn/T/t095-hsmba9ad/tmpa4267pv3/decisions.jsonl'",
+      "seconds": 0.01,
+      "measured": {}
+    },
+    {
+      "test": "opening_the_workbench_makes_no_model_call",
+      "category": "traffic",
+      "kind": "target",
+      "ref": "G3; NFR-006; workbench.py:86,234",
+      "outcome": "fail (known gap)",
+      "detail": "20 model calls were made inside the page load for a queue of 20",
+      "seconds": 0.1,
+      "measured": {
+        "queue": 20,
+        "posts_during_an_outage": 120,
+        "seconds_before_the_page_exists_during_an_outage": 620,
+        "posts_on_a_cold_start": 20,
+        "routes": [
+          "carrier_a"
+        ]
+      }
+    },
+    {
+      "test": "local_stage_times_on_the_86_inbox_folders",
+      "category": "latency",
+      "kind": "as-is",
+      "ref": "sources.py:184-208; prepare.py:501-607; simulation/inbox read only",
+      "outcome": "pass",
+      "detail": "",
+      "seconds": 36.08,
+      "measured": {
+        "folders": 86,
+        "files_read": 189,
+        "files_marked_needs_human": 0,
+        "folders_that_stopped": [],
+        "read_seconds": {
+          "typed only": {
+            "n": 48,
+            "p50": 0.0004,
+            "p95": 0.0051,
+            "max": 0.0089,
+            "mean": 0.0014
+          },
+          "with a pdf": {
+            "n": 20,
+            "p50": 0.0073,
+            "p95": 0.016,
+            "max": 0.0162,
+            "mean": 0.0077
+          },
+          "with an image": {
+            "n": 18,
+            "p50": 1.7774,
+            "p95": 2.6719,
+            "max": 2.7345,
+            "mean": 1.9841
+          }
+        },
+        "read_seconds_per_image_file": {
+          "n": 18,
+          "p50": 1.7774,
+          "p95": 2.6719,
+          "max": 2.7345,
+          "mean": 1.9841
+        },
+        "gates_and_rules_seconds_with_a_stub_reply": {
+          "n": 86,
+          "p50": 0.0014,
+          "p95": 0.0028,
+          "max": 0.0039,
+          "mean": 0.0015
+        },
+        "pdftoppm_installed": false,
+        "tesseract_installed": true,
+        "note": "one machine, one run; a scanned PDF is not read here when pdftoppm is missing (G16)"
+      }
+    },
+    {
+      "test": "a_second_run_over_unchanged_files_costs_no_tokens",
+      "category": "cost",
+      "kind": "as-is",
+      "ref": "D-022; llm_extract.py:127-142,455-460",
+      "outcome": "pass",
+      "detail": "",
+      "seconds": 0.06,
+      "measured": {
+        "first": {
+          "hosts": [
+            "localhost"
+          ],
+          "model_calls": 15,
+          "from_cache": 0,
+          "tokens": 24180,
+          "failed_attempts": {
+            "rate_limit_429": 0,
+            "timeout": 0,
+            "other": 0,
+            "reply_not_usable": 0
+          }
+        },
+        "second": {
+          "hosts": [
+            "localhost"
+          ],
+          "model_calls": 0,
+          "from_cache": 15,
+          "tokens": 0,
+          "failed_attempts": {
+            "rate_limit_429": 0,
+            "timeout": 0,
+            "other": 0,
+            "reply_not_usable": 0
+          }
+        }
+      }
+    },
+    {
+      "test": "an_http_400_is_answered_with_one_more_post_and_one_usage_row",
+      "category": "cost",
+      "kind": "as-is",
+      "ref": "llm_extract.py:464-472",
+      "outcome": "pass",
+      "detail": "",
+      "seconds": 0.0,
+      "measured": {
+        "posts": 2,
+        "events": [
+          "other",
+          "retry",
+          null
+        ],
+        "worst_case_posts_per_submission": 12
+      }
+    },
+    {
+      "test": "tokens_per_submission_and_daily_headroom_from_the_real_token_log",
+      "category": "cost",
+      "kind": "as-is",
+      "ref": "underwriting_pipeline/cache/token_log.jsonl and cache/extractions (read only)",
+      "outcome": "fail",
+      "detail": "28 call rows: the numbers in system-design.md were taken from 13",
+      "seconds": 0.01,
+      "measured": {
+        "token_log_rows": 58,
+        "calls": 28,
+        "failed_attempt_rows": 30,
+        "models": [
+          "openai/gpt-oss-120b"
+        ],
+        "first_row": "2026-10-10T20:34:52",
+        "last_row": "2026-10-13T14:30:23",
+        "prompt_tokens": {
+          "n": 28,
+          "p50": 621.5,
+          "p95": 716,
+          "max": 717,
+          "mean": 639.8929
+        },
+        "completion_tokens": {
+          "n": 28,
+          "p50": 948.5,
+          "p95": 1455,
+          "max": 1483,
+          "mean": 1005.75
+        },
+        "total_tokens": {
+          "n": 28,
+          "p50": 1619.0,
+          "p95": 2105,
+          "max": 2170,
+          "mean": 1645.6429
+        },
+        "reasoning_tokens": {
+          "n": 28,
+          "p50": 627.0,
+          "p95": 1135,
+          "max": 1166,
+          "mean": 670.3214
+        },
+        "host_reported_seconds": {
+          "queue_time": {
+            "n": 28,
+            "p50": 0.1732,
+            "p95": 0.2436,
+            "max": 0.8822,
+            "mean": 0.1909
+          },
+          "prompt_time": {
+            "n": 28,
+            "p50": 0.0312,
+            "p95": 0.1762,
+            "max": 0.3151,
+            "mean": 0.0609
+          },
+          "completion_time": {
+            "n": 28,
+            "p50": 1.9736,
+            "p95": 3.0945,
+            "max": 3.115,
+            "mean": 2.1145
+          },
+          "total_time": {
+            "n": 28,
+            "p50": 2.004,
+            "p95": 3.1006,
+            "max": 3.1441,
+            "mean": 2.1753
+          }
+        },
+        "files_per_call": {
+          "n": 28,
+          "p50": 2.0,
+          "p95": 3,
+          "max": 3,
+          "mean": 1.6786
+        },
+        "submissions_per_day_under_200000_tokens": 121,
+        "monthly": {
+          "300": {
+            "tokens": 493693,
+            "tokens_per_business_day_of_22": 22441,
+            "share_of_daily_limit_percent": 11.2
+          },
+          "1000": {
+            "tokens": 1645643,
+            "tokens_per_business_day_of_22": 74802,
+            "share_of_daily_limit_percent": 37.4
+          },
+          "3000": {
+            "tokens": 4936929,
+            "tokens_per_business_day_of_22": 224406,
+            "share_of_daily_limit_percent": 112.2
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 ---
 name: actuary
+model: sonnet
 description: "Role — Actuary / Credit Risk Analyst (@actuary). Use for any turn, task, or review that belongs to @actuary on the AI underwriting team."
 ---
 

@@ -38,3 +38,10 @@ SUB-063 did not pick between sales 400000 and 250000. That refusal is right, and
 No loss-run date was invented for the two files whose runs are missing.
 
 This does not approve the extractor, the hazard points, or a bind.
+
+## Dated lines — 2026-10-13
+
+- **loss runs = valued-through date only; claims are not read or scored** (@senior-underwriter, T-039 High-1). "Clean" on a loss run means its valuation date matched; no claim count, paid amount, open claim, or years covered is extracted or scored. The published score file is not touched.
+- **SUB-057, 058, 064, 065: OCR returned no text and no model reply was scored; "Call: ok" means no error was raised. Six of ten rows come from a model reply.** (@ai-engineer-assistant, T-039 High-1). The four hard scans are one `scan.jpg` each with a null name and all nine fields missed; their misses are real, but no model call was made for them.
+
+Wherever this score is quoted, T-076 included, it carries both lines and the standing wording **"8 of 9 fields scored; loss runs = date only"** (D-033 item 5).

@@ -1,5 +1,6 @@
 ---
 name: head-of-underwriting
+model: sonnet
 description: "Role — Head of Underwriting / Product Owner (@head-of-underwriting). Use for any turn, task, or review that belongs to @head-of-underwriting on the AI underwriting team."
 ---
 

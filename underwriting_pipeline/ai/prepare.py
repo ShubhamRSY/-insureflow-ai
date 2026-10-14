@@ -7,6 +7,7 @@ Run: python underwriting_pipeline/ai/prepare.py
 Inbox: python underwriting_pipeline/ai/prepare.py simulation/inbox simulation/pending-approval deliverables/data-engineer/conflicts
 """
 
+import hashlib
 import json
 import re
 import sys
@@ -15,6 +16,16 @@ from pathlib import Path
 
 import llm_extract
 import sources
+
+ROOT = Path(__file__).resolve().parents[2]
+# G2 (D-029): the send gate reads the last saved run at this path. It never calls process_submission and never trusts a passed-in report.
+EXTRACT_DIR = ROOT / "deliverables" / "data-engineer" / "extractions"
+HASH_ALGORITHM = "sha256"
+# P-010 part 1: these two statuses are refused for every actor, including the user. There is no override.
+REFUSED_STATUSES = ("extraction_failed", "all_values_rejected")
+REJECT_REASON = "the model answered but every value was rejected by the gate"
+# G2 (D-029): the reader accepts only this closed set. A missing, empty, or unknown status is refused, not allowed.
+STATUSES = ("complete", "incomplete", "extraction_failed", "all_values_rejected")
 
 FIELDS = (
     "named_insured",
@@ -515,6 +526,7 @@ def process_submission(folder: Path) -> dict:
     }
     conflicts = []
     error = None
+    rejected = False
     readable = [doc for doc in docs if doc.get("text") and not doc.get("needs_human")]
     if not readable:
         extracted = {"fields": [], "conflicts": []}
@@ -526,7 +538,9 @@ def process_submission(folder: Path) -> dict:
             error = llm_extract._safe(str(exc))
         else:
             if not extracted["conflicts"] and not any(row.get("value") for row in extracted["fields"]):
-                error = "model call returned no fields"
+                # D-024: llm_extract returns only after it has its own usable values, so an all-empty reply is
+                # an answer the gate rejected, not a failed call. A raised call stays extraction_failed above.
+                rejected = True
     for row in extracted["fields"]:
         field_id = row.get("field_id")
         if field_id not in merged or not row.get("value"):
@@ -592,9 +606,19 @@ def process_submission(folder: Path) -> dict:
     report["needs_human"] = needs_human
     report["locations"] = locations
     report["error"] = error
-    # A failed or empty model call is not "no data". Nothing is asked of the producer and nothing is sent.
-    report["status"] = "extraction_failed" if error else "complete" if report["complete"] else "incomplete"
+    report.update(_run_metadata())
+    # D-024: an answered reply the gate rejected is not a failed call, and it gets no request and no draft.
     if error:
+        report["status"] = "extraction_failed"
+    elif rejected:
+        report["status"] = "all_values_rejected"
+    elif report["complete"]:
+        report["status"] = "complete"
+    else:
+        report["status"] = "incomplete"
+    report["status_reason"] = REJECT_REASON if rejected else None
+    # A failed call or an all-rejected answer is not "no data". Nothing is asked of the producer and nothing is sent.
+    if error or rejected:
         report["complete"] = False
         report["request"] = None
     elif report["complete"]:
@@ -605,6 +629,95 @@ def process_submission(folder: Path) -> dict:
             text += "\nAlso send:\n" + "\n".join(f"- {item}" for item in extra) + "\n"
         report["request"] = text
     return report
+
+
+def _run_metadata() -> dict:
+    """Extraction-run metadata for the saved run (data-model.md). Best effort; null where a setting is unavailable."""
+    try:
+        model = llm_extract.endpoint_settings().get("model")
+    except Exception:
+        model = None
+    return {
+        "model_version": model,
+        "prompt_version": getattr(llm_extract, "PROMPT_VERSION", None),
+        "ocr_settings": getattr(sources, "OCR_SETTINGS", None),
+        "host": llm_extract._host() if hasattr(llm_extract, "_host") else None,
+        "temperature": getattr(llm_extract, "TEMPERATURE", None),
+    }
+
+
+def hash_payload(payload: dict, algorithm: str = HASH_ALGORITHM) -> str:
+    """The saved_hash bytes (data-model.md): the payload without saved_hash/hash_algorithm, canonical JSON, UTF-8, lowercase hex."""
+    if algorithm != HASH_ALGORITHM:
+        raise ValueError(f"unsupported hash algorithm {algorithm!r}")
+    body = {key: value for key, value in payload.items() if key not in {"saved_hash", "hash_algorithm"}}
+    blob = json.dumps(body, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
+    return hashlib.sha256(blob.encode("utf-8")).hexdigest()
+
+
+def read_saved_run(submission: str, extract_dir: Path | None = None) -> dict:
+    """G2 (D-029). Read the last saved run, verify its hash, and refuse when anything is off.
+
+    Fail closed: no file, no usable hash, an unknown algorithm, a digest that does not match, or a status
+    outside the closed set (`complete`, `incomplete`, `extraction_failed`, `all_values_rejected`) all refuse.
+    A status that is missing, empty, or unknown is refused, not allowed, so a caller that branches on it fails closed.
+    The gate reads the file itself and never trusts a report a caller passes in.
+    """
+    directory = Path(extract_dir) if extract_dir is not None else EXTRACT_DIR
+    path = directory / f"{submission}.json"
+    try:
+        payload = json.loads(path.read_text())
+    except (OSError, ValueError):
+        raise ValueError(f"no saved run for {submission}; refusing to gate on nothing") from None
+    if not isinstance(payload, dict):
+        raise ValueError(f"the saved run for {submission} is not an object; refusing")
+    algorithm = payload.get("hash_algorithm")
+    stored = payload.get("saved_hash")
+    if algorithm != HASH_ALGORITHM or not isinstance(stored, str) or not stored:
+        raise ValueError(f"the saved run for {submission} has no usable hash; refusing")
+    if hash_payload(payload, algorithm) != stored:
+        raise ValueError(f"the saved run for {submission} changed since it was saved; refusing")
+    status = payload.get("status")
+    if not isinstance(status, str) or status not in STATUSES:
+        raise ValueError(f"the saved run for {submission} has status {status!r}, outside the closed set; refusing")
+    return payload
+
+
+def current_status(submission: str, extract_dir: Path | None = None) -> str:
+    """The status of the last saved run, read, hash-checked, and validated by the gate itself (G2)."""
+    return read_saved_run(submission, extract_dir)["status"]
+
+
+def _saved_payload(report: dict) -> dict:
+    """The ExtractionRun payload (data-model.md): the exact object the saved_hash is computed over."""
+    fields = []
+    for row in report.get("fields") or []:
+        fields.append(
+            {
+                "field_id": row["field_id"],
+                "value": row["value"],
+                "source": row.get("source"),
+                "confidence": row.get("confidence"),
+                "needs_review": row.get("needs_review"),
+                "start": row.get("start"),
+                "end": row.get("end"),
+            }
+        )
+    return {
+        "submission": report.get("folder"),
+        "status": report.get("status"),
+        "error": report.get("error"),
+        "complete": bool(report.get("complete")),
+        "conflicts": report.get("conflicts") or [],
+        "needs_human": report.get("needs_human") or [],
+        "sprinklers": report.get("sprinklers"),
+        "model_version": report.get("model_version"),
+        "prompt_version": report.get("prompt_version"),
+        "ocr_settings": report.get("ocr_settings"),
+        "host": report.get("host"),
+        "temperature": report.get("temperature"),
+        "fields": fields,
+    }
 
 
 def write_drafts(inbox: Path, draft_dir: Path, conflict_dir: Path) -> list[dict]:
@@ -619,15 +732,22 @@ def write_drafts(inbox: Path, draft_dir: Path, conflict_dir: Path) -> list[dict]
     for folder in sorted(p for p in inbox.iterdir() if p.is_dir() and p.name.startswith("SUB-")):
         report = process_submission(folder)
         reports.append(report)
+        refused = report.get("status") in REFUSED_STATUSES
         dest = draft_dir / f"{folder.name}.md"
         side = conflict_dir / f"{folder.name}.json"
         if report["request"]:
             dest.write_text(report["request"])
+        elif refused and dest.exists():
+            # D1: a failed call or an all-rejected answer removes the old draft. Nothing is sent to the producer.
+            dest.unlink()
         conflicts_out = report["conflicts"]
         if conflicts_out:
             side.write_text(
                 json.dumps({"submission": folder.name, "conflicts": conflicts_out}, indent=2) + "\n"
             )
+        elif refused:
+            # D1: the conflict file is kept as it is for the human.
+            pass
         elif side.exists():
             prior = json.loads(side.read_text())
             kept = prior.get("conflicts") or []
@@ -635,26 +755,11 @@ def write_drafts(inbox: Path, draft_dir: Path, conflict_dir: Path) -> list[dict]
                 conflicts_out = kept
             else:
                 side.unlink()
-        fields = []
-        for row in report.get("fields") or []:
-            fields.append(
-                {
-                    "field_id": row["field_id"],
-                    "value": row["value"],
-                    "source": row.get("source"),
-                    "confidence": row.get("confidence"),
-                    "needs_review": row.get("needs_review"),
-                    "start": row.get("start"),
-                    "end": row.get("end"),
-                }
-            )
-        (extract_dir / f"{folder.name}.json").write_text(
-            json.dumps(
-                {"submission": folder.name, "fields": fields, "conflicts": conflicts_out},
-                indent=2,
-            )
-            + "\n"
-        )
+        payload = _saved_payload(report)
+        payload["conflicts"] = conflicts_out
+        payload["hash_algorithm"] = HASH_ALGORITHM
+        payload["saved_hash"] = hash_payload(payload, HASH_ALGORITHM)
+        (extract_dir / f"{folder.name}.json").write_text(json.dumps(payload, indent=2) + "\n")
     return reports
 
 
@@ -665,14 +770,20 @@ def approve(
     reason: str = "",
     report: dict | None = None,
 ) -> Path:
-    """The user may override. The account manager may approve when the agency rules pass."""
-    import sys
+    """The user may override every block except the two refused statuses (P-010). G2 reads the status itself.
 
+    The passed-in report is not a source of truth: the gate reads the last saved run and checks its hash,
+    so an untouched failed or all-rejected run can never be approved, by anyone.
+    """
     app = Path(__file__).resolve().parents[1] / "app"
     if str(app) not in sys.path:
         sys.path.insert(0, str(app))
     from package import agency_problem
 
+    current = read_saved_run(draft.stem)  # G2: the file's current status, read and hash-checked here
+    status = current.get("status")
+    if status in REFUSED_STATUSES:
+        raise ValueError(f"this file's status is {status}; it cannot be approved or sent, for any actor")
     name = (actor or "").strip().lstrip("@").lower().replace(" ", "-")
     if name not in {"user", "account-manager"}:
         raise ValueError("only the user or the account manager may approve; no AI role can send")
@@ -684,7 +795,7 @@ def approve(
     if name == "account-manager":
         if not (reason or "").strip():
             raise ValueError("the account manager must write a reason")
-        problem = agency_problem(report)
+        problem = agency_problem(current)
         if problem:
             raise ValueError(problem)
         header = f"Approved-by: account-manager\nReason: {reason.strip()}\n"
@@ -696,6 +807,57 @@ def approve(
     dest = out_dir / draft.name
     dest.write_text(f"{header}\n{body}")
     return dest
+
+
+def _raiser(exc: Exception):
+    def boom(_docs):
+        raise exc
+
+    return boom
+
+
+def _fake_report(submission: str, status: str, error: str | None) -> dict:
+    """A minimal report shaped like process_submission output, for the self-check. No model call."""
+    rows = [
+        {
+            "field_id": field,
+            "value": None,
+            "start": None,
+            "end": None,
+            "source": None,
+            "confidence": 0.0,
+            "needs_review": True,
+        }
+        for field in FIELDS
+    ]
+    return {
+        "folder": submission,
+        "status": status,
+        "status_reason": None,
+        "error": error,
+        "complete": False,
+        "missing": list(FIELDS),
+        "request": None,
+        "conflicts": [],
+        "extra": [],
+        "fields": rows,
+        "sprinklers": "no",
+        "needs_human": [],
+        "locations": [],
+        "model_version": "test",
+        "prompt_version": "test",
+        "ocr_settings": None,
+        "host": None,
+        "temperature": 0,
+    }
+
+
+def _save_run(directory: Path, submission: str, status: str, error: str | None = None) -> None:
+    payload = _saved_payload(_fake_report(submission, status, error))
+    payload["hash_algorithm"] = HASH_ALGORITHM
+    payload["saved_hash"] = hash_payload(payload, HASH_ALGORITHM)
+    directory.mkdir(parents=True, exist_ok=True)
+    (directory / f"{submission}.json").write_text(json.dumps(payload, indent=2) + "\n")
 
 
 if __name__ == "__main__":
@@ -867,26 +1029,157 @@ if __name__ == "__main__":
         assert not same_operations("accounting office", "restaurant, tacos, fryer")
         same_area = _square_feet({"a.md": "Shop is 2,200 sq ft.", "b.md": "2200 sf"})
         assert {row[0] for row in same_area} == {"2200"}
-        try:
-            approve(Path("underwriting_pipeline/ai/prepare.py"), "", Path("simulation/to-producer"))
-            raise SystemExit("empty approver should fail")
-        except ValueError:
-            pass
+        # D-024: a raised call stays extraction_failed; an answered reply the gate rejected is all_values_rejected.
+        real_extract = llm_extract.llm_extract
         with tempfile.TemporaryDirectory() as tmp:
-            draft = Path(tmp) / "SUB-000.md"
-            draft.write_text("Nothing has been declined.\n")
-            out = Path(tmp) / "to-producer"
-            out.mkdir()
+            folder = Path(tmp) / "SUB-200"
+            folder.mkdir()
+            (folder / "application.md").write_text("Named insured: Example LLC\n")
             try:
-                approve(draft, "account-manager", out, reason="ready")
-                raise SystemExit("manager without a report should fail")
-            except ValueError:
-                pass
+                llm_extract.llm_extract = _raiser(RuntimeError("model call failed: HTTP 429 rate limit"))
+                failed = process_submission(folder)
+                assert failed["status"] == "extraction_failed"
+                assert failed["error"] and failed["request"] is None and failed["complete"] is False
+                llm_extract.llm_extract = _raiser(RuntimeError("model call returned no fields"))
+                empty = process_submission(folder)
+                assert empty["status"] == "extraction_failed" and empty["request"] is None
+                llm_extract.llm_extract = lambda docs: {
+                    "fields": [
+                        {
+                            "field_id": "named_insured",
+                            "value": None,
+                            "source": "application.md",
+                            "confidence": 0.0,
+                            "needs_review": True,
+                        }
+                    ],
+                    "conflicts": [],
+                }
+                rejected = process_submission(folder)
+                assert rejected["status"] == "all_values_rejected"
+                assert rejected["error"] is None and rejected["request"] is None
+                assert rejected["complete"] is False and rejected["status_reason"] == REJECT_REASON
+            finally:
+                llm_extract.llm_extract = real_extract
+        # D1: on either refused status the old draft goes and the conflict file stays, and the run is saved and hashed.
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            inbox = tmp / "inbox"
+            (inbox / "SUB-300").mkdir(parents=True)
+            (inbox / "SUB-300" / "application.md").write_text("Named insured: Example LLC\n")
+            pending = tmp / "pending-approval"
+            pending.mkdir()
+            conflicts = tmp / "conflicts"
+            conflicts.mkdir()
+            side = conflicts / "SUB-300.json"
+            kept = {
+                "submission": "SUB-300",
+                "conflicts": [
+                    {"field": "tiv_building", "values": [{"value": "1"}], "resolution": "unresolved"}
+                ],
+            }
+            side.write_text(json.dumps(kept, indent=2) + "\n")
+            real_ps = process_submission
             try:
-                approve(draft, "ai-engineer-assistant", out)
-                raise SystemExit("assistant approve should fail")
-            except ValueError:
-                pass
-            sent = approve(draft, "user", out)
-            assert "Approved-by: user (override)" in sent.read_text()
+                for status, err in (
+                    ("extraction_failed", "model call failed: HTTP 429 rate limit"),
+                    ("all_values_rejected", None),
+                ):
+                    (pending / "SUB-300.md").write_text("old draft\n")
+
+                    def fake(folder, status=status, err=err):
+                        return _fake_report("SUB-300", status, err)
+
+                    globals()["process_submission"] = fake
+                    write_drafts(inbox, pending, conflicts)
+                    assert not (pending / "SUB-300.md").exists(), "the old draft must be removed"
+                    assert json.loads(side.read_text()) == kept, "the conflict file must be kept"
+                    saved = json.loads((tmp / "extractions" / "SUB-300.json").read_text())
+                    assert saved["status"] == status and saved["error"] == err
+                    assert saved["saved_hash"] == hash_payload(saved)
+                    assert read_saved_run("SUB-300", tmp / "extractions")["status"] == status
+            finally:
+                globals()["process_submission"] = real_ps
+        # G2: the gate reads the last saved run and checks its hash. The two refused statuses have no override.
+        good = _fake_report("SUB-103", "incomplete", None)
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            ext = tmp / "extractions"
+            saved_dir = EXTRACT_DIR
+            globals()["EXTRACT_DIR"] = ext
+            try:
+                pending = tmp / "pending-approval"
+                pending.mkdir()
+                out = tmp / "to-producer"
+                out.mkdir()
+
+                def draft_for(sub: str) -> Path:
+                    path = pending / f"{sub}.md"
+                    path.write_text("Nothing has been declined.\n")
+                    return path
+
+                for sub, status, err in (
+                    ("SUB-101", "extraction_failed", "model call failed: HTTP 429 rate limit"),
+                    ("SUB-102", "all_values_rejected", None),
+                ):
+                    _save_run(ext, sub, status, err)
+                    path = draft_for(sub)
+                    for actor in ("user", "user (override)", "account-manager"):
+                        try:
+                            approve(path, actor, out, reason="ready", report=good)
+                            raise SystemExit(f"{status} must be refused for {actor}")
+                        except ValueError:
+                            pass
+                try:
+                    approve(draft_for("SUB-190"), "user", out, report=good)
+                    raise SystemExit("approving with no saved run must be refused")
+                except ValueError:
+                    pass
+                _save_run(ext, "SUB-191", "incomplete", None)
+                tampered = json.loads((ext / "SUB-191.json").read_text())
+                tampered["status"] = "complete"
+                (ext / "SUB-191.json").write_text(json.dumps(tampered, indent=2) + "\n")
+                try:
+                    approve(draft_for("SUB-191"), "user", out)
+                    raise SystemExit("a changed saved run must be refused")
+                except ValueError:
+                    pass
+                # Medium-1 fail-closed: a hash-valid run whose status is empty, unknown, or missing is refused by the reader,
+                # so a caller that branches on the status fails closed instead of receiving "".
+                for sub, label, bad in (
+                    ("SUB-194", "empty", ""),
+                    ("SUB-195", "unknown", "banana"),
+                    ("SUB-196", "missing", None),
+                ):
+                    _save_run(ext, sub, "incomplete", None)
+                    raw = json.loads((ext / f"{sub}.json").read_text())
+                    if bad is None:
+                        raw.pop("status")
+                    else:
+                        raw["status"] = bad
+                    raw["saved_hash"] = hash_payload(raw)
+                    (ext / f"{sub}.json").write_text(json.dumps(raw, indent=2) + "\n")
+                    for reader in (read_saved_run, current_status):
+                        try:
+                            reader(sub)
+                            raise SystemExit(f"a {label} status must be refused")
+                        except ValueError:
+                            pass
+                _save_run(ext, "SUB-192", "incomplete", None)
+                assert current_status("SUB-192") == "incomplete", "an in-set status still reads"
+                sent = approve(draft_for("SUB-192"), "user", out)
+                assert "Approved-by: user (override)" in sent.read_text()
+                _save_run(ext, "SUB-193", "incomplete", None)
+                try:
+                    approve(draft_for("SUB-193"), "ai-engineer-assistant", out)
+                    raise SystemExit("no AI role may approve")
+                except ValueError:
+                    pass
+                try:
+                    approve(draft_for("SUB-193"), "account-manager", out)
+                    raise SystemExit("the account manager must write a reason")
+                except ValueError:
+                    pass
+            finally:
+                globals()["EXTRACT_DIR"] = saved_dir
         print("prepare ok")

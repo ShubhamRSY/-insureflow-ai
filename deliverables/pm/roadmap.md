@@ -4,6 +4,7 @@
 - Date: 2026-10-09
 - Status: Accepted by @head-of-underwriting (T-013)
 - Replaces the carrier/MGA charter (T-001 cancelled, D-003 superseded by D-004)
+- See also: deliverables/pm/requirements.md (T-097), the functional and non-functional requirements register for this pilot.
 
 ## Goal
 

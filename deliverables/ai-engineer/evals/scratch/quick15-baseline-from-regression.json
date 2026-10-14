@@ -1,0 +1,47 @@
+{
+  "conflict": {
+    "flagged": 1,
+    "hit": 11,
+    "miss": 1,
+    "not_credited": 2
+  },
+  "construction": {
+    "hit": 12,
+    "miss": 3
+  },
+  "loss_runs": {
+    "flagged": 1,
+    "hit": 7,
+    "miss": 2,
+    "not_credited": 5
+  },
+  "named_insured": {
+    "hit": 10,
+    "miss": 5
+  },
+  "operations": {
+    "hit": 9,
+    "miss": 6
+  },
+  "premises": {
+    "hit": 9,
+    "miss": 6
+  },
+  "sales": {
+    "hit": 11,
+    "miss": 4
+  },
+  "status": {
+    "hit": 10,
+    "miss": 3,
+    "not_credited": 2
+  },
+  "tiv": {
+    "hit": 11,
+    "miss": 4
+  },
+  "year_built": {
+    "hit": 12,
+    "miss": 3
+  }
+}

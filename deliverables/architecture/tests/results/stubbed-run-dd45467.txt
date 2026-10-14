@@ -1,0 +1,205 @@
+Exception in thread Thread-5 (work):
+Exception in thread Thread-7 (work):
+Exception in thread Thread-6 (work):
+Exception in thread Thread-9 (work):
+Exception in thread Thread-8 (work):
+Exception in thread Thread-10 (work):
+Exception in thread Thread-11 (work):
+Traceback (most recent call last):
+Traceback (most recent call last):
+Exception in thread Thread-12 (work):
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/threading.py", line 1082, in _bootstrap_inner
+    self._context.run(self.run)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/threading.py", line 1082, in _bootstrap_inner
+    self._context.run(self.run)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^
+Traceback (most recent call last):
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/threading.py", line 1024, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/threading.py", line 1024, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/threading.py", line 1082, in _bootstrap_inner
+    self._context.run(self.run)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^
+Traceback (most recent call last):
+Traceback (most recent call last):
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/threading.py", line 1082, in _bootstrap_inner
+    self._context.run(self.run)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/threading.py", line 1024, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/threading.py", line 1082, in _bootstrap_inner
+    self._context.run(self.run)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/threading.py", line 1082, in _bootstrap_inner
+    self._context.run(self.run)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/threading.py", line 1024, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/disastershubz/INSURANCE FLOW AI/-insureflow-ai-1/deliverables/architecture/tests/test_system_design_stubbed.py", line 674, in work
+    workbench.record_decision({"underwriter_id": f"UW-TEST-{number}", "action": "approve", "submission": f"SUB-T{row:04d}", "reason": "SYNTHETIC load test"}, decisions)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/threading.py", line 1082, in _bootstrap_inner
+    self._context.run(self.run)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/threading.py", line 1024, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/disastershubz/INSURANCE FLOW AI/-insureflow-ai-1/deliverables/architecture/tests/test_system_design_stubbed.py", line 674, in work
+    workbench.record_decision({"underwriter_id": f"UW-TEST-{number}", "action": "approve", "submission": f"SUB-T{row:04d}", "reason": "SYNTHETIC load test"}, decisions)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/disastershubz/INSURANCE FLOW AI/-insureflow-ai-1/deliverables/architecture/tests/test_system_design_stubbed.py", line 674, in work
+    workbench.record_decision({"underwriter_id": f"UW-TEST-{number}", "action": "approve", "submission": f"SUB-T{row:04d}", "reason": "SYNTHETIC load test"}, decisions)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/threading.py", line 1024, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/threading.py", line 1082, in _bootstrap_inner
+    self._context.run(self.run)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/threading.py", line 1024, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/disastershubz/INSURANCE FLOW AI/-insureflow-ai-1/deliverables/architecture/tests/test_system_design_stubbed.py", line 674, in work
+    workbench.record_decision({"underwriter_id": f"UW-TEST-{number}", "action": "approve", "submission": f"SUB-T{row:04d}", "reason": "SYNTHETIC load test"}, decisions)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/disastershubz/INSURANCE FLOW AI/-insureflow-ai-1/underwriting_pipeline/app/workbench.py", line 135, in record_decision
+    status = prepare.current_status(submission)
+  File "/Users/disastershubz/INSURANCE FLOW AI/-insureflow-ai-1/underwriting_pipeline/ai/prepare.py", line 688, in current_status
+    return read_saved_run(submission, extract_dir)["status"]
+           ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/disastershubz/INSURANCE FLOW AI/-insureflow-ai-1/underwriting_pipeline/ai/prepare.py", line 671, in read_saved_run
+    raise ValueError(f"no saved run for {submission}; refusing to gate on nothing") from None
+  File "/Users/disastershubz/INSURANCE FLOW AI/-insureflow-ai-1/underwriting_pipeline/app/workbench.py", line 135, in record_decision
+    status = prepare.current_status(submission)
+  File "/Users/disastershubz/INSURANCE FLOW AI/-insureflow-ai-1/deliverables/architecture/tests/test_system_design_stubbed.py", line 674, in work
+    workbench.record_decision({"underwriter_id": f"UW-TEST-{number}", "action": "approve", "submission": f"SUB-T{row:04d}", "reason": "SYNTHETIC load test"}, decisions)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/threading.py", line 1024, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/disastershubz/INSURANCE FLOW AI/-insureflow-ai-1/underwriting_pipeline/app/workbench.py", line 135, in record_decision
+    status = prepare.current_status(submission)
+  File "/Users/disastershubz/INSURANCE FLOW AI/-insureflow-ai-1/underwriting_pipeline/ai/prepare.py", line 688, in current_status
+    return read_saved_run(submission, extract_dir)["status"]
+           ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/disastershubz/INSURANCE FLOW AI/-insureflow-ai-1/underwriting_pipeline/app/workbench.py", line 135, in record_decision
+    status = prepare.current_status(submission)
+  File "/Users/disastershubz/INSURANCE FLOW AI/-insureflow-ai-1/underwriting_pipeline/ai/prepare.py", line 688, in current_status
+    return read_saved_run(submission, extract_dir)["status"]
+           ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/disastershubz/INSURANCE FLOW AI/-insureflow-ai-1/underwriting_pipeline/ai/prepare.py", line 671, in read_saved_run
+    raise ValueError(f"no saved run for {submission}; refusing to gate on nothing") from None
+  File "/Users/disastershubz/INSURANCE FLOW AI/-insureflow-ai-1/deliverables/architecture/tests/test_system_design_stubbed.py", line 674, in work
+    workbench.record_decision({"underwriter_id": f"UW-TEST-{number}", "action": "approve", "submission": f"SUB-T{row:04d}", "reason": "SYNTHETIC load test"}, decisions)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/disastershubz/INSURANCE FLOW AI/-insureflow-ai-1/underwriting_pipeline/app/workbench.py", line 135, in record_decision
+    status = prepare.current_status(submission)
+  File "/Users/disastershubz/INSURANCE FLOW AI/-insureflow-ai-1/underwriting_pipeline/ai/prepare.py", line 688, in current_status
+    return read_saved_run(submission, extract_dir)["status"]
+           ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/disastershubz/INSURANCE FLOW AI/-insureflow-ai-1/underwriting_pipeline/ai/prepare.py", line 688, in current_status
+    return read_saved_run(submission, extract_dir)["status"]
+           ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/disastershubz/INSURANCE FLOW AI/-insureflow-ai-1/underwriting_pipeline/ai/prepare.py", line 671, in read_saved_run
+    raise ValueError(f"no saved run for {submission}; refusing to gate on nothing") from None
+  File "/Users/disastershubz/INSURANCE FLOW AI/-insureflow-ai-1/deliverables/architecture/tests/test_system_design_stubbed.py", line 674, in work
+    workbench.record_decision({"underwriter_id": f"UW-TEST-{number}", "action": "approve", "submission": f"SUB-T{row:04d}", "reason": "SYNTHETIC load test"}, decisions)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/disastershubz/INSURANCE FLOW AI/-insureflow-ai-1/underwriting_pipeline/app/workbench.py", line 135, in record_decision
+    status = prepare.current_status(submission)
+  File "/Users/disastershubz/INSURANCE FLOW AI/-insureflow-ai-1/underwriting_pipeline/ai/prepare.py", line 688, in current_status
+    return read_saved_run(submission, extract_dir)["status"]
+           ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/disastershubz/INSURANCE FLOW AI/-insureflow-ai-1/underwriting_pipeline/ai/prepare.py", line 671, in read_saved_run
+    raise ValueError(f"no saved run for {submission}; refusing to gate on nothing") from None
+ValueError: no saved run for SUB-T0000; refusing to gate on nothing
+  File "/Users/disastershubz/INSURANCE FLOW AI/-insureflow-ai-1/deliverables/architecture/tests/test_system_design_stubbed.py", line 674, in work
+    workbench.record_decision({"underwriter_id": f"UW-TEST-{number}", "action": "approve", "submission": f"SUB-T{row:04d}", "reason": "SYNTHETIC load test"}, decisions)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/disastershubz/INSURANCE FLOW AI/-insureflow-ai-1/underwriting_pipeline/app/workbench.py", line 135, in record_decision
+    status = prepare.current_status(submission)
+ValueError: no saved run for SUB-T0000; refusing to gate on nothing
+  File "/Users/disastershubz/INSURANCE FLOW AI/-insureflow-ai-1/underwriting_pipeline/ai/prepare.py", line 671, in read_saved_run
+    raise ValueError(f"no saved run for {submission}; refusing to gate on nothing") from None
+  File "/Users/disastershubz/INSURANCE FLOW AI/-insureflow-ai-1/underwriting_pipeline/ai/prepare.py", line 671, in read_saved_run
+    raise ValueError(f"no saved run for {submission}; refusing to gate on nothing") from None
+ValueError: no saved run for SUB-T0000; refusing to gate on nothing
+ValueError: no saved run for SUB-T0000; refusing to gate on nothing
+ValueError: no saved run for SUB-T0000; refusing to gate on nothing
+  File "/Users/disastershubz/INSURANCE FLOW AI/-insureflow-ai-1/underwriting_pipeline/ai/prepare.py", line 688, in current_status
+    return read_saved_run(submission, extract_dir)["status"]
+           ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/disastershubz/INSURANCE FLOW AI/-insureflow-ai-1/underwriting_pipeline/ai/prepare.py", line 671, in read_saved_run
+    raise ValueError(f"no saved run for {submission}; refusing to gate on nothing") from None
+  File "/Users/disastershubz/INSURANCE FLOW AI/-insureflow-ai-1/underwriting_pipeline/app/workbench.py", line 135, in record_decision
+    status = prepare.current_status(submission)
+ValueError: no saved run for SUB-T0000; refusing to gate on nothing
+ValueError: no saved run for SUB-T0000; refusing to gate on nothing
+  File "/Users/disastershubz/INSURANCE FLOW AI/-insureflow-ai-1/underwriting_pipeline/ai/prepare.py", line 688, in current_status
+    return read_saved_run(submission, extract_dir)["status"]
+           ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/disastershubz/INSURANCE FLOW AI/-insureflow-ai-1/underwriting_pipeline/ai/prepare.py", line 671, in read_saved_run
+    raise ValueError(f"no saved run for {submission}; refusing to gate on nothing") from None
+ValueError: no saved run for SUB-T0000; refusing to gate on nothing
+pass              failure  as-is  six_429s_give_extraction_failed_and_nothing_cached
+pass              failure  as-is  retry_after_one_hour_is_cut_to_max_wait_then_fails
+pass              failure  as-is  two_timeouts_then_a_reply_is_one_good_extraction
+pass              failure  as-is  six_timeouts_fail_after_31_seconds_of_waits
+pass              failure  as-is  a_bad_reply_fails_is_not_cached_is_called_again_and_its_tokens_are_logged
+pass              failure  as-is  provider_outage_gives_extraction_failed_with_cause_other
+fail (known gap)  failure  target a_refused_provider_host_marks_the_file_and_does_not_stop_the_process
+                  -> SystemExit: the whole process stops, the workbench server included
+pass              failure  as-is  the_api_key_is_in_no_log_row_and_no_error
+pass              failure  as-is  a_blank_scan_is_marked_needs_human_and_is_not_sent_to_the_model
+fail (known gap)  failure  target a_folder_where_nothing_was_read_gets_no_missing_info_request
+                  -> status incomplete: a request for all 9 fields is drafted, as if the producer had left them out
+fail (known gap)  failure  target a_file_that_cannot_be_opened_is_listed_for_a_person_and_the_rest_is_read
+                  -> the whole submission stops: {'scan.png': 'UnidentifiedImageError', 'application-2.pdf': 'PdfminerException', 'schedule.xlsx': 'BadZipFile'}
+fail (known gap)  failure  target text_past_120000_characters_is_listed_as_unread
+                  -> the second file was cut off whole and nothing says so; status incomplete, and the producer is asked for ['loss_run_valued_through']
+pass              failure  as-is  the_same_files_in_two_folders_cost_one_model_call
+fail (known gap)  failure  target a_duplicate_submission_is_recognized
+                  -> the same bytes get two unrelated ids and nothing links them
+pass              failure  as-is  a_run_killed_during_the_cache_write_leaves_no_result_and_the_next_run_calls_again
+pass              failure  as-is  a_cut_line_in_the_token_log_is_skipped_and_the_next_row_is_whole
+error             failure  target a_run_killed_during_the_send_write_leaves_no_partial_package
+                  -> ValueError: no saved run for SUB-T0001; refusing to gate on nothing
+error             failure  target a_second_send_does_not_replace_the_first
+                  -> ValueError: no saved run for SUB-T0001; refusing to gate on nothing
+pass              failure  as-is  a_changed_prompt_model_host_temperature_or_file_is_a_new_cache_key
+pass              failure  as-is  a_saved_reply_400_days_old_is_served_with_no_call
+pass              send     as-is  no_ai_role_can_send_or_approve
+error             send     as-is  a_failed_file_is_refused_for_the_user_and_the_account_manager_when_the_report_is_passed
+                  -> TypeError: send_to_carrier() got an unexpected keyword argument 'report'
+pass              send     target a_failed_file_is_refused_when_the_caller_leaves_the_report_out
+error             send     target a_send_with_no_logged_underwriter_approve_is_refused
+                  -> TypeError: send_to_carrier() got an unexpected keyword argument 'report'
+pass              send     as-is  a_failed_file_gets_no_missing_info_draft
+pass              traffic  as-is  load_300_submissions_one_after_another_cold_then_from_the_cache
+pass              traffic  as-is  peak_hour_60_submissions_against_the_recorded_per_minute_limit
+pass              traffic  as-is  one_day_of_150_submissions_against_the_recorded_daily_limit
+fail (known gap)  traffic  target four_workers_on_the_same_new_file_call_the_model_once
+                  -> 4 model calls for one file, and 2 of 4 workers stopped with ['FileNotFoundError']
+error             traffic  as-is  eight_threads_appending_to_the_token_log_and_the_decision_log_lose_no_row
+                  -> FileNotFoundError: [Errno 2] No such file or directory: '/var/folders/g4/nw3tvq1j6q7c8jjlxwf19c5c0000gn/T/t095-hsmba9ad/tmpa4267pv3/decisions.jsonl'
+fail (known gap)  traffic  target opening_the_workbench_makes_no_model_call
+                  -> 20 model calls were made inside the page load for a queue of 20
+pass              latency  as-is  local_stage_times_on_the_86_inbox_folders
+pass              cost     as-is  a_second_run_over_unchanged_files_costs_no_tokens
+pass              cost     as-is  an_http_400_is_answered_with_one_more_post_and_one_usage_row
+fail              cost     as-is  tokens_per_submission_and_daily_headroom_from_the_real_token_log
+                  -> 28 call rows: the numbers in system-design.md were taken from 13
+
+{'pass': 22, 'fail (known gap)': 7, 'error': 5, 'fail': 1}
+network calls attempted: 0; protected files changed: 0
+results: /Users/disastershubz/INSURANCE FLOW AI/-insureflow-ai-1/deliverables/architecture/tests/results/stubbed-results.json
+exit=1

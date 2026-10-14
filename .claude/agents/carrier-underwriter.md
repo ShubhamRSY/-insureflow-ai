@@ -1,5 +1,6 @@
 ---
 name: carrier-underwriter
+model: haiku
 description: "Simulated outside party — underwriters at Carrier A, B and C (@carrier-underwriter). Use for any turn, task, or review that belongs to @carrier-underwriter on the AI underwriting team."
 ---
 
