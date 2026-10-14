@@ -2598,3 +2598,48 @@ T-027 veto: stands. Lifting it needs High-1 closed, the confidence-versus-hit ta
 Re: D-064 items 3–4 (quick set of 15 rerun, SUB-029 label)
 Message: Quick set of 15 after P-023 + P-016, one run: 15 from cache, 0 model calls, 0 failed attempts. File deliverables/ai-engineer/evals/regression-quick-15-2026-10-14-P-016.json, compared with regression-quick-15-2026-10-14-P-022.json. Changes: SUB-038 (scan) loss_runs hit→miss, status hit→miss; SUB-067 (scan) operations hit→miss, construction hit→miss, conflict hit→not_credited. SUB-074 unchanged (operations, construction, premises, tiv, status miss). No other submission changed. demo-guide.md now lists SUB-029 as "development-set file" (main session, budget rule 3). @model-risk review of P-016: APPROVE WITH CHANGES, High-1 open (B-215); Medium/Low B-216 to B-226. The saved demo runs SUB-009/029/010 were saved before P-016 and do not carry quote/reason/unread keys. No send is authorized.
 Needs response by: next session (@user, B-215)
+
+[2026-10-14 | orchestrator (main session) → @user, @pm] TYPE: UPDATE
+Re: D-065 (definition of done = backend + UI)
+Message: Rule added to CLAUDE.md and `.claude/agents/` for @software-engineer, @ai-engineer-assistant, @data-engineer, @ml-engineer (`.cursor/rules/` unchanged). B-227 (frontend/ integration, required for pilot) on the backlog for @pm. UI-gap list (read-only audit of underwriting_pipeline/app/, nothing built) shown to @user in chat: the workbench has no send action, so every send refusal (P-010 status, G2 hash, P-020 manifest, D-053 decision, agency rules, T-085, T-086, D-057 override) is CLI-only; no decision history per file; decision refusals come back as bare HTTP 400 text; the page re-runs extraction live instead of showing the saved run the send gate reads; no "What's new" panel. Waiting on @user before any build.
+Needs response by: @user
+
+[2026-10-14 | @ai-engineer-assistant → @user, @pm, @model-risk] TYPE: UPDATE
+Re: D-066 block 1 items 1 and 2 (P-024 built, B-215; P-016 drop analysis; P-025 proposed)
+Message: P-024 built, prompt unchanged. `llm_extract.py` keeps start, end, quote, needs_review, reason, confidence on each conflict side; `prepare.py` adds `_carry_flag` and uses it on both agree paths (field-vs-field and the conflict "all sides agree"). "280,000" and "$280k" from a scan: stored 280000, needs_review True, reason "number or date read from a scan", quote kept; one side flagged still flags; an unflagged pair stays False. Self-checks (host vars unset): llm_extract "llm gate ok", sources ok, prepare ok, workbench ok, package ok. Drop analysis (`deliverables/ai-engineer/p-016-drop-analysis.md`, recomputed from cache copy, 0 model calls): 9 values dropped that existed before; 2 correct, 2 right-in-substance/garbled, 1 uncheckable, 3 WRONG (SUB-067 effective_date and sales, SUB-074 TIV 280000 vs 220000). Correct drops sit at 0.58 to 0.66; wrong at 0.00, 0.00, 0.67. Proposal `deliverables/ai-engineer/proposal-P-025.md`: options A to D, recommends B (store flagged above 0.50). Not approved, not built. Quick 15 not rerun after P-024 (D-066 asks for @model-risk re-check first).
+Needs response by: @user (approve change P-025 and letter, or not)
+
+[2026-10-14 | @model-risk → @user, @ai-engineer-assistant, @software-engineer, @pm] TYPE: REVIEW
+Re: P-024 build (B-215, D-066) re-check; P-016 High-1
+Message: Verdict: APPROVE. No High. B-215 (P-016 High-1) is closed. An approved proposal is not a production approval; the T-027 production veto stands.
+Re-run by me (LLM_* unset, no model call, no scorer main): self-checks llm_extract ("llm gate ok"), prepare ("prepare ok"), workbench ("workbench ok"), package ("package ok") pass. Independent recompute through the real accept_field gate and the real llm_extract conflict build (HTTP post replaced by a fixed reply, temp cache): two scan sides "280,000" and "$280k" -> tiv_building "280000", needs_review True, reason "number or date read from a scan", quote "280,000", source scan.png, span 15-22, conflicts [], workbench.needs_review_ids() = ["tiv_building"], so the approve asks for the acknowledgment. Same result on the fields-loop merge path (scan row plus typed row). llm_extract conflict sides now carry value, source, start, end, quote, needs_review, reason, confidence.
+Medium/Low for the backlog (one line each):
+- Medium: the saved row keeps one side's quote and source; the other agreeing side's quote is not saved anywhere (the conflict item is dropped), so "keep each side's quote" holds only in llm_extract's output, not in the saved run.
+- Medium: prepare's "all sides agree" conflict branch only fills a field whose merged value is None; if the field already has a value (or was nulled by a fields-loop conflict) the agreeing conflict is dropped with `continue` without comparing it to that value (pre-existing).
+- Medium: D-022 quick set of 15 must be rerun after this approved change before P-024 counts as done.
+- Low: the prepare self-check covers only the conflict path; the fields-loop `_carry_flag` path has no self-check.
+T-027 veto: stands. Lifting it needs the confidence-versus-hit table and (d) the new 20-file hold-out (T-091 to T-093), gold first, scored once; High-1 is no longer a condition.
+Needs response by: none (@pm: add the Medium/Low lines to BACKLOG)
+
+[2026-10-14 | @software-engineer → @user, @senior-underwriter, @pm] TYPE: UPDATE
+Re: D-066 block 2 (workbench items 10, 2/4/8, 1, 13)
+Message: Built in underwriting_pipeline/app/workbench.py. Item 10: load_queue reads only the saved run (hash check, manifest check); no saved run shows a plain message; self-check with llm_extract._post and process_submission patched to raise passes. Items 2/4/8: act() returns plain-words refusals, POST redirects to the card (no 400 pages). Item 1: typed "send to carrier SUB-###" calls package.send_to_carrier as user, same gate. Item 13: draft shown with user-override approve via prepare.approve (D-050). Found and fixed: snippet() crashed on scan sources. "What's new" panel added. Screenshots (sandbox, temp copies) in deliverables/software-engineer/screenshots/D-066-SUB-009-send.png, -SUB-029-draft.png, -SUB-010-refused.png. SUB-010's saved run is "complete" with TIV 0; its send is refused: "no carrier is named for this file (match is hold)". Not built: carrier override on the card; saved runs do not store locations or extra items, so the card says so.
+Needs response by: @senior-underwriter (UI review, High only)
+
+[2026-10-14 | @senior-underwriter → @user, @software-engineer, @pm] TYPE: REVIEW
+Re: D-066 block 2 workbench UI (D-065 item 3, items 10, 2/4/8, 1, 13; What's new)
+Message: Verdict: APPROVE WITH CHANGES. Criteria 1-4 are met as written; self-check "workbench ok" re-run (LLM_* unset); rendered the real queue with load_queue(), no model call; read the 3 screenshots.
+High-1: on the real inbox 83 of 86 cards are the same red "No usable saved run" paragraph; only SUB-009, SUB-010, SUB-029 are usable and sit among them. An underwriter or account manager opening the page sees a wall of errors. Resolves it: list saved-run cards first and fold the no-run files into one collapsed "No saved run (83)" block with the one-line reason and how to create a run (the message says "Run extraction" without saying how or by whom).
+Medium/Low (one line each, backlog):
+- M: Send to carrier form is on every card, including hold, incomplete and no-carrier files; it never shows which carrier the package goes to, so the typed line confirms nothing the underwriter can see. Show the carrier and the package's missing/hold flags above the box.
+- M: no "already sent" line for carriers (producers get "Producer request on file"); a second send silently overwrites to-carrier/SUB-###.md and a second approve overwrites to-producer. Show the file and its time, and ask before re-send.
+- M: SUB-029 shows "Not read by extraction: schedule.xlsx" while five fields cite schedule.xlsx, and "Not read: none" two lines later; the ignored-files test is by extension, not from the saved run. Contradicts itself on the card.
+- M: SUB-010 shows quote tracking "carrier_b quoted, sent 2026-10-10" while the match is hold and the send is refused for no carrier; fixture or display, an underwriter cannot tell which.
+- M: the draft is read from pending-approval, not tied to the saved run; no line saying the draft is current, so a stale draft can be approved after the file changed (approve checks status only).
+- M: the draft approve is user-override only and its button says "send"; there is no account-manager path or gate result shown (what agency rules pass or fail), so D-050's account-manager approval cannot be seen or tested in the UI.
+- M: refusal messages sit in a process-wide dict, shown once to whichever GET comes first (a second tab, a refresh or a favicon fetch clears them); a refusal can vanish unread, and it is unlocked across threads.
+- M: no saved-run time or age on the card; "hash check: ok" is printed unconditionally (a failed hash shows the no-run text instead, fine) but a stale run looks current.
+- L: refusal texts are the raw ValueError (e.g. "G2", status names such as extraction_failed); wording for an underwriter should be plain, with the status explained.
+- L: the decision form has no id hint and no order hint (approve, then send); the first send refusal teaches it.
+- L: "Approve and send to producer" has no confirm and no typed line, unlike the carrier send; consistent with D-050 but inconsistent on screen.
+Needs response by: @software-engineer (High-1), @pm (Medium/Low to BACKLOG)

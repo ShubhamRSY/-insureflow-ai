@@ -5,6 +5,7 @@
   "complete": true,
   "conflicts": [],
   "needs_human": [],
+  "unread": [],
   "sprinklers": "yes",
   "model_version": "openai/gpt-oss-120b",
   "prompt_version": "82be09bd42f7",
@@ -19,7 +20,9 @@
       "confidence": 1.0,
       "needs_review": false,
       "start": 15,
-      "end": 39
+      "end": 39,
+      "quote": "Frio Paper Wholesale LLC",
+      "reason": null
     },
     {
       "field_id": "premises_address",
@@ -28,7 +31,9 @@
       "confidence": 1.0,
       "needs_review": false,
       "start": 58,
-      "end": 95
+      "end": 95,
+      "quote": "1800 Factor St, San Antonio, TX 78208",
+      "reason": null
     },
     {
       "field_id": "effective_date",
@@ -37,7 +42,9 @@
       "confidence": 1.0,
       "needs_review": false,
       "start": 112,
-      "end": 122
+      "end": 122,
+      "quote": "2027-03-01",
+      "reason": null
     },
     {
       "field_id": "operations",
@@ -46,7 +53,9 @@
       "confidence": 1.0,
       "needs_review": false,
       "start": 150,
-      "end": 195
+      "end": 195,
+      "quote": "light wholesale, paper goods, no cold storage",
+      "reason": null
     },
     {
       "field_id": "sales_or_payroll",
@@ -55,7 +64,9 @@
       "confidence": 1.0,
       "needs_review": false,
       "start": 214,
-      "end": 221
+      "end": 221,
+      "quote": "2400000",
+      "reason": null
     },
     {
       "field_id": "tiv_building",
@@ -64,7 +75,9 @@
       "confidence": 1.0,
       "needs_review": false,
       "start": 236,
-      "end": 243
+      "end": 243,
+      "quote": "4100000",
+      "reason": null
     },
     {
       "field_id": "construction",
@@ -73,7 +86,9 @@
       "confidence": 1.0,
       "needs_review": false,
       "start": 258,
-      "end": 272
+      "end": 272,
+      "quote": "noncombustible",
+      "reason": null
     },
     {
       "field_id": "year_built",
@@ -82,7 +97,9 @@
       "confidence": 1.0,
       "needs_review": false,
       "start": 285,
-      "end": 289
+      "end": 289,
+      "quote": "1995",
+      "reason": null
     },
     {
       "field_id": "loss_run_valued_through",
@@ -91,7 +108,9 @@
       "confidence": 1.0,
       "needs_review": false,
       "start": 56,
-      "end": 66
+      "end": 66,
+      "quote": "2026-08-31",
+      "reason": null
     }
   ],
   "input_manifest": [
@@ -113,5 +132,5 @@
     }
   ],
   "hash_algorithm": "sha256",
-  "saved_hash": "f600f099273614099211dc7228eefca3cdeeca9b391fc92227e3adef43bbceef"
+  "saved_hash": "66a7a2d5ce7e539bb600bf71628203fd0e05a45b1411875165ff166b58498b3f"
 }

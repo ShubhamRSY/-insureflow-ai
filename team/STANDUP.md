@@ -1454,3 +1454,23 @@ Blocked: No.
 - Done: independent review of the P-016 build and P-023. APPROVE WITH CHANGES; one High (conflict "all sides agree" path in prepare.py drops needs_review, so a scan value skips S2 and the D-039 acknowledgment). Self-checks, T-080 cases, SUB-078, SUB-067 recomputed with no model call.
 - Doing next: re-check High-1 when fixed. T-027 production veto stands.
 - Blocked by / need from: @user on whether the High-1 fix is inside P-016 or a new P-###.
+
+### 2026-10-14 — @ai-engineer-assistant
+- Done: P-024 built (B-215) and self-checked; P-016 drop analysis written; P-025 proposed, not built.
+- Doing next: nothing until @user answers P-025; @model-risk re-check of P-024.
+- Blocked by / need from: @user "approve change P-025" plus a letter.
+
+### 2026-10-14 — @model-risk
+- Done: re-check of P-024 (B-215). APPROVE, no High; B-215 closed. Self-checks pass; "280,000" + "$280k" from a scan recomputed through the real gate -> needs_review True, quote kept, in needs_review_ids(). Three Medium, one Low for the backlog.
+- Doing next: review the confidence-versus-hit table and the T-091 to T-093 hold-out when ready. T-027 production veto stands.
+- Blocked by / need from: nothing.
+
+### 2026-10-14 — @software-engineer
+- Done: D-066 block 2 workbench items 10, 2/4/8, 1, 13; What's new panel; self-checks pass; 3 sandbox screenshots.
+- Doing next: fix High findings from @senior-underwriter UI review.
+- Blocked by / need from: @senior-underwriter review.
+
+### 2026-10-14 — @senior-underwriter
+- Done: UI review of D-066 block 2 workbench. APPROVE WITH CHANGES. Criteria 1-4 met; one High: 83 of 86 cards are "No usable saved run" errors, burying the 3 usable cards. Ten Medium/Low to the backlog.
+- Doing next: re-check High-1 after the fix.
+- Blocked by / need from: @software-engineer fix for High-1.

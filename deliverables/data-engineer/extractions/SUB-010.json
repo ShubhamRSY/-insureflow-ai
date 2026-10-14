@@ -5,6 +5,7 @@
   "complete": true,
   "conflicts": [],
   "needs_human": [],
+  "unread": [],
   "sprinklers": "yes",
   "model_version": "openai/gpt-oss-120b",
   "prompt_version": "82be09bd42f7",
@@ -19,7 +20,9 @@
       "confidence": 1.0,
       "needs_review": false,
       "start": 15,
-      "end": 38
+      "end": 38,
+      "quote": "Leon Creek Painting LLC",
+      "reason": null
     },
     {
       "field_id": "premises_address",
@@ -28,7 +31,9 @@
       "confidence": 1.0,
       "needs_review": false,
       "start": 57,
-      "end": 96
+      "end": 96,
+      "quote": "600 Nogalitos St, San Antonio, TX 78204",
+      "reason": null
     },
     {
       "field_id": "effective_date",
@@ -37,7 +42,9 @@
       "confidence": 1.0,
       "needs_review": false,
       "start": 113,
-      "end": 123
+      "end": 123,
+      "quote": "2027-02-15",
+      "reason": null
     },
     {
       "field_id": "operations",
@@ -46,7 +53,9 @@
       "confidence": 1.0,
       "needs_review": false,
       "start": 151,
-      "end": 198
+      "end": 198,
+      "quote": "light contractor, interior painting, no roofing",
+      "reason": null
     },
     {
       "field_id": "sales_or_payroll",
@@ -55,7 +64,9 @@
       "confidence": 1.0,
       "needs_review": false,
       "start": 217,
-      "end": 223
+      "end": 223,
+      "quote": "480000",
+      "reason": null
     },
     {
       "field_id": "tiv_building",
@@ -64,7 +75,9 @@
       "confidence": 1.0,
       "needs_review": false,
       "start": 58,
-      "end": 59
+      "end": 59,
+      "quote": "0",
+      "reason": null
     },
     {
       "field_id": "construction",
@@ -73,7 +86,9 @@
       "confidence": 1.0,
       "needs_review": false,
       "start": 254,
-      "end": 261
+      "end": 261,
+      "quote": "masonry",
+      "reason": null
     },
     {
       "field_id": "year_built",
@@ -82,7 +97,9 @@
       "confidence": 1.0,
       "needs_review": false,
       "start": 274,
-      "end": 278
+      "end": 278,
+      "quote": "1962",
+      "reason": null
     },
     {
       "field_id": "loss_run_valued_through",
@@ -91,7 +108,9 @@
       "confidence": 1.0,
       "needs_review": false,
       "start": 55,
-      "end": 65
+      "end": 65,
+      "quote": "2026-09-01",
+      "reason": null
     }
   ],
   "input_manifest": [
@@ -113,5 +132,5 @@
     }
   ],
   "hash_algorithm": "sha256",
-  "saved_hash": "cfadd87ef2df70b95524b919e078211ca72c73fa16374eb289a05e2949c13725"
+  "saved_hash": "47675a64df22dfb2b1eb84c9e3f6504969c81d3dd60565012a1e76a6cbbad20c"
 }

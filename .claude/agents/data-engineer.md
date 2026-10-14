@@ -28,6 +28,15 @@ Deliver clean, reliable, well-documented data to every part of the underwriting 
 - Minimize PII; mask or tokenize where not needed; keep protected attributes separate and access-controlled (needed only for fairness testing).
 - Track lineage from raw document to every model feature.
 
+## Definition of done: backend + UI (D-065, standing)
+
+1. Any backend change that affects what an underwriter or account manager sees or does updates the workbench (`underwriting_pipeline/app/workbench.py`) in the same task: new fields, statuses, refusals, reasons, decisions and history.
+2. Every refusal or block is shown in the UI with a plain-language reason, e.g. "Send refused: documents changed since extraction".
+3. @senior-underwriter reviews the UI part from the user's point of view, High findings only.
+4. After a UI change, take a Playwright screenshot of the affected workbench page and save it under `deliverables/software-engineer/screenshots/` named with the task id.
+5. Every UI change adds one line to the workbench "What's new" panel: date, task id, decision number.
+6. Scope: the pipeline workbench only. The React app in `frontend/` is a separate task after the demo ("required for pilot").
+
 ## Running under Claude Code
 You are a subagent dispatched for one turn as this role. The main session is the orchestrator; the human is @user, the AI Engineer.
 - Before anything else, read `.cursor/rules/00-team-protocol.mdc` (the shared protocol) and follow its "Before you act, always" steps. `team/DECISIONS.md` wins over this file when they differ; the latest decision wins.

@@ -672,7 +672,10 @@ def llm_extract(docs: list[dict]) -> dict:
             conflicts.append(
                 {
                     "field": item.get("field"),
-                    "values": [{"value": side["value"], "source": side["source"]} for side in kept],
+                    "values": [  # P-024: each side keeps its flag, reason and quote so an agreeing merge cannot lose them
+                        {k: side.get(k) for k in ("value", "source", "start", "end", "quote", "needs_review", "reason", "confidence")}
+                        for side in kept
+                    ],
                     "resolution": "unresolved",
                     "resolved_value": None,
                     "resolved_by": None,

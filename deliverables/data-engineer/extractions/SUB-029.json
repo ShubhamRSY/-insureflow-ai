@@ -5,6 +5,7 @@
   "complete": false,
   "conflicts": [],
   "needs_human": [],
+  "unread": [],
   "sprinklers": "yes",
   "model_version": "openai/gpt-oss-120b",
   "prompt_version": "82be09bd42f7",
@@ -19,7 +20,9 @@
       "confidence": 1.0,
       "needs_review": false,
       "start": 21,
-      "end": 45
+      "end": 45,
+      "quote": "Fredericksburg Paper LLC",
+      "reason": null
     },
     {
       "field_id": "premises_address",
@@ -28,7 +31,9 @@
       "confidence": 1.0,
       "needs_review": false,
       "start": 75,
-      "end": 119
+      "end": 119,
+      "quote": "410 Fredericksburg Rd, San Antonio, TX 78201",
+      "reason": null
     },
     {
       "field_id": "effective_date",
@@ -37,7 +42,9 @@
       "confidence": 0.0,
       "needs_review": true,
       "start": null,
-      "end": null
+      "end": null,
+      "quote": null,
+      "reason": null
     },
     {
       "field_id": "operations",
@@ -46,7 +53,9 @@
       "confidence": 1.0,
       "needs_review": false,
       "start": 47,
-      "end": 62
+      "end": 62,
+      "quote": "light wholesale",
+      "reason": null
     },
     {
       "field_id": "sales_or_payroll",
@@ -55,7 +64,9 @@
       "confidence": 1.0,
       "needs_review": false,
       "start": 149,
-      "end": 156
+      "end": 156,
+      "quote": "1800000",
+      "reason": null
     },
     {
       "field_id": "tiv_building",
@@ -64,7 +75,9 @@
       "confidence": 1.0,
       "needs_review": false,
       "start": 120,
-      "end": 126
+      "end": 126,
+      "quote": "900000",
+      "reason": null
     },
     {
       "field_id": "construction",
@@ -73,7 +86,9 @@
       "confidence": 1.0,
       "needs_review": false,
       "start": 127,
-      "end": 134
+      "end": 134,
+      "quote": "masonry",
+      "reason": null
     },
     {
       "field_id": "year_built",
@@ -82,7 +97,9 @@
       "confidence": 1.0,
       "needs_review": false,
       "start": 135,
-      "end": 139
+      "end": 139,
+      "quote": "1990",
+      "reason": null
     },
     {
       "field_id": "loss_run_valued_through",
@@ -91,7 +108,9 @@
       "confidence": 0.0,
       "needs_review": true,
       "start": null,
-      "end": null
+      "end": null,
+      "quote": null,
+      "reason": null
     }
   ],
   "input_manifest": [
@@ -105,5 +124,5 @@
     }
   ],
   "hash_algorithm": "sha256",
-  "saved_hash": "d218da3bfcfe5571f184b17843156b013abe75da92c12fe4edbe2c4dd5643a7e"
+  "saved_hash": "806f5b45dd389c857fbae1fc5599740185be2c7a560f2fa9d6b4fcc1c0e6ace5"
 }

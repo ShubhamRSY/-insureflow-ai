@@ -244,3 +244,19 @@ Also open from T-097, already in the register's Section D so not repeated as row
 | B-224 | P-016 | @software-engineer | Low: workbench ai_version logs "local-default" when LLM_MODEL is unset. | 2026-10-14 |
 | B-225 | P-016 | @ai-engineer-assistant | Low: the "no known loss" drop returns no reason. | 2026-10-14 |
 | B-226 | P-016 | @ai-engineer-assistant | Low: as-built memo says quick-15 not run; the P-016 score file exists. | 2026-10-14 |
+| B-227 | D-065 | @pm | Required for pilot: integrate the pipeline workbench features into the React app in `frontend/`. Separate task, after the demo. | 2026-10-14 |
+| B-228 | P-024 | @ai-engineer-assistant | Medium: merged row keeps one side's quote; the other side's quote is not saved. | 2026-10-14 |
+| B-229 | P-024 | @ai-engineer-assistant | Medium: an agreeing conflict is dropped without comparison when the field already has a value (pre-existing). | 2026-10-14 |
+| B-230 | P-024 | @ai-engineer-assistant | Low: no self-check covers the fields-loop flag carry. | 2026-10-14 |
+| B-231 | D-066 | @software-engineer | High (senior-underwriter, open): 83 of 86 cards are red "No usable saved run"; list saved-run cards first, fold the rest into one collapsed "No saved run (83)" block with the reason and how to create a run. | 2026-10-14 |
+| B-232 | D-066 | @software-engineer | Medium: Send form on hold/incomplete/no-carrier cards and never names the carrier. | 2026-10-14 |
+| B-233 | D-066 | @software-engineer | Medium: no "already sent" line; a second send overwrites to-carrier/SUB-###.md, a second approve overwrites to-producer. | 2026-10-14 |
+| B-234 | D-066 | @software-engineer | Medium: SUB-029 "Not read by extraction: schedule.xlsx" while five fields cite it (ignored list by extension, not saved run). | 2026-10-14 |
+| B-235 | D-066 | @software-engineer | Medium: SUB-010 quote tracking shows carrier_b quoted while match is hold and send refused. | 2026-10-14 |
+| B-236 | D-066 | @software-engineer | Medium: draft not tied to the saved run; a stale draft can be approved after the file changed. | 2026-10-14 |
+| B-237 | D-066 | @software-engineer | Medium: draft approve is user-override only, button says "send"; no account-manager path or agency-rule result shown (D-050). | 2026-10-14 |
+| B-238 | D-066 | @software-engineer | Medium: refusal messages in a process-wide unlocked dict; shown once to whichever GET comes first. | 2026-10-14 |
+| B-239 | D-066 | @software-engineer | Medium: no saved-run time/age on the card; a stale run looks current. | 2026-10-14 |
+| B-240 | D-066 | @software-engineer | Low: refusal texts are raw ValueError wording ("G2", status names). | 2026-10-14 |
+| B-241 | D-066 | @software-engineer | Low: decision form has no id hint or order hint (approve, then send). | 2026-10-14 |
+| B-242 | D-066 | @software-engineer | Low: "Approve and send to producer" has no confirm or typed line, unlike the carrier send. | 2026-10-14 |

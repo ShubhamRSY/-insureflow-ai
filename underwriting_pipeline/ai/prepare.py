@@ -519,6 +519,19 @@ def unread_rows(docs: list[dict], not_sent: list[str]) -> list[dict]:
     return rows + [{"file": name, "page": None, "reason": f"not sent: text past {llm_extract.MAX_CHARS:,} characters"} for name in not_sent]
 
 
+def _carry_flag(cur: dict, other: dict) -> None:
+    """P-024: two agreeing values merge into one; the saved row is needs_review if either side was, and keeps the reason and quote."""
+    if other.get("needs_review") and not cur.get("needs_review"):
+        cur["needs_review"] = True
+        for k in ("reason", "quote", "source", "start", "end"):
+            if other.get(k) is not None:
+                cur[k] = other[k]
+    else:
+        for k in ("reason", "quote"):
+            if cur.get(k) is None and other.get(k) is not None:
+                cur[k] = other[k]
+
+
 def process_submission(folder: Path) -> dict:
     docs = sources.read_folder(folder)
     texts = {doc["name"]: doc["text"] for doc in docs}
@@ -561,6 +574,7 @@ def process_submission(folder: Path) -> dict:
             merged[field_id] = row
         elif agrees(field_id, cur["value"], row["value"]):
             cur["value"] = _canonical(field_id, cur["value"])
+            _carry_flag(cur, row)
         elif cur["value"] != row["value"]:
             conflicts.append(
                 _conflict(
@@ -577,8 +591,13 @@ def process_submission(folder: Path) -> dict:
         if len(sides) >= 2 and all(agrees(item.get("field"), sides[0], side) for side in sides[1:]):
             field_id = item.get("field")
             if field_id in merged and merged[field_id]["value"] is None:
+                kept = [side for side in item["values"] if side.get("value")]
+                merged[field_id].update({k: kept[0].get(k) for k in ("source", "start", "end", "quote", "reason", "confidence")})
+                merged[field_id]["confidence"] = merged[field_id]["confidence"] or 0.0
                 merged[field_id]["value"] = _canonical(field_id, sides[0])
-                merged[field_id]["needs_review"] = False
+                merged[field_id]["needs_review"] = bool(kept[0].get("needs_review"))
+                for side in kept[1:]:
+                    _carry_flag(merged[field_id], side)
             continue
         if item["field"] in merged:
             merged[item["field"]]["value"] = None
@@ -1067,6 +1086,26 @@ if __name__ == "__main__":
         assert amount_value("2200 sf") == 2200
         assert amount_value("8 units") is None
         assert agrees("sales_or_payroll", "220000", "about 220k")
+        # P-024: agreeing scan values "280,000" and "$280k" keep the flag, reason and quote (B-215)
+        _side = lambda v, q, f: {"value": v, "source": "scan.png", "start": 0, "end": 5, "quote": q, "needs_review": f,
+                                 "reason": "number or date read from a scan" if f else None, "confidence": 0.9}
+        for flags, want in (((True, True), True), ((True, False), True), ((False, True), True), ((False, False), False)):
+            with tempfile.TemporaryDirectory() as tmp:
+                folder = Path(tmp) / "SUB-201"
+                folder.mkdir()
+                (folder / "scan.png").write_text("x")
+                real_read, real_extract = sources.read_folder, llm_extract.llm_extract
+                sources.read_folder = lambda f: [{"name": "scan.png", "text": "Building 280,000 or $280k", "ocr_words": None}]
+                llm_extract.llm_extract = lambda docs: {"fields": [], "not_sent": [], "conflicts": [
+                    {"field": "tiv_building", "resolution": "unresolved", "values": [_side("280,000", "280,000", flags[0]), _side("$280k", "$280k", flags[1])]}]}
+                try:
+                    out = process_submission(folder)
+                finally:
+                    sources.read_folder, llm_extract.llm_extract = real_read, real_extract
+            row = next(r for r in out["fields"] if r["field_id"] == "tiv_building")
+            assert row["value"] == "280000" and row["needs_review"] is want, (flags, row)
+            assert (row["reason"], row["quote"]) == (("number or date read from a scan", "280,000" if flags[0] else "$280k") if want else (None, "280,000")), row
+            assert out["conflicts"] == []
         assert same_operations(
             "habitational, 8 units, no commercial cooking",
             "Small apartments, 8 units, sprinklers throughout.",

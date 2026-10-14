@@ -31,6 +31,19 @@ import quotes
 INBOX = ROOT / "simulation" / "inbox"
 PAGE = Path(__file__).resolve().parent / "workbench.html"
 LOG = package.DECISIONS_LOG
+PENDING = ROOT / "simulation" / "pending-approval"  # missing-info drafts waiting for approval
+TO_PRODUCER = ROOT / "simulation" / "to-producer"
+TO_CARRIER = ROOT / "simulation" / "to-carrier"
+BANNER = ""  # set by serve(); the sandbox screenshots label the page with it
+MESSAGES: dict[str, tuple[bool, str]] = {}  # submission -> (ok, plain-words result of the last action); shown once
+# D-065 item 5: one line per user-visible feature: date, task or proposal, decision number, what an underwriter sees.
+WHATS_NEW = (
+    ("2026-10-14", "P-016", "D-064", "Needs-review values show their reason and cited text; approve needs each one ticked; unread pages are listed."),
+    ("2026-10-14", "D-066 item 10", "D-066", "The page shows only the saved run (status, hash check, manifest check). It never runs extraction or a model call."),
+    ("2026-10-14", "D-066 items 2/4/8", "D-066", "Every refused decision or send is shown on its card in plain words with the reason. No bare error pages."),
+    ("2026-10-14", "D-066 item 1", "D-066", "Send to carrier on the card: type the exact line \"send to carrier SUB-###\"; it goes through the same send gate."),
+    ("2026-10-14", "D-066 item 13", "D-066, D-050", "The missing-info draft shows on the card with an approve action (user override; refused for failed or all-rejected files)."),
+)
 _LOG_LOCK = threading.Lock()  # ponytail: one process writes the log; a file lock if a second writer appears
 
 
@@ -143,8 +156,29 @@ def snippet(folder: Path, row: dict) -> str:
     path = folder / source
     if not path.is_file():
         return ""
-    text = path.read_text()
+    try:
+        text = path.read_text()
+    except UnicodeDecodeError:  # a scan or other binary source has no text to quote; the saved quote is shown instead
+        return ""
     return text[row["start"] : row["end"]]
+
+
+def saved_report(name: str) -> tuple[dict | None, str]:
+    """Item 10 (D-066): the last saved run only. Returns (report, "") or (None, plain reason). No extraction, no model call."""
+    try:
+        saved = prepare.read_saved_run(name)
+    except ValueError as exc:
+        return None, str(exc)
+    fields = saved.get("fields") or []
+    return {
+        **saved,
+        "fields": fields,
+        "conflicts": saved.get("conflicts") or [],
+        "missing": [r["field_id"] for r in fields if not r.get("value")],
+        "extra": [],  # not stored in the saved run
+        "locations": None,  # not stored in the saved run
+        "status_reason": prepare.REJECT_REASON if saved.get("status") == "all_values_rejected" else None,
+    }, ""
 
 
 def load_queue(only: str | None = None) -> list[dict]:
@@ -153,21 +187,19 @@ def load_queue(only: str | None = None) -> list[dict]:
         folders = [folder for folder in folders if folder.name == only]
     rows = []
     for folder in folders:
-        report = prepare.process_submission(folder)
+        report, problem = saved_report(folder.name)
         files = sorted(p.name for p in folder.iterdir() if p.is_file())
         ignored = [name for name in files if not name.endswith((".md", ".csv"))]
-        rows.append(
-            {
-                "id": folder.name,
-                "report": report,
-                "files": files,
-                "ignored": ignored,
-                "route": route(report),
-                "note": match(report)["note"],
-                "score": points.score(facts(report)),
-                "snippets": {row["field_id"]: snippet(folder, row) for row in report["fields"]},
-            }
-        )
+        row = {"id": folder.name, "report": report, "saved_problem": problem, "files": files, "ignored": ignored}
+        if report is not None:
+            row.update(
+                manifest=prepare.manifest_problem(folder.name, inbox=INBOX),
+                route=route(report),
+                note=match(report)["note"],
+                score=points.score(facts(report)),
+                snippets={r["field_id"]: snippet(folder, r) for r in report["fields"]},
+            )
+        rows.append(row)
     return rows
 
 
@@ -264,6 +296,30 @@ def _append(payload: dict, action: str, actor: str, reason: str, log_path: Path)
     return row
 
 
+REFUSED_AS = {"/decision": "Decision refused", "/close-subjectivity": "Not closed", "/send": "Send refused", "/approve-draft": "Request not approved"}
+
+
+def act(path: str, payload: dict) -> tuple[str, bool, str]:
+    """D-066 items 2/4/8: run one POST action. Returns (submission, ok, plain-words message); a refusal never raises."""
+    sub = (payload.get("submission") or "").strip()
+    try:
+        if path in ("/send", "/approve-draft") and not re.fullmatch(r"SUB-\d+", sub):
+            raise ValueError("no such submission id on the form")
+        if path == "/decision":
+            row = record_decision(payload, LOG)
+            return sub, True, f"Decision recorded: {row['action']} by {row['underwriter_id']}."
+        if path == "/close-subjectivity":
+            quotes.close_subjectivity(*(payload.get(k, "") for k in ("submission", "carrier", "subjectivity", "underwriter_id", "reason")))
+            return sub, True, "Subjectivity closed and logged."
+        if path == "/send":  # item 1: the same gate as every send; the actor is the user, the line is typed on the card
+            dest = package.send_to_carrier(sub, "user", TO_CARRIER, user_line=payload.get("user_line", ""))
+            return sub, True, f"Sent: package {dest.name} written to to-carrier. Not bound."
+        dest = prepare.approve(PENDING / f"{sub}.md", "user", TO_PRODUCER, payload.get("reason", ""))  # item 13: D-050, user override
+        return sub, True, f"Approved: request {dest.name} written to to-producer. It lists only missing items and declines nothing."
+    except (ValueError, OSError) as exc:
+        return sub, False, f"{REFUSED_AS.get(path, 'Refused')}: {exc}"
+
+
 def _confidence(row: dict) -> str:
     used = row.get("confidence", "")
     model = row.get("model_confidence")
@@ -272,12 +328,27 @@ def _confidence(row: dict) -> str:
     return f"{used} ocr / {model} model"
 
 
-def render(queue: list[dict], counts: dict | None = None) -> str:
+def _msg(messages: dict, key: str) -> str:
+    if key not in messages:
+        return ""
+    ok, text = messages[key]
+    return f'<p class="msg {"ok" if ok else "bad"}" role="alert">{html.escape(text)}</p>'
+
+
+def render(queue: list[dict], counts: dict | None = None, messages: dict | None = None) -> str:
     counts = counts or {"approve": 0, "edit": 0, "decline": 0}
+    messages = messages or {}
     corrections = counts["edit"] + counts["decline"]
     blocks = []
     for item in queue:
         report = item["report"]
+        if report is None:  # item 10: no saved run, or it cannot be read; nothing is extracted here
+            blocks.append(
+                f'<article id="{html.escape(item["id"])}"><h2>{html.escape(item["id"])}</h2>{_msg(messages, item["id"])}'
+                f'<p class="bad">No usable saved run: {html.escape(item.get("saved_problem") or "none found")}. '
+                "This page shows saved runs only and does not run extraction. Run extraction, then reload. No decision or send is offered.</p></article>"
+            )
+            continue
         refused = report.get("status") in prepare.REFUSED_STATUSES
         field_rows = []
         for row in report["fields"]:
@@ -325,8 +396,13 @@ def render(queue: list[dict], counts: dict | None = None) -> str:
             )
             for u in unread
         ) + "</ul>"
+        manifest = item.get("manifest") or ""
         lines = [
             f"<h2>{html.escape(item['id'])}</h2>",
+            _msg(messages, item["id"]),
+            f"<p>Saved run: status {html.escape(str(report.get('status')))} · hash check: ok · manifest check: "
+            + (f'<span class="bad">FAILED — {html.escape(manifest)}. A send will be refused.</span>' if manifest else "ok")
+            + "</p>",
             f"<p>Files: {html.escape(', '.join(item['files']) or 'none')}</p>",
             f"<p>Not read by extraction: {html.escape(', '.join(item['ignored']) or 'none')}</p>",
         ]
@@ -340,7 +416,7 @@ def render(queue: list[dict], counts: dict | None = None) -> str:
             unread_html,
             f"<p>Needs human read: {html.escape(', '.join(report.get('needs_human') or []) or 'none')}</p>",
             f"<p>Address check: {html.escape(address_check)}</p>",
-            f"<p>Locations: {html.escape('; '.join(('primary ' if row.get('primary') else 'other ') + row['address'] for row in report.get('locations') or []) or 'one premises')}</p>",
+            f"<p>Locations: {html.escape('; '.join(('primary ' if row.get('primary') else 'other ') + row['address'] for row in report['locations']) or 'one premises') if report.get('locations') is not None else 'not stored in the saved run'}</p>",
             "<h3>Extracted fields</h3>",
             f"<table><tr><th>Field</th><th>Value</th><th>Confidence</th><th>Source</th><th>Cited text</th><th>Review note</th></tr>{''.join(field_rows)}</table>",
             f"<h3>Conflicts</h3>{conflict_html}",
@@ -376,6 +452,23 @@ def render(queue: list[dict], counts: dict | None = None) -> str:
 <button type="submit">Record decision</button>
 </form>"""
         )
+        sid = html.escape(item["id"])
+        draft = PENDING / f"{item['id']}.md"
+        if draft.is_file():
+            lines.append(
+                f"<h3>Missing-info draft for the producer (not sent)</h3><pre>{html.escape(draft.read_text())}</pre>"
+                f'<form method="post" action="/approve-draft"><input type="hidden" name="submission" value="{sid}">'
+                '<label>Reason (optional) <input name="reason"></label> '
+                '<button type="submit">Approve and send to producer (user override)</button></form>'
+            )
+        if (TO_PRODUCER / f"{item['id']}.md").is_file():
+            lines.append("<p>Producer request on file in to-producer.</p>")
+        lines.append(
+            f'<h3>Send to carrier</h3><form method="post" action="/send"><input type="hidden" name="submission" value="{sid}">'
+            f'<label>Type <code>send to carrier {sid}</code> to confirm <input name="user_line" size="28" autocomplete="off"></label> '
+            '<button type="submit">Send to carrier</button></form>'
+            "<p>Goes through the same send gate as every send: saved run, documents unchanged, an approve logged, no failed file. The underwriter decides; nothing is bound.</p>"
+        )
         blocks.append(
             f'<article id="{html.escape(item["id"])}">\n' + "\n".join(lines) + "\n</article>"
         )
@@ -386,9 +479,19 @@ body {{ font: 15px/1.4 sans-serif; margin: 2rem; }}
 article {{ border-top: 1px solid #ccc; padding: 1rem 0; }}
 table {{ border-collapse: collapse; }}
 td, th {{ border: 1px solid #ddd; padding: 0.3rem 0.5rem; text-align: left; }}
+.msg {{ padding: 0.5rem 0.75rem; border-left: 4px solid; font-weight: 600; }}
+.msg.ok {{ border-color: #1a7f37; background: #e9f7ee; }}
+.msg.bad, .bad {{ border-color: #b42318; color: #b42318; }}
+.msg.bad {{ background: #fdecea; }}
+.banner {{ background: #fff3bf; border: 2px dashed #b08900; padding: 0.5rem 0.75rem; font-weight: 700; }}
+pre {{ background: #f6f6f6; padding: 0.5rem; white-space: pre-wrap; }}
+details {{ margin: 0.5rem 0; }}
 </style></head><body>
+{f'<p class="banner">{html.escape(BANNER)}</p>' if BANNER else ''}
 <h1>Underwriter workbench</h1>
-<p>Synthetic queue. A decision is logged only with an id on the underwriter list. Decline and edit need a reason, and so does an approve after a decline. Approve, edit, and decline are saved with that reason. This page does not bind and does not send a carrier package.</p>
+{''.join(_msg(messages, k) for k in messages if k not in {q["id"] for q in queue})}
+<details open><summary><b>What's new</b></summary><ul>{''.join(f"<li>{html.escape(d)} · {html.escape(t)} · {html.escape(n)}: {html.escape(w)}</li>" for d, t, n, w in WHATS_NEW)}</ul></details>
+<p>Synthetic queue. A decision is logged only with an id on the underwriter list. Decline and edit need a reason, and so does an approve after a decline. Approve, edit, and decline are saved with that reason. This page shows saved runs only. It never binds. A carrier send needs the typed line and passes the send gate.</p>
 <p>Decisions so far: {counts['approve']} approved, {counts['edit']} edited, {counts['decline']} declined. Corrections: {corrections}.</p>
 {''.join(blocks)}
 </body></html>
@@ -396,37 +499,30 @@ td, th {{ border: 1px solid #ddd; padding: 0.3rem 0.5rem; text-align: left; }}
 
 
 def serve(port: int = 8765, only: str | None = None) -> None:
-    page = render(load_queue(only), correction_counts(LOG))
-    PAGE.write_text(page)
+    PAGE.write_text(render(load_queue(only), correction_counts(LOG)))
 
     class Handler(BaseHTTPRequestHandler):
         def do_GET(self):
-            body = PAGE.read_text().encode()
+            shown = dict(MESSAGES)
+            MESSAGES.clear()
+            body = render(load_queue(only), correction_counts(LOG), shown).encode()  # saved runs only: no extraction here
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.end_headers()
             self.wfile.write(body)
 
         def do_POST(self):
-            if self.path not in ("/decision", "/close-subjectivity"):
+            if self.path not in REFUSED_AS:
                 self.send_error(404)
                 return
             size = int(self.headers.get("Content-Length", "0"))
             form = parse_qs(self.rfile.read(size).decode())
             payload = {k: v[0] for k, v in form.items()}
             payload["ack"] = form.get("ack", [])
-            try:
-                if self.path == "/decision":
-                    record_decision(payload, LOG)
-                else:
-                    quotes.close_subjectivity(*(payload.get(k, "") for k in ("submission", "carrier", "subjectivity", "underwriter_id", "reason")))
-            except ValueError as exc:
-                self.send_response(400)
-                self.end_headers()
-                self.wfile.write(str(exc).encode())
-                return
-            self.send_response(303)
-            self.send_header("Location", "/")
+            sub, ok, text = act(self.path, payload)
+            MESSAGES[sub] = (ok, text)
+            self.send_response(303)  # never a bare 400 page: back to the card with the reason on it
+            self.send_header("Location", "/" + (f"#{sub}" if sub else ""))
             self.end_headers()
 
     ThreadingHTTPServer(("127.0.0.1", port), Handler).serve_forever()
@@ -687,4 +783,81 @@ if __name__ == "__main__":
         assert match(r("sprinklered apartments", "$6,000,000"))["note"] == OUT_TIV
         assert route(r("office")) == "carrier_a" and route(r("barley mill")) == "no_match"
         assert "COOKING" not in points.score(facts(fake))["reason_codes"]
+
+        # D-066 items 10, 2/4/8, 1, 13: saved run only on load, refusals as plain messages, typed send, draft approve.
+        import llm_extract
+
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            ext, inbox, dlog = tmp / "extractions", tmp / "inbox", tmp / "decisions.jsonl"
+            old = (prepare.EXTRACT_DIR, prepare.INBOX_DIR, INBOX, LOG, PENDING, TO_PRODUCER, TO_CARRIER, package.DECISIONS_LOG, package.SENDS_LOG, package.INBOX, llm_extract._post, prepare.process_submission)
+
+            def stored(sub: str, status: str, fields=None, complete=True) -> None:
+                folder = inbox / sub
+                folder.mkdir(parents=True, exist_ok=True)
+                (folder / "application.md").write_text(f"SYNTHETIC application {sub}\n")
+                payload = {"submission": sub, "status": status, "error": None, "complete": complete, "conflicts": [], "needs_human": [], "unread": [], "sprinklers": "no", "fields": fields or [],
+                           "input_manifest": prepare.folder_manifest(folder), "hash_algorithm": prepare.HASH_ALGORITHM}
+                payload["saved_hash"] = prepare.hash_payload(payload)
+                ext.mkdir(exist_ok=True)
+                (ext / f"{sub}.json").write_text(json.dumps(payload))
+
+            def boom(*_a, **_k):
+                raise SystemExit("page load must not extract or call a model")
+
+            try:
+                prepare.EXTRACT_DIR, prepare.INBOX_DIR, INBOX, LOG = ext, inbox, inbox, dlog
+                PENDING, TO_PRODUCER, TO_CARRIER = tmp / "pending", tmp / "to-producer", tmp / "to-carrier"
+                package.DECISIONS_LOG, package.SENDS_LOG, package.INBOX = dlog, tmp / "sends.jsonl", inbox
+                good = [{"field_id": f, "value": "x", "source": "application.md", "start": 0, "end": 3} for f in prepare.FIELDS]
+                good = [{**r, "value": {"operations": "accounting office", "tiv_building": "$1,000,000"}.get(r["field_id"], "x")} for r in good]
+                stored("SUB-901", "complete", good)
+                stored("SUB-903", "complete", good)
+                stored("SUB-910", "extraction_failed", complete=False)
+                stored("SUB-929", "incomplete", [{**r, "value": None} if r["field_id"] == "effective_date" else r for r in good], complete=False)
+                (inbox / "SUB-902").mkdir()  # no saved run
+                (inbox / "SUB-903" / "application.md").write_text("changed after extraction\n")
+                # item 10: page load with the model call and extraction both patched to raise.
+                llm_extract._post, prepare.process_submission = boom, boom
+                q = load_queue()
+                pg = render(q, None)
+                assert "No usable saved run: no saved run for SUB-902" in pg and "does not run extraction" in pg
+                assert "hash check: ok · manifest check: ok" in pg and "changed since extraction" in pg
+                llm_extract._post, prepare.process_submission = old[-2:]
+
+                # items 2/4/8: refusals come back as (submission, False, plain words), never an exception.
+                def refused(path, **kw):
+                    sub, ok, text = act(path, {"submission": "SUB-901", **kw})
+                    assert not ok and sub == "SUB-901", text
+                    return text
+
+                assert "Decision refused: only an id on underwriters.json" in refused("/decision", underwriter_id="UW-999", action="approve")
+                assert refused("/send", user_line="send to carrier SUB-901").startswith("Send refused: no logged decision")
+                assert "changed since extraction" in act("/send", {"submission": "SUB-903", "user_line": "send to carrier SUB-903"})[2]
+                assert "Send refused: this file's status is extraction_failed" in act("/send", {"submission": "SUB-910", "user_line": "send to carrier SUB-910"})[2]
+                assert act("/send", {"submission": "../x"})[2].startswith("Send refused: no such submission")
+                pg = render(load_queue(), None, {"SUB-901": (False, "Send refused: x")})
+                assert 'class="msg bad"' in pg and "Send refused: x" in pg and 'action="/send"' in pg
+
+                # item 1: a recorded approve, then the typed line. A wrong line is refused; the right one writes the package.
+                assert act("/decision", {"submission": "SUB-901", "underwriter_id": "user", "action": "approve", "reason": "ok"})[1]
+                assert "exact line" in refused("/send", user_line="yes")
+                assert not TO_CARRIER.exists()
+                sub, ok, text = act("/send", {"submission": "SUB-901", "user_line": "send to carrier SUB-901"})
+                assert ok and text.startswith("Sent:") and (TO_CARRIER / "SUB-901.md").is_file(), text
+                assert json.loads((tmp / "sends.jsonl").read_text().splitlines()[-1])["actor"] == "user"
+
+                # item 13: the draft shows on the card; the user approves it (D-050); refused files cannot be approved.
+                PENDING.mkdir()
+                (PENDING / "SUB-929.md").write_text("Submission SUB-929\nNothing has been declined. Nothing has been bound.\n\nMissing:\n- effective date\n")
+                (PENDING / "SUB-910.md").write_text("Submission SUB-910\nNothing has been declined.\n")
+                pg = render(load_queue(), None)
+                assert "Missing-info draft for the producer (not sent)" in pg and "- effective date" in pg and 'action="/approve-draft"' in pg
+                assert act("/approve-draft", {"submission": "SUB-910"})[2].startswith("Request not approved: this file's status is extraction_failed")
+                sub, ok, text = act("/approve-draft", {"submission": "SUB-929", "reason": "producer asked"})
+                assert ok and (TO_PRODUCER / "SUB-929.md").read_text().startswith("Approved-by: user (override)"), text
+                assert "Producer request on file" in render(load_queue(), None)
+                assert not act("/approve-draft", {"submission": "SUB-901"})[1]  # no draft file: plain refusal, not a crash
+            finally:
+                (prepare.EXTRACT_DIR, prepare.INBOX_DIR, INBOX, LOG, PENDING, TO_PRODUCER, TO_CARRIER, package.DECISIONS_LOG, package.SENDS_LOG, package.INBOX, llm_extract._post, prepare.process_submission) = old
         print("workbench ok")

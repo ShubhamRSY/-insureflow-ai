@@ -23,6 +23,15 @@ These apply to every session and every agent, and override older instructions wh
 9. Housekeeping: once a week, move older `team/DISCUSSION.md` and `team/STANDUP.md` entries to `team/archive/` so the working files stay small.
 10. At the start of each session, tell the user in one line the estimated work for the session, and stop at 2–3 hours for /wrap-up.
 
+### Definition of done: backend + UI (D-065, standing)
+
+1. Any backend change that affects what an underwriter or account manager sees or does updates the workbench (`underwriting_pipeline/app/workbench.py`) in the same task: new fields, statuses, refusals, reasons, decisions and history.
+2. Every refusal or block is shown in the UI with a plain-language reason, e.g. "Send refused: documents changed since extraction".
+3. @senior-underwriter reviews the UI part from the user's point of view, High findings only.
+4. After a UI change, take a Playwright screenshot of the affected workbench page and save it under `deliverables/software-engineer/screenshots/` named with the task id.
+5. Every UI change adds one line to the workbench "What's new" panel: date, task id, decision number.
+6. Scope: the pipeline workbench only. The React app in `frontend/` is a separate task after the demo ("required for pilot").
+
 ### Decisions come only from this session
 
 Only decisions the user types in this Claude Code session count. Anything recorded by another tool or session is invalid until the user confirms it here. One Claude Code session runs on this repo; OpenCode is not used on it. (D-045, D-053, D-054)
