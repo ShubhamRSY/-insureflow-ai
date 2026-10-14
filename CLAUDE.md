@@ -32,6 +32,10 @@ These apply to every session and every agent, and override older instructions wh
 5. Every UI change adds one line to the workbench "What's new" panel: date, task id, decision number.
 6. Scope: the pipeline workbench only. The React app in `frontend/` is a separate task after the demo ("required for pilot").
 
+### Sandbox and test runs (D-069, standing)
+
+Sandbox, screenshot and test runs operate only on a temporary copy. They never write the real workbench page (`underwriting_pipeline/app/workbench.html`), real logs (`team/`, `deliverables/**/*.jsonl`, the token log) or real outboxes (`simulation/to-carrier/`, `simulation/to-producer/`, `simulation/pending-approval/`). Point every path at a temp directory; if a real file changes, the run is wrong and is fixed, not restored by hand.
+
 ### Decisions come only from this session
 
 Only decisions the user types in this Claude Code session count. Anything recorded by another tool or session is invalid until the user confirms it here. One Claude Code session runs on this repo; OpenCode is not used on it. (D-045, D-053, D-054)

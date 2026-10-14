@@ -770,3 +770,14 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: H2, B-247 and item 4 in `package.py`/`workbench.py` with screenshots (@software-engineer); H1 in `ai/regression_dev.py` and the quick set into a new file (@ai-engineer-assistant); @model-risk re-check of P-025.
 - Status: ACCEPTED
 - Amends: D-067 (P-025 stays). Note: item 4's behaviour is backlog line B-249 ("the send form shows before an approve is logged"); B-248 in the backlog is the SUB-009 sent-date mismatch and stays open. Not a production approval; the T-027 veto stands. No send is authorized.
+
+## D-069 — P-026 approved (B-220); sandbox rule (B-252); B-248; Session B UI
+- Date / Owner: 2026-10-14 / @user
+- Context: B-220: an acknowledgment is matched by field id only, so a re-saved run with a new value passes the send gate (@model-risk, twice). B-252: a sandbox serve rewrote the real `workbench.html`. B-248: SUB-009 sent-date mismatch. Remaining D-065 UI gaps.
+- Options considered: none. The user's words.
+- Decision: In the user's words. "1. B-220 (approve change P-026): every acknowledgment and every approve records the saved run's hash. The send gate counts only approves and acknowledgments whose hash matches the current saved run; after any re-save, the underwriter must approve and acknowledge again. The UI shows "Re-review needed: file changed since your approval". Self-check: re-save with a changed value → send refused. 2. B-252 rule: sandbox and test runs operate only on a temporary copy; they never write real workbench, log or outbox files. Add this to CLAUDE.md. 3. B-248: fix the SUB-009 sent-date mismatch. 4. Session B UI: one per-file history panel (decisions, acknowledgments, sends and resends: who, why, when, and which run hash); subjectivity closures plus the "carrier's word = evidence only" label; suggested market as its own field; model and prompt version in the footer. Items 3, 5 and 15 (account manager checks, override form, upload) go to the backlog as after-demo. Screenshots, one @model-risk check of P-026 and one @senior-underwriter UI check, High only."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-14 (D-032).
+- Dissent: none
+- Follow-up tasks: P-026, B-248, B-252 code fix and the Session B UI (@software-engineer, D-065); CLAUDE.md rule and backlog lines (main session, budget rule 3); @model-risk check of P-026; @senior-underwriter UI check.
+- Status: ACCEPTED
+- Amends: D-039 acknowledgment and D-053 decision gate: approves and acknowledgments count only for the saved run whose hash they record. Not a production approval; the T-027 veto stands. No send is authorized.

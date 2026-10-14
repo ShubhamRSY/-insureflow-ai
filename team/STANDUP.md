@@ -1528,3 +1528,19 @@ Blocked: No.
 - L: the refusal reads "Approve again"; say that the previous approve did not cover the value (the run changed after approve).
 - L: after a send, rows[-1] being any later non-approve (edit/note) refuses with the ack message, not the "latest decision is X" message; wording may confuse.
 - Blocked by / need from: none.
+
+### 2026-10-14 — @software-engineer
+- Did: P-026 (run_hash on approves, send gate counts only the current run, re-review message), B-248/B-250 (Sent-on header as the one date source), B-252 (sandbox mode, real files untouched), Session B UI (History panel, closures + evidence-only label, suggested market, model/prompt footer), 4 screenshots, What's new lines.
+- Next: fix findings from @model-risk (P-026) and @senior-underwriter (UI, High only).
+- Backlog (Low): quote-tracking "stays open until an underwriter logs the closure" note still shows after a closure; legacy packages show "sent not recorded" and carrier "unknown" (no header); History shows the full ISO time.
+- Blocked by / need from: none.
+
+### 2026-10-14 — @model-risk
+- Done: checked P-026 (B-220) build. APPROVE; B-220 closed, no High. Self-checks package/workbench/prepare pass; no real log, outbox or workbench.html written.
+- Next: Medium (identical re-save keeps approval) and 3 Lows to backlog for @user/@pm.
+- Blockers: none. Not a production approval; T-027 veto stands.
+
+### 2026-10-14 — @senior-underwriter
+- Done: UI check of D-069 (stale banner, history panel, subjectivity closures, footer, B-248). APPROVE WITH CHANGES; no High.
+- Next: M1-M3 and 3 Lows to backlog for @pm.
+- Blockers: none.

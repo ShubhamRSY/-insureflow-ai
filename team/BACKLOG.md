@@ -274,3 +274,14 @@ Also open from T-097, already in the register's Section D so not repeated as row
 | B-254 | D-068 | @software-engineer | Low: the "Already sent" line is dropped when an acknowledgment is open. | 2026-10-14 |
 | B-255 | D-068 | @software-engineer | Low: "Approve again" refusal does not say why the earlier approve did not cover the value. | 2026-10-14 |
 | B-256 | D-068 | @software-engineer | Low: after a send, a later edit/note decision shows the ack message instead of "latest decision is X". | 2026-10-14 |
+| B-257 | D-069 | @software-engineer | After demo: account manager checks shown on the card (agency rules pass/fail, D-017 item 3 / D-050) — D-065 gap item 3. | 2026-10-14 |
+| B-258 | D-069 | @software-engineer | After demo: carrier override form (D-057: no_match only, carrier + reason, logged) — D-065 gap item 5. | 2026-10-14 |
+| B-259 | D-069 | @software-engineer | After demo: document upload / intake in the UI — D-065 gap item 15. | 2026-10-14 |
+| B-260 | P-026 | @user | Medium (decision): a byte-identical re-save keeps the same hash, so the old approve still counts; D-069 says "any re-save". Accept, or add a save id to the hash. | 2026-10-14 |
+| B-261 | P-026 | @software-engineer | Low: a /decision POST without run_hash skips the stale-card check; make the field required. | 2026-10-14 |
+| B-262 | P-026 | @software-engineer | Low: an old approve with no hash shows "file changed since your approval" though nothing changed. | 2026-10-14 |
+| B-263 | P-026 | @software-engineer | Low: confirm build_package uses the same saved-run read as the send gate. | 2026-10-14 |
+| B-264 | D-069 | @software-engineer | Medium: "Suggested market: none" beside "Carrier match: carrier_a" reads as a contradiction. | 2026-10-14 |
+| B-265 | D-069 | @software-engineer | Medium: footer model is the environment's, not the model that made the saved run. | 2026-10-14 |
+| B-266 | D-069 | @software-engineer | Medium: a stale card does not show what changed since the approval. | 2026-10-14 |
+| B-267 | D-069 | @software-engineer | Low: History shows only "user" as who; sent "not recorded" has no reason; closure "date not recorded" untested visually. | 2026-10-14 |

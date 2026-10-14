@@ -172,8 +172,20 @@ def _submission_of(target) -> str:
     return target.strip() if isinstance(target, str) else ""
 
 
-def _decision_problem(submission: str) -> str:
-    """Empty string if the latest logged decision is approve (D-053, D-055). Reads the one real log; takes nothing from the caller."""
+STALE = "Re-review needed: file changed since your approval"
+
+
+def _current_hash(submission: str) -> str:
+    try:
+        return prepare.read_saved_run(submission)["saved_hash"]
+    except ValueError:
+        return ""
+
+
+def _decision_problem(submission: str, run_hash: str | None = None) -> str:
+    """Empty string if the latest logged decision is approve (D-053, D-055) made on the current saved run (P-026, D-069).
+
+    Reads the one real log; takes nothing from the caller. An approve row with no run_hash, or another run's, does not count."""
     rows = decisions(submission, DECISIONS_LOG)
     if not rows:
         return "no logged decision by a listed underwriter for this file"
@@ -184,6 +196,9 @@ def _decision_problem(submission: str) -> str:
     declined = any((r.get("action") or "").strip() == "decline" for r in rows[:-1])
     if declined and not (last.get("reason") or "").strip():
         return "an approve after a decline needs a written reason"
+    current = _current_hash(submission) if run_hash is None else run_hash
+    if not current or last.get("run_hash") != current:
+        return STALE
     return ""
 
 
@@ -227,7 +242,7 @@ def needs_review_ids(report: dict) -> list[str]:
 def ack_problem(submission: str, report: dict) -> str:
     """D-068 (B-244): empty if the latest logged approve acknowledged every needs-review value of the saved run."""
     rows = decisions(submission, DECISIONS_LOG)
-    done = set(rows[-1].get("acknowledged") or []) if rows else set()
+    done = set(rows[-1].get("acknowledged") or []) if rows and rows[-1].get("run_hash") == report.get("saved_hash") else set()  # P-026: another run's acknowledgments do not count
     open_ = [f for f in needs_review_ids(report) if f not in done]
     if not open_:
         return ""
@@ -243,7 +258,14 @@ def sent_files(submission: str, out_dir: Path) -> list[Path]:
 
 
 def sent_on(dest: Path) -> str:
-    return datetime.fromtimestamp(dest.stat().st_mtime).date().isoformat()
+    """B-248/B-250 (D-069): the one source of the sent date is the "Sent-on:" header written into the package at send,
+    never file mtime (a copy or restore changes mtime). Older packages have no header: "not recorded"."""
+    line = next((l for l in dest.read_text().splitlines()[:4] if l.startswith("Sent-on:")), "") if dest.is_file() else ""
+    return line.split(":", 1)[1].strip() if line else "not recorded"
+
+
+def sent_phrase(date_text: str) -> str:
+    return "(date not recorded)" if date_text == "not recorded" else f"on {date_text}"
 
 
 def sent_info(submission: str, out_dir: Path) -> tuple[str, str]:
@@ -275,7 +297,7 @@ def send_to_carrier(
     problem = prepare.manifest_problem(submission)  # P-020 (D-062): the input documents are the ones extracted, every actor
     if problem:
         raise ValueError(problem)
-    problem = _decision_problem(submission)  # D-053, every actor
+    problem = _decision_problem(submission, report["saved_hash"])  # D-053 + P-026, every actor
     if problem:
         raise ValueError(problem)
     name = _actor(actor)
@@ -299,7 +321,7 @@ def send_to_carrier(
     dest = out_dir / f"{submission}.md"
     resend = (resend_reason or "").strip()
     if dest.exists() and not resend:
-        raise ValueError(f"already sent on {sent_on(dest)}; a second send needs an explicit resend with a written reason")
+        raise ValueError(f"already sent {sent_phrase(sent_on(dest))}; a second send needs an explicit resend with a written reason")
     if dest.exists():  # B-247: earlier package files are kept; the resend gets the next number
         dest = out_dir / f"{submission}-resend-{len(sent_files(submission, out_dir)) + 1}.md"
     body = build_package(submission, carrier, reason if name == "user" else "")  # T-085: raises on an empty required field or no carrier; nothing is written yet
@@ -308,11 +330,12 @@ def send_to_carrier(
     note = f"Reason: {reason.strip()}\n" if (reason or "").strip() else ""
     line = f"User-line: {user_line.strip()}\n" if name == "user" else ""
     again = f"Resend-reason: {resend}\n" if resend else ""
-    dest.write_text(f"Sent-by: {who}\n{line}{note}{again}\n{body}")
-    if name == "user" or resend:
-        SENDS_LOG.parent.mkdir(parents=True, exist_ok=True)
-        with SENDS_LOG.open("a") as handle:
-            handle.write(json.dumps({"submission": submission, "actor": name, "user_line": user_line.strip(), "package": str(dest), **({"resend": True, "resend_reason": resend} if resend else {}), **({"carrier_override": carrier.strip().lower(), "override_reason": reason.strip()} if (carrier or "").strip() else {})}) + "\n")
+    today = datetime.now().astimezone()
+    dest.write_text(f"Sent-by: {who}\nSent-on: {today.date().isoformat()}\n{line}{note}{again}\n{body}")
+    # P-026/D-069: every send is logged (history panel), with the run it was built from
+    SENDS_LOG.parent.mkdir(parents=True, exist_ok=True)
+    with SENDS_LOG.open("a") as handle:
+        handle.write(json.dumps({"submission": submission, "actor": name, "date": today.date().isoformat(), "at": today.isoformat(timespec="seconds"), "run_hash": report["saved_hash"], "reason": (reason or "").strip(), "user_line": user_line.strip(), "package": str(dest), **({"resend": True, "resend_reason": resend} if resend else {}), **({"carrier_override": carrier.strip().lower(), "override_reason": reason.strip()} if (carrier or "").strip() else {})}) + "\n")
     return dest
 
 
@@ -356,7 +379,7 @@ if __name__ == "__main__":
         seq = iter(range(1, 1000))
 
         def decide(sub: str, action: str, reason: str = "", who: str = "UW-001", n: int | None = None):
-            row = {"seq": next(seq) if n is None else n, "submission": sub, "action": action, "underwriter_id": who, "reason": reason}
+            row = {"seq": next(seq) if n is None else n, "submission": sub, "action": action, "underwriter_id": who, "reason": reason, "run_hash": _current_hash(sub)}
             with log.open("a") as handle:
                 handle.write(json.dumps(row) + "\n")
 
@@ -415,17 +438,16 @@ if __name__ == "__main__":
             except ValueError:
                 pass
 
-            for sub in ("SUB-001", "SUB-193", "SUB-194"):
-                decide(sub, "approve")
-
             # The account-manager rules still gate a normal file.
             save(ext, "SUB-193", "complete", complete=True, fields=office, sprinklers="no")
+            save(ext, "SUB-194", "incomplete", complete=False, fields=full(year_built=""))
+            for sub in ("SUB-001", "SUB-193", "SUB-194"):
+                decide(sub, "approve")
             try:
                 send_to_carrier("SUB-193", "account-manager", dest_dir)
                 raise SystemExit("missing reason should fail")
             except ValueError:
                 pass
-            save(ext, "SUB-194", "incomplete", complete=False, fields=full(year_built=""))
             assert agency_problem("SUB-194") == "the file is not complete"
             try:
                 send_to_carrier("SUB-194", "account-manager", dest_dir, reason="ready")
@@ -461,7 +483,7 @@ if __name__ == "__main__":
                 pass
             with log.open("a") as handle:
                 handle.write(json.dumps({"seq": 800, "submission": "SUB-195", "action": "edit", "underwriter_id": "UW-001", "reason": "from the loss run", "field_id": "year_built", "new_value": "1987"}) + "\n")
-                handle.write(json.dumps({"seq": 801, "submission": "SUB-195", "action": "approve", "underwriter_id": "UW-001", "reason": ""}) + "\n")
+                handle.write(json.dumps({"seq": 801, "submission": "SUB-195", "action": "approve", "underwriter_id": "UW-001", "reason": "", "run_hash": _current_hash("SUB-195")}) + "\n")
             edited = build_package("SUB-195")
             assert "year_built: 1987" in edited and "EDITED by UW-001" in edited and "from the loss run" in edited
             # T-085: no carrier named (nightclub) -> refused.
@@ -600,8 +622,40 @@ if __name__ == "__main__":
             except ValueError as exc:
                 assert "2 values need review and are not acknowledged (named_insured, operations)" in str(exc), exc
             with log.open("a") as handle:
-                handle.write(json.dumps({"seq": 9001, "submission": "SUB-321", "action": "approve", "underwriter_id": "UW-001", "reason": "", "acknowledged": ["named_insured", "operations"]}) + "\n")
+                handle.write(json.dumps({"seq": 9001, "submission": "SUB-321", "action": "approve", "underwriter_id": "UW-001", "reason": "", "acknowledged": ["named_insured", "operations"], "run_hash": _current_hash("SUB-321")}) + "\n")
             assert send_to_carrier("SUB-321", "user", dest_dir, user_line=LINE("SUB-321")).exists()
+            # P-026 (D-069, B-220): approve + acknowledge, then a re-save with a changed value -> refused; approve + acknowledge again -> allowed.
+            save(ext, "SUB-322", "complete", complete=True, fields=low, sprinklers="no")
+            def approve_ack(n):
+                with log.open("a") as handle:
+                    handle.write(json.dumps({"seq": n, "submission": "SUB-322", "action": "approve", "underwriter_id": "UW-001", "reason": "", "acknowledged": ["named_insured", "operations"], "run_hash": _current_hash("SUB-322")}) + "\n")
+            approve_ack(9100)
+            save(ext, "SUB-322", "complete", complete=True, fields=[{**r, "value": "Other Co"} if r["field_id"] == "named_insured" else r for r in low], sprinklers="no")
+            for actor, kw in (("user", {"user_line": LINE("SUB-322")}), ("account-manager", {"reason": "ready"})):
+                try:
+                    send_to_carrier("SUB-322", actor, dest_dir, **kw)
+                    raise SystemExit(f"a re-saved run must refuse the send for {actor}")
+                except ValueError as exc:
+                    assert str(exc) == STALE, exc
+            approve_ack(9101)
+            assert send_to_carrier("SUB-322", "user", dest_dir, user_line=LINE("SUB-322")).exists()
+            # an approve row with no run_hash (an old row) does not count, even with every acknowledgment
+            save(ext, "SUB-323", "complete", complete=True, fields=low, sprinklers="no")
+            with log.open("a") as handle:
+                handle.write(json.dumps({"seq": 9200, "submission": "SUB-323", "action": "approve", "underwriter_id": "UW-001", "acknowledged": ["named_insured", "operations"]}) + "\n")
+            try:
+                send_to_carrier("SUB-323", "user", dest_dir, user_line=LINE("SUB-323"))
+                raise SystemExit("an approve with no run hash must not count")
+            except ValueError as exc:
+                assert str(exc) == STALE, exc
+            # B-248: the sent date is the package header, not file mtime.
+            import os
+            sent = dest_dir / "SUB-322.md"
+            os.utime(sent, (0, 0))
+            assert sent_on(sent) == datetime.now().astimezone().date().isoformat() and "Sent-on:" in sent.read_text()
+            (dest_dir / "old.md").write_text("Sent-by: user\n\nPackage old\n")
+            assert sent_on(dest_dir / "old.md") == "not recorded"
+            assert {json.loads(x)["run_hash"] for x in SENDS_LOG.read_text().splitlines()} - {""}
             (tmp / "inbox" / "SUB-320" / "late-loss-run.pdf").write_bytes(b"added after extraction")
             try:
                 send_to_carrier("SUB-320", "user", dest_dir, user_line=LINE("SUB-320"))

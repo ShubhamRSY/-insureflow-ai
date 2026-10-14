@@ -12,9 +12,11 @@ import html
 import json
 import os
 import re
+import shutil
 import sys
+import tempfile
 import threading
-from datetime import date
+from datetime import date, datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs
@@ -23,6 +25,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "underwriting_pipeline" / "ai"))
 sys.path.insert(0, str(ROOT / "underwriting_pipeline" / "models"))
 sys.path.insert(0, str(ROOT / "underwriting_pipeline" / "app"))
+import llm_extract
 import package
 import points
 import prepare
@@ -38,6 +41,10 @@ BANNER = ""  # set by serve(); the sandbox screenshots label the page with it
 MESSAGES: dict[str, tuple[bool, str]] = {}  # submission -> (ok, plain-words result of the last action); shown once
 # D-065 item 5: one line per user-visible feature: date, task or proposal, decision number, what an underwriter sees.
 WHATS_NEW = (
+    ("2026-10-14", "P-026", "D-069", "Every approve logs the saved run's hash; a re-saved file shows \"Re-review needed: file changed since your approval\" and the send is refused for everyone until you approve and acknowledge again."),
+    ("2026-10-14", "B-248", "D-069", "The sent date comes from one place, the Sent-on line in the package file, on the card and in quote tracking alike (older packages show \"not recorded\")."),
+    ("2026-10-14", "B-252", "D-069", "A sandbox run (--sandbox) writes the page, logs and outboxes into a temporary copy; the real files are never touched."),
+    ("2026-10-14", "Session B", "D-069", "Each card has one History panel (decisions, acknowledgments, sends, resends: who, why, when, run hash), subjectivity closures with the \"evidence only\" label, a Suggested market field, and a model and prompt version footer."),
     ("2026-10-14", "B-244", "D-068", "A low-confidence scan value is a needs-review value: the send is refused for everyone until the latest approve acknowledged every one; the card names them."),
     ("2026-10-14", "B-247", "D-068", "A resend writes a new package file (SUB-###-resend-N.md); earlier files are kept and the card lists every package file sent."),
     ("2026-10-14", "B-249", "D-068", "The send form is hidden until an approve is logged; the card says \"Approve first\"."),
@@ -203,6 +210,7 @@ def load_queue(only: str | None = None) -> list[dict]:
                 manifest=prepare.manifest_problem(folder.name, inbox=INBOX),
                 route=route(report),
                 note=match(report)["note"],
+                suggested=match(report)["suggested"],
                 score=points.score(facts(report)),
                 snippets={r["field_id"]: snippet(folder, r) for r in report["fields"]},
             )
@@ -255,11 +263,14 @@ def record_decision(payload: dict, log_path: Path) -> dict:
         if status in prepare.REFUSED_STATUSES:
             raise ValueError(f"this file's status is {status}; an approve is refused for it")
         # D-039: every value flagged needs-review is listed at approve; each must be acknowledged, and is logged.
+        shown = (payload.get("run_hash") or "").strip()  # the run the card showed; the log stores the run read now (P-026)
+        if shown and shown != saved["saved_hash"]:
+            raise ValueError("the saved run changed since this card was opened; reload the page and review again")
         listed = needs_review_ids(saved)
         unacked = [f for f in listed if f not in (payload.get("ack") or [])]
         if unacked:
             raise ValueError(f"acknowledge every needs-review value before approving: {', '.join(unacked)}")
-        payload = {**payload, "acknowledged": listed}
+        payload = {**payload, "acknowledged": listed, "run_hash": saved["saved_hash"]}
     with _LOG_LOCK:
         if action == "approve" and not reason:
             # D-053: an approve after a decline needs a written reason; refused here, not only at the send.
@@ -288,9 +299,11 @@ def _append(payload: dict, action: str, actor: str, reason: str, log_path: Path)
         "action": action,
         "underwriter_id": actor,
         "reason": reason,
+        **({"run_hash": payload["run_hash"]} if action == "approve" else {}),
         **({"acknowledged": payload["acknowledged"]} if payload.get("acknowledged") else {}),
         **({"field_id": payload["field_id"].strip(), "new_value": payload["new_value"].strip()} if (payload.get("field_id") or "").strip() else {}),
         "date": date.today().isoformat(),
+        "at": datetime.now().astimezone().isoformat(timespec="seconds"),
         "ai_version": ai_version(),
         "bound": False,
         "sent_to_carrier": False,
@@ -372,14 +385,17 @@ def _send_html(item: dict, report: dict, refused: bool, manifest: str) -> str:
     why = _no_send_reason(item, report, refused)
     if why:
         return f'<h3>Send to carrier</h3><p class="bad">No send: {html.escape(why)}.</p>'
-    if package._decision_problem(item["id"]):  # B-249 (D-068): no form before an approve is logged
-        return f'<h3>Send to carrier</h3><p class="bad">Approve first. No send form until an approve is logged ({html.escape(package._decision_problem(item["id"]))}).</p>'
+    problem = package._decision_problem(item["id"], report.get("saved_hash") or "")
+    if problem == package.STALE:  # P-026 (D-069)
+        return f'<h3>Send to carrier</h3><p class="bad">{package.STALE}. No send form until you approve again and tick each needs-review value.</p>'
+    if problem:  # B-249 (D-068): no form before an approve is logged
+        return f'<h3>Send to carrier</h3><p class="bad">Approve first. No send form until an approve is logged ({html.escape(problem)}).</p>'
     unack = package.ack_problem(item["id"], report)  # B-244 (D-068)
     if unack:
         return f'<h3>Send to carrier</h3><p class="bad">Send refused: {html.escape(unack)}. Approve again and tick each one.</p>'
     when, to = package.sent_info(item["id"], TO_CARRIER)
     files = package.sent_files(item["id"], TO_CARRIER)
-    already = f'<p class="msg ok">Already sent on {html.escape(when)} to {html.escape(to)}. Package files sent: {html.escape(", ".join(f.name for f in files))}.</p>' if when else ""
+    already = f'<p class="msg ok">Already sent {html.escape(package.sent_phrase(when))} to {html.escape(to)}. Package files sent: {html.escape(", ".join(f.name for f in files))}.</p>' if when else ""
     resend = (
         '<label>Resend reason (required for a second send) <input name="resend_reason" size="30"></label> ' if when else ""
     )
@@ -390,6 +406,51 @@ def _send_html(item: dict, report: dict, refused: bool, manifest: str) -> str:
         f'<button type="submit">{"Resend" if when else "Send"} to {html.escape(item["route"])}</button></form>'
         "<p>Goes through the same send gate as every send: saved run, documents unchanged, an approve logged, no failed file. The underwriter decides; nothing is bound.</p>"
     )
+
+
+def _short(h: str) -> str:
+    return (h or "")[:8]
+
+
+def history_html(sub: str, current: str) -> str:
+    """D-069 Session B: one per-file panel: decisions, acknowledgments, sends and resends. Who, why, when, run hash."""
+    events = []
+    try:
+        for r in package.decisions(sub, LOG):
+            what = r.get("action", "")
+            if what == "edit" and r.get("field_id"):
+                what += f" {r['field_id']} to {r.get('new_value', '')}"
+            if r.get("acknowledged"):
+                what += f"; acknowledged {len(r['acknowledged'])}: {', '.join(r['acknowledged'])}"
+            events.append((r.get("at") or f"{r.get('date', '')}T00:00:00", 0, r.get("underwriter_id", ""), what, r.get("reason", ""), r.get("run_hash") if r.get("action") == "approve" else None, r.get("at") or r.get("date", "")))
+    except ValueError as exc:
+        return f"<h3>History</h3><p class=\"bad\">History unavailable: {html.escape(str(exc))}</p>"
+    if package.SENDS_LOG.exists():
+        for line in package.SENDS_LOG.read_text().splitlines():
+            try:
+                r = json.loads(line)
+            except ValueError:
+                continue
+            if isinstance(r, dict) and r.get("submission") == sub:
+                events.append((r.get("at") or f"{r.get('date', '')}T00:00:00", 1, r.get("actor", ""), ("resend " if r.get("resend") else "send ") + Path(r.get("package", "")).name, r.get("resend_reason") or r.get("reason", ""), r.get("run_hash", ""), r.get("at") or r.get("date") or "date not recorded"))
+    if not events:
+        return "<h3>History</h3><p>No decision or send logged for this file.</p>"
+    rows = []
+    for _k, _o, who, what, why, run, when in sorted(events, key=lambda e: e[:2]):
+        if run is None:
+            mark = "—"
+        elif not run:
+            mark = "no run hash recorded — does not count"
+        else:
+            mark = f"run {_short(run)} " + ("(current run)" if run == current else "— not the current run")
+        rows.append(f"<tr><td>{html.escape(when)}</td><td>{html.escape(who)}</td><td>{html.escape(what)}</td><td>{html.escape(why or '—')}</td><td>{html.escape(mark)}</td></tr>")
+    return f"<h3>History</h3><table class=\"history\"><tr><th>When</th><th>Who</th><th>What</th><th>Why</th><th>Saved run</th></tr>{''.join(rows)}</table><p>Current run: {html.escape(_short(current) or 'unknown')}</p>"
+
+
+def footer_html() -> str:
+    """D-069: the model and prompt version of this environment. Never a key or a host address."""
+    model = os.environ.get("LLM_MODEL") or "not set"
+    return f"<footer><p>Model (this environment): {html.escape(model)} · Prompt version (this code): {html.escape(str(llm_extract.PROMPT_VERSION))}</p></footer>"
 
 
 def render(queue: list[dict], counts: dict | None = None, messages: dict | None = None) -> str:
@@ -457,6 +518,7 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
         lines = [
             f"<h2>{html.escape(item['id'])}</h2>",
             _msg(messages, item["id"]),
+            (f'<p class="msg bad" role="alert">{package.STALE}. Approve and tick each needs-review value again.</p>' if package._decision_problem(item["id"], report.get("saved_hash") or "") == package.STALE else ""),
             f"<p>Saved run: status {html.escape(str(report.get('status')))} · hash check: ok · manifest check: "
             + (f'<span class="bad">FAILED — {html.escape(manifest)}. A send will be refused.</span>' if manifest else "ok")
             + "</p>",
@@ -467,6 +529,7 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
             lines += [
                 f"<p>Score: {item['score']['points']} · {html.escape(', '.join(item['score']['reason_codes']) or 'none')} · not a price</p>",
                 f"<p>Carrier match: {html.escape(item['route'])}{html.escape(' · ' + item['note']) if item.get('note') else ''} · recommendation only</p>",
+                f"<p>Suggested market: <b>{html.escape(item.get('suggested') or 'none')}</b> · recommendation only; the underwriter decides</p>",
             ]
         lines += [
             f"<p>Extraction: {html.escape(extraction)}</p>",
@@ -498,6 +561,7 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
         lines.append(
             f"""<form method="post" action="/decision">
 <input type="hidden" name="submission" value="{html.escape(item['id'])}">
+<input type="hidden" name="run_hash" value="{html.escape(report.get('saved_hash') or '')}">
 {acks}
 <label>Underwriter id <input name="underwriter_id" required></label>
 <label>Action
@@ -521,6 +585,7 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
         if (TO_PRODUCER / f"{item['id']}.md").is_file():
             lines.append("<p>Producer request on file in to-producer.</p>")
         lines.append(_send_html(item, report, refused, manifest))
+        lines.append(history_html(item["id"], report.get("saved_hash") or ""))
         blocks.append(
             f'<article id="{html.escape(item["id"])}">\n' + "\n".join(lines) + "\n</article>"
         )
@@ -538,6 +603,7 @@ td, th {{ border: 1px solid #ddd; padding: 0.3rem 0.5rem; text-align: left; }}
 .banner {{ background: #fff3bf; border: 2px dashed #b08900; padding: 0.5rem 0.75rem; font-weight: 700; }}
 pre {{ background: #f6f6f6; padding: 0.5rem; white-space: pre-wrap; }}
 details {{ margin: 0.5rem 0; }}
+footer {{ border-top: 1px solid #ccc; margin-top: 2rem; color: #555; }}
 </style></head><body>
 {f'<p class="banner">{html.escape(BANNER)}</p>' if BANNER else ''}
 <h1>Underwriter workbench</h1>
@@ -547,11 +613,38 @@ details {{ margin: 0.5rem 0; }}
 <p>Decisions so far: {counts['approve']} approved, {counts['edit']} edited, {counts['decline']} declined. Corrections: {corrections}.</p>
 {''.join(blocks)}
 {_folded(unsaved)}
+{footer_html()}
 </body></html>
 """
 
 
-def serve(port: int = 8765, only: str | None = None) -> None:
+def sandbox(tmp: Path) -> None:
+    """B-252 (D-069): copy the real inputs into tmp and point every path the page can write at the copy.
+
+    Covers the page, the decision/sends/closure logs, the three outboxes, the saved runs, the inbox and the model cache
+    (token log). Nothing real is written afterwards. Call before serve() or any test that posts an action."""
+    global PAGE, LOG, INBOX, PENDING, TO_PRODUCER, TO_CARRIER, BANNER
+    tmp = Path(tmp)
+    for name, src in (("inbox", INBOX), ("extractions", prepare.EXTRACT_DIR), ("pending", PENDING), ("to-producer", TO_PRODUCER),
+                      ("to-carrier", TO_CARRIER), ("from-carrier", quotes.FROM_CARRIER), ("cache", llm_extract.CACHE)):
+        if src.is_dir() and name != "cache":  # the cache starts empty: a sandbox never reads or grows the real token log
+            shutil.copytree(src, tmp / name, dirs_exist_ok=True)
+        (tmp / name).mkdir(exist_ok=True)
+    logs = {"decisions.jsonl": package.DECISIONS_LOG, "sends.jsonl": package.SENDS_LOG, "closures.jsonl": quotes.CLOSURES}
+    for name, src in logs.items():
+        if src.is_file():
+            shutil.copy2(src, tmp / name)
+    PAGE, LOG, INBOX = tmp / "workbench.html", tmp / "decisions.jsonl", tmp / "inbox"
+    PENDING, TO_PRODUCER, TO_CARRIER = tmp / "pending", tmp / "to-producer", tmp / "to-carrier"
+    package.DECISIONS_LOG, package.SENDS_LOG, package.INBOX = LOG, tmp / "sends.jsonl", INBOX
+    quotes.CLOSURES, quotes.TO_CARRIER, quotes.FROM_CARRIER = tmp / "closures.jsonl", TO_CARRIER, tmp / "from-carrier"
+    prepare.EXTRACT_DIR, prepare.INBOX_DIR, llm_extract.CACHE = tmp / "extractions", INBOX, tmp / "cache"
+    BANNER = f"SANDBOX COPY in {tmp}: nothing here is real; no real log, outbox or page is written"
+
+
+def serve(port: int = 8765, only: str | None = None, sandbox_dir: Path | None = None) -> None:
+    if sandbox_dir is not None:
+        sandbox(sandbox_dir)
     PAGE.write_text(render(load_queue(only), correction_counts(LOG)))
 
     class Handler(BaseHTTPRequestHandler):
@@ -582,11 +675,14 @@ def serve(port: int = 8765, only: str | None = None) -> None:
 
 
 if __name__ == "__main__":
-    import tempfile
-
     if "--serve" in sys.argv:
         chosen = next((arg for arg in sys.argv if arg.startswith("SUB-")), None)
-        serve(only=chosen)
+        box = None  # --sandbox [DIR]: every write goes to a temporary copy (B-252)
+        if "--sandbox" in sys.argv:
+            after = sys.argv[sys.argv.index("--sandbox") + 1 :][:1]
+            box = Path(after[0]) if after and not after[0].startswith(("-", "SUB-")) else Path(tempfile.mkdtemp(prefix="workbench-sandbox-"))
+            print(f"sandbox: {box}", flush=True)
+        serve(only=chosen, sandbox_dir=box)
     else:
         def save(ext: Path, submission: str, status: str, fields=None) -> None:
             """A saved run shaped like prepare.write_drafts() writes, no model call. The hash is the reader's."""
@@ -921,7 +1017,7 @@ if __name__ == "__main__":
                 # B-244: an approve logged before the run held low-confidence values does not cover them.
                 stored("SUB-905", "complete", [{**r, "needs_review": True} if r["field_id"] == "named_insured" else r for r in good])
                 with dlog.open("a") as h:
-                    h.write(json.dumps({"seq": 9000, "submission": "SUB-905", "action": "approve", "underwriter_id": "user", "reason": "ok"}) + "\n")
+                    h.write(json.dumps({"seq": 9000, "submission": "SUB-905", "action": "approve", "underwriter_id": "user", "reason": "ok", "run_hash": package._current_hash("SUB-905")}) + "\n")
                 assert "Send refused: 1 value needs review and is not acknowledged (named_insured)" in render(load_queue(), None)
                 assert "not acknowledged (named_insured)" in act("/send", {"submission": "SUB-905", "user_line": "send to carrier SUB-905"})[2]
 
@@ -936,6 +1032,88 @@ if __name__ == "__main__":
                 assert ok and (TO_PRODUCER / "SUB-929.md").read_text().startswith("Approved-by: user (override)"), text
                 assert "Producer request on file" in render(load_queue(), None)
                 assert not act("/approve-draft", {"submission": "SUB-901"})[1]  # no draft file: plain refusal, not a crash
+
+                # P-026 (D-069): approve, re-save with a changed value -> re-review message and refused send; approve again -> allowed.
+                def art(page: str, sub: str) -> str:
+                    start = page.index(f'<article id="{sub}">')
+                    return page[start : page.index("</article>", start)]
+
+                stored("SUB-906", "complete", good)
+                assert act("/decision", {"submission": "SUB-906", "underwriter_id": "user", "action": "approve", "reason": "ok", "run_hash": "0ld"})[2].startswith("Decision refused: the saved run changed since this card was opened")
+                assert act("/decision", {"submission": "SUB-906", "underwriter_id": "user", "action": "approve", "reason": "ok"})[1]
+                first = json.loads(dlog.read_text().splitlines()[-1])
+                assert first["run_hash"] == package._current_hash("SUB-906") and first["at"] and "Re-review needed" not in art(render(load_queue(), None), "SUB-906")
+                stored("SUB-906", "complete", [{**r, "value": "Different Co"} if r["field_id"] == "named_insured" else r for r in good])
+                pg = render(load_queue(), None)
+                assert "Re-review needed: file changed since your approval" in art(pg, "SUB-906") and 'action="/send"' not in art(pg, "SUB-906")
+                assert act("/send", {"submission": "SUB-906", "user_line": "send to carrier SUB-906"})[2] == "Send refused: Re-review needed: file changed since your approval"
+                assert "not the current run" in art(pg, "SUB-906")
+                assert act("/decision", {"submission": "SUB-906", "underwriter_id": "user", "action": "approve", "reason": "ok again"})[1]
+                pg = render(load_queue(), None)
+                assert "Re-review needed" not in art(pg, "SUB-906") and 'action="/send"' in art(pg, "SUB-906")
+                assert act("/send", {"submission": "SUB-906", "user_line": "send to carrier SUB-906"})[1]
+
+                # History panel: decisions, acknowledgments, sends and resends with who, why, when, short run hash.
+                h = art(render(load_queue(), None), "SUB-901")
+                cur = package._current_hash("SUB-901")[:8]
+                assert "<h3>History</h3>" in h and "send SUB-901.md" in h and "resend SUB-901-resend-2.md" in h and "carrier lost it" in h
+                assert f"run {cur} (current run)" in h and "approve" in h and "user" in h
+                ack = art(render(load_queue(), None), "SUB-905")
+                assert "approve" in ack and "no run hash" not in ack
+                assert "No decision or send logged" in art(render(load_queue(), None), "SUB-929")
+
+                stored("SUB-908", "complete", [{**r, "needs_review": True, "quote": "Acme", "reason": "r"} if r["field_id"] == "named_insured" else r for r in good])
+                assert act("/decision", {"submission": "SUB-908", "underwriter_id": "user", "action": "approve", "reason": "checked", "ack": ["named_insured"]})[1]
+                assert "acknowledged 1: named_insured" in art(render(load_queue(), None), "SUB-908")
+
+                # Suggested market is its own field; the footer shows model and prompt version, never a key or a host.
+                stored("SUB-907", "complete", [{**r, "value": "roofing contractor"} if r["field_id"] == "operations" else r for r in good])
+                assert "Suggested market: <b>carrier_b</b>" in art(render(load_queue(), None), "SUB-907")
+                assert "Suggested market: <b>none</b>" in art(render(load_queue(), None), "SUB-901")
+                env_old = {k: os.environ.get(k) for k in ("LLM_API_KEY", "LLM_BASE_URL", "LLM_MODEL")}
+                try:
+                    for k in env_old:
+                        os.environ.pop(k, None)
+                    assert f"Model (this environment): not set · Prompt version (this code): {llm_extract.PROMPT_VERSION}" in render([], None)
+                    os.environ.update(LLM_MODEL="test-model", LLM_API_KEY="sk-SECRET", LLM_BASE_URL="https://user:pw@host.example/v1")
+                    foot = render(load_queue(), None)
+                    assert "Model (this environment): test-model" in foot and "SECRET" not in foot and "host.example" not in foot and "pw@" not in foot
+                finally:
+                    for k, v in env_old.items():
+                        os.environ.pop(k, None)
+                        if v is not None:
+                            os.environ[k] = v
             finally:
                 (prepare.EXTRACT_DIR, prepare.INBOX_DIR, INBOX, LOG, PENDING, TO_PRODUCER, TO_CARRIER, package.DECISIONS_LOG, package.SENDS_LOG, package.INBOX, llm_extract._post, prepare.process_submission) = old
+
+        # B-252 (D-069): a sandbox run writes only inside its temp directory; the real files' bytes stay the same.
+        import hashlib
+
+        real = [PAGE, package.DECISIONS_LOG, package.SENDS_LOG, quotes.CLOSURES, llm_extract.CACHE / "token_log.jsonl"]
+        real_dirs = [PENDING, TO_PRODUCER, TO_CARRIER, prepare.EXTRACT_DIR]
+
+        def fingerprint() -> dict:
+            files = [f for f in real if f.is_file()] + [f for d in real_dirs if d.is_dir() for f in sorted(d.rglob("*")) if f.is_file()]
+            return {str(f): hashlib.sha256(f.read_bytes()).hexdigest() for f in files} | {str(d): sorted(x.name for x in d.iterdir()) for d in real_dirs if d.is_dir()} | {f"exists {f}": f.is_file() for f in real}
+
+        before_real = fingerprint()
+        names = ("PAGE", "LOG", "INBOX", "PENDING", "TO_PRODUCER", "TO_CARRIER", "BANNER")
+        saved_mod = {n: globals()[n] for n in names}
+        saved_other = (package.DECISIONS_LOG, package.SENDS_LOG, package.INBOX, quotes.CLOSURES, quotes.TO_CARRIER, quotes.FROM_CARRIER, prepare.EXTRACT_DIR, prepare.INBOX_DIR, llm_extract.CACHE)
+        with tempfile.TemporaryDirectory() as box_dir:
+            box_dir = Path(box_dir)
+            try:
+                sandbox(box_dir)
+                assert PAGE.parent == box_dir and "SANDBOX COPY" in BANNER
+                PAGE.write_text(render(load_queue(), correction_counts(LOG)))  # what serve() writes first
+                sid = next(p.name for p in INBOX.iterdir() if p.name.startswith("SUB-") and (prepare.EXTRACT_DIR / f"{p.name}.json").is_file())
+                act("/decision", {"submission": sid, "underwriter_id": "user", "action": "approve", "reason": "sandbox check"})
+                act("/send", {"submission": sid, "user_line": f"send to carrier {sid}"})
+                act("/close-subjectivity", {"submission": "SUB-002", "carrier": "carrier_b", "subjectivity": "x", "underwriter_id": "user", "reason": "sandbox check"})
+                assert LOG.is_file() and (box_dir / "workbench.html").is_file() and "SANDBOX COPY" in PAGE.read_text()
+            finally:
+                for n, v in saved_mod.items():
+                    globals()[n] = v
+                (package.DECISIONS_LOG, package.SENDS_LOG, package.INBOX, quotes.CLOSURES, quotes.TO_CARRIER, quotes.FROM_CARRIER, prepare.EXTRACT_DIR, prepare.INBOX_DIR, llm_extract.CACHE) = saved_other
+        assert fingerprint() == before_real, "a sandbox run changed a real file"
         print("workbench ok")
