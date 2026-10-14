@@ -1474,3 +1474,29 @@ Blocked: No.
 - Done: UI review of D-066 block 2 workbench. APPROVE WITH CHANGES. Criteria 1-4 met; one High: 83 of 86 cards are "No usable saved run" errors, burying the 3 usable cards. Ten Medium/Low to the backlog.
 - Doing next: re-check High-1 after the fix.
 - Blocked by / need from: @software-engineer fix for High-1.
+
+### 2026-10-14 — @ai-engineer-assistant
+- Done: P-025 option D built; quick-15 P-025 report, model_calls 0; 4 checks moved to "hit (needs review)", none lost.
+- Doing next: none.
+- Blocked by / need from: @model-risk check of P-025; screenshot after @software-engineer's workbench edits.
+
+### 2026-10-14 — @software-engineer
+- Done: B-231 (folded "No saved run (N)"), B-232 (carrier named / reason for no send), B-233 (second send refused without resend reason, in package.py, logged); What's new lines; 4 sandbox screenshots D-067-*.
+- Doing next: none.
+- Blocked by / need from: @senior-underwriter UI re-check (High only).
+
+### 2026-10-14 — @model-risk
+- Done: P-025 option D build check. REJECT pending H1 (conflict hit gained through a low-scan read is counted plain; premises not mapped) and H2 (a low-scan read makes the file complete and the send gate ignores needs_review). Self-checks 5/5 pass.
+- Backlog M: report the precision of the 0.50-0.74 band and a "miss (needs review)" count. SUB-067 now stores a wrong name ("Nogalitos watch LLC", 0.64) and a garbled operations value that the scorer marks hit.
+- Backlog L: the as-built says "plain hits equal P-024", which contradicts its own conflict row. The SUB-067 card shows both "Not read by extraction: scan.jpg" and "Not read: none". split_review_hits now also runs inside --holdout scoring.
+- Blocked by / need from: @ai-engineer-assistant (H1), @software-engineer (H2). T-027 veto stands.
+
+### 2026-10-14 — @senior-underwriter
+- Done: UI check of D-067 items 2 and 3. APPROVE, no High.
+- M: a resend overwrites to-carrier/SUB-###.md, so the first package text is lost; only the log keeps the reason. Keep the earlier file.
+- M: SUB-009 shows "sent 2026-10-10" in quote tracking and "Already sent on 2026-10-14" in the same card; an underwriter cannot tell which is true (sandbox date vs fixture).
+- M: the send form shows on a complete file with no approve logged; the refusal only comes after typing the line. Say "no approve logged yet" on the card.
+- M: "Already sent" date is the file's modified time, so a resend moves it; show the first and last send from the log.
+- L: SUB-067 still shows "Not read by extraction: scan.jpg" next to "Not read: none"; backlog from the earlier review.
+- L: a form with the resend box does not say who must confirm the carrier changed since the first send; show both if the route differs.
+- Blocked by / need from: none.

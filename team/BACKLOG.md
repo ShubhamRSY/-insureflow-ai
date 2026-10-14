@@ -260,3 +260,12 @@ Also open from T-097, already in the register's Section D so not repeated as row
 | B-240 | D-066 | @software-engineer | Low: refusal texts are raw ValueError wording ("G2", status names). | 2026-10-14 |
 | B-241 | D-066 | @software-engineer | Low: decision form has no id hint or order hint (approve, then send). | 2026-10-14 |
 | B-242 | D-066 | @software-engineer | Low: "Approve and send to producer" has no confirm or typed line, unlike the carrier send. | 2026-10-14 |
+| B-243 | P-025 | @ai-engineer-assistant | High (model-risk, open): SUB-067 conflict is a plain hit only because of a low-confidence scan value; treat conflict like status in the split; CHECK_FIELD misses premises→premises_address; rerun quick set into a new file. | 2026-10-14 |
+| B-244 | P-025 | @software-engineer | High (model-risk, open): a 0.50–0.74 scan value counts toward complete and `agency_problem` never reads needs_review; refuse the send while any low-confidence scan row is unacknowledged; self-check. | 2026-10-14 |
+| B-245 | P-025 | @ai-engineer-assistant | Medium: report accuracy of the 0.50–0.74 band and a "miss (needs review)" count (SUB-067 stores a wrong name and garbled operations). | 2026-10-14 |
+| B-246 | P-025 | @ai-engineer-assistant | Low: as-built note contradicts itself on plain hits; the split also runs in --holdout scoring. | 2026-10-14 |
+| B-247 | D-067 | @software-engineer | Medium: a resend overwrites the first package file. | 2026-10-14 |
+| B-248 | D-067 | @software-engineer | Medium: SUB-009 quote tracking "sent 2026-10-10" vs "Already sent on 2026-10-14". | 2026-10-14 |
+| B-249 | D-067 | @software-engineer | Medium: the send form shows before an approve is logged. | 2026-10-14 |
+| B-250 | D-067 | @software-engineer | Medium: "already sent" date is the file mtime, so a resend moves it. | 2026-10-14 |
+| B-251 | D-067 | @software-engineer | Low: no warning when the carrier route changed since the first send. | 2026-10-14 |

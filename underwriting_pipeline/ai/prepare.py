@@ -334,10 +334,12 @@ def _set_cited(merged: dict, field: str, value: str, source: str, start: int, en
     quote = texts[source][start:end] if texts and source in texts else None
     if scans and source in scans:
         confidence = min(confidence, llm_extract.cited_ocr_score(quote or value, value, scans[source]))
-        if confidence < llm_extract.MIN_CONFIDENCE:
+        if confidence < llm_extract.SCAN_FLOOR:
             return
         if field == "loss_run_valued_through":  # S2
             flag, reason = True, llm_extract.REASON_SCAN
+        if confidence < llm_extract.MIN_CONFIDENCE:  # P-025
+            flag, reason = True, llm_extract.REASON_LOW_SCAN
     merged[field] = {
         "field_id": field,
         "value": value,
@@ -1325,8 +1327,11 @@ if __name__ == "__main__":
         assert {(r["file"], r["reason"]) for r in report["unread"]} == {("b.docx", "file type .docx is not read"), ("a.md", "not sent: text past 120,000 characters")}
         assert set(report["needs_human"]) >= {"a.md", "b.docx"}, "every unread file is also in needs_human, as a list of names"
     merged_g2 = {f: {"field_id": f, "value": None, "needs_review": True} for f in FIELDS}
-    apply_document_rules(merged_g2, [], {"s.jpg": "Valued through: 2026-01-01", "n.md": "No known loss letter"}, {"s.jpg": [["Valued", 0.9], ["through:", 0.9], ["2026-01-01", 0.5]]})
-    assert merged_g2["loss_run_valued_through"]["value"] is None, "G2: a document rule on a scan takes the cited-word score"
+    apply_document_rules(merged_g2, [], {"s.jpg": "Valued through: 2026-01-01", "n.md": "No known loss letter"}, {"s.jpg": [["Valued", 0.9], ["through:", 0.9], ["2026-01-01", 0.4]]})
+    assert merged_g2["loss_run_valued_through"]["value"] is None, "G2: a document rule on a scan takes the cited-word score; under 0.50 it is dropped"
+    apply_document_rules(merged_g2, [], {"s.jpg": "Valued through: 2026-01-01", "n.md": "No known loss letter"}, {"s.jpg": [["Valued", 0.9], ["through:", 0.9], ["2026-01-01", 0.6]]})
+    assert merged_g2["loss_run_valued_through"]["reason"] == llm_extract.REASON_LOW_SCAN, "P-025: 0.6 is stored for review"
+    merged_g2["loss_run_valued_through"]["value"] = None
     apply_document_rules(merged_g2, [], {"s.jpg": "Valued through: 2026-01-01", "n.md": "No known loss letter"}, {"s.jpg": [["Valued", 0.9], ["through:", 0.9], ["2026-01-01", 0.9]]})
     assert merged_g2["loss_run_valued_through"]["value"] == "2026-01-01" and merged_g2["loss_run_valued_through"]["needs_review"], "G2/S2: passes at 0.9, kept and flagged"
     print("prepare ok")

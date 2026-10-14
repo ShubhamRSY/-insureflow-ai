@@ -19,6 +19,8 @@ from pathlib import Path
 os.environ.setdefault("LLM_MAX_WAIT", "1800")  # a batch score waits out a daily token limit; set before llm_extract loads
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import llm_extract  # noqa: E402
+import prepare  # noqa: E402
 
 OUT = Path(sys.argv[1]) if len(sys.argv) > 1 and not sys.argv[1].startswith("--") else (
     ROOT / "deliverables" / "ai-engineer" / "evals" / "regression-SUB-017-076.json"
@@ -82,14 +84,34 @@ def tally(rows: list[dict]) -> dict:
     return counted
 
 
+# P-025 (D-067): check name -> stored field id. A hit on a field stored with the low-confidence scan reason is "hit (needs review)".
+CHECK_FIELD = {"sales": "sales_or_payroll", "tiv": "tiv_building", "loss_runs": "loss_run_valued_through"}
+NEEDS_REVIEW_HIT = "hit (needs review)"
+
+
+def split_review_hits(checks: dict, report: dict | None) -> dict:
+    """Computed here; the frozen scorers and published score files are not touched. status counts as such when any stored row is a low-confidence scan read."""
+    if not report:
+        return checks
+    low = {r["field_id"] for r in report.get("fields") or [] if r.get("value") and r.get("reason") == llm_extract.REASON_LOW_SCAN}
+    return {k: (NEEDS_REVIEW_HIT if v == "hit" and (bool(low) if k == "status" else CHECK_FIELD.get(k, k) in low) else v) for k, v in checks.items()}
+
+
 def score_retry(module, sid: str, score=None) -> dict:
     """A failed model call is not a score of the code: try it again, and keep the error if it never succeeds."""
     score = score or module.score_one
-    for attempt in range(1, 4):
-        row = score(sid)
-        if not row.get("error"):
-            break
-        time.sleep(60)
+    seen = []
+    real = prepare.process_submission
+    prepare.process_submission = lambda *a, **k: seen.append(real(*a, **k)) or seen[-1]  # the scorer calls prepare.process_submission; keep its report
+    try:
+        for attempt in range(1, 4):
+            row = score(sid)
+            if not row.get("error"):
+                break
+            time.sleep(60)
+    finally:
+        prepare.process_submission = real
+    row = {**row, "checks": split_review_hits(row["checks"], seen[-1] if seen else None)}
     print(time.strftime("%H:%M"), sid, row.get("error") or "ok", "attempts", attempt, flush=True)
     return {**row, "attempts": attempt}
 

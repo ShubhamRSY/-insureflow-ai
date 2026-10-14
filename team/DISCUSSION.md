@@ -2643,3 +2643,29 @@ Medium/Low (one line each, backlog):
 - L: the decision form has no id hint and no order hint (approve, then send); the first send refusal teaches it.
 - L: "Approve and send to producer" has no confirm and no typed line, unlike the carrier send; consistent with D-050 but inconsistent on screen.
 Needs response by: @software-engineer (High-1), @pm (Medium/Low to BACKLOG)
+
+### 2026-10-14 — @ai-engineer-assistant
+- Done: P-025 option D built (D-067). Scan values 0.50 to below 0.75 stored as needs-review with "Low-confidence scan read — check against the page"; below 0.50 dropped; typed unchanged; prompt unchanged. Separate "hit (needs review)" column computed in regression_dev.py (no frozen scorer touched). One What's new line. Quick 15 from cache, model_calls 0: SUB-038 loss_runs and status, SUB-067 operations and construction now "hit (needs review)"; SUB-067 conflict now a plain hit; no plain hit dropped. Detail in `deliverables/ai-engineer/p-025-as-built.md`.
+- Doing next: nothing until told; @model-risk check of P-025 is open (D-067).
+- Blocked by / need from: screenshot and @senior-underwriter UI check after @software-engineer finishes workbench.py.
+
+### 2026-10-14 — @software-engineer
+- Done (D-067 items 2, 3; D-065 applies): B-231 saved-run cards first, all no-saved-run cards in one closed `<details>` "No saved run (N)" with the reason and who runs `prepare.py` to create a run. B-232 the send form names the carrier ("The package goes to carrier_a", button "Send to carrier_a"); on hold/no_match/senior_referral, refused, manifest-changed or incomplete cards it says "No send: <reason>" and shows no form. B-233 `package.send_to_carrier` refuses a second send ("already sent on <date>; needs an explicit resend with a written reason") for every path; `resend_reason` is written to the package header and to sends.jsonl (`resend`, `resend_reason`); card shows "Already sent on <date> to <carrier>" with a resend-reason field. "What's new" has three lines (B-231/232/233, D-067). Self-checks pass: workbench, package, quotes, intake, prepare (LLM_* unset). `ai/` untouched.
+- Screenshots (Playwright, sandbox copy: temp logs, to-carrier, to-producer, extractions copy; real logs and simulation/to-carrier unchanged; sends made only in the sandbox by the sandbox user id): `deliverables/software-engineer/screenshots/D-067-queue-folded.png`, `D-067-SUB-009-send-form.png`, `D-067-SUB-009-resend-refused.png`, `D-067-SUB-067-low-confidence.png` (saved run of SUB-067 built from the cache with `_post` patched to raise, no model call).
+- Needs response by: @senior-underwriter (UI re-check of High-1, High only).
+
+---
+[2026-10-14 | @model-risk → @ai-engineer-assistant, @software-engineer, @pm] TYPE: REVIEW
+Re: P-025 option D (D-067)
+Message: Verdict REJECT, to be re-checked once H1 and H2 are closed. The gate logic is correct: scan only, 0.50 floor, quote still required, typed documents unchanged. All five self-checks pass with LLM_* unset. The P-024 file is unedited, and the deltas recompute exactly (5 checks changed, 0 model calls).
+H1 (scores): a hit that exists only because of a low-confidence read is still counted as a plain hit. SUB-067 conflict went from not_credited to a plain "hit" only because the low-scan `operations` value set identity. So conflict plain hits went 12 to 13, which breaks "never as plain hits". `CHECK_FIELD` also leaves out premises->premises_address. Fix: handle conflict like status in split_review_hits, add premises, and rerun the quick set into a new file.
+H2 (send): a 0.50-0.74 scan read now counts toward `complete`. agency_problem (package.py) does not read needs_review, so such a value can reach a carrier package without anyone acknowledging it. SUB-038 became complete this way. Fix: refuse the send while any REASON_LOW_SCAN row has not been acknowledged by the underwriter, and add a self-check for it.
+Backlog (Medium/Low): see STANDUP. This is not a production approval: the T-027 veto stands.
+
+---
+[2026-10-14 | @senior-underwriter → @software-engineer, @pm] TYPE: REVIEW
+Re: D-067 items 2, 3 UI check (D-065 item 3), workbench.py and package.py diff plus 4 screenshots
+Message: Verdict APPROVE. No High findings. Saved-run cards come first and the 82 no-run cards sit in one closed "No saved run (82)" section with the reason and how a run is made. The send form names the carrier before confirm and the button repeats it. A file with no carrier, hold, incomplete or refused status shows "No send: <reason>" in plain words. A second send shows "Already sent on <date> to <carrier>", is refused with a plain reason, and needs a written resend reason that is logged. SUB-067 shows "Low-confidence scan read — check against the page" with a tick per value. Not run live: read from the screenshots and diff only.
+Backlog (Medium/Low, one line each): see STANDUP.
+- Doing next: none.
+- Blocked by / need from: none.

@@ -31,6 +31,7 @@ Run: python underwriting_pipeline/app/package.py
 
 import json
 import sys
+from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -218,6 +219,19 @@ def agency_problem(target) -> str:
     return ""
 
 
+def sent_on(dest: Path) -> str:
+    return datetime.fromtimestamp(dest.stat().st_mtime).date().isoformat()
+
+
+def sent_info(submission: str, out_dir: Path) -> tuple[str, str]:
+    """(date, carrier) of the package already in out_dir, or ("", "")."""
+    dest = out_dir / f"{submission}.md"
+    if not dest.is_file():
+        return "", ""
+    carrier = next((l.split(":", 1)[1].strip() for l in dest.read_text().splitlines() if l.startswith("Carrier:")), "unknown")
+    return sent_on(dest), carrier
+
+
 def send_to_carrier(
     submission: str,
     actor: str,
@@ -225,8 +239,11 @@ def send_to_carrier(
     reason: str = "",
     user_line: str = "",
     carrier: str = "",
+    resend_reason: str = "",
 ) -> Path:
-    """T-071: read the status from the last saved run itself, before the actor is looked at, and refuse both refused statuses for every actor."""
+    """B-233 (D-067): a second send for the same submission is refused unless resend_reason is written; the resend is logged.
+
+    T-071: read the status from the last saved run itself, before the actor is looked at, and refuse both refused statuses for every actor."""
     submission = (submission or "").strip()
     report = prepare.read_saved_run(submission)  # G2: no file, hash differs, or unknown status -> refuse
     status = report.get("status")
@@ -253,17 +270,21 @@ def send_to_carrier(
         raise ValueError("packages go to to-carrier")
     if (carrier or "").strip() and name != "user":
         raise ValueError("only the user may override the carrier")
+    dest = out_dir / f"{submission}.md"
+    resend = (resend_reason or "").strip()
+    if dest.exists() and not resend:
+        raise ValueError(f"already sent on {sent_on(dest)}; a second send needs an explicit resend with a written reason")
     body = build_package(submission, carrier, reason if name == "user" else "")  # T-085: raises on an empty required field or no carrier; nothing is written yet
     out_dir.mkdir(parents=True, exist_ok=True)
-    dest = out_dir / f"{submission}.md"
     who = "user (override)" if name == "user" else "account-manager"
     note = f"Reason: {reason.strip()}\n" if (reason or "").strip() else ""
     line = f"User-line: {user_line.strip()}\n" if name == "user" else ""
-    dest.write_text(f"Sent-by: {who}\n{line}{note}\n{body}")
-    if name == "user":
+    again = f"Resend-reason: {resend}\n" if resend else ""
+    dest.write_text(f"Sent-by: {who}\n{line}{note}{again}\n{body}")
+    if name == "user" or resend:
         SENDS_LOG.parent.mkdir(parents=True, exist_ok=True)
         with SENDS_LOG.open("a") as handle:
-            handle.write(json.dumps({"submission": submission, "actor": name, "user_line": user_line.strip(), "package": str(dest), **({"carrier_override": carrier.strip().lower(), "override_reason": reason.strip()} if (carrier or "").strip() else {})}) + "\n")
+            handle.write(json.dumps({"submission": submission, "actor": name, "user_line": user_line.strip(), "package": str(dest), **({"resend": True, "resend_reason": resend} if resend else {}), **({"carrier_override": carrier.strip().lower(), "override_reason": reason.strip()} if (carrier or "").strip() else {})}) + "\n")
     return dest
 
 
@@ -487,6 +508,7 @@ if __name__ == "__main__":
                     try:
                         send_to_carrier(sub, actor, dest_dir, reason="ready", user_line=LINE(sub))
                         assert ok, f"{sub} must be refused for {actor}"
+                        (dest_dir / f"{sub}.md").unlink()  # B-233: the next actor sends afresh
                     except ValueError:
                         assert not ok, f"{sub} must pass for {actor}"
             assert len(log.read_text().splitlines()) == 16  # history untouched by the sends
@@ -527,6 +549,17 @@ if __name__ == "__main__":
             save(ext, "SUB-320", "complete", complete=True, fields=office, sprinklers="no")
             decide("SUB-320", "approve")
             assert send_to_carrier("SUB-320", "user", dest_dir, user_line=LINE("SUB-320")).exists()
+            # B-233 (D-067): a second send is refused without a resend reason; with one it is allowed and logged.
+            try:
+                send_to_carrier("SUB-320", "user", dest_dir, user_line=LINE("SUB-320"))
+                raise SystemExit("a second send without a resend reason must be refused")
+            except ValueError as exc:
+                assert "already sent on" in str(exc), exc
+            assert sent_info("SUB-320", dest_dir)[1] == "carrier_a"
+            send_to_carrier("SUB-320", "user", dest_dir, user_line=LINE("SUB-320"), resend_reason="carrier lost the file")
+            last = json.loads(SENDS_LOG.read_text().splitlines()[-1])
+            assert last["resend"] is True and last["resend_reason"] == "carrier lost the file"
+            assert "Resend-reason: carrier lost the file" in (dest_dir / "SUB-320.md").read_text()
             (tmp / "inbox" / "SUB-320" / "late-loss-run.pdf").write_bytes(b"added after extraction")
             try:
                 send_to_carrier("SUB-320", "user", dest_dir, user_line=LINE("SUB-320"))

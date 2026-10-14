@@ -748,3 +748,14 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: P-024 build and the P-016 drop analysis plus a proposal (P-025, not built) (@ai-engineer-assistant); demo re-save from cache (main session); workbench items 10, 2/4/8, 1, 13 with screenshots (@software-engineer); @model-risk re-check of P-024; @senior-underwriter UI review. "D-017 item 3 as corrected" is D-050 (producer request: only truly missing items, not a refused status, no decline language).
 - Status: ACCEPTED
 - Amends: nothing. A send made through the new workbench action in a demo still needs every gate; no AI role sends. Not a production approval.
+
+## D-067 — P-025 approved with D; B-231; B-232/B-233
+- Date / Owner: 2026-10-14 / @user
+- Context: P-025 (`deliverables/ai-engineer/proposal-P-025.md`) after the P-016 drop analysis. @senior-underwriter UI High-1 (B-231) and Mediums B-232, B-233 on the D-066 workbench.
+- Options considered: P-025 A, B, C, D.
+- Decision: In the user's words. "1. approve change P-025 with D: on scanned pages only, low-confidence values at or above 0.50 are stored as needs-review instead of dropped; typed documents unchanged. Scores report "hit (needs review)" in a separate column, never as plain hits. The workbench labels them "Low-confidence scan read — check against the page". Rerun the quick set and report both columns. 2. B-231: saved-run cards first; all "No usable saved run" cards folded into one collapsed section with a count. 3. B-232/B-233 (send form): the form shows the carrier name before confirmation; a second send for the same submission is refused unless it is an explicit resend with a written reason, logged. Screenshots, one @model-risk check of P-025 and one @senior-underwriter UI check, High only."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-14 (D-032).
+- Dissent: none
+- Follow-up tasks: P-025 in `ai/`, the separate score column in the regression report, and the workbench label (@ai-engineer-assistant, D-065: backend + UI in the same task); B-231, B-232/B-233 (@software-engineer); quick set of 15; screenshots; @model-risk check of P-025; @senior-underwriter UI check.
+- Status: ACCEPTED
+- Amends: P-016 option C3/S2 behaviour on scans for values from 0.50 to below 0.75 (stored as needs-review, not dropped). Frozen scorers and published scores are not edited; the separate column is computed in the regression report. Not a production approval; the T-027 veto stands. No send is authorized.

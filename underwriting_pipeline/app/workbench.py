@@ -38,6 +38,10 @@ BANNER = ""  # set by serve(); the sandbox screenshots label the page with it
 MESSAGES: dict[str, tuple[bool, str]] = {}  # submission -> (ok, plain-words result of the last action); shown once
 # D-065 item 5: one line per user-visible feature: date, task or proposal, decision number, what an underwriter sees.
 WHATS_NEW = (
+    ("2026-10-14", "B-231", "D-067", "Saved-run cards come first; every card with no usable saved run is folded into one closed section \"No saved run (N)\" with the reason and how a run is created."),
+    ("2026-10-14", "B-232", "D-067", "The Send to carrier form names the carrier before you confirm; when there is no carrier or the file is refused or incomplete, the card says why there is no send."),
+    ("2026-10-14", "B-233", "D-067", "A package already sent shows \"Already sent on <date> to <carrier>\"; a second send is refused unless you tick resend and write a reason, which is logged."),
+    ("2026-10-14", "P-025", "D-067", "A scan read below the confidence line (0.50 to 0.74) is kept, marked \"Low-confidence scan read — check against the page\", and must be ticked at approve."),
     ("2026-10-14", "P-016", "D-064", "Needs-review values show their reason and cited text; approve needs each one ticked; unread pages are listed."),
     ("2026-10-14", "D-066 item 10", "D-066", "The page shows only the saved run (status, hash check, manifest check). It never runs extraction or a model call."),
     ("2026-10-14", "D-066 items 2/4/8", "D-066", "Every refused decision or send is shown on its card in plain words with the reason. No bare error pages."),
@@ -312,7 +316,7 @@ def act(path: str, payload: dict) -> tuple[str, bool, str]:
             quotes.close_subjectivity(*(payload.get(k, "") for k in ("submission", "carrier", "subjectivity", "underwriter_id", "reason")))
             return sub, True, "Subjectivity closed and logged."
         if path == "/send":  # item 1: the same gate as every send; the actor is the user, the line is typed on the card
-            dest = package.send_to_carrier(sub, "user", TO_CARRIER, user_line=payload.get("user_line", ""))
+            dest = package.send_to_carrier(sub, "user", TO_CARRIER, user_line=payload.get("user_line", ""), resend_reason=payload.get("resend_reason", ""))
             return sub, True, f"Sent: package {dest.name} written to to-carrier. Not bound."
         dest = prepare.approve(PENDING / f"{sub}.md", "user", TO_PRODUCER, payload.get("reason", ""))  # item 13: D-050, user override
         return sub, True, f"Approved: request {dest.name} written to to-producer. It lists only missing items and declines nothing."
@@ -328,6 +332,20 @@ def _confidence(row: dict) -> str:
     return f"{used} ocr / {model} model"
 
 
+def _folded(cards: list[str]) -> str:
+    """B-231: every card with no usable saved run, in one closed section with a count and how a run is created."""
+    if not cards:
+        return ""
+    return (
+        f"<details{' open' if 'role=\"alert\"' in ''.join(cards) else ''}><summary><b>No saved run ({len(cards)})</b></summary>"
+        "<p>These files have no usable saved extraction run, so the workbench shows nothing for them and offers no decision or send. "
+        "A run is created outside this page: the AI Engineer (or @ai-engineer-assistant for the team) runs "
+        "<code>python underwriting_pipeline/ai/prepare.py simulation/inbox simulation/pending-approval deliverables/data-engineer/conflicts</code> "
+        "with the model host set. Reload the page afterwards. This page never runs extraction.</p>"
+        + "".join(cards) + "</details>"
+    )
+
+
 def _msg(messages: dict, key: str) -> str:
     if key not in messages:
         return ""
@@ -335,15 +353,47 @@ def _msg(messages: dict, key: str) -> str:
     return f'<p class="msg {"ok" if ok else "bad"}" role="alert">{html.escape(text)}</p>'
 
 
+def _no_send_reason(item: dict, report: dict, refused: bool) -> str:
+    """B-232: plain words for why this card has no send form; empty when a send can be offered."""
+    if refused:
+        return f"this file's status is {report.get('status')}; it cannot be sent"
+    if item.get("manifest"):
+        return f"documents changed since extraction ({item['manifest']})"
+    if item["route"] not in package.CARRIERS:
+        return f"the carrier match is {item['route']}" + (f" ({item['note']})" if item.get("note") else "") + ", so no carrier is named"
+    if not report.get("complete"):
+        return "the file is incomplete (a required field is empty)"
+    return ""
+
+
+def _send_html(item: dict, report: dict, refused: bool, manifest: str) -> str:
+    sid = html.escape(item["id"])
+    why = _no_send_reason(item, report, refused)
+    if why:
+        return f'<h3>Send to carrier</h3><p class="bad">No send: {html.escape(why)}.</p>'
+    when, to = package.sent_info(item["id"], TO_CARRIER)
+    already = f'<p class="msg ok">Already sent on {html.escape(when)} to {html.escape(to)}.</p>' if when else ""
+    resend = (
+        '<label>Resend reason (required for a second send) <input name="resend_reason" size="30"></label> ' if when else ""
+    )
+    return (
+        f'<h3>Send to carrier</h3>{already}<form method="post" action="/send"><input type="hidden" name="submission" value="{sid}">'
+        f"<p>The package goes to <b>{html.escape(item['route'])}</b>. Check the carrier name, then confirm.</p>"
+        f'{resend}<label>Type <code>send to carrier {sid}</code> to confirm <input name="user_line" size="28" autocomplete="off"></label> '
+        f'<button type="submit">{"Resend" if when else "Send"} to {html.escape(item["route"])}</button></form>'
+        "<p>Goes through the same send gate as every send: saved run, documents unchanged, an approve logged, no failed file. The underwriter decides; nothing is bound.</p>"
+    )
+
+
 def render(queue: list[dict], counts: dict | None = None, messages: dict | None = None) -> str:
     counts = counts or {"approve": 0, "edit": 0, "decline": 0}
     messages = messages or {}
     corrections = counts["edit"] + counts["decline"]
-    blocks = []
+    blocks, unsaved = [], []
     for item in queue:
         report = item["report"]
         if report is None:  # item 10: no saved run, or it cannot be read; nothing is extracted here
-            blocks.append(
+            unsaved.append(
                 f'<article id="{html.escape(item["id"])}"><h2>{html.escape(item["id"])}</h2>{_msg(messages, item["id"])}'
                 f'<p class="bad">No usable saved run: {html.escape(item.get("saved_problem") or "none found")}. '
                 "This page shows saved runs only and does not run extraction. Run extraction, then reload. No decision or send is offered.</p></article>"
@@ -463,12 +513,7 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
             )
         if (TO_PRODUCER / f"{item['id']}.md").is_file():
             lines.append("<p>Producer request on file in to-producer.</p>")
-        lines.append(
-            f'<h3>Send to carrier</h3><form method="post" action="/send"><input type="hidden" name="submission" value="{sid}">'
-            f'<label>Type <code>send to carrier {sid}</code> to confirm <input name="user_line" size="28" autocomplete="off"></label> '
-            '<button type="submit">Send to carrier</button></form>'
-            "<p>Goes through the same send gate as every send: saved run, documents unchanged, an approve logged, no failed file. The underwriter decides; nothing is bound.</p>"
-        )
+        lines.append(_send_html(item, report, refused, manifest))
         blocks.append(
             f'<article id="{html.escape(item["id"])}">\n' + "\n".join(lines) + "\n</article>"
         )
@@ -494,6 +539,7 @@ details {{ margin: 0.5rem 0; }}
 <p>Synthetic queue. A decision is logged only with an id on the underwriter list. Decline and edit need a reason, and so does an approve after a decline. Approve, edit, and decline are saved with that reason. This page shows saved runs only. It never binds. A carrier send needs the typed line and passes the send gate.</p>
 <p>Decisions so far: {counts['approve']} approved, {counts['edit']} edited, {counts['decline']} declined. Corrections: {corrections}.</p>
 {''.join(blocks)}
+{_folded(unsaved)}
 </body></html>
 """
 
@@ -717,6 +763,8 @@ if __name__ == "__main__":
         assert "<option>approve</option>" in page_ok
         assert "<h3>Missing</h3>" in page_ok and "Carrier match:" in page_ok and "Score:" in page_ok
         # P-016 R1/D-039: the card shows reason, quote, unread rows, and a checkbox per needs-review value.
+        lowc = render([card("complete", fields=[{"field_id": "tiv_building", "value": "220000", "needs_review": True, "quote": "TIV 220,000", "reason": "Low-confidence scan read — check against the page"}])], None)
+        assert "NEEDS REVIEW: Low-confidence scan read — check against the page" in lowc and needs_review_ids({"fields": [{"field_id": "tiv_building", "value": "220000", "needs_review": True}]}) == ["tiv_building"], "P-025 label and approve list"
         flagged = card("complete", fields=[{"field_id": "year_built", "value": "1942", "needs_review": True, "quote": "Built 1942", "reason": "number or date read from a scan"}])
         flagged["report"]["unread"] = [{"file": "a.pdf", "page": 2, "reason": "blank"}, {"file": "b.docx", "page": None, "reason": "file type .docx is not read"}]
         pf = render([flagged], None)
@@ -846,6 +894,22 @@ if __name__ == "__main__":
                 sub, ok, text = act("/send", {"submission": "SUB-901", "user_line": "send to carrier SUB-901"})
                 assert ok and text.startswith("Sent:") and (TO_CARRIER / "SUB-901.md").is_file(), text
                 assert json.loads((tmp / "sends.jsonl").read_text().splitlines()[-1])["actor"] == "user"
+
+                # B-231/B-232/B-233 (D-067): folding with a count, carrier named, second send refused, resend logged.
+                pg = render(load_queue(), None)
+                assert "No saved run (1)" in pg and pg.index('id="SUB-901"') < pg.index("No saved run (1)") < pg.index('id="SUB-902"')
+                assert "<details><summary><b>No saved run" in pg  # closed by default
+                assert "carrier_a" in pg and "Already sent on" in pg and "to carrier_a" in pg and "Resend reason" in pg
+                assert "No send: the carrier match is hold" in pg or "No send: the file is incomplete" in pg  # SUB-929
+                assert "No send: this file&#x27;s status is extraction_failed" in pg
+                line = "send to carrier SUB-901"
+                assert act("/send", {"submission": "SUB-901", "user_line": line})[2].startswith("Send refused: already sent on")
+                assert "written reason" in act("/send", {"submission": "SUB-901", "user_line": line})[2]
+                sub, ok, text = act("/send", {"submission": "SUB-901", "user_line": line, "resend_reason": "carrier lost it"})
+                assert ok and json.loads((tmp / "sends.jsonl").read_text().splitlines()[-1])["resend_reason"] == "carrier lost it", text
+                stored("SUB-904", "complete", good)
+                assert act("/decision", {"submission": "SUB-904", "underwriter_id": "user", "action": "approve", "reason": "ok"})[1]
+                assert "The package goes to <b>carrier_a</b>" in render(load_queue(), None)
 
                 # item 13: the draft shows on the card; the user approves it (D-050); refused files cannot be approved.
                 PENDING.mkdir()

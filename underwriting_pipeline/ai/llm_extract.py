@@ -295,6 +295,8 @@ REASON_QUOTE = "quote not found in {}"
 REASON_VALUE = "value not inside the cited text"
 REASON_REWORDED = "value is not in the cited text (translated or reworded)"
 REASON_SCAN = "number or date read from a scan"
+SCAN_FLOOR = 0.50  # P-025 (D-067): on a scan, 0.50 to below MIN_CONFIDENCE is stored for review, not dropped
+REASON_LOW_SCAN = "Low-confidence scan read — check against the page"
 
 
 def _squash(text: str) -> str:
@@ -430,7 +432,8 @@ def accept_field(item: dict, docs: dict[str, str], ocr_confidence: dict | None =
     }
     if value is None or str(value).strip() == "" or str(value).lower() == "null":
         return base
-    if confidence < MIN_CONFIDENCE:
+    low_scan = on_scan and SCAN_FLOOR <= confidence < MIN_CONFIDENCE
+    if confidence < MIN_CONFIDENCE and not low_scan:
         base["reason"] = f"confidence {confidence:.2f} is under {MIN_CONFIDENCE}"
         return base
     text = docs.get(source, "")
@@ -451,6 +454,8 @@ def accept_field(item: dict, docs: dict[str, str], ocr_confidence: dict | None =
         return base
     if on_scan and field_id in NUMBER_FIELDS + DATE_FIELDS:  # S2
         flag, reason = True, REASON_SCAN
+    if low_scan:
+        flag, reason = True, REASON_LOW_SCAN
     return {
         "field_id": field_id,
         "value": str(value).strip(),
@@ -1177,12 +1182,20 @@ if __name__ == "__main__":
     # C3 and S2: on a scan the gate is the lower of the model score and the lowest cited word that holds the value; a scan number or date stays flagged.
     words = [["Year", 0.95], ["built:", 0.9], ["1942", 0.6], ["Name:", 0.99], ["Acme", 0.99], ["LLC", 0.97]]
     low = one("year_built", "1942", "Year built: 1942", "Year built: 1942", conf=0.99, scan=0.9, words=words)
-    assert low["value"] is None and low["ocr_cited_confidence"] == 0.6, "the cited word '1942' scored 0.6"
+    assert low["value"] == "1942" and low["ocr_cited_confidence"] == 0.6 and low["reason"] == REASON_LOW_SCAN, "P-025: the cited word '1942' scored 0.6, stored for review"
+    assert one("year_built", "1942", "Year built: 1942", "Year built: 1942", conf=0.99, scan=0.9, words=[["Year", 0.9], ["built:", 0.9], ["1942", 0.4]])["value"] is None, "0.4 is under the scan floor"
     assert one("named_insured", "Acme LLC", "Name: Acme LLC", "Name: Acme LLC", conf=0.99, scan=0.5, words=words)["confidence"] == 0.97, "the page score is not used when the words are known; the lowest word that holds the value is"
-    assert one("named_insured", "Acme LLC", "Name: Acme LLC", "Name: Acme LLC", conf=0.6, scan=0.9, words=words)["value"] is None, "the model's 0.6 is the lower score"
+    assert one("named_insured", "Acme LLC", "Name: Acme LLC", "Name: Acme LLC", conf=0.4, scan=0.9, words=words)["value"] is None, "the model's 0.4 is the lower score, under the scan floor"
     assert one("named_insured", "Zed LLC", "Name: Zed LLC", "Name: Zed LLC", conf=0.99, scan=0.9, words=words)["value"] is None, "a cited word not in the word list counts as 0"
     ok = one("year_built", "1942", "Year built: 1942", "Year built: 1942", conf=0.99, scan=0.9, words=[["Year", 0.9], ["built:", 0.9], ["1942", 0.85]])
     assert ok["value"] == "1942" and ok["needs_review"] and ok["reason"] == REASON_SCAN, "S2: a number from a scan that passes the gate is kept flagged"
+    # P-025: scan 0.49 dropped; 0.50 and 0.74 stored, flagged, reasoned; 0.75 as before; typed 0.60 dropped
+    for c, kept in ((0.49, False), (0.50, True), (0.74, True)):
+        r = one("named_insured", "Acme LLC", "Name: Acme LLC", "Name: Acme LLC", conf=c, scan=0.99, words=words)
+        assert (r["value"] == "Acme LLC") == kept and (not kept or (r["needs_review"] and r["reason"] == REASON_LOW_SCAN)), c
+    assert not one("named_insured", "Acme LLC", "Name: Acme LLC", "Name: Acme LLC", conf=0.75, scan=0.99, words=words)["needs_review"], "0.75 is as before"
+    assert one("named_insured", "Acme LLC", "Name: Acme LLC", "Name: Acme LLC", conf=0.60)["value"] is None, "typed 0.60 is dropped"
+    assert one("named_insured", "Acme LLC", "Nope", "Name: Acme LLC", conf=0.6, scan=0.99, words=words)["value"] is None, "a low scan value still needs its quote"
     assert not one("named_insured", "Acme LLC", "Name: Acme LLC", "Name: Acme LLC", conf=0.99, scan=0.9, words=words)["needs_review"], "S2 marks numbers and dates only"
     assert one("year_built", "1942", "Year built: 1942", "Year built: 1942", conf=0.99)["needs_review"] is False, "a typed file keeps the model score and no flag"
     assert one("named_insured", "Acme LLC", "Acme LLC", "Acme LLC", scan=0.2)["value"] is None, "a scan with no word list takes the page score, as before"
