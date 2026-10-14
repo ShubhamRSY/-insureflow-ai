@@ -8,6 +8,9 @@ vi.mock('../lib/api', () => ({
   endpoints: {
     signup: vi.fn(),
     me: vi.fn(),
+    startCheckout: vi.fn(),
+    confirmCheckout: vi.fn(),
+    cancelCheckout: vi.fn(),
   },
 }));
 
@@ -142,6 +145,83 @@ describe('SignupPage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Dashboard home')).toBeInTheDocument();
+    });
+  });
+
+  it('routes a paid plan through checkout instead of creating it directly', async () => {
+    endpoints.signup.mockResolvedValue({ token: 'tok-1', api_key: 'key-123', org_id: 'org-1' });
+    endpoints.me.mockResolvedValue({ username: 'jdoe' });
+    endpoints.startCheckout.mockResolvedValue({ checkout_id: 'chk_1', tier: 'pro', amount_due: 999, currency: 'USD', status: 'pending' });
+    renderPage();
+    fillStep1();
+
+    await waitFor(() => {
+      expect(screen.getByText('Pro')).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByText('Pro').closest('button'));
+    fireEvent.click(screen.getByText('Continue to payment'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Checkout')).toBeInTheDocument();
+    });
+    expect(endpoints.startCheckout).toHaveBeenCalledWith({ tier: 'pro' });
+    expect(screen.getByText('Pay & create account')).toBeInTheDocument();
+  });
+
+  it('completes checkout and activates the paid plan', async () => {
+    endpoints.signup.mockResolvedValue({ token: 'tok-1', api_key: 'key-123', org_id: 'org-1' });
+    endpoints.me.mockResolvedValue({ username: 'jdoe' });
+    endpoints.startCheckout.mockResolvedValue({ checkout_id: 'chk_1', tier: 'pro', amount_due: 999, currency: 'USD', status: 'pending' });
+    endpoints.confirmCheckout.mockResolvedValue({ checkout_id: 'chk_1', status: 'completed', tier: 'pro', plan_status: 'active' });
+    renderPage();
+    fillStep1();
+
+    await waitFor(() => {
+      expect(screen.getByText('Pro')).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByText('Pro').closest('button'));
+    fireEvent.click(screen.getByText('Continue to payment'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Pay & create account')).toBeInTheDocument();
+    });
+    fireEvent.change(screen.getByPlaceholderText('Name on card'), { target: { value: 'Jane Buyer' } });
+    fireEvent.change(screen.getByPlaceholderText('Card number'), { target: { value: '4242424242424242' } });
+    fireEvent.change(screen.getByPlaceholderText('MM/YY'), { target: { value: '12/30' } });
+    fireEvent.change(screen.getByPlaceholderText('CVC'), { target: { value: '123' } });
+    fireEvent.click(screen.getByText('Pay & create account'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Welcome to InsureFlow!')).toBeInTheDocument();
+    });
+    expect(endpoints.confirmCheckout).toHaveBeenCalledWith('chk_1', expect.objectContaining({ card_number: '4242424242424242' }));
+  });
+
+  it('shows a checkout error when the card is rejected', async () => {
+    endpoints.signup.mockResolvedValue({ token: 'tok-1', api_key: 'key-123', org_id: 'org-1' });
+    endpoints.me.mockResolvedValue({ username: 'jdoe' });
+    endpoints.startCheckout.mockResolvedValue({ checkout_id: 'chk_1', tier: 'starter', amount_due: 299, currency: 'USD', status: 'pending' });
+    endpoints.confirmCheckout.mockRejectedValue(new Error('Card number is invalid'));
+    renderPage();
+    fillStep1();
+
+    await waitFor(() => {
+      expect(screen.getByText('Starter')).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByText('Starter').closest('button'));
+    fireEvent.click(screen.getByText('Continue to payment'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Pay & create account')).toBeInTheDocument();
+    });
+    fireEvent.change(screen.getByPlaceholderText('Name on card'), { target: { value: 'Jane Buyer' } });
+    fireEvent.change(screen.getByPlaceholderText('Card number'), { target: { value: '1111111111111111' } });
+    fireEvent.change(screen.getByPlaceholderText('MM/YY'), { target: { value: '12/30' } });
+    fireEvent.change(screen.getByPlaceholderText('CVC'), { target: { value: '123' } });
+    fireEvent.click(screen.getByText('Pay & create account'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Card number is invalid')).toBeInTheDocument();
     });
   });
 });
