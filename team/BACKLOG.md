@@ -193,3 +193,8 @@ Recorded at closure, not decided by @pm. Two of the three are already in `delive
 | B-153 | T-097 | @compliance | Lifting the T-020 veto (misrepresentation to a carrier; `arch §8.2` items (a)–(f), `package.py`) is @compliance's call, after the package/send build is checked against (a)–(f). The T-097 close does not lift it and is not a production approval. @pm cannot lift a veto. | 2026-10-13 |
 
 Also open from T-097, already in the register's Section D so not repeated as rows here: Q9 — whether D-017 item 3's "complete" was meant for producer requests (changes FR-025, NFR-020) — stays with @user (register D-5); the NFR-058–NFR-061 pilot success-metric and go/no-go numbers are @head-of-underwriting's (register D-2).
+
+| ID | Task | Owner | Follow-up | Date |
+|---|---|---|---|---|
+| B-179 | T-079 | @user | Medium: the D-053 gate counts an approve from any underwriter_id, including an AI-role or account-manager id typed into the workbench; D-017 says no AI role approves. Needs the user's ruling on which ids count (open since D-053). | 2026-10-14 |
+| B-180 | T-079 | @software-engineer | Low: an `edit` after an approve, or a reasonless re-approve after an earlier decline that was already explained, refuses the send. Fails closed; document it for the underwriter. | 2026-10-14 |

@@ -1360,3 +1360,8 @@ Blocked: No.
 - Done: T-079 — `underwriting_pipeline/app/package.py` now requires a logged underwriter approve for a carrier send, for every actor including the user and the account manager (D-033 item 2; line 2 of team/DEMO-BLOCKERS.md; item (a) of the T-020 veto). The send reads the decision log itself (`DECISIONS_LOG`, `package.py:36`); no decision is passed in by the caller; the gate runs at `package.py:160`, before the actor is read. The agency gate and the T-071 status gate are unchanged, and `prepare.approve()`'s producer path is not touched (the gate lives in `send_to_carrier`, not `agency_problem`). Self-check temp-only, no model call: `package ok`, plus `workbench ok` and `prepare ok` re-run to confirm no regression. Commit `db7cbb1`, branch `ai-team`, no push.
 - Doing next: T-085 (d), T-086 (c), T-087 (e) — the other three T-020 veto items, when dispatched. T-079 stays TODO; I did not change its status.
 - Blocked by / need from: @compliance, @senior-underwriter, @account-manager, @model-risk: review T-079. @user: three QUESTIONs in the T-079 handoff — (1) the declined-then-approved case (undecided; code holds and refuses, leaving the file with a person); (2) "last" is ordered by log line because rows carry a date and no time (B-104); (3) which ids count as an underwriter — the log accepts any id (B-138, B-100).
+
+### 2026-10-14 — @software-engineer
+- Done: T-079 rebuilt to D-053 in underwriting_pipeline/app/package.py (latest logged decision must be approve, every actor; approve after decline needs a reason). Self-checks: package ok, workbench ok. IN_REVIEW.
+- Doing next: T-085, T-086, T-087 when dispatched.
+- Blocked by / need from: @user: two QUESTIONs (how "last" is ordered; which ids count as underwriter). Reviewers: T-079.

@@ -7,11 +7,21 @@ for any actor including the user. The account manager can send only when the
 agency rules pass, and must write a reason. No AI role can send.
 Every other block keeps the user's override (D-017).
 
+T-079 / D-053: a carrier send also reads the decision log itself and refuses
+unless the latest logged decision for the submission is approve, for every
+actor. An approve after a decline needs a written reason on that approve row.
+The whole history stays in the log; nothing here edits it. No decision is
+passed in by the caller. Open for @user (D-053): how "last" is ordered (here:
+final line of the append-only log, because a row has a date and no time,
+B-104) and which ids count as an underwriter (here: none filtered, the log
+takes any id, B-138, B-100).
+
 # ponytail: one markdown file per submission. Quote tracking is the from-carrier reply, add a tracker when a carrier answers.
 
 Run: python underwriting_pipeline/app/package.py
 """
 
+import json
 import sys
 from pathlib import Path
 
@@ -19,6 +29,8 @@ ROOT = Path(__file__).resolve().parents[2]
 # B-169: the status reader lives in prepare.py. Reach it the same way workbench.py does.
 sys.path.insert(0, str(ROOT / "underwriting_pipeline" / "ai"))
 import prepare
+
+DECISIONS_LOG = ROOT / "deliverables" / "software-engineer" / "decisions.jsonl"
 
 
 def build_package(submission: str, summary: str) -> str:
@@ -45,6 +57,29 @@ def _submission_of(target) -> str:
     if isinstance(target, dict):
         target = target.get("submission")
     return target.strip() if isinstance(target, str) else ""
+
+
+def _decision_problem(submission: str, log_path: Path) -> str:
+    """Empty string if the latest logged decision is approve (D-053). Reads the log; takes no decision from the caller."""
+    rows = []
+    if log_path.exists():
+        for line in log_path.read_text().splitlines():
+            try:
+                row = json.loads(line)
+            except ValueError:
+                continue  # a bad line is never an approve
+            if isinstance(row, dict) and (row.get("submission") or "").strip() == submission:
+                rows.append(row)
+    if not rows:
+        return "no logged decision for this file"
+    last = rows[-1]  # ponytail: line order; a row has a date and no time (B-104)
+    action = (last.get("action") or "").strip()
+    if action != "approve":
+        return f"the latest logged decision is {action or 'not an approve'}, not approve"
+    declined = any((r.get("action") or "").strip() == "decline" for r in rows[:-1])
+    if declined and not (last.get("reason") or "").strip():
+        return "an approve after a decline needs a written reason"
+    return ""
 
 
 def agency_problem(target) -> str:
@@ -85,12 +120,16 @@ def send_to_carrier(
     out_dir: Path,
     body: str,
     reason: str = "",
+    log_path: Path = DECISIONS_LOG,
 ) -> Path:
     """T-071: read the status from the last saved run itself, before the actor is looked at, and refuse both refused statuses for every actor."""
     report = prepare.read_saved_run(submission)  # G2: no file, hash differs, or unknown status -> refuse
     status = report.get("status")
     if status in prepare.REFUSED_STATUSES:
         raise ValueError(f"this file's status is {status}; it cannot be sent, for any actor including the user")
+    problem = _decision_problem((submission or "").strip(), log_path)  # D-053, every actor
+    if problem:
+        raise ValueError(problem)
     name = _actor(actor)
     if name not in {"user", "account-manager"}:
         raise ValueError("only the user or the account manager may send to a carrier")
@@ -141,6 +180,12 @@ if __name__ == "__main__":
     with tempfile.TemporaryDirectory() as tmp:
         tmp = Path(tmp)
         ext = tmp / "extractions"
+        log = tmp / "decisions.jsonl"
+
+        def decide(sub: str, action: str, reason: str = ""):
+            with log.open("a") as handle:
+                handle.write(json.dumps({"submission": sub, "action": action, "underwriter_id": "UW-TEST", "reason": reason}) + "\n")
+
         saved_dir = prepare.EXTRACT_DIR
         prepare.EXTRACT_DIR = ext
         try:
@@ -151,7 +196,7 @@ if __name__ == "__main__":
             save(ext, "SUB-001", "complete", complete=True, fields=office, sprinklers="no")
             for actor in ("software-engineer", "ai-engineer-assistant", "@model-risk"):
                 try:
-                    send_to_carrier("SUB-001", actor, dest_dir, body)
+                    send_to_carrier("SUB-001", actor, dest_dir, body, log_path=log)
                     raise SystemExit(f"a send as {actor} should fail")
                 except ValueError:
                     pass
@@ -161,7 +206,7 @@ if __name__ == "__main__":
                 save(ext, sub, status)
                 for actor in ("user", "user (override)", "@account-manager", "ai-engineer-assistant"):
                     try:
-                        send_to_carrier(sub, actor, dest_dir, body, reason="ready")
+                        send_to_carrier(sub, actor, dest_dir, body, reason="ready", log_path=log)
                         raise SystemExit(f"{status} must be refused for {actor}")
                     except ValueError:
                         pass
@@ -170,7 +215,7 @@ if __name__ == "__main__":
 
             # T-071 (2): nothing saved, a changed hash, and an unknown status all refuse.
             try:
-                send_to_carrier("SUB-190", "user", dest_dir, body)
+                send_to_carrier("SUB-190", "user", dest_dir, body, log_path=log)
                 raise SystemExit("a send with no saved run should fail")
             except ValueError:
                 pass
@@ -179,7 +224,7 @@ if __name__ == "__main__":
             tampered["status"] = "incomplete"
             (ext / "SUB-191.json").write_text(json.dumps(tampered))
             try:
-                send_to_carrier("SUB-191", "user", dest_dir, body)
+                send_to_carrier("SUB-191", "user", dest_dir, body, log_path=log)
                 raise SystemExit("a changed saved run should fail")
 
             except ValueError:
@@ -190,33 +235,54 @@ if __name__ == "__main__":
             raw["saved_hash"] = prepare.hash_payload(raw)
             (ext / "SUB-192.json").write_text(json.dumps(raw))
             try:
-                send_to_carrier("SUB-192", "user", dest_dir, body)
+                send_to_carrier("SUB-192", "user", dest_dir, body, log_path=log)
                 raise SystemExit("an unknown status should fail")
             except ValueError:
                 pass
 
+            for sub in ("SUB-001", "SUB-193", "SUB-194"):
+                decide(sub, "approve")
+
             # The account-manager rules still gate a normal file.
             save(ext, "SUB-193", "complete", complete=True, fields=office, sprinklers="no")
             try:
-                send_to_carrier("SUB-193", "account-manager", dest_dir, body)
+                send_to_carrier("SUB-193", "account-manager", dest_dir, body, log_path=log)
                 raise SystemExit("missing reason should fail")
             except ValueError:
                 pass
             save(ext, "SUB-194", "incomplete", complete=False, fields=office)
             assert agency_problem("SUB-194") == "the file is not complete"
             try:
-                send_to_carrier("SUB-194", "account-manager", dest_dir, body, reason="ready")
+                send_to_carrier("SUB-194", "account-manager", dest_dir, body, reason="ready", log_path=log)
                 raise SystemExit("an incomplete send should fail")
             except ValueError:
                 pass
 
             # A good account-manager send, and the user's override on an incomplete file.
-            sent = send_to_carrier("SUB-193", "account-manager", dest_dir, body, reason="complete office file")
+            sent = send_to_carrier("SUB-193", "account-manager", dest_dir, body, reason="complete office file", log_path=log)
             text = sent.read_text()
             assert text.startswith("Sent-by: account-manager")
             assert "Reason: complete office file" in text
-            override = send_to_carrier("SUB-194", "user", dest_dir, body)
+            override = send_to_carrier("SUB-194", "user", dest_dir, body, log_path=log)
             assert override.read_text().startswith("Sent-by: user (override)")
+
+            # T-079 / D-053: the log decides, for every actor, with no decision passed in.
+            for sub in ("SUB-301", "SUB-302", "SUB-303", "SUB-304"):
+                save(ext, sub, "complete", complete=True, fields=office, sprinklers="no")
+            decide("SUB-302", "approve")
+            decide("SUB-302", "decline", reason="not in appetite")
+            decide("SUB-303", "decline", reason="first look")
+            decide("SUB-303", "approve")
+            decide("SUB-304", "decline", reason="first look")
+            decide("SUB-304", "approve", reason="producer sent the missing loss runs")
+            for sub, ok in (("SUB-301", False), ("SUB-302", False), ("SUB-303", False), ("SUB-304", True)):
+                for actor in ("user", "account-manager"):
+                    try:
+                        send_to_carrier(sub, actor, dest_dir, body, reason="ready", log_path=log)
+                        assert ok, f"{sub} must be refused for {actor}"
+                    except ValueError:
+                        assert not ok, f"{sub} must pass for {actor}"
+            assert len(log.read_text().splitlines()) == 3 + 2 + 2 + 2 + 0 + 0  # history untouched by the sends
         finally:
             prepare.EXTRACT_DIR = saved_dir
     print("package ok")

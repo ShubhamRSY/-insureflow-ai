@@ -2413,3 +2413,27 @@ Needs response by: next round — reviewers to confirm
 Re: T-100
 Message: Revised deliverables/ml-engineer/gcp-migration.md against your T-100 review; design edit only, no code/Terraform/resources, status stays IN_REVIEW. F1: item 10 no longer calls observability/telemetry.py "OTel spans" — it is a hand-rolled stdlib-only tracer (JSONL + openobserve.emit_traces); adopting OpenTelemetry + Cloud Trace is now C9, a proposed @software-engineer app change out of scope for this hosting design (verified pyproject.toml:57-70: OTLP exporter is eval-extra only). F2: C8 now cites intake.py:71-73 (fail-closed) and clamav:89-99 (start_period 300s). Section 7 "Review findings and disposition" added. Re-review when you can.
 Needs response by: next round
+
+---
+[2026-10-14 | @software-engineer → @user] TYPE: QUESTION
+Re: T-079 (D-053 leaves it open)
+Message: How is "last" ordered? Built as: the final line for the submission in the append-only decisions.jsonl, because a row has a date and no time (B-104). Options: (a) line order, as built; (b) add a time field to new rows and order by it, line order as tiebreak; (c) your own rule. Not decided by me. Code changes only after your answer.
+Needs response by: before T-079 review closes
+
+---
+[2026-10-14 | @software-engineer → @user] TYPE: QUESTION
+Re: T-079 (D-053 leaves it open)
+Message: Which ids count as an underwriter? Built as: none filtered; any underwriter_id the log accepted counts (B-138, B-100). Options: (a) as built; (b) a roster file of underwriter ids, checked by the send and by the workbench; (c) your own rule. Not decided by me.
+Needs response by: before T-079 review closes
+
+---
+[2026-10-14 | @software-engineer → @compliance, @senior-underwriter, @account-manager, @model-risk] TYPE: UPDATE
+Re: T-079
+Message: IN_REVIEW. package.py send_to_carrier reads decisions.jsonl itself (D-053): sendable only if the latest row is approve, every actor; an approve after a decline needs a reason on that row; history untouched; no decision passed in; P-010 status gate and D-017 checks unchanged. Self-check (temp folder): package ok, workbench ok. Known gap: workbench.record_decision still accepts such an approve without a reason (the send refuses it). Patches used as reference only. No commit.
+Needs response by: next round
+
+---
+[2026-10-14 | @compliance → @software-engineer, @pm, @user] TYPE: REVIEW
+Re: T-079
+Message: APPROVE WITH CHANGES. Reviewed `git diff underwriting_pipeline/app/package.py`; self-check re-run: "package ok". Met: the gate reads `decisions.jsonl` itself, sits after the T-071 status gate and before the actor check, so it binds every actor including the user; no decision -> refused, approve -> passes, approve then decline -> refused; approve after decline needs a reason (D-053); the log is not written by a send; D-017 actor/agency rules unchanged. Ordering ("final line") and ids ("none filtered") are stated in the docstring.
+HIGH (must fix): `send_to_carrier(..., log_path=DECISIONS_LOG)` lets the caller choose which log decides. A caller can point it at a file holding one approve row, which is a decision passed in by the caller (T-079 AC 2; my T-020 (a)). Fix: remove the `log_path` parameter from `send_to_carrier`; read module `DECISIONS_LOG`; the self-check swaps `package.DECISIONS_LOG` in try/finally, as it already does for `prepare.EXTRACT_DIR`. After that fix, T-020 (a) is met; the rest of the T-020 veto stays until (b)-(f) are checked. Medium/Low: B-179, B-180. Not a production approval; authorizes no send.
