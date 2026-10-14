@@ -1,18 +1,15 @@
 # Next session
 
-Written 2026-10-14 by the orchestrator at wrap-up. Wrap-up commit: `dfc79de` on `ai-team`, pushed to `origin/ai-team` (private). Read CLAUDE.md "Usage budget rules" first: demo blockers only, sessions of 2–3 hours, one-line estimate at the start. D-065 (definition of done = backend + UI) applies to every builder task.
+Written 2026-10-14 by the orchestrator at wrap-up. Wrap-up commit: `8ada0f9` on `ai-team`, pushed to `origin/ai-team` (private). Read CLAUDE.md "Usage budget rules" first: demo blockers only, sessions of 2–3 hours, one-line estimate at the start. Standing rules: D-065 (definition of done = backend + UI) and D-069 (sandbox and test runs never write real workbench, log or outbox files; in CLAUDE.md).
 
 ## Where we stopped
 
-- D-068: P-025 kept and fixed. @model-risk re-check: **APPROVE**, H1 (B-243) and H2 (B-244) closed. T-027 veto stands.
-  - B-244: one needs-review list (`package.needs_review_ids`, used by the workbench too); `send_to_carrier` refuses, for every actor, while the latest approve's acknowledgment does not cover every needs-review value. Card: "Send refused: N values need review and are not acknowledged (...)".
-  - B-243: `regression_dev.py` split counts conflict like status and adds premises; `--self-check` added.
-  - B-247: a resend writes `SUB-###-resend-N.md`; earlier package files are kept; card lists every package sent.
-  - B-249 (the user called it B-248): the send form is hidden until an approve is logged; card says "Approve first". B-248 (SUB-009 sent-date mismatch) stays open.
-- @senior-underwriter UI check: **APPROVE**, no High. Lows B-253 to B-256. B-252: sandbox `serve()` rewrites the real `workbench.html`.
-- Quick set of 15, P-025-fix (`regression-quick-15-2026-10-14-P-025-fix.json`), 0 model calls. No plain hit comes from a low-confidence value.
-- Screenshots (sandbox): `deliverables/software-engineer/screenshots/D-068-*.png`.
-- Earlier today: P-022, P-023, P-016, P-024, P-025 built; workbench reads saved runs only, plain refusals, send action, draft approve, folded no-run cards, carrier named on the send form, resend needs a reason.
+- D-069: P-026 built (B-220 closed): every approve row stores `run_hash` and `at`; the send gate and the acknowledgment check count only an approve whose hash equals the current saved run, for every actor; otherwise "Re-review needed: file changed since your approval". A stale card cannot approve (hidden `run_hash`). @model-risk: **APPROVE**; T-027 veto stands.
+- B-248/B-250: sent date comes from a `Sent-on:` header written at send, not file mtime. Packages sent before this (SUB-009 included) show "not recorded"; no date was guessed. Every send (account manager too) is logged in `sends.jsonl` with date, reason and `run_hash`.
+- B-252: `workbench.sandbox(tmp)` and `--serve --sandbox [DIR]` point the page, logs, outboxes and model cache at a copy; self-check asserts real files unchanged.
+- Session B UI: per-file History panel (who, why, when, short run hash, mark when not current); subjectivity closures with "carrier's word = evidence only"; Suggested market field; footer with model and prompt version. Screenshots `deliverables/software-engineer/screenshots/D-069-*.png` (sandbox).
+- @senior-underwriter UI check: **APPROVE WITH CHANGES**, no High. Medium/Low B-264 to B-267. @model-risk Medium/Low B-260 to B-263.
+- After demo (backlog): B-257 account manager checks on the card, B-258 carrier override form, B-259 upload.
 - Self-checks at wrap-up (no model host): llm_extract, prepare, intake, package, workbench, points all ok.
 - Not committed, left alone: `src/insureflow/`, `tests/`, `docs/rag/`, `scripts/`.
 
@@ -29,9 +26,9 @@ Written 2026-10-14 by the orchestrator at wrap-up. Wrap-up commit: `dfc79de` on 
 
 ## Pending decisions for the user
 
-1. B-220 (Medium, raised twice by @model-risk): an acknowledgment is matched by field id only, so a re-saved run with a new value in an acknowledged field passes the send gate without a fresh approve.
-2. Which remaining D-065 UI gaps to build (override form, decision/acknowledgment history, subjectivity closures, model version, intake upload).
-3. The confidence-versus-hit table (B-222), needed to lift T-027; then the new 20-file hold-out (T-091 to T-093).
+1. B-260: a byte-identical re-save keeps the same hash, so the old approve still counts. Accept, or add a save id to the hash.
+2. The confidence-versus-hit table (B-222), needed to lift T-027; then the new 20-file hold-out (T-091 to T-093).
+3. Demo readiness: SUB-009's existing package has no recorded send date; re-send in the demo needs a written resend reason.
 4. Parked: P-018, P-019/T-099, T-100. OCR price basis: $10.00 or $1.50 per 1,000 pages.
 
 ## Open vetoes and what resolves each
@@ -44,12 +41,12 @@ Written 2026-10-14 by the orchestrator at wrap-up. Wrap-up commit: `dfc79de` on 
 
 ## First 3 tasks next session
 
-1. B-220: tie the acknowledgment to the value and quote, not only the field id (@software-engineer), with UI and screenshot.
-2. B-222 confidence-versus-hit table (@ai-engineer-assistant) once @user says so; it is on the T-027 path.
-3. B-248, B-250 (sent dates), B-252 (sandbox serve writes the real page); then the remaining reviewers of T-079, T-083, T-085, T-086, T-087.
+1. B-264 to B-266 (suggested market wording, footer model from the saved run, what changed since approval) (@software-engineer), screenshots.
+2. B-222 confidence-versus-hit table (@ai-engineer-assistant) once @user says so.
+3. A demo walk-through in the sandbox on SUB-009, SUB-029, SUB-010, SUB-038 (@senior-underwriter), then `deliverables/pm/demo-guide.md` updated to the current workbench.
 
 ## For the AI Engineer
 
-- Pending proposals: none. P-025 approved by @model-risk after the fixes.
-- Latest eval scores (quick-15, P-025-fix, cached; hit / hit (needs review)): named_insured 13/0, operations 12/1, sales 13/0, construction 13/1, year_built 15/0, premises 12/0, tiv 14/0, loss_runs 8/1, conflict 10/3, status 12/1.
-- Top failure to fix next: B-220 (acknowledgment by field id survives a changed value); on scores, SUB-074.
+- Pending proposals: none. P-026 approved by @model-risk.
+- Latest eval scores (quick-15, P-025-fix, cached; hit / hit (needs review)): named_insured 13/0, operations 12/1, sales 13/0, construction 13/1, year_built 15/0, premises 12/0, tiv 14/0, loss_runs 8/1, conflict 10/3, status 12/1. No extraction change this session, so no rerun.
+- Top failure to fix next: B-222 (the table @model-risk needs for T-027); on scores, SUB-074.
