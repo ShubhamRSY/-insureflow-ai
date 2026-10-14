@@ -25,6 +25,7 @@ sys.path.insert(0, str(ROOT / "underwriting_pipeline" / "app"))
 import package
 import points
 import prepare
+import quotes
 
 INBOX = ROOT / "simulation" / "inbox"
 PAGE = Path(__file__).resolve().parent / "workbench.html"
@@ -248,6 +249,7 @@ def render(queue: list[dict], counts: dict | None = None) -> str:
             "<h3>Extracted fields</h3>",
             f"<table><tr><th>Field</th><th>Value</th><th>Confidence</th><th>Source</th><th>Cited text</th></tr>{''.join(field_rows)}</table>",
             f"<h3>Conflicts</h3>{conflict_html}",
+            quotes.html_for(item["id"]),
         ]
         if not refused:
             missing = report["missing"] + report.get("extra", [])
@@ -491,6 +493,12 @@ if __name__ == "__main__":
         page_ok = render([normal], None)
         assert "<option>approve</option>" in page_ok
         assert "<h3>Missing</h3>" in page_ok and "Carrier match:" in page_ok and "Score:" in page_ok
+        # T-087: the card shows the quote status per carrier and SUB-002's open subjectivity.
+        sub2 = card("complete", fields=[{"field_id": "operations", "value": "restaurant"}])
+        sub2["id"] = "SUB-002"
+        page2 = render([sub2], None)
+        assert "carrier_b: quoted, subjectivities open" in page2 and "confirm hood and suppression on the inspection [open]" in page2 and "not bound" in page2
+        assert "No carrier reply on file" in page_ok
 
         assert logged["sent_to_carrier"] is False
         assert logged["reason"] == "self-check"

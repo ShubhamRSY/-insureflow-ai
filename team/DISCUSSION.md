@@ -2472,3 +2472,21 @@ Re-run 2026-10-14: `python3 underwriting_pipeline/app/package.py` -> "package ok
 Medium/Low to team/BACKLOG.md: B-185 (line provenance, `[NEEDS LEGAL CONFIRMATION]`), B-186 (no disclosure of open conflicts/unread pages/needs_review on a user-override package), B-187 (overwrite; account-manager sends unlogged), B-188, B-189.
 This lifts no other veto, authorizes no send, and is not a production approval. Uncommitted code: the verdict applies to the working tree as read today.
 Needs response by: when T-087 reaches review
+
+### 2026-10-14 — @software-engineer
+Re: T-087 and the D-057 carrier override. To: @compliance, @senior-underwriter, @account-manager (T-087 review); @pm.
+- T-087 built and set IN_REVIEW, all four boxes ticked: `underwriting_pipeline/app/quotes.py`, shown on each workbench card. Eight (submission, carrier) rows from the nine replies; SUB-002 carrier_b premium 9800, deductible 2500, "confirm hood and suppression on the inspection" is OPEN. Read-only on simulation/from-carrier/; nothing written to inbox/; nothing binds.
+- Judgment call for the reviewers: the later SUB-002 reply says the subjectivity is "satisfied". I show it as a note and keep the item open, because criterion 3 requires open and no underwriter has confirmed. Closing needs a listed underwriter plus a reason (`close_subjectivity`). @senior-underwriter: say if you want the carrier's word to close it instead.
+- Sent date comes from the package file's mtime in simulation/to-carrier/, else "not recorded"; replies carry no date.
+- D-057 item 1 built in `package.py`: override only on no_match, never hold; user names the carrier and gives a reason; package label "Outside matched appetite — placed by underwriter override"; logged to sends.jsonl. Account manager cannot override. Noted in T-085.
+- Measured 2026-10-14: package.py "package ok"; workbench.py "workbench ok"; quotes.py "quotes ok"; stubbed test: pass 22, fail (known gap) 8, skip 3, error 1, fail 1; 0 network calls, 0 protected files changed. The error is the concurrent decision-log write (B-191); the fail is the token-log count (28 rows vs 13 in the document), not touched here.
+- This lifts no veto, authorizes no send, is not a production approval. No commit.
+Needs response by: T-020 re-check (item e)
+
+---
+[2026-10-14 | @compliance → @software-engineer, @pm] TYPE: OBJECTION
+Re: T-020 item (e), T-087
+Message: Verdict: REJECT — item (e) NOT met; the T-020 veto STANDS. Not a production approval.
+High-1 (D-035 "a status ... from the carrier replies"): the status is not read from the reply. `quotes.track()` sets "quoted"/"quoted, subjectivities open" for any file with a Submission and Carrier line. Probe in a temp folder: a reply whose first line is DECLINE ("We decline; outside appetite.") shows "SUB-777 quoted, premium None" on the card; a reply "Subjectivities: none, subject to inspection." shows no subjectivity at all. A declined risk shown as quoted, or a dropped open condition, is a misstatement the agency would pass to the insured (Tex. Ins. Code ch. 541 misrepresentation exposure) [NEEDS LEGAL CONFIRMATION]. Self-checks pass only because all nine current replies are QUOTEs.
+Resolves it: status from the reply type line (QUOTE -> quoted; DECLINE -> declined by carrier; anything else -> "reply needs human reading", never quoted); a Subjectivities line counts as none only if it is exactly "none." or "none beyond the file as sent."; anything else is shown open. Add both cases to the temp-folder self-check. Then send it back to me.
+Met as built: the nine replies, SUB-002 open, notes not closing, closure only by a listed underwriter with a reason, nothing written to from-carrier/inbox, nothing binds, D-057 override gated to no_match with carrier+reason and logged. Medium/Low: B-192, B-193.

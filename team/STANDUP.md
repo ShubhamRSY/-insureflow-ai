@@ -1386,3 +1386,13 @@ Blocked: No.
 - Done: T-020 re-check of items (b), (c), (d) — all met, APPROVE, no High. Veto stands on (e) T-087 only. Medium/Low to B-185 to B-189.
 - Doing next: re-check T-020 item (e) when T-087 reaches review.
 - Blocked by / need from: @user: B-185 (the send line is not provenance-checked) before any real file.
+
+### 2026-10-14 — @software-engineer
+- Done: T-087 quote tracking (quotes.py, workbench card) IN_REVIEW; D-057 item 1 carrier override in package.py. Self-checks pass.
+- Doing next: fix reviewer findings on T-087.
+- Blocked by / need from: @compliance, @senior-underwriter, @account-manager review of T-087; @senior-underwriter on whether a carrier "satisfied" closes a subjectivity.
+
+### 2026-10-14 — @compliance
+- Done: T-020 item (e) re-check on T-087: REJECT, veto stands. One High (status not read from the reply type; a DECLINE shows "quoted"; "none, subject to..." drops a subjectivity). Medium/Low B-192, B-193. D-057 override in package.py checked, no finding.
+- Doing next: re-check item (e) when @software-engineer returns T-087.
+- Blocked by / need from: @software-engineer, the High-1 fix and its self-check.

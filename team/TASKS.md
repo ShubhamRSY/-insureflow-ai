@@ -1095,6 +1095,7 @@ D-004 (user, 2026-10-09): Sanger & Altgelt agency pipeline. Eight steps. No auto
   - [x] The package is labeled synthetic. One self-check in a temp folder
 - Output: underwriting_pipeline/app/package.py
 - Notes: D-033 item 4: "package built from the reviewed file". Line 6 of team/DEMO-BLOCKERS.md. Found by @senior-underwriter (T-020 High-2: "The sent SUB-002 package has no sales and no year built") and @compliance (T-020 H4, A-02). Does not authorize a send. Not a production approval. 2026-10-13, @pm, board maintenance: confirmed as item (d) of the remaining T-020 veto (@compliance re-look, team/DISCUSSION.md:2306/2311). Not started; TODO. No verdict from @pm. 2026-10-14, @software-engineer: built with T-086 under D-056. What "the underwriter's edits" are now: a workbench edit row stores `field_id` and `new_value` (workbench.py), and the package carries the latest edit per field by a listed underwriter, marked EDITED with the original value and citation. Edit rows with no field stay reason-only and are not carried. The carrier is `workbench.route()` on the edited saved run, as `agency_problem` already uses it; T-083 will replace that function and the package follows it. Open: a QUESTION to @user on the out-of-appetite user override (DISCUSSION). Self-check: `python underwriting_pipeline/app/package.py`.
+  2026-10-14, @software-engineer: D-057 item 1 built in `package.py`. `send_to_carrier(..., carrier=)` / `build_package(..., carrier_override, override_reason)`: the user's override is allowed only when `route()` returns no_match, never hold (a hold, or a carrier named on any other match, is refused); the send must name carrier_a, carrier_b or carrier_c and give a written reason; the package carries "Outside matched appetite — placed by underwriter override" and the reason; the sends.jsonl row records `carrier_override` and `override_reason`. The account manager cannot override. Every other gate (decision log, saved run, user line, empty field) still applies. Self-check in package.py -> package ok. B-185 and B-191 unchanged (D-057 items 2 and 3).
 
 ### T-086 — A user send carries the user's exact line
 - Owner: @software-engineer
@@ -1115,17 +1116,18 @@ D-004 (user, 2026-10-09): Sanger & Altgelt agency pipeline. Eight steps. No auto
 ### T-087 — Quote tracking from the carrier replies
 - Owner: @software-engineer
 - Requested by: @user
-- Status: TODO
+- Status: IN_REVIEW
 - Priority: P0
 - Depends on: T-086
 - Reviewers: @compliance, @senior-underwriter, @account-manager
 - Acceptance criteria:
-  - [ ] "quote tracking shows a status per submission and carrier from the carrier replies, including open subjectivities" (D-035)
-  - [ ] "per submission and carrier, store sent date, status, premium, deductible, and each subjectivity as open or closed" (@senior-underwriter)
-  - [ ] The nine replies now in simulation/from-carrier/ are read, and SUB-002's subjectivity "confirm hood and suppression" shows as open
-  - [ ] Nothing is written into simulation/from-carrier/ or simulation/inbox/. Nothing binds. One self-check in a temp folder
-- Output: underwriting_pipeline/app/package.py, or a new file under underwriting_pipeline/app/ that the owner names
+  - [x] "quote tracking shows a status per submission and carrier from the carrier replies, including open subjectivities" (D-035)
+  - [x] "per submission and carrier, store sent date, status, premium, deductible, and each subjectivity as open or closed" (@senior-underwriter)
+  - [x] The nine replies now in simulation/from-carrier/ are read, and SUB-002's subjectivity "confirm hood and suppression" shows as open
+  - [x] Nothing is written into simulation/from-carrier/ or simulation/inbox/. Nothing binds. One self-check in a temp folder
+- Output: underwriting_pipeline/app/package.py, or a new file under underwriting_pipeline/app/ that the owner names (named: quotes.py; shown on the workbench card by workbench.py)
 - Notes: D-035. Line 8 of team/DEMO-BLOCKERS.md. Found by @senior-underwriter (T-020 High-1) and @compliance (T-020 H5). Item (e) of what resolves the T-020 veto, and T-020's third criterion. When T-071, T-079, T-085, T-086, and this task are in, T-020 goes back to @compliance and @senior-underwriter. 2026-10-13, @pm, board maintenance: confirmed as item (e) of the remaining T-020 veto (@compliance re-look, team/DISCUSSION.md:2306/2313) and T-020's third criterion. T-071 is now DONE; this task and T-079, T-085, T-086 remain. Not started; TODO. No verdict from @pm.
+  2026-10-14, @software-engineer (owner's check, not an approval): built `underwriting_pipeline/app/quotes.py`; `workbench.py` shows it on each card ("Quote tracking"). Read: the nine replies in simulation/from-carrier/ give eight (submission, carrier) rows; SUB-002 carrier_b shows premium 9800, deductible 2500, "confirm hood and suppression on the inspection" [open]. Judgment for review: the later SUB-002 reply says the subjectivity is "satisfied", but it cites an agency reply and criterion 3 requires open, so a carrier statement is shown as a note and does not close it; a subjectivity closes only when a listed underwriter with a written reason calls `close_subjectivity` (subjectivity_closures.jsonl). Sent date = mtime of simulation/to-carrier/SUB-###.md, else "not recorded" (replies carry no date). Nothing written to simulation/from-carrier/ or inbox/ (self-check compares mtimes). Nothing binds (`bound` is False). Self-check: `python3 underwriting_pipeline/app/quotes.py` -> quotes ok; `workbench.py` -> workbench ok. Reviewers @compliance, @senior-underwriter, @account-manager to look; T-020 goes back to @compliance. No model call.
 
 ### T-088 — Proposal P-017: the commit hash and the literal status in score output
 - Owner: @ai-engineer-assistant

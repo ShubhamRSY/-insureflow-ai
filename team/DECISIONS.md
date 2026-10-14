@@ -622,3 +622,14 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: T-085, T-086 (@software-engineer), then @compliance re-check of T-020 items (b), (c), (d).
 - Status: ACCEPTED
 - Amends: T-085 criterion 3 (the package carries the underwriter's edits; the build may make an edit store its field and new value). Answers pending decision 5 (the stubbed test file). Not a production approval; lifts no veto; authorizes no send.
+
+## D-057 — Carrier override on no_match; B-185 a prototype limit; the concurrent log write before pilot
+- Date / Owner: 2026-10-14 / @user
+- Context: @software-engineer's QUESTION on T-085: when `route()` gives hold or no_match there is no carrier to name, so the package is refused even for the user. @compliance B-185: the code cannot prove the send line came from the user. The stubbed test's concurrent decision-log write errors.
+- Options considered: none. The user's rules.
+- Decision: In the user's words. "1. Carrier override: allowed only when route() returns no_match, never hold. My send must name the carrier and give a written reason; the package shows "Outside matched appetite — placed by underwriter override"; all logged. 2. B-185: accepted as a prototype limit. Production requires an authenticated underwriter action (login/SSO, audit log) before any real data. Backlog it as required-before-real-data. 3. The concurrent decision-log write error goes to the backlog as required-before-pilot."
+- Rationale: The user typed this in this Claude Code session on 2026-10-14.
+- Dissent: none
+- Follow-up tasks: the override in `package.py` (@software-engineer, with T-087); B-190 (required before real data); B-191 (required before pilot).
+- Status: ACCEPTED
+- Amends: answers the T-085 QUESTION. No automatic decline and no automatic bind are unchanged. Not a production approval; lifts no veto; authorizes no send.

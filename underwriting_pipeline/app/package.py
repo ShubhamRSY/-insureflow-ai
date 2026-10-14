@@ -101,15 +101,31 @@ def reviewed(submission: str) -> dict:
     return {**run, "fields": fields, "complete": all((r.get("value") or "").strip() for r in fields)}
 
 
-def build_package(submission: str) -> str:
-    """T-085: the whole body comes from the saved run, the log and route(). Refuses an empty required field or no carrier."""
+CARRIERS = {"carrier_a", "carrier_b", "carrier_c"}
+OVERRIDE_LABEL = "Outside matched appetite — placed by underwriter override"
+
+
+def build_package(submission: str, carrier_override: str = "", override_reason: str = "") -> str:
+    """T-085: the whole body comes from the saved run, the log and route(). Refuses an empty required field or no carrier.
+
+    D-057: carrier_override is honoured only when route() gives no_match (never hold), with a written reason.
+    """
     submission = (submission or "").strip()
     report = reviewed(submission)
     empty = [r["field_id"] for r in report["fields"] if not (r.get("value") or "").strip()]
     if empty:
         raise ValueError(f"required field empty: {', '.join(empty)}")
-    carrier = _route(report)
-    if carrier not in {"carrier_a", "carrier_b", "carrier_c"}:
+    carrier, label = _route(report), ""
+    chosen = (carrier_override or "").strip().lower()
+    if chosen:  # D-057 item 1
+        if carrier != "no_match":
+            raise ValueError(f"a carrier override is allowed only when the match is no_match (match is {carrier})")
+        if chosen not in CARRIERS:
+            raise ValueError(f"the override must name carrier_a, carrier_b or carrier_c, not {chosen!r}")
+        if not (override_reason or "").strip():
+            raise ValueError("a carrier override needs a written reason")
+        carrier, label = chosen, f"{OVERRIDE_LABEL}\nOverride reason: {override_reason.strip()}\n"
+    elif carrier not in CARRIERS:
         raise ValueError(f"no carrier is named for this file (match is {carrier})")
     from workbench import snippet
 
@@ -126,7 +142,7 @@ def build_package(submission: str) -> str:
         "SYNTHETIC: test data, not a real submission.\n"
         "Nothing has been declined. Nothing has been bound.\n"
         "The underwriter has not been replaced by this file.\n\n"
-        f"Carrier: {carrier}\n"
+        f"Carrier: {carrier}\n{label}"
         f"Sprinklers: {report.get('sprinklers') or 'not stated'}\n\n"
         "Fields:\n" + "\n".join(lines) + "\n"
     )
@@ -202,6 +218,7 @@ def send_to_carrier(
     out_dir: Path,
     reason: str = "",
     user_line: str = "",
+    carrier: str = "",
 ) -> Path:
     """T-071: read the status from the last saved run itself, before the actor is looked at, and refuse both refused statuses for every actor."""
     submission = (submission or "").strip()
@@ -225,7 +242,9 @@ def send_to_carrier(
         raise ValueError(f'a user send needs the exact line "send to carrier {submission}"')
     if out_dir.name != "to-carrier":
         raise ValueError("packages go to to-carrier")
-    body = build_package(submission)  # T-085: raises on an empty required field or no carrier; nothing is written yet
+    if (carrier or "").strip() and name != "user":
+        raise ValueError("only the user may override the carrier")
+    body = build_package(submission, carrier, reason if name == "user" else "")  # T-085: raises on an empty required field or no carrier; nothing is written yet
     out_dir.mkdir(parents=True, exist_ok=True)
     dest = out_dir / f"{submission}.md"
     who = "user (override)" if name == "user" else "account-manager"
@@ -235,7 +254,7 @@ def send_to_carrier(
     if name == "user":
         SENDS_LOG.parent.mkdir(parents=True, exist_ok=True)
         with SENDS_LOG.open("a") as handle:
-            handle.write(json.dumps({"submission": submission, "actor": name, "user_line": user_line.strip(), "package": str(dest)}) + "\n")
+            handle.write(json.dumps({"submission": submission, "actor": name, "user_line": user_line.strip(), "package": str(dest), **({"carrier_override": carrier.strip().lower(), "override_reason": reason.strip()} if (carrier or "").strip() else {})}) + "\n")
     return dest
 
 
@@ -415,6 +434,31 @@ if __name__ == "__main__":
                 logged = [json.loads(x) for x in sends.read_text().splitlines()]
                 assert len(logged) == 1 and logged[0]["submission"] == "SUB-195" and logged[0]["user_line"] == LINE("SUB-195")
 
+            # D-057 item 1: override only on no_match, with carrier and reason; never hold; logged.
+            save(ext, "SUB-401", "complete", complete=True, fields=full(operations="nightclub"))
+            save(ext, "SUB-402", "complete", complete=True, fields=full(operations="mixed use"))
+            for sub in ("SUB-401", "SUB-402"):
+                decide(sub, "approve")
+            sends.unlink(missing_ok=True)
+            for sub, kw in (("SUB-402", dict(carrier="carrier_a", reason="x")), ("SUB-401", dict(reason="x")), ("SUB-401", dict(carrier="carrier_a")),
+                            ("SUB-401", dict(carrier="carrier_z", reason="x")), ("SUB-193", dict(carrier="carrier_b", reason="x"))):
+                try:
+                    send_to_carrier(sub, "user", dest_dir, user_line=LINE(sub), **kw)
+                    raise SystemExit(f"{sub} {kw} must be refused")
+                except ValueError:
+                    pass
+            try:
+                send_to_carrier("SUB-401", "account-manager", dest_dir, reason="x", carrier="carrier_a")
+                raise SystemExit("the account manager may not override")
+            except ValueError:
+                pass
+            assert not (dest_dir / "SUB-401.md").exists() and not (dest_dir / "SUB-402.md").exists() and not sends.exists()
+            done = send_to_carrier("SUB-401", "user", dest_dir, user_line=LINE("SUB-401"), carrier="carrier_b", reason="client asked, bar is a small tasting room")
+            text = done.read_text()
+            assert OVERRIDE_LABEL in text and "Carrier: carrier_b" in text and "small tasting room" in text
+            row = json.loads(sends.read_text().splitlines()[-1])
+            assert row["carrier_override"] == "carrier_b" and row["override_reason"].startswith("client asked") and row["submission"] == "SUB-401"
+
             # T-079 / D-053: the log decides, for every actor, with no decision passed in.
             for sub in ("SUB-301", "SUB-302", "SUB-303", "SUB-304"):
                 save(ext, sub, "complete", complete=True, fields=office, sprinklers="no")
@@ -431,7 +475,7 @@ if __name__ == "__main__":
                         assert ok, f"{sub} must be refused for {actor}"
                     except ValueError:
                         assert not ok, f"{sub} must pass for {actor}"
-            assert len(log.read_text().splitlines()) == 13  # history untouched by the sends
+            assert len(log.read_text().splitlines()) == 15  # history untouched by the sends
 
             # D-055: highest seq wins, not line order; an unlisted id or an AI role is not a decision;
             # a repeated seq refuses; no seq is not a decision; underwriters.json may not list an AI role.
