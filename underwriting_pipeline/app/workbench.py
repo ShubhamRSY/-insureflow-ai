@@ -12,6 +12,7 @@ import html
 import json
 import os
 import sys
+import threading
 from datetime import date
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -20,12 +21,15 @@ from urllib.parse import parse_qs
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "underwriting_pipeline" / "ai"))
 sys.path.insert(0, str(ROOT / "underwriting_pipeline" / "models"))
+sys.path.insert(0, str(ROOT / "underwriting_pipeline" / "app"))
+import package
 import points
 import prepare
 
 INBOX = ROOT / "simulation" / "inbox"
 PAGE = Path(__file__).resolve().parent / "workbench.html"
-LOG = ROOT / "deliverables" / "software-engineer" / "decisions.jsonl"
+LOG = package.DECISIONS_LOG
+_LOG_LOCK = threading.Lock()  # ponytail: one process writes the log; a file lock if a second writer appears
 
 
 def _ops(report: dict) -> str:
@@ -124,6 +128,8 @@ def record_decision(payload: dict, log_path: Path) -> dict:
     reason = (payload.get("reason") or "").strip()
     if not actor:
         raise ValueError("underwriter id required")
+    if actor not in package.underwriters():
+        raise ValueError("only an id on underwriters.json may log a decision (D-055); AI roles never count")
     if action not in {"approve", "edit", "decline"}:
         raise ValueError("action must be approve, edit, or decline")
     if action in {"edit", "decline"} and not reason:
@@ -135,7 +141,27 @@ def record_decision(payload: dict, log_path: Path) -> dict:
         status = prepare.current_status(submission)
         if status in prepare.REFUSED_STATUSES:
             raise ValueError(f"this file's status is {status}; an approve is refused for it")
+    with _LOG_LOCK:
+        if action == "approve" and not reason:
+            # D-053: an approve after a decline needs a written reason; refused here, not only at the send.
+            if any(r.get("action") == "decline" for r in package.decisions(submission, log_path)):
+                raise ValueError("an approve after a decline needs a written reason")
+        return _append(payload, action, actor, reason, log_path)
+
+
+def _append(payload: dict, action: str, actor: str, reason: str, log_path: Path) -> dict:
+    """D-055: every entry gets the next sequence number in the log; the highest seq is the latest decision."""
+    last = 0
+    if log_path.exists():
+        for line in log_path.read_text().splitlines():
+            try:
+                seq = json.loads(line).get("seq")
+            except (ValueError, AttributeError):
+                continue
+            if isinstance(seq, int) and not isinstance(seq, bool):
+                last = max(last, seq)
     row = {
+        "seq": last + 1,
         "submission": payload.get("submission"),
         "action": action,
         "underwriter_id": actor,
@@ -244,7 +270,7 @@ table {{ border-collapse: collapse; }}
 td, th {{ border: 1px solid #ddd; padding: 0.3rem 0.5rem; text-align: left; }}
 </style></head><body>
 <h1>Underwriter workbench</h1>
-<p>Synthetic queue. A decision is logged only with an underwriter id. Decline and edit need a reason. Approve, edit, and decline are saved with that reason. This page does not bind and does not send a carrier package.</p>
+<p>Synthetic queue. A decision is logged only with an id on the underwriter list. Decline and edit need a reason, and so does an approve after a decline. Approve, edit, and decline are saved with that reason. This page does not bind and does not send a carrier package.</p>
 <p>Decisions so far: {counts['approve']} approved, {counts['edit']} edited, {counts['decline']} declined. Corrections: {corrections}.</p>
 {''.join(blocks)}
 </body></html>
@@ -321,7 +347,7 @@ if __name__ == "__main__":
                     pass
                 try:
                     record_decision(
-                        {"underwriter_id": "UW-1", "action": "decline", "submission": "SUB-000"},
+                        {"underwriter_id": "UW-001", "action": "decline", "submission": "SUB-000"},
                         check,
                     )
                     raise SystemExit("decline without reason should fail")
@@ -331,7 +357,7 @@ if __name__ == "__main__":
                 # T-071 (4): an approve with nothing saved is refused.
                 try:
                     record_decision(
-                        {"underwriter_id": "UW-TEST", "action": "approve", "submission": "SUB-000", "reason": "self-check"},
+                        {"underwriter_id": "UW-001", "action": "approve", "submission": "SUB-000", "reason": "self-check"},
                         check,
                     )
                     raise SystemExit("an approve with no saved run should fail")
@@ -342,7 +368,7 @@ if __name__ == "__main__":
                 save(ext, "SUB-000", "complete")
                 record_decision(
                     {
-                        "underwriter_id": "UW-TEST",
+                        "underwriter_id": "UW-001",
                         "action": "approve",
                         "submission": "SUB-000",
                         "reason": "self-check",
@@ -356,25 +382,46 @@ if __name__ == "__main__":
                     save(ext, sub, status)
                     try:
                         record_decision(
-                            {"underwriter_id": "UW-TEST", "action": "approve", "submission": sub, "reason": "self-check"},
+                            {"underwriter_id": "UW-001", "action": "approve", "submission": sub, "reason": "self-check"},
                             check,
                         )
                         raise SystemExit(f"an approve on {status} should fail")
                     except ValueError:
                         pass
                     record_decision(
-                        {"underwriter_id": "UW-TEST", "action": "edit", "submission": sub, "reason": "corrected by hand"},
+                        {"underwriter_id": "UW-001", "action": "edit", "submission": sub, "reason": "corrected by hand"},
                         check,
                     )
                     record_decision(
-                        {"underwriter_id": "UW-TEST", "action": "decline", "submission": sub, "reason": "not bindable as read"},
+                        {"underwriter_id": "UW-001", "action": "decline", "submission": sub, "reason": "not bindable as read"},
                         check,
                     )
                 record_decision(
-                    {"underwriter_id": "UW-TEST", "action": "edit", "submission": "SUB-000", "reason": "square feet were 4500"},
+                    {"underwriter_id": "UW-001", "action": "edit", "submission": "SUB-000", "reason": "square feet were 4500"},
                     check,
                 )
                 assert correction_counts(check) == {"approve": 1, "edit": 3, "decline": 2}, correction_counts(check)
+
+                # D-055: seq rises by one per entry; an unlisted id or an AI role cannot log.
+                seqs = [json.loads(line)["seq"] for line in check.read_text().splitlines()]
+                assert seqs == list(range(1, len(seqs) + 1)), seqs
+                for who in ("UW-999", "senior-underwriter", "@compliance"):
+                    try:
+                        record_decision({"underwriter_id": who, "action": "edit", "submission": "SUB-000", "reason": "x"}, check)
+                        raise SystemExit(f"{who} should not be able to log")
+                    except ValueError:
+                        pass
+
+                # D-053: an approve after a decline needs a written reason at the workbench.
+                save(ext, "SUB-012", "complete")
+                record_decision({"underwriter_id": "user", "action": "decline", "submission": "SUB-012", "reason": "first look"}, check)
+                try:
+                    record_decision({"underwriter_id": "user", "action": "approve", "submission": "SUB-012"}, check)
+                    raise SystemExit("an approve after a decline without a reason should fail")
+                except ValueError:
+                    pass
+                record_decision({"underwriter_id": "user", "action": "approve", "submission": "SUB-012", "reason": "loss runs arrived"}, check)
+                assert package.decisions("SUB-012", check)[-1]["action"] == "approve"
             finally:
                 prepare.EXTRACT_DIR = saved_dir
 

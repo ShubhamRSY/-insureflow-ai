@@ -600,3 +600,14 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Status: ACCEPTED
 - Amends: nothing. It adds to D-017 and D-045.
 
+
+## D-055 — T-079: how "last" is ordered, and which ids count as an underwriter
+- Date / Owner: 2026-10-14 / @user
+- Context: D-053 left two T-079 points open (QUESTIONs from @software-engineer, team/DISCUSSION.md, 2026-10-14): how "last" is ordered when a log row has a date and no time (B-104), and which ids count as an underwriter (B-138, B-100, B-179).
+- Options considered: line order, a time field, or a sequence number; any id, or a list of underwriter ids.
+- Decision: In the user's words. "'last' decision = highest sequence number in the one real decision log (add a sequence number to every entry), never timestamps. Underwriter ids = only ids listed in a config file of underwriters (me plus named synthetic underwriters); AI roles never count." And: "Remove the log_path parameter from the send; it always reads the one real decision log." "The workbench refuses to log an approve after a decline without a written reason."
+- Rationale: The user typed this in this Claude Code session on 2026-10-14.
+- Dissent: none
+- Follow-up tasks: T-079 (built by the orchestrator in the main session at the user's instruction; `underwriting_pipeline/app/underwriters.json` lists `user`, `UW-001`, `UW-002`), then @compliance re-check.
+- Status: ACCEPTED
+- Amends: answers the two points D-053 left open. Not a production approval; lifts no veto; authorizes no send.

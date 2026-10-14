@@ -11,10 +11,11 @@ T-079 / D-053: a carrier send also reads the decision log itself and refuses
 unless the latest logged decision for the submission is approve, for every
 actor. An approve after a decline needs a written reason on that approve row.
 The whole history stays in the log; nothing here edits it. No decision is
-passed in by the caller. Open for @user (D-053): how "last" is ordered (here:
-final line of the append-only log, because a row has a date and no time,
-B-104) and which ids count as an underwriter (here: none filtered, the log
-takes any id, B-138, B-100).
+passed in by the caller, and the caller cannot choose the log: the send always
+reads DECISIONS_LOG. D-055: "last" is the highest sequence number (`seq`) in
+that one log, never a timestamp; only ids in underwriters.json count, and AI
+roles never count. A row with no integer seq, a repeated seq, or an id not on
+the list is not a decision.
 
 # ponytail: one markdown file per submission. Quote tracking is the from-carrier reply, add a tracker when a carrier answers.
 
@@ -31,6 +32,39 @@ sys.path.insert(0, str(ROOT / "underwriting_pipeline" / "ai"))
 import prepare
 
 DECISIONS_LOG = ROOT / "deliverables" / "software-engineer" / "decisions.jsonl"
+UNDERWRITERS = Path(__file__).resolve().parent / "underwriters.json"
+AI_ROLES = {p.stem for p in (ROOT / ".claude" / "agents").glob("*.md")} | {"ai-engineer"}
+
+
+def underwriters() -> set[str]:
+    """D-055: the ids that count as an underwriter. Refuses the file if it lists an AI role."""
+    ids = {(u.get("id") or "").strip() for u in json.loads(UNDERWRITERS.read_text())["underwriters"]}
+    ids.discard("")
+    ai = {i for i in ids if i.lstrip("@") in AI_ROLES}
+    if ai:
+        raise ValueError(f"underwriters.json lists AI roles, which never count: {sorted(ai)}")
+    return ids
+
+
+def decisions(submission: str, log_path: Path) -> list[dict]:
+    """D-055: this file's decisions by a listed underwriter, in seq order. Raises on a repeated seq (fail closed)."""
+    allowed = underwriters()
+    rows = []
+    if log_path.exists():
+        for line in log_path.read_text().splitlines():
+            try:
+                row = json.loads(line)
+            except ValueError:
+                continue  # a bad line is never a decision
+            if not isinstance(row, dict) or (row.get("submission") or "").strip() != submission:
+                continue
+            seq = row.get("seq")
+            if isinstance(seq, int) and not isinstance(seq, bool) and (row.get("underwriter_id") or "").strip() in allowed:
+                rows.append(row)
+    rows.sort(key=lambda r: r["seq"])
+    if len({r["seq"] for r in rows}) != len(rows):
+        raise ValueError("the decision log repeats a sequence number for this file; no latest decision can be read")
+    return rows
 
 
 def build_package(submission: str, summary: str) -> str:
@@ -59,20 +93,12 @@ def _submission_of(target) -> str:
     return target.strip() if isinstance(target, str) else ""
 
 
-def _decision_problem(submission: str, log_path: Path) -> str:
-    """Empty string if the latest logged decision is approve (D-053). Reads the log; takes no decision from the caller."""
-    rows = []
-    if log_path.exists():
-        for line in log_path.read_text().splitlines():
-            try:
-                row = json.loads(line)
-            except ValueError:
-                continue  # a bad line is never an approve
-            if isinstance(row, dict) and (row.get("submission") or "").strip() == submission:
-                rows.append(row)
+def _decision_problem(submission: str) -> str:
+    """Empty string if the latest logged decision is approve (D-053, D-055). Reads the one real log; takes nothing from the caller."""
+    rows = decisions(submission, DECISIONS_LOG)
     if not rows:
-        return "no logged decision for this file"
-    last = rows[-1]  # ponytail: line order; a row has a date and no time (B-104)
+        return "no logged decision by a listed underwriter for this file"
+    last = rows[-1]  # highest seq (D-055)
     action = (last.get("action") or "").strip()
     if action != "approve":
         return f"the latest logged decision is {action or 'not an approve'}, not approve"
@@ -120,14 +146,13 @@ def send_to_carrier(
     out_dir: Path,
     body: str,
     reason: str = "",
-    log_path: Path = DECISIONS_LOG,
 ) -> Path:
     """T-071: read the status from the last saved run itself, before the actor is looked at, and refuse both refused statuses for every actor."""
     report = prepare.read_saved_run(submission)  # G2: no file, hash differs, or unknown status -> refuse
     status = report.get("status")
     if status in prepare.REFUSED_STATUSES:
         raise ValueError(f"this file's status is {status}; it cannot be sent, for any actor including the user")
-    problem = _decision_problem((submission or "").strip(), log_path)  # D-053, every actor
+    problem = _decision_problem((submission or "").strip())  # D-053, every actor
     if problem:
         raise ValueError(problem)
     name = _actor(actor)
@@ -182,12 +207,15 @@ if __name__ == "__main__":
         ext = tmp / "extractions"
         log = tmp / "decisions.jsonl"
 
-        def decide(sub: str, action: str, reason: str = ""):
-            with log.open("a") as handle:
-                handle.write(json.dumps({"submission": sub, "action": action, "underwriter_id": "UW-TEST", "reason": reason}) + "\n")
+        seq = iter(range(1, 1000))
 
-        saved_dir = prepare.EXTRACT_DIR
-        prepare.EXTRACT_DIR = ext
+        def decide(sub: str, action: str, reason: str = "", who: str = "UW-001", n: int | None = None):
+            row = {"seq": next(seq) if n is None else n, "submission": sub, "action": action, "underwriter_id": who, "reason": reason}
+            with log.open("a") as handle:
+                handle.write(json.dumps(row) + "\n")
+
+        saved_dir, saved_log = prepare.EXTRACT_DIR, DECISIONS_LOG
+        prepare.EXTRACT_DIR, DECISIONS_LOG = ext, log
         try:
             dest_dir = tmp / "to-carrier"
             dest_dir.mkdir()
@@ -196,7 +224,7 @@ if __name__ == "__main__":
             save(ext, "SUB-001", "complete", complete=True, fields=office, sprinklers="no")
             for actor in ("software-engineer", "ai-engineer-assistant", "@model-risk"):
                 try:
-                    send_to_carrier("SUB-001", actor, dest_dir, body, log_path=log)
+                    send_to_carrier("SUB-001", actor, dest_dir, body)
                     raise SystemExit(f"a send as {actor} should fail")
                 except ValueError:
                     pass
@@ -206,7 +234,7 @@ if __name__ == "__main__":
                 save(ext, sub, status)
                 for actor in ("user", "user (override)", "@account-manager", "ai-engineer-assistant"):
                     try:
-                        send_to_carrier(sub, actor, dest_dir, body, reason="ready", log_path=log)
+                        send_to_carrier(sub, actor, dest_dir, body, reason="ready")
                         raise SystemExit(f"{status} must be refused for {actor}")
                     except ValueError:
                         pass
@@ -215,7 +243,7 @@ if __name__ == "__main__":
 
             # T-071 (2): nothing saved, a changed hash, and an unknown status all refuse.
             try:
-                send_to_carrier("SUB-190", "user", dest_dir, body, log_path=log)
+                send_to_carrier("SUB-190", "user", dest_dir, body)
                 raise SystemExit("a send with no saved run should fail")
             except ValueError:
                 pass
@@ -224,7 +252,7 @@ if __name__ == "__main__":
             tampered["status"] = "incomplete"
             (ext / "SUB-191.json").write_text(json.dumps(tampered))
             try:
-                send_to_carrier("SUB-191", "user", dest_dir, body, log_path=log)
+                send_to_carrier("SUB-191", "user", dest_dir, body)
                 raise SystemExit("a changed saved run should fail")
 
             except ValueError:
@@ -235,7 +263,7 @@ if __name__ == "__main__":
             raw["saved_hash"] = prepare.hash_payload(raw)
             (ext / "SUB-192.json").write_text(json.dumps(raw))
             try:
-                send_to_carrier("SUB-192", "user", dest_dir, body, log_path=log)
+                send_to_carrier("SUB-192", "user", dest_dir, body)
                 raise SystemExit("an unknown status should fail")
             except ValueError:
                 pass
@@ -246,24 +274,24 @@ if __name__ == "__main__":
             # The account-manager rules still gate a normal file.
             save(ext, "SUB-193", "complete", complete=True, fields=office, sprinklers="no")
             try:
-                send_to_carrier("SUB-193", "account-manager", dest_dir, body, log_path=log)
+                send_to_carrier("SUB-193", "account-manager", dest_dir, body)
                 raise SystemExit("missing reason should fail")
             except ValueError:
                 pass
             save(ext, "SUB-194", "incomplete", complete=False, fields=office)
             assert agency_problem("SUB-194") == "the file is not complete"
             try:
-                send_to_carrier("SUB-194", "account-manager", dest_dir, body, reason="ready", log_path=log)
+                send_to_carrier("SUB-194", "account-manager", dest_dir, body, reason="ready")
                 raise SystemExit("an incomplete send should fail")
             except ValueError:
                 pass
 
             # A good account-manager send, and the user's override on an incomplete file.
-            sent = send_to_carrier("SUB-193", "account-manager", dest_dir, body, reason="complete office file", log_path=log)
+            sent = send_to_carrier("SUB-193", "account-manager", dest_dir, body, reason="complete office file")
             text = sent.read_text()
             assert text.startswith("Sent-by: account-manager")
             assert "Reason: complete office file" in text
-            override = send_to_carrier("SUB-194", "user", dest_dir, body, log_path=log)
+            override = send_to_carrier("SUB-194", "user", dest_dir, body)
             assert override.read_text().startswith("Sent-by: user (override)")
 
             # T-079 / D-053: the log decides, for every actor, with no decision passed in.
@@ -278,11 +306,43 @@ if __name__ == "__main__":
             for sub, ok in (("SUB-301", False), ("SUB-302", False), ("SUB-303", False), ("SUB-304", True)):
                 for actor in ("user", "account-manager"):
                     try:
-                        send_to_carrier(sub, actor, dest_dir, body, reason="ready", log_path=log)
+                        send_to_carrier(sub, actor, dest_dir, body, reason="ready")
                         assert ok, f"{sub} must be refused for {actor}"
                     except ValueError:
                         assert not ok, f"{sub} must pass for {actor}"
             assert len(log.read_text().splitlines()) == 3 + 2 + 2 + 2 + 0 + 0  # history untouched by the sends
+
+            # D-055: highest seq wins, not line order; an unlisted id or an AI role is not a decision;
+            # a repeated seq refuses; no seq is not a decision; underwriters.json may not list an AI role.
+            for sub in ("SUB-305", "SUB-306", "SUB-307", "SUB-308", "SUB-309"):
+                save(ext, sub, "complete", complete=True, fields=office, sprinklers="no")
+            decide("SUB-305", "approve", reason="seq decides, not the line", n=901)
+            decide("SUB-305", "decline", reason="later line, lower seq", n=900)
+            decide("SUB-306", "approve", who="senior-underwriter")
+            decide("SUB-306", "approve", who="UW-999")
+            decide("SUB-307", "approve", n=950)
+            decide("SUB-307", "approve", n=950)
+            with log.open("a") as handle:
+                handle.write(json.dumps({"submission": "SUB-308", "action": "approve", "underwriter_id": "user"}) + "\n")
+            decide("SUB-309", "decline", reason="first look", who="user")
+            decide("SUB-309", "approve", reason="loss runs arrived", who="user")
+            for sub, ok in (("SUB-305", True), ("SUB-306", False), ("SUB-307", False), ("SUB-308", False), ("SUB-309", True)):
+                try:
+                    send_to_carrier(sub, "user", dest_dir, body)
+                    assert ok, f"{sub} must be refused"
+                except ValueError:
+                    assert not ok, f"{sub} must pass"
+            assert "user" in underwriters() and not underwriters() & AI_ROLES
+            saved_uw = UNDERWRITERS
+            UNDERWRITERS = tmp / "uw.json"
+            UNDERWRITERS.write_text(json.dumps({"underwriters": [{"id": "user"}, {"id": "@pm"}]}))
+            try:
+                underwriters()
+                raise SystemExit("an AI role on the underwriter list should fail")
+            except ValueError:
+                pass
+            finally:
+                UNDERWRITERS = saved_uw
         finally:
-            prepare.EXTRACT_DIR = saved_dir
+            prepare.EXTRACT_DIR, DECISIONS_LOG = saved_dir, saved_log
     print("package ok")

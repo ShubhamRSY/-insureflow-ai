@@ -1365,3 +1365,14 @@ Blocked: No.
 - Done: T-079 rebuilt to D-053 in underwriting_pipeline/app/package.py (latest logged decision must be approve, every actor; approve after decline needs a reason). Self-checks: package ok, workbench ok. IN_REVIEW.
 - Doing next: T-085, T-086, T-087 when dispatched.
 - Blocked by / need from: @user: two QUESTIONs (how "last" is ordered; which ids count as underwriter). Reviewers: T-079.
+
+### 2026-10-14 — @compliance
+- Written by the orchestrator at @user's instruction ("Add the missing @compliance standup for 2026-10-14"), from @compliance's review in team/DISCUSSION.md.
+- Done: T-079 review — APPROVE WITH CHANGES. One High: the caller-chosen `log_path` on `send_to_carrier`. Medium/Low to B-179, B-180.
+- Doing next: re-check T-079 after the fix; T-020 item (a) is met once the High is resolved.
+- Blocked by / need from: nothing.
+
+### 2026-10-14 — @compliance
+- Done: T-079 re-check — APPROVE, no High. Item (a) of the T-020 veto met; the veto stands on (b)-(f). Medium/Low to B-181 to B-184.
+- Doing next: re-check T-020 items as T-085, T-086, T-087 reach review.
+- Blocked by / need from: @user: B-183 (id allowlist is not authentication) before any real file.
