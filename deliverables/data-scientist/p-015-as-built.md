@@ -1,0 +1,23 @@
+# P-015 points.py part, as built, and what workbench.py must change
+
+- Author: @data-scientist. 2026-10-14. D-070 item 4, D-040 (S3 H1 M1 T2 V3 W1 A1 E2). Synthetic. Not a production approval. No commit.
+- Built: `underwriting_pipeline/models/points.py` (self-check passes: "points ok"), `reason-codes.md`, `problem-framing.md`, `name-swap-T-067.md` with `underwriting_pipeline/models/name_swap.py`. Not touched: `ai/`, `app/`.
+
+## What points.py now offers
+- `points.score_run(saved_run) -> dict`: keys `scored` (bool), `points` (int or None), `reason_codes` (list), `not_scored_reason` (string starting "Not scored — ", or None), `lines` (3 display strings), `points_version`. Takes the report from `saved_report()` (needs `status`, `fields`; reads `missing`, `conflicts`, `extra`, `error`, `cooking` when present). Never returns a number for a failed, incomplete, rejected, unknown, or empty file.
+- `points.facts(report)` replaces `workbench.facts()`. `points.score(facts)` stays as the inner table; its input key is now `cooking_equipment` (a fact dict), not `cooking`/`restaurant`. The page must call `score_run()`, not `score()`.
+- `points.CODES` (the 5 valid codes), `points.POINTS_VERSION`, `points.LOSS_LINE`.
+
+## What workbench.py must change (@software-engineer)
+1. Delete `facts()` (lines ~152 to 163). In `load_queue()` use `score=points.score_run(report)` in place of `points.score(facts(report))`. The line-936 self-check (`points.score(facts(fake))` expecting no COOKING) must use `points.score_run`; a fake with `operations: "restaurant"` and no `cooking` key gives no COOKING and the line "Cooking: not scored — no cooking equipment stated in the file".
+2. Display (line ~530, replaces "Score: N · codes · not a price"). If `score["scored"]`: `Score: {points} · {codes or 'none'} · not a price`. Else show `score["not_scored_reason"]` and no number (a failed file must not print "Score: 0 · none"). Then always one line each from `score["lines"]` in order: "Loss history: not scored", the cooking line, the hood line. Escape them (they hold cited text).
+3. Mark-wrong control (W1): next to each code in `score["reason_codes"]` a small form with hidden `submission` and `code`, required `reason`, and `underwriter_id`. Path e.g. `/mark-code`. Refuse when: id not on underwriters.json (same check as `record_decision`), no reason, or the code is not in `points.CODES` or not among the codes of the saved run's score for that submission. Log row (your design: same log with `action: "mark_code_wrong"` that `correction_counts` does not count, or a sibling file): `submission`, `code`, `reason`, `underwriter_id`, `date`, `at`, `points_version`, `run_hash`. A mark does not change the number, `match()`, the send gate, or status. Show it beside the code ("marked wrong by <id>: <reason>") and in the History panel. No add-a-code control (A1).
+4. `record_decision` / `_append` (E2): every row also saves `points` (int or null), `not_scored_reason` (string or null), `reason_codes` (list), `points_version`, `model_version`, `prompt_version`. Take them from the server's saved-run read of that submission at the click (`saved_report()` then `score_run()`; `model_version` and `prompt_version` from the saved run), never from the form and never from `os.environ` or `ai_version()`. A run saved before P-015 gives a valid score_run (cooking not_stated). Old rows are not rewritten; a row without the keys reads "not recorded".
+5. E2 cache key: the saved run does not hold the extraction cache key (`_saved_payload` saves `model_version` and `prompt_version` only). Save `cache_key: null` and say so; saving the key is a `prepare.py` change (needs a P-###, @ai-engineer-assistant).
+6. Self-checks to add (D-069: temp files only): a failed, incomplete and empty saved run shows "Not scored" and no "Score: " number; the three lines show on every card; a decision row holds the keys and they do not change when `LLM_MODEL` changes; a mark with no reason or an unknown code is refused; a mark leaves `match()` and the points unchanged.
+7. WHATS_NEW: one line (D-065 item 5).
+
+## Notes for reviewers
+- COOKING needs the `Cooking equipment:` line. Today's inbox has one only in SUB-002 and SUB-011 (reply.md), so almost every scored file shows 0 for cooking and "not scored" on the cooking line. Intended (M1).
+- V3 today is a hash of the table, word lists, hazard terms and negation pattern; the git slot reads `not-recorded` until P-017. Set `points.GIT_COMMIT` then.
+- `HAZARD_TERMS` lives in `prepare.py` (built first). points.py imports it so there is one list and the hash follows it. The spec said the list lives in points.py; it does not, because `ai/` could not be edited and a second copy could drift.

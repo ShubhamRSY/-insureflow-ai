@@ -1544,3 +1544,34 @@ Blocked: No.
 - Done: UI check of D-069 (stale banner, history panel, subjectivity closures, footer, B-248). APPROVE WITH CHANGES; no High.
 - Next: M1-M3 and 3 Lows to backlog for @pm.
 - Blockers: none.
+
+### 2026-10-14 — @ai-engineer-assistant
+- Done: B-222 confidence-vs-hit table (15 files hit cache; scans separate signal, typed none) and P-015 prepare.py S3 + T2. Self-checks pass (prepare, llm_extract, sources, workbench, package).
+- Next: @data-scientist builds points.py on `run["cooking"]`; I run the quick 15 only if asked.
+- Blockers: none.
+
+### 2026-10-14 — @data-scientist
+- Done: P-015 points.py (LOSS_HISTORY out, cooking from the stated fact, not-scored result, POINTS_VERSION V3), reason-codes.md, problem-framing.md, as-built memo for workbench, T-067 name swap on cached results (7 files, 0 changes in score or match; thin, see file).
+- Next: @software-engineer builds the workbench part from `deliverables/data-scientist/p-015-as-built.md`.
+- Blockers: none. E2 cache key not in the saved run; needs a P-### for prepare.py.
+
+### 2026-10-14 — @software-engineer
+- Done: D-070 workbench part: P-015 (Not scored, mark-wrong W1, E2 fields on decision rows), B-264, B-265, B-266, What's new line, 5 screenshots, self-checks.
+- Next: @senior-underwriter UI review (High only); cache_key needs a P-### for prepare.py.
+- Blockers: none.
+
+### 2026-10-14 — @model-risk
+- Done: D-070 check of B-222 (APPROVE) and P-015 (APPROVE WITH CHANGES, High-1 cooking negation by line, not clause). Recomputed B-222 table and the T-067 name swap on a scratch cache, no model call; self-checks pass; git and real logs/outboxes unchanged.
+- Vetoes: T-017 stands until High-1 closes; T-027 stands until (d) hold-out T-091 to T-093.
+- Backlog (one line each):
+  - B-222 M: scan cells rest on 4 files (038, 053, 067, 074; 30 values); the report gives no per-cell file counts and no reading.
+  - B-222 M: no --self-check flag; main writes the deliverable whenever LLM_CACHE_DIR is set.
+  - B-222 L: dead line `packed_ok`; values judged raw, not as stored.
+  - P-015 M: E2 cache_key saved as null though E2 is approved and prepare.py was in this build.
+  - P-015 M: decision rows recompute points at the click (proposal: held from render); edit/decline rows carry no run_hash.
+  - P-015 M: name-swap evidence thin: 7 files, 1 scored, none with a stated cooking fact; test does not compare `extra`/Not-scored reason (recomputed: unchanged).
+  - P-015 M: labels English only ("Equipo de cocina:", "Cooking Equipment -" not read); "char-broiler" not matched.
+  - P-015 M: T2 strips only the exact extracted name; a variant (DBA, "Blanco St Kitchen") still trips the "kitchen"/"restaurant" substring cue.
+  - P-015 L: an extraction_failed card says "no cooking equipment stated in the file".
+  - P-015 L: V3 git slot reads not-recorded until P-017 (disclosed).
+- Next: re-check High-1 when fixed.

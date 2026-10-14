@@ -1,0 +1,250 @@
+{
+  "files_hit": [
+    "SUB-027",
+    "SUB-029",
+    "SUB-038",
+    "SUB-042",
+    "SUB-044",
+    "SUB-050",
+    "SUB-051",
+    "SUB-053",
+    "SUB-056",
+    "SUB-067",
+    "SUB-070",
+    "SUB-071",
+    "SUB-073",
+    "SUB-074",
+    "SUB-076"
+  ],
+  "n_values": 115,
+  "bins": [
+    "<0.50",
+    "0.50-0.74",
+    "0.75-0.89",
+    "0.90-1.00"
+  ],
+  "counts": {
+    "typed": {
+      "named_insured": {
+        "stored": {
+          "0.90-1.00": {
+            "correct": 10,
+            "incorrect": 1
+          }
+        }
+      },
+      "ALL": {
+        "stored": {
+          "0.90-1.00": {
+            "correct": 80,
+            "incorrect": 5
+          }
+        }
+      },
+      "premises_address": {
+        "stored": {
+          "0.90-1.00": {
+            "correct": 10,
+            "incorrect": 1
+          }
+        }
+      },
+      "operations": {
+        "stored": {
+          "0.90-1.00": {
+            "correct": 10,
+            "incorrect": 0
+          }
+        }
+      },
+      "sales_or_payroll": {
+        "stored": {
+          "0.90-1.00": {
+            "correct": 11,
+            "incorrect": 1
+          }
+        }
+      },
+      "tiv_building": {
+        "stored": {
+          "0.90-1.00": {
+            "correct": 11,
+            "incorrect": 0
+          }
+        }
+      },
+      "construction": {
+        "stored": {
+          "0.90-1.00": {
+            "correct": 10,
+            "incorrect": 1
+          }
+        }
+      },
+      "year_built": {
+        "stored": {
+          "0.90-1.00": {
+            "correct": 11,
+            "incorrect": 0
+          }
+        }
+      },
+      "loss_run_valued_through": {
+        "stored": {
+          "0.90-1.00": {
+            "correct": 7,
+            "incorrect": 1
+          }
+        }
+      }
+    },
+    "scan": {
+      "named_insured": {
+        "stored": {
+          "0.90-1.00": {
+            "correct": 2,
+            "incorrect": 0
+          },
+          "0.50-0.74": {
+            "correct": 0,
+            "incorrect": 1
+          },
+          "0.75-0.89": {
+            "correct": 1,
+            "incorrect": 0
+          }
+        }
+      },
+      "ALL": {
+        "stored": {
+          "0.90-1.00": {
+            "correct": 15,
+            "incorrect": 0
+          },
+          "0.75-0.89": {
+            "correct": 5,
+            "incorrect": 2
+          },
+          "0.50-0.74": {
+            "correct": 3,
+            "incorrect": 2
+          }
+        },
+        "dropped": {
+          "<0.50": {
+            "correct": 0,
+            "incorrect": 3
+          }
+        }
+      },
+      "premises_address": {
+        "stored": {
+          "0.75-0.89": {
+            "correct": 0,
+            "incorrect": 1
+          },
+          "0.90-1.00": {
+            "correct": 1,
+            "incorrect": 0
+          }
+        },
+        "dropped": {
+          "<0.50": {
+            "correct": 0,
+            "incorrect": 2
+          }
+        }
+      },
+      "operations": {
+        "stored": {
+          "0.90-1.00": {
+            "correct": 2,
+            "incorrect": 0
+          },
+          "0.50-0.74": {
+            "correct": 1,
+            "incorrect": 0
+          },
+          "0.75-0.89": {
+            "correct": 0,
+            "incorrect": 1
+          }
+        }
+      },
+      "sales_or_payroll": {
+        "stored": {
+          "0.90-1.00": {
+            "correct": 2,
+            "incorrect": 0
+          },
+          "0.75-0.89": {
+            "correct": 1,
+            "incorrect": 0
+          }
+        },
+        "dropped": {
+          "<0.50": {
+            "correct": 0,
+            "incorrect": 1
+          }
+        }
+      },
+      "tiv_building": {
+        "stored": {
+          "0.90-1.00": {
+            "correct": 2,
+            "incorrect": 0
+          },
+          "0.75-0.89": {
+            "correct": 1,
+            "incorrect": 0
+          },
+          "0.50-0.74": {
+            "correct": 0,
+            "incorrect": 1
+          }
+        }
+      },
+      "construction": {
+        "stored": {
+          "0.90-1.00": {
+            "correct": 2,
+            "incorrect": 0
+          },
+          "0.50-0.74": {
+            "correct": 1,
+            "incorrect": 0
+          }
+        }
+      },
+      "year_built": {
+        "stored": {
+          "0.75-0.89": {
+            "correct": 1,
+            "incorrect": 0
+          },
+          "0.90-1.00": {
+            "correct": 3,
+            "incorrect": 0
+          }
+        }
+      },
+      "loss_run_valued_through": {
+        "stored": {
+          "0.50-0.74": {
+            "correct": 1,
+            "incorrect": 0
+          },
+          "0.75-0.89": {
+            "correct": 1,
+            "incorrect": 0
+          },
+          "0.90-1.00": {
+            "correct": 1,
+            "incorrect": 0
+          }
+        }
+      }
+    }
+  }
+}

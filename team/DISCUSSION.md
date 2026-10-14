@@ -2719,3 +2719,44 @@ Verdict: APPROVE. No High. Self-checks with LLM_* unset: workbench ok, package o
 - Medium (backlog): M1 "Suggested market: none" sits next to "Carrier match: carrier_a" on SUB-009; two market lines that look contradictory, say "none (no referral rule fired)". M2 footer model is "this environment", not the model that made the saved run; an underwriter reading an old file could be misled, show the run's own model. M3 stale card does not say what changed since approval (no diff of fields vs the approved run).
 - Low: L1 history "Who" shows "user" only, fine for demo, show a name in production. L2 SUB-002 "sent not recorded" with a quoted carrier reply has no reason shown. L3 closure date "date not recorded" fallback for old rows is not visible in a screenshot.
 - Blocked by / need from: none.
+
+### 2026-10-14 — @ai-engineer-assistant
+- B-222 done (D-070 item 3), a report, not a UI change: `deliverables/ai-engineer/confidence-vs-hit.md` and `.json`; script `underwriting_pipeline/ai/confidence_vs_hit.py` (assert self-check, `_post` raises, cache copied to scratch). 15 of 60 development files hit the cache. 115 values judged.
+- Typed: all 85 values sit in 0.90-1.00 (80 correct, 5 incorrect), so confidence does not separate right from wrong. Scans: 0.90-1.00 15/0, 0.75-0.89 5/2, 0.50-0.74 3/2, dropped under 0.50 0/3 (all wrong). Scans carry a signal, typed does not. Small counts. Correct = existing `eval_holdout.hit_*` read-only.
+- P-015 prepare.py part built (S3, T2): `report["cooking"]` with `equipment` and `hood_suppression` (state, terms, source, start, end, quote), in the saved payload. "taco" and the insured's name no longer start the cooking ask. No prompt, no call. Keys and limits: `deliverables/ai-engineer/p-015-prepare-as-built.md`. All five self-checks pass.
+- Next: @data-scientist reads the keys in `points.py`. Older saved runs have no `cooking` key: read as not_stated.
+- Not a production approval. No commit.
+
+---
+[2026-10-14 | @data-scientist → @software-engineer, @pm, @responsible-ai, @model-risk] TYPE: UPDATE
+Re: P-015 points part (D-040, D-070 item 4) and T-067 name-swap
+
+### 2026-10-14 — @data-scientist
+- Built `underwriting_pipeline/models/points.py`: LOSS_HISTORY removed (range 0 to 80); `facts()` moved in; COOKING only from `run["cooking"]["equipment"].state == "yes"` (H1 hood shown, no points; M1 number kept with "Cooking: not scored"); `score_run(saved_run)` returns a score or "Not scored — reason" (failed, incomplete, rejected, unknown, empty: never a number); `POINTS_VERSION` (V3). Self-check passes, with the wording-pair test and a no-number-for-unscored test.
+- V3 today: 12-hex hash of the table, word lists, `prepare.HAZARD_TERMS` and the negation pattern, plus `+git:not-recorded` (`GIT_COMMIT = None` until P-017). No git call, so an environment change cannot move it. HAZARD_TERMS stays in `prepare.py` (no `ai/` edit); points.py imports it.
+- reason-codes.md rewritten (v2); problem-framing.md has the dated loss-history line. For @software-engineer: `deliverables/data-scientist/p-015-as-built.md` (display lines, mark-wrong control per W1, record_decision keys per E2). The extraction cache key is not in the saved run, so E2 saves it as null unless `prepare.py` is changed (needs a P-###).
+- T-067 name swap, cached results only (`models/name_swap.py`, results `deliverables/data-scientist/name-swap-T-067.md`): 7 files tested (cache holds 15; 6 have the name only in a scan, 2 keep it in a scan-cited item), 8 names each incl. the 5 trigger-word names, 56 pairs. Changed: score 0, carrier match 0, status 0. Thin: 1 of the 7 carries a number, 6 are Not scored; swaps the name after the model, does not test the model's reading. Not evidence for the 60.
+- Not a production approval. No commit. Five self-checks pass (points, prepare, workbench, package, name_swap --check).
+
+### 2026-10-14 — @software-engineer
+- D-070 items 2 and 4 built in `underwriting_pipeline/app/workbench.py` (no ai/ or models/ change). `facts()` removed; the card uses `points.score_run`: score, or "Not scored — reason" with no number for failed, incomplete and rejected files; the three lines on every card (loss history not scored, cooking, hood).
+- W1: `/mark-code` (id on underwriters.json, reason, code must be shown on the saved run). Logged in the sibling `code_marks.jsonl` (not the decision log, so a mark never touches the send gate); shown beside the code and in History; the number and match() do not change. A1: no add-a-code control.
+- E2: every decision row saves points, not_scored_reason, reason_codes, POINTS_VERSION, model_version, prompt_version from the saved run at the click; cache_key is null and the card data says "not recorded" (saving it is a prepare.py change, needs a P-###). Approve rows also save `approved_values`.
+- B-265 footer shows the saved run's model and prompt (per card when they differ), not the environment's. B-264 Suggested market only on senior referrals. B-266 stale card lists changed fields old → new from the approve row's `approved_values`; approvals made before today say "not recorded".
+- Self-checks pass: workbench, package, quotes, intake, points, prepare (LLM_* unset); no real log, outbox or page changed. Five D-070 screenshots in `deliverables/software-engineer/screenshots/` (sandbox only). @senior-underwriter UI review (High only) pending.
+
+---
+[2026-10-14 | @model-risk → @ai-engineer-assistant, @data-scientist, @software-engineer, @pm, @user] TYPE: REVIEW
+Re: B-222 (D-070 item 3) and P-015 build (D-040, D-070 item 4)
+Message: Two verdicts. Not a production approval; no send is authorized.
+A. B-222 confidence-versus-hit table: APPROVE. No High. Criteria met: cached results only, bins x correct/incorrect per field, typed and scan separate. Recomputed independently (LLM_* unset, `_post` raises, scratch cache copy): same 15 files, 115 values, counts equal to the published JSON. Read: scans 0.90+ 15/0, 0.75-0.89 5/2, 0.50-0.74 3/2, dropped <0.50 0/3; typed all at 0.90+ with 5 errors, so confidence gives no warning on typed errors.
+B. P-015 build: APPROVE WITH CHANGES. Self-checks pass (points, prepare, workbench, package, name_swap --check); no real file written. Name-swap re-run by me: 0 of 56 pairs changed, also with `extra` and the Not-scored reason compared.
+High-1 (prepare.py cooking_facts, NO_WORDS): negation is a line-start test, not "in the same clause" (P-015 §5). "Cooking equipment: no fryer; gas grill and charbroiler" gives state none, 0 points, and the page says "Cooking: stated none" with no quote, contrary to the source. Resolve: negate per term within its clause; any non-negated hazard is yes; show the quote on the "stated none" line; self-check this case. Inside ai/: build fix under P-015 or new P-### is @user's call.
+Medium/Low: in STANDUP.
+T-017 veto (mine): stands until High-1 closes; my High-1/2/3 of 2026-10-11 are otherwise met. Lifting it is not production approval (B-027 Tier 2 evidence still needed).
+T-027 veto: stands. The table condition is met; what remains is (d), the new 20-file hold-out (T-091 to T-093), gold first, scored once.
+
+[2026-10-14 | orchestrator (main session) → @user, @pm] TYPE: UPDATE
+Re: D-070 status at wrap-up
+Message: Built: B-222 table (@ai-engineer-assistant), P-015 prepare.py S3/T2 (@ai-engineer-assistant), P-015 points.py + docs + T-067 name-swap test (@data-scientist; 0 of 56 pairs changed on 7 cached files), P-015 workbench + B-264/B-265/B-266 (@software-engineer; screenshots D-070-*.png, sandbox). @model-risk: B-222 APPROVE; P-015 APPROVE WITH CHANGES, High B-268 (cooking negation per clause), T-017 veto stands until fixed; T-027 table condition met. @responsible-ai check of P-015 did not run: the dispatch stopped on the weekly usage limit (resets 2026-10-17) and wrote nothing (B-270). @senior-underwriter UI check of D-070 not run (B-270). B-260 accepted by @user (D-070). No send is authorized.
+Needs response by: @user (B-268, B-269)

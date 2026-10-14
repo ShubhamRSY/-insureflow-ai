@@ -781,3 +781,14 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: P-026, B-248, B-252 code fix and the Session B UI (@software-engineer, D-065); CLAUDE.md rule and backlog lines (main session, budget rule 3); @model-risk check of P-026; @senior-underwriter UI check.
 - Status: ACCEPTED
 - Amends: D-039 acknowledgment and D-053 decision gate: approves and acknowledgments count only for the saved run whose hash they record. Not a production approval; the T-027 veto stands. No send is authorized.
+
+## D-070 — B-260 accepted; B-264/B-265/B-266; B-222 table; build P-015 with name-swap test
+- Date / Owner: 2026-10-14 / @user
+- Context: B-260 (identical re-save keeps the hash). @senior-underwriter Mediums B-264 to B-266. B-222 is on the T-027 path. P-015 approved in D-040 (S3 H1 M1 T2 V3 W1 A1 E2), not built; T-067 name-swap test not run.
+- Options considered: none. The user's words.
+- Decision: In the user's words. "1. B-260: accept — an identical re-save keeps the same hash and the approval stands ("same data, same approval"). 2. B-265: the footer shows the model and prompt version that produced the saved run, not the environment's. B-264: show suggested market only for senior referrals. B-266: a stale card lists changed fields (old → new). 3. B-222: confidence-versus-hit table from cached results (no model calls): confidence bins vs correct/incorrect per field, scans and typed separately. 4. Build P-015 as approved (D-040: S3 H1 M1 T2 V3 W1 A1 E2). The name-swap fairness test runs on cached results (no model calls) and must show no change in score or carrier match. UI and screenshots for each; one @model-risk check (B-222 and P-015) and one @responsible-ai check of P-015 fairness, High only."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-14 (D-032).
+- Dissent: none
+- Follow-up tasks: B-222 table and P-015 `prepare.py` part (S3, T2) (@ai-engineer-assistant); P-015 `points.py`, reason-codes and problem-framing docs, T-067 name-swap test (@data-scientist); P-015 workbench part and B-264/B-265/B-266 with screenshots (@software-engineer); @model-risk check of B-222 and P-015; @responsible-ai check of P-015 fairness.
+- Status: ACCEPTED
+- Amends: D-069 item 1 as to B-260 (an identical re-save is not a change). Not a production approval; vetoes on T-017 and T-027 are lifted only by their holders. No send is authorized.

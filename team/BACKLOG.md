@@ -285,3 +285,7 @@ Also open from T-097, already in the register's Section D so not repeated as row
 | B-265 | D-069 | @software-engineer | Medium: footer model is the environment's, not the model that made the saved run. | 2026-10-14 |
 | B-266 | D-069 | @software-engineer | Medium: a stale card does not show what changed since the approval. | 2026-10-14 |
 | B-267 | D-069 | @software-engineer | Low: History shows only "user" as who; sent "not recorded" has no reason; closure "date not recorded" untested visually. | 2026-10-14 |
+| B-268 | P-015 | @ai-engineer-assistant | High (model-risk, open; T-017 veto stands): `cooking_facts` tests "no" only at line start; "Cooking equipment: no fryer; gas grill and charbroiler" reads "stated none", scores 0, no quote. Fix: negate per clause, show the quote on "stated none", add the case to the self-check. @user: P-015 fix or new P-###. | 2026-10-14 |
+| B-269 | P-015 | @user | Medium (decision): E2 cache key is null because prepare.py does not save it; saving it is an `ai/` change needing a P-###. | 2026-10-14 |
+| B-270 | D-070 | @pm | Owed: @responsible-ai fairness check of P-015 (dispatch stopped on the weekly usage limit, nothing written) and the @senior-underwriter UI check of the D-070 workbench (D-065). | 2026-10-14 |
+| B-271 | D-070 | @ai-engineer-assistant | Medium: only 15 of 60 development files are in the extraction cache, so B-222 (115 values) and T-067 (7 files, 1 scored) are thin; the P-016 drop analysis said 60 of 60 hits — reconcile. | 2026-10-14 |

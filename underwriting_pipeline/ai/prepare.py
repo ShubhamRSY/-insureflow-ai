@@ -312,6 +312,47 @@ def sprinklers_yes(texts: dict) -> bool:
     return False
 
 
+# P-015 S3 (D-040/D-070): cooking facts from the labelled lines of the source text, with a citation, as sprinklers_yes does.
+# Equipment and hood/suppression only. Class words, cuisine words and the insured's name are never read. No model call.
+COOKING_LABELS = {"equipment": ("cooking equipment:",), "hood_suppression": ("hood and fire suppression:", "hood and suppression:", "hood:", "suppression:")}
+HAZARD_TERMS = ("fryer", "fryers", "freidora", "freidoras", "open flame", "llama abierta", "charbroiler", "grill", "parrilla")
+NO_WORDS = re.compile(r"^(none|no|not|without|sin|ninguno|ninguna|n/a)\b")
+
+
+def _without_name(blob: str, name: str | None, texts: dict) -> str:
+    """P-015 T2: remove the named insured (the extracted value and any 'Named insured:' line) before cue words are looked for."""
+    names = {name} if name else set()
+    for text in texts.values():
+        for row in extract_labeled(text, LABELS["named_insured"]):
+            if row.get("value"):
+                names.add(row["value"])
+    for n in sorted(names, key=len, reverse=True):
+        blob = re.sub(re.escape(n), " ", blob, flags=re.I)
+    return blob
+
+
+def cooking_facts(texts: dict) -> dict:
+    """{"equipment": fact, "hood_suppression": fact}. fact = {"state", "terms", "source", "start", "end", "quote"}.
+
+    equipment state: "yes" (a hazard term is stated, not negated), "none" (stated none), "other" (a line with no hazard term), "not_stated".
+    hood_suppression state: "stated" (a system is named), "none" (stated none), "not_stated". Nothing here adds points (H1).
+    """
+    out = {}
+    for key, labels in COOKING_LABELS.items():
+        fact = {"state": "not_stated", "terms": [], "source": None, "start": None, "end": None, "quote": None}
+        for name, text in texts.items():
+            row = extract_labeled(text, labels)[0]
+            if not row["value"]:
+                continue
+            value = row["value"].lower()
+            found = [t for t in HAZARD_TERMS if re.search(rf"\b{re.escape(t)}\b", value)] if key == "equipment" else []
+            state = "none" if NO_WORDS.match(value) else ("yes" if found else "other") if key == "equipment" else "stated"
+            fact = {"state": state, "terms": [] if state == "none" else found, "source": name, "start": row["start"], "end": row["end"], "quote": row["value"]}
+            break
+        out[key] = fact
+    return out
+
+
 def carrier_run_date(texts: dict) -> tuple[str, str, int, int] | None:
     """Use the carrier loss-run date when a no-known-loss letter is also in the folder."""
     if not any("no known loss" in text.lower() for text in texts.values()):
@@ -608,17 +649,18 @@ def process_submission(folder: Path) -> dict:
     _apply_reply(conflicts, texts.get("reply.md", ""))
     apply_document_rules(merged, conflicts, texts, {doc["name"]: doc["ocr_words"] for doc in docs if doc.get("ocr_words")})
     locations = apply_locations(merged, conflicts, texts)
-    blob = "\n".join(texts.values()).lower()
+    blob = _without_name("\n".join(texts.values()), merged["named_insured"].get("value"), texts).lower()  # P-015 T2: the insured's name never starts an ask
+    cooking = cooking_facts(texts)
     extra = []
-    if any(word in blob for word in ("restaurant", "fryer", "taco", "kitchen")):
+    if any(word in blob for word in ("restaurant", "fryer", "kitchen")):  # P-015 T2: cuisine words ("taco") are not cues
         for label, cues in (
             ("cooking equipment", ("cooking equipment", "fryer")),
-            ("hood and fire suppression", ("hood", "suppression")),
+            ("hood and fire suppression", ("hood", "suppression")),  # matched as whole words below
             ("sprinklers", ("sprinkler",)),
             ("liquor sales", ("liquor",)),
             ("hours", ("hours", " open ")),
         ):
-            if not any(cue in blob for cue in cues):
+            if not any(re.search(rf"\b{re.escape(cue.strip())}", blob) for cue in cues):
                 extra.append(label)
     needs_human = [doc["name"] for doc in docs if doc.get("needs_human")]
     unread = unread_rows(docs, extracted.get("not_sent") or [])
@@ -636,6 +678,7 @@ def process_submission(folder: Path) -> dict:
     report["fields"] = rows
     report["folder"] = folder.name
     report["sprinklers"] = "yes" if sprinklers_yes(texts) else "no"
+    report["cooking"] = cooking
     report["needs_human"] = needs_human
     report["unread"] = unread
     report["locations"] = locations
@@ -774,6 +817,7 @@ def _saved_payload(report: dict) -> dict:
         "needs_human": report.get("needs_human") or [],
         "unread": report.get("unread") or [],  # P-016 (c): file and page not read, with the reason
         "sprinklers": report.get("sprinklers"),
+        "cooking": report.get("cooking"),  # P-015 S3: equipment and hood/suppression facts with their citation; an older run has none = not stated
         "model_version": report.get("model_version"),
         "prompt_version": report.get("prompt_version"),
         "ocr_settings": report.get("ocr_settings"),
@@ -1334,4 +1378,34 @@ if __name__ == "__main__":
     merged_g2["loss_run_valued_through"]["value"] = None
     apply_document_rules(merged_g2, [], {"s.jpg": "Valued through: 2026-01-01", "n.md": "No known loss letter"}, {"s.jpg": [["Valued", 0.9], ["through:", 0.9], ["2026-01-01", 0.9]]})
     assert merged_g2["loss_run_valued_through"]["value"] == "2026-01-01" and merged_g2["loss_run_valued_through"]["needs_review"], "G2/S2: passes at 0.9, kept and flagged"
+    # P-015 S3/T2. No model call.
+    kitchen = "Cooking equipment: two floor fryers\nHood and fire suppression: wet chemical system, inspected 2026-05-12\n"
+    cf = cooking_facts({"kitchen.md": "Notes\n" + kitchen})
+    assert cf["equipment"]["state"] == "yes" and cf["equipment"]["terms"] == ["fryers"] and cf["hood_suppression"]["state"] == "stated"
+    for key in cf:
+        f = cf[key]
+        assert ("Notes\n" + kitchen)[f["start"] : f["end"]] == f["quote"], "the citation points at the stated text"
+    assert cooking_facts({"a.md": "Cooking equipment: none\n"})["equipment"]["state"] == "none"
+    assert cooking_facts({"a.md": "Cooking equipment: sin freidora\n"})["equipment"]["state"] == "none", "negated hazard gives no yes"
+    assert cooking_facts({"a.md": "Cooking equipment: freidora y parrilla\n"})["equipment"]["terms"] == ["freidora", "parrilla"]
+    assert cooking_facts({"a.md": "Cooking equipment: microwave\n"})["equipment"]["state"] == "other"
+    for text in ("Taqueria Fryer and Sons\nDescription of operations: restaurant, tacos\n", "Hood Street Books\nOpen Flame Yoga LLC\n", ""):
+        assert cooking_facts({"a.md": text})["equipment"]["state"] == "not_stated" and cooking_facts({"a.md": text})["hood_suppression"]["state"] == "not_stated", "names, class and cuisine words are not facts"
+    with tempfile.TemporaryDirectory() as tmp:
+        def ask(name: str, ops: str) -> list:
+            sub = Path(tmp) / "x"
+            sub.mkdir(exist_ok=True)
+            (sub / "application.md").write_text(f"Named insured: {name}\nDescription of operations: {ops}\n")
+            real = llm_extract.llm_extract
+            llm_extract.llm_extract = lambda docs: {"fields": [], "conflicts": [], "not_sent": []}
+            try:
+                return process_submission(sub)["extra"]
+            finally:
+                llm_extract.llm_extract = real
+        base = ask("Plain Holdings LLC", "bookkeeping office")
+        assert base == [], base
+        for nm in ("Guenther Tacos y Mas", "Blanco Street Kitchen", "Fryer and Sons Bookkeeping", "Open Flame Yoga", "Hood Street Books"):
+            assert ask(nm, "bookkeeping office") == base, f"T2: the name {nm!r} must not start the cooking ask"
+        assert ask("Plain Holdings LLC", "taqueria, tacos") == base, "T2: a cuisine word does not start the ask"
+        assert "cooking equipment" in ask("Plain Holdings LLC", "restaurant"), "a class word still asks the producer"
     print("prepare ok")

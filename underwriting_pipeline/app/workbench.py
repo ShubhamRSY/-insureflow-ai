@@ -41,6 +41,7 @@ BANNER = ""  # set by serve(); the sandbox screenshots label the page with it
 MESSAGES: dict[str, tuple[bool, str]] = {}  # submission -> (ok, plain-words result of the last action); shown once
 # D-065 item 5: one line per user-visible feature: date, task or proposal, decision number, what an underwriter sees.
 WHATS_NEW = (
+    ("2026-10-14", "P-015/B-264/B-265/B-266", "D-070", "The score shows \"Not scored — reason\" when a file is failed, incomplete or empty, and the cooking and hood lines; each code has a mark-wrong control (logged; the number does not change); the footer names the model and prompt version of the saved run; Suggested market shows only on senior referrals; a stale card lists the changed fields, old to new."),
     ("2026-10-14", "P-026", "D-069", "Every approve logs the saved run's hash; a re-saved file shows \"Re-review needed: file changed since your approval\" and the send is refused for everyone until you approve and acknowledge again."),
     ("2026-10-14", "B-248", "D-069", "The sent date comes from one place, the Sent-on line in the package file, on the card and in quote tracking alike (older packages show \"not recorded\")."),
     ("2026-10-14", "B-252", "D-069", "A sandbox run (--sandbox) writes the page, logs and outboxes into a temporary copy; the real files are never touched."),
@@ -149,20 +150,6 @@ def route(report: dict) -> str:
     return match(report)["route"]
 
 
-def facts(report: dict) -> dict:
-    by = {row["field_id"]: (row["value"] or "") for row in report["fields"]}
-    ops = by.get("operations", "").lower()
-    tiv = "".join(ch for ch in by.get("tiv_building", "") if ch.isdigit())
-    return {
-        "restaurant": any(word in ops for word in ("restaurant", "taco", "kitchen")),
-        "cooking": any(word in ops for word in ("fryer", "restaurant", "taco", "kitchen")),
-        "habitational": any(word in ops for word in ("habitational", "apartment", "flats")),
-        "contracting": "contractor" in ops or "painting" in ops,
-        "construction": by.get("construction", "").lower(),
-        "tiv": int(tiv) if tiv else 0,
-    }
-
-
 def snippet(folder: Path, row: dict) -> str:
     source = row.get("source")
     if not source or row.get("start") is None:
@@ -211,7 +198,8 @@ def load_queue(only: str | None = None) -> list[dict]:
                 route=route(report),
                 note=match(report)["note"],
                 suggested=match(report)["suggested"],
-                score=points.score(facts(report)),
+                score=points.score_run(report),
+                marks=code_marks(folder.name),
                 snippets={r["field_id"]: snippet(folder, r) for r in report["fields"]},
             )
         rows.append(row)
@@ -221,6 +209,61 @@ def load_queue(only: str | None = None) -> list[dict]:
 def ai_version() -> str:
     model = os.environ.get("LLM_MODEL") or "local-default"
     return model + "+rules-d015"
+
+
+def marks_path() -> Path:
+    return LOG.with_name("code_marks.jsonl")  # a sibling file: a mark is not a decision and never changes the send gate (W1)
+
+
+def code_marks(sub: str) -> list[dict]:
+    path = marks_path()
+    rows = []
+    for line in path.read_text().splitlines() if path.is_file() else []:
+        try:
+            r = json.loads(line)
+        except ValueError:
+            continue
+        if isinstance(r, dict) and r.get("submission") == sub:
+            rows.append(r)
+    return rows
+
+
+def mark_code(payload: dict) -> dict:
+    """P-015 W1: an underwriter marks a shown reason code wrong, with a reason. Logged; the number, match() and the send gate do not change."""
+    sub, code = (payload.get("submission") or "").strip(), (payload.get("code") or "").strip()
+    actor, reason = (payload.get("underwriter_id") or "").strip(), (payload.get("reason") or "").strip()
+    if not actor or actor not in package.underwriters():
+        raise ValueError("only an id on underwriters.json may mark a code wrong")
+    if not reason:
+        raise ValueError("a reason is required")
+    report, problem = saved_report(sub)
+    if report is None:
+        raise ValueError(problem)
+    if code not in points.CODES or code not in points.score_run(report)["reason_codes"]:
+        raise ValueError(f"{code or 'no code'} is not a code shown for {sub}; codes cannot be added (A1)")
+    row = {"submission": sub, "code": code, "reason": reason, "underwriter_id": actor, "date": date.today().isoformat(),
+           "at": datetime.now().astimezone().isoformat(timespec="seconds"), "points_version": points.POINTS_VERSION, "run_hash": report.get("saved_hash")}
+    with _LOG_LOCK:
+        marks_path().parent.mkdir(parents=True, exist_ok=True)
+        with marks_path().open("a") as handle:
+            handle.write(json.dumps(row) + "\n")
+    return row
+
+
+def run_record(sub: str) -> dict:
+    """P-015 E2: score, codes, versions and model/prompt of the saved run at the click. Never the form, never the environment."""
+    report, problem = saved_report(sub) if re.fullmatch(r"SUB-\d+", sub or "") else (None, "no saved run")
+    if report is None:
+        return {"points": None, "not_scored_reason": f"Not scored — {problem}", "reason_codes": [], "points_version": points.POINTS_VERSION,
+                "model_version": None, "prompt_version": None, "cache_key": None}
+    s = points.score_run(report)
+    return {"points": s["points"], "not_scored_reason": s["not_scored_reason"], "reason_codes": s["reason_codes"], "points_version": s["points_version"],
+            "model_version": report.get("model_version"), "prompt_version": report.get("prompt_version"),
+            "cache_key": None}  # the saved run does not hold the extraction cache key; saving it is a prepare.py change (P-###)
+
+
+def field_values(report: dict) -> dict:
+    return {r["field_id"]: r.get("value") for r in report.get("fields") or []}
 
 
 def correction_counts(log_path: Path) -> dict:
@@ -270,13 +313,13 @@ def record_decision(payload: dict, log_path: Path) -> dict:
         unacked = [f for f in listed if f not in (payload.get("ack") or [])]
         if unacked:
             raise ValueError(f"acknowledge every needs-review value before approving: {', '.join(unacked)}")
-        payload = {**payload, "acknowledged": listed, "run_hash": saved["saved_hash"]}
+        payload = {**payload, "acknowledged": listed, "run_hash": saved["saved_hash"], "approved_values": field_values(saved)}  # B-266: what was approved
     with _LOG_LOCK:
         if action == "approve" and not reason:
             # D-053: an approve after a decline needs a written reason; refused here, not only at the send.
             if any(r.get("action") == "decline" for r in package.decisions(submission, log_path)):
                 raise ValueError("an approve after a decline needs a written reason")
-        return _append(payload, action, actor, reason, log_path)
+        return _append({**payload, "run_record": run_record((payload.get("submission") or "").strip())}, action, actor, reason, log_path)
 
 
 needs_review_ids = package.needs_review_ids  # D-068: one list, shared with the send gate
@@ -300,6 +343,8 @@ def _append(payload: dict, action: str, actor: str, reason: str, log_path: Path)
         "underwriter_id": actor,
         "reason": reason,
         **({"run_hash": payload["run_hash"]} if action == "approve" else {}),
+        **payload["run_record"],
+        **({"approved_values": payload["approved_values"]} if action == "approve" else {}),
         **({"acknowledged": payload["acknowledged"]} if payload.get("acknowledged") else {}),
         **({"field_id": payload["field_id"].strip(), "new_value": payload["new_value"].strip()} if (payload.get("field_id") or "").strip() else {}),
         "date": date.today().isoformat(),
@@ -314,7 +359,7 @@ def _append(payload: dict, action: str, actor: str, reason: str, log_path: Path)
     return row
 
 
-REFUSED_AS = {"/decision": "Decision refused", "/close-subjectivity": "Not closed", "/send": "Send refused", "/approve-draft": "Request not approved"}
+REFUSED_AS = {"/decision": "Decision refused", "/mark-code": "Mark refused", "/close-subjectivity": "Not closed", "/send": "Send refused", "/approve-draft": "Request not approved"}
 
 
 def act(path: str, payload: dict) -> tuple[str, bool, str]:
@@ -326,6 +371,9 @@ def act(path: str, payload: dict) -> tuple[str, bool, str]:
         if path == "/decision":
             row = record_decision(payload, LOG)
             return sub, True, f"Decision recorded: {row['action']} by {row['underwriter_id']}."
+        if path == "/mark-code":
+            row = mark_code(payload)
+            return sub, True, f"Marked {row['code']} wrong by {row['underwriter_id']}. The number does not change."
         if path == "/close-subjectivity":
             quotes.close_subjectivity(*(payload.get(k, "") for k in ("submission", "carrier", "subjectivity", "underwriter_id", "reason")))
             return sub, True, "Subjectivity closed and logged."
@@ -412,7 +460,7 @@ def _short(h: str) -> str:
     return (h or "")[:8]
 
 
-def history_html(sub: str, current: str) -> str:
+def history_html(sub: str, current: str, marks: list[dict] | None = None) -> str:
     """D-069 Session B: one per-file panel: decisions, acknowledgments, sends and resends. Who, why, when, run hash."""
     events = []
     try:
@@ -425,6 +473,8 @@ def history_html(sub: str, current: str) -> str:
             events.append((r.get("at") or f"{r.get('date', '')}T00:00:00", 0, r.get("underwriter_id", ""), what, r.get("reason", ""), r.get("run_hash") if r.get("action") == "approve" else None, r.get("at") or r.get("date", "")))
     except ValueError as exc:
         return f"<h3>History</h3><p class=\"bad\">History unavailable: {html.escape(str(exc))}</p>"
+    for m in marks or []:
+        events.append((m.get("at") or "", 2, m.get("underwriter_id", ""), f"marked {m.get('code')} wrong", m.get("reason", ""), m.get("run_hash") or "", m.get("at") or m.get("date", "")))
     if package.SENDS_LOG.exists():
         for line in package.SENDS_LOG.read_text().splitlines():
             try:
@@ -447,10 +497,57 @@ def history_html(sub: str, current: str) -> str:
     return f"<h3>History</h3><table class=\"history\"><tr><th>When</th><th>Who</th><th>What</th><th>Why</th><th>Saved run</th></tr>{''.join(rows)}</table><p>Current run: {html.escape(_short(current) or 'unknown')}</p>"
 
 
-def footer_html() -> str:
-    """D-069: the model and prompt version of this environment. Never a key or a host address."""
-    model = os.environ.get("LLM_MODEL") or "not set"
-    return f"<footer><p>Model (this environment): {html.escape(model)} · Prompt version (this code): {html.escape(str(llm_extract.PROMPT_VERSION))}</p></footer>"
+def footer_html(queue: list[dict] | None = None) -> str:
+    """B-265 (D-070): the model and prompt version that produced each saved run, not the environment's. Per card if they differ."""
+    runs = {(i["id"]): (i["report"].get("model_version") or "not recorded", str(i["report"].get("prompt_version") or "not recorded"))
+            for i in queue or [] if i.get("report")}
+    if not runs:
+        return "<footer><p>Model and prompt version: no saved run on this page</p></footer>"
+    kinds = set(runs.values())
+    if len(kinds) == 1:
+        m, p = next(iter(kinds))
+        return f"<footer><p>Model (saved run): {html.escape(m)} · Prompt version (saved run): {html.escape(p)}</p></footer>"
+    rows = "".join(f"<li>{html.escape(k)}: model {html.escape(m)} · prompt {html.escape(p)}</li>" for k, (m, p) in runs.items())
+    return f"<footer><p>Model and prompt version of each saved run (they differ):</p><ul>{rows}</ul></footer>"
+
+
+def stale_changes(sub: str, report: dict) -> str:
+    """B-266: the fields that changed between the latest approve and the current saved run, old to new."""
+    try:
+        last = [r for r in package.decisions(sub, LOG) if r.get("action") == "approve"][-1]
+    except (ValueError, IndexError):
+        return ""
+    old = last.get("approved_values")
+    if not isinstance(old, dict):
+        return "<p>Which fields changed was not recorded for this earlier approval. Compare the table below.</p>"
+    new = field_values(report)
+    diff = [f"{k}: {old.get(k) or '—'} → {new.get(k) or '—'}" for k in dict.fromkeys([*old, *new]) if (old.get(k) or None) != (new.get(k) or None)]
+    if not diff:
+        return "<p>No field value differs; the run changed in another way (status, a source file or a cited quote).</p>"
+    return "<p>Changed since your approval (old → new):</p><ul>" + "".join(f"<li>{html.escape(d)}</li>" for d in diff) + "</ul>"
+
+
+def score_html(item: dict, report: dict) -> list[str]:
+    """P-015: the score, or why there is none; the three lines; a mark-wrong control beside each code (W1). No add-a-code control (A1)."""
+    sc, sid = item["score"], html.escape(item["id"])
+    marks = item.get("marks") or []
+    out = []
+    if sc["scored"]:
+        out.append(f"<p>Score: {sc['points']} · not a price</p>")
+        if not sc["reason_codes"]:
+            out.append("<p>Codes: none</p>")
+    else:
+        out.append(f"<p class=\"bad\">{html.escape(sc['not_scored_reason'])}</p>")
+    for code in sc["reason_codes"]:
+        shown = "".join(f" <i>(marked wrong by {html.escape(m['underwriter_id'])}: {html.escape(m['reason'])})</i>" for m in marks if m.get("code") == code)
+        out.append(
+            f'<form method="post" action="/mark-code" class="mark"><b>{html.escape(code)}</b>{shown} '
+            f'<input type="hidden" name="submission" value="{sid}"><input type="hidden" name="code" value="{html.escape(code)}">'
+            '<label>Mark wrong: id <input name="underwriter_id" size="8" required></label> <label>reason <input name="reason" required></label> '
+            '<button type="submit">Mark wrong</button> <small>logged; the number does not change</small></form>'
+        )
+    out += [f"<p>{html.escape(line)}</p>" for line in sc["lines"]]
+    return out
 
 
 def render(queue: list[dict], counts: dict | None = None, messages: dict | None = None) -> str:
@@ -518,19 +615,18 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
         lines = [
             f"<h2>{html.escape(item['id'])}</h2>",
             _msg(messages, item["id"]),
-            (f'<p class="msg bad" role="alert">{package.STALE}. Approve and tick each needs-review value again.</p>' if package._decision_problem(item["id"], report.get("saved_hash") or "") == package.STALE else ""),
+            (f'<p class="msg bad" role="alert">{package.STALE}. Approve and tick each needs-review value again.</p>' + stale_changes(item["id"], report) if package._decision_problem(item["id"], report.get("saved_hash") or "") == package.STALE else ""),
             f"<p>Saved run: status {html.escape(str(report.get('status')))} · hash check: ok · manifest check: "
             + (f'<span class="bad">FAILED — {html.escape(manifest)}. A send will be refused.</span>' if manifest else "ok")
             + "</p>",
             f"<p>Files: {html.escape(', '.join(item['files']) or 'none')}</p>",
             f"<p>Not read by extraction: {html.escape(', '.join(item['ignored']) or 'none')}</p>",
         ]
+        lines += score_html(item, report)
         if not refused:
-            lines += [
-                f"<p>Score: {item['score']['points']} · {html.escape(', '.join(item['score']['reason_codes']) or 'none')} · not a price</p>",
-                f"<p>Carrier match: {html.escape(item['route'])}{html.escape(' · ' + item['note']) if item.get('note') else ''} · recommendation only</p>",
-                f"<p>Suggested market: <b>{html.escape(item.get('suggested') or 'none')}</b> · recommendation only; the underwriter decides</p>",
-            ]
+            lines.append(f"<p>Carrier match: {html.escape(item['route'])}{html.escape(' · ' + item['note']) if item.get('note') else ''} · recommendation only</p>")
+            if item["route"] == "senior_referral":  # B-264: only a senior referral names a market
+                lines.append(f"<p>Suggested market: <b>{html.escape(item.get('suggested') or 'none')}</b> · recommendation only; the underwriter decides</p>")
         lines += [
             f"<p>Extraction: {html.escape(extraction)}</p>",
             unread_html,
@@ -585,7 +681,7 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
         if (TO_PRODUCER / f"{item['id']}.md").is_file():
             lines.append("<p>Producer request on file in to-producer.</p>")
         lines.append(_send_html(item, report, refused, manifest))
-        lines.append(history_html(item["id"], report.get("saved_hash") or ""))
+        lines.append(history_html(item["id"], report.get("saved_hash") or "", item.get("marks") or []))
         blocks.append(
             f'<article id="{html.escape(item["id"])}">\n' + "\n".join(lines) + "\n</article>"
         )
@@ -601,6 +697,7 @@ td, th {{ border: 1px solid #ddd; padding: 0.3rem 0.5rem; text-align: left; }}
 .msg.bad, .bad {{ border-color: #b42318; color: #b42318; }}
 .msg.bad {{ background: #fdecea; }}
 .banner {{ background: #fff3bf; border: 2px dashed #b08900; padding: 0.5rem 0.75rem; font-weight: 700; }}
+form.mark {{ margin: 0.2rem 0; }}
 pre {{ background: #f6f6f6; padding: 0.5rem; white-space: pre-wrap; }}
 details {{ margin: 0.5rem 0; }}
 footer {{ border-top: 1px solid #ccc; margin-top: 2rem; color: #555; }}
@@ -613,7 +710,7 @@ footer {{ border-top: 1px solid #ccc; margin-top: 2rem; color: #555; }}
 <p>Decisions so far: {counts['approve']} approved, {counts['edit']} edited, {counts['decline']} declined. Corrections: {corrections}.</p>
 {''.join(blocks)}
 {_folded(unsaved)}
-{footer_html()}
+{footer_html(queue)}
 </body></html>
 """
 
@@ -625,6 +722,8 @@ def sandbox(tmp: Path) -> None:
     (token log). Nothing real is written afterwards. Call before serve() or any test that posts an action."""
     global PAGE, LOG, INBOX, PENDING, TO_PRODUCER, TO_CARRIER, BANNER
     tmp = Path(tmp)
+    if marks_path().is_file():
+        shutil.copy2(marks_path(), tmp / "code_marks.jsonl")
     for name, src in (("inbox", INBOX), ("extractions", prepare.EXTRACT_DIR), ("pending", PENDING), ("to-producer", TO_PRODUCER),
                       ("to-carrier", TO_CARRIER), ("from-carrier", quotes.FROM_CARRIER), ("cache", llm_extract.CACHE)):
         if src.is_dir() and name != "cache":  # the cache starts empty: a sandbox never reads or grows the real token log
@@ -828,9 +927,7 @@ if __name__ == "__main__":
 
         # T-071 (3): the refused card hides approve, Missing, the carrier match, and the score.
         def card(status: str, status_reason: str | None = None, needs_human=None, fields=None) -> dict:
-            return {
-                "id": f"SUB-{status}",
-                "report": {
+            rep_ = {
                     "status": status,
                     "status_reason": status_reason,
                     "error": "model call failed: HTTP 429 rate limit" if status == "extraction_failed" else None,
@@ -841,13 +938,8 @@ if __name__ == "__main__":
                     "missing": ["named_insured"],
                     "extra": [],
                     "locations": [],
-                },
-                "files": ["application.md"],
-                "ignored": [],
-                "route": "hold",
-                "score": {"points": 12, "reason_codes": ["COOKING"]},
-                "snippets": {},
             }
+            return {"id": f"SUB-{status}", "report": rep_, "files": ["application.md"], "ignored": [], "route": "hold", "score": points.score_run(rep_), "snippets": {}}
 
         for item in (
             card("extraction_failed"),
@@ -857,7 +949,7 @@ if __name__ == "__main__":
             assert "<option>approve</option>" not in page
             assert "<h3>Missing</h3>" not in page
             assert "Carrier match:" not in page
-            assert "Score:" not in page
+            assert "Score:" not in page and "Not scored — " in page and "Loss history: not scored" in page and "Cooking: not scored" in page
             assert "<option>edit</option>" in page and "<option>decline</option>" in page
         assert "REJECTED" in render([card("all_values_rejected", status_reason=prepare.REJECT_REASON)], None)
         normal = card("complete", fields=[{"field_id": "operations", "value": "accounting office"}])
@@ -933,7 +1025,7 @@ if __name__ == "__main__":
         assert route(r("sprinklered apartments", "$4,000,000")) == "carrier_c"
         assert match(r("sprinklered apartments", "$6,000,000"))["note"] == OUT_TIV
         assert route(r("office")) == "carrier_a" and route(r("barley mill")) == "no_match"
-        assert "COOKING" not in points.score(facts(fake))["reason_codes"]
+        assert "COOKING" not in points.score_run({**fake, "status": "complete"})["reason_codes"]
 
         # D-066 items 10, 2/4/8, 1, 13: saved run only on load, refusals as plain messages, typed send, draft approve.
         import llm_extract
@@ -1069,15 +1161,71 @@ if __name__ == "__main__":
                 # Suggested market is its own field; the footer shows model and prompt version, never a key or a host.
                 stored("SUB-907", "complete", [{**r, "value": "roofing contractor"} if r["field_id"] == "operations" else r for r in good])
                 assert "Suggested market: <b>carrier_b</b>" in art(render(load_queue(), None), "SUB-907")
-                assert "Suggested market: <b>none</b>" in art(render(load_queue(), None), "SUB-901")
+                assert "Suggested market" not in art(render(load_queue(), None), "SUB-901")  # B-264: senior referrals only
                 env_old = {k: os.environ.get(k) for k in ("LLM_API_KEY", "LLM_BASE_URL", "LLM_MODEL")}
                 try:
                     for k in env_old:
                         os.environ.pop(k, None)
-                    assert f"Model (this environment): not set · Prompt version (this code): {llm_extract.PROMPT_VERSION}" in render([], None)
+                    assert "no saved run on this page" in render([], None)
                     os.environ.update(LLM_MODEL="test-model", LLM_API_KEY="sk-SECRET", LLM_BASE_URL="https://user:pw@host.example/v1")
                     foot = render(load_queue(), None)
-                    assert "Model (this environment): test-model" in foot and "SECRET" not in foot and "host.example" not in foot and "pw@" not in foot
+                    # B-265: the footer shows the saved run's model and prompt (here none recorded), never the environment's, a key or a host.
+                    assert "Model (saved run): not recorded" in foot and "test-model" not in foot and "SECRET" not in foot and "host.example" not in foot and "pw@" not in foot
+                    stored("SUB-901", "complete", good)
+                    raw = json.loads((ext / "SUB-901.json").read_text())
+                    raw.update(model_version="model-A", prompt_version="v7")
+                    raw["saved_hash"] = prepare.hash_payload(raw)
+                    (ext / "SUB-901.json").write_text(json.dumps(raw))
+                    foot = render([q for q in load_queue() if q["id"] == "SUB-901"], None)
+                    assert "Model (saved run): model-A · Prompt version (saved run): v7" in foot and "test-model" not in foot
+                    foot = render(load_queue(), None)
+                    assert "(they differ)" in foot and "SUB-901: model model-A · prompt v7" in foot and "SUB-907: model not recorded" in foot
+                    # E2: the decision row holds the saved run's versions and does not follow LLM_MODEL.
+                    stored("SUB-901", "complete", good)
+                    raw = json.loads((ext / "SUB-901.json").read_text())
+                    raw.update(model_version="model-A", prompt_version="v7")
+                    raw["saved_hash"] = prepare.hash_payload(raw)
+                    (ext / "SUB-901.json").write_text(json.dumps(raw))
+                    row1 = record_decision({"underwriter_id": "user", "submission": "SUB-901", "action": "edit", "reason": "e2 check"}, dlog)
+                    os.environ["LLM_MODEL"] = "changed"
+                    row2 = record_decision({"underwriter_id": "user", "submission": "SUB-901", "action": "edit", "reason": "e2 again"}, dlog)
+                    keys = ("points", "not_scored_reason", "reason_codes", "points_version", "model_version", "prompt_version", "cache_key")
+                    assert all(k in row1 for k in keys) and all(row1[k] == row2[k] for k in keys) and row1["model_version"] == "model-A" and row1["prompt_version"] == "v7" and row1["cache_key"] is None
+                    assert record_decision({"underwriter_id": "user", "submission": "SUB-910", "action": "decline", "reason": "x"}, dlog)["points"] is None
+                    assert row1["points"] == 0 and row1["not_scored_reason"] is None
+                    # P-015: a failed, incomplete and empty saved run shows Not scored and no number; the three lines show on every card.
+                    pg = render(load_queue(), None)
+                    for sid_ in ("SUB-910", "SUB-929"):
+                        a = art(pg, sid_)
+                        assert "Not scored — " in a and "Score:" not in a and "Loss history: not scored" in a and "Cooking: not scored" in a and "Hood and suppression:" in a, sid_
+                    assert "Score: 0" in art(pg, "SUB-901") and "Cooking: not scored" in art(pg, "SUB-901")
+                    # W1: a mark with no reason, an unknown id or an unknown code is refused; a mark leaves match() and the points unchanged.
+                    stored("SUB-950", "complete", [{**r, "value": "restaurant, 2 stories"} if r["field_id"] == "operations" else {**r, "value": "Frame"} if r["field_id"] == "construction" else r for r in good])
+                    q0 = {i["id"]: i for i in load_queue()}["SUB-950"]
+                    assert q0["score"]["reason_codes"] == ["FRAME_CONSTRUCTION"], q0["score"]
+                    mk = {"submission": "SUB-950", "code": "FRAME_CONSTRUCTION", "underwriter_id": "user", "reason": "brick veneer"}
+                    for bad in ({"reason": ""}, {"underwriter_id": "UW-999"}, {"code": "COOKING"}, {"code": "MADE_UP"}):
+                        ok_, = [act("/mark-code", {**mk, **bad})[1]]
+                        assert not ok_
+                    assert act("/mark-code", {**mk, **{"reason": ""}})[2].startswith("Mark refused: a reason is required")
+                    assert not marks_path().exists() or code_marks("SUB-950") == []
+                    assert act("/mark-code", mk)[1]
+                    q1 = {i["id"]: i for i in load_queue()}["SUB-950"]
+                    assert q1["score"] == q0["score"] and q1["route"] == q0["route"] and match(q1["report"]) == match(q0["report"])
+                    m1 = json.loads(marks_path().read_text().splitlines()[-1])
+                    assert m1["points_version"] == points.POINTS_VERSION and m1["run_hash"] == q1["report"]["saved_hash"] and m1["reason"] == "brick veneer" and m1["at"]
+                    a = art(render(load_queue(), None), "SUB-950")
+                    assert "marked wrong by user: brick veneer" in a and "marked FRAME_CONSTRUCTION wrong" in a and 'action="/mark-code"' in a
+                    assert "Score: 15" in a and "add a code" not in a.lower()
+                    assert package.decisions("SUB-950", dlog) == []  # a mark is not a decision
+                    # B-266: a stale card lists changed fields, old to new.
+                    assert act("/decision", {"submission": "SUB-908", "underwriter_id": "user", "action": "approve", "reason": "again", "ack": ["named_insured"]})[1]
+                    stored("SUB-908", "complete", [{**r, "value": "Other Co", "needs_review": True, "quote": "Acme", "reason": "r"} if r["field_id"] == "named_insured" else r for r in good])
+                    a = art(render(load_queue(), None), "SUB-908")
+                    assert "Re-review needed" in a and "named_insured: x → Other Co" in a, a
+                    assert "year_built:" not in a.split("Changed since")[1].split("</ul>")[0]
+                    assert "senior_referral" not in a or "Suggested market" in a
+                    assert "not recorded for this earlier approval" in art(render(load_queue(), None), "SUB-906") or "Re-review needed" not in art(render(load_queue(), None), "SUB-906")
                 finally:
                     for k, v in env_old.items():
                         os.environ.pop(k, None)
