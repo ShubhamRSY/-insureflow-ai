@@ -125,6 +125,8 @@ def score_run(report: dict) -> dict:
     hood = f["hood_suppression"]
     hood_line = f"Hood and suppression: {HOOD_WORDS.get(hood.get('state'), 'not stated')}" + (f" — \"{hood.get('quote')}\"" if hood.get("quote") else "")
     lines = [LOSS_LINE, cooking_line(f["cooking_equipment"]), hood_line]
+    if isinstance(report, dict) and report.get("status") == "extraction_failed":  # D-079 (B-295): nothing was read
+        lines = [f"{label}: Not read — extraction failed" for label in ("Loss history", "Cooking", "Hood and suppression")]
     out = {"scored": why is None, "points": None, "reason_codes": [], "not_scored_reason": why and f"Not scored — {why}",
            "lines": lines, "points_version": POINTS_VERSION}
     if why is None and f["cooking_equipment"].get("state") == "needs_review":  # B-278 (D-073): never a normal number
@@ -175,6 +177,10 @@ if __name__ == "__main__":
     nr = {"state": "needs_review", "terms": [], "quote": "no fryer but charbroiler"}
     assert cooking_line(nr) == 'Cooking: needs review — "no fryer but charbroiler"'
     assert "COOKING" not in score_run(run(cooking={"equipment": nr, "hood_suppression": {"state": "not_stated"}}))["reason_codes"], "P-029: no points"
+    # D-079 (B-295): a failed extraction never reads "none stated".
+    failed = score_run({"status": "extraction_failed", "fields": []})
+    assert failed["points"] is None and all(line.endswith("Not read — extraction failed") for line in failed["lines"]), failed["lines"]
+    assert not any("stated" in line for line in failed["lines"])
     # B-278 (D-073): provisional until the underwriter records the call for this run; points apply only after it.
     pr = run(cooking={"equipment": nr, "hood_suppression": {"state": "not_stated"}}, saved_hash="h1")
     got = score_run(pr)
@@ -199,7 +205,7 @@ if __name__ == "__main__":
     for r in bad:
         got = score_run(r)
         assert not got["scored"] and got["points"] is None and got["reason_codes"] == [] and got["not_scored_reason"].startswith("Not scored — "), r
-        assert got["lines"][0] == LOSS_LINE
+        assert got["lines"][0] == (LOSS_LINE if r.get("status") != "extraction_failed" else "Loss history: Not read — extraction failed")
     assert "HTTP 429" in score_run(bad[0])["not_scored_reason"] and "tiv_building" in score_run(bad[1])["not_scored_reason"]
     assert "premises_address" in score_run(bad[2])["not_scored_reason"]
     # A resolved conflict does not block. A run saved before P-015 (no cooking key) reads as not stated.

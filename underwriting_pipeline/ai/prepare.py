@@ -322,7 +322,7 @@ ITEM_SPLIT = re.compile(r"[;,/]|\b(?:and|or|y|o|with|con)\b")  # P-027: a negati
 NONE_AFTER = re.compile(r":\s*(none|no|not|n/a|ninguno|ninguna)\s*$")  # "fryer: none"
 
 
-NEG_WORD = re.compile(r"(?<![\w/'’])(no|none|not|without|never|don't|don’t|dont|n/a|sin|nunca|ninguno|ninguna)(?![\w/'’])")  # P-031 (D-074)
+NEG_WORD = re.compile(r"(?<![\w/'’])(no|none|not|without|never|don't|don’t|dont|n/a|sin|nunca|ninguno|ninguna|ningún|nada|w/o|isn't|isn’t|removed|zero)(?![\w/'’])")  # P-031 (D-074), P-033 (D-079)
 REASON_COOKING = "the cooking line contains a negation word (P-031): the underwriter records present or none"
 
 
@@ -1447,6 +1447,11 @@ if __name__ == "__main__":
     assert two("Cooking equipment: fryer\nno grill on site\n")["state"] == "yes", "a newline ends the line: the next line is not read"
     assert two("Cooking equipment: no fryer\ngas grill\n")["state"] == "needs_review"
     assert equipment_fact("fryer\nno grill") == ("yes", ["fryer"], [])
+    # P-033 (D-079): more negation words; whole words only.
+    for line in ("ningún freidora", "nada de parrilla", "fryer w/o hood", "grill isn't used", "fryer removed", "zero fryers", "fryer isn’t used"):
+        assert eq(line)["state"] == "needs_review", (line, eq(line))
+    for line in ("nadal grill", "zeroed fryer", "removedly grill"):
+        assert eq(line)["state"] == "yes", ("whole words only", line, eq(line))
     assert cooking_facts({"a.md": "Hood: N/A\n"})["hood_suppression"]["state"] == "not_stated"
     assert cooking_facts({"a.md": "Hood: without hood\n"})["hood_suppression"]["state"] == "none"
     assert cooking_facts({"a.md": "Hood: without hood; Ansul suppression\n"})["hood_suppression"]["state"] == "stated"

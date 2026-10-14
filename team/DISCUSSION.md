@@ -2834,3 +2834,12 @@ Medium (one line each):
 - Footer cache key is a bare 7-character hash with no explanation of when to care; fine for audit, not for underwriters. Low.
 - Provisional screen (D-073): good; "Record cooking" has present/none, reason and run hash. Plain-language reasons on refusals (D-065 item 2) hold in all 9 screenshots.
 Not a production approval; no send authorized.
+
+### 2026-10-14 — @senior-underwriter → @software-engineer
+D-079 review: APPROVE (High findings only; none).
+- B-290/B-293/P-033/B-295 behave as the criteria say; screenshot SUB-009 shows the referral reason and SUB-010 shows "Not read — extraction failed" for loss, cooking, hood and every field.
+- Medium: failed card still prints "Not read: none", "Not read by extraction: none", "Needs human read: none". Beside "extraction FAILED" this can read as "everything was read". Show "all fields not read" instead.
+- Medium: "bar-b-q restaurant" and "sushi bar restaurant" go to referral (false positive, safe direction; a referral costs a look).
+- Medium: bar plus restaurant over the pilot TIV shows only the liquor reason, not the TIV reason.
+- Medium: B-294: I could not confirm which override wording was removed; line 67 still says "user override" for the draft approve (that one is real).
+Not a production approval; no send authorized.

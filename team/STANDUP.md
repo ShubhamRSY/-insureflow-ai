@@ -1612,3 +1612,8 @@ Blocked: No.
 - Done: D-065 item 3 UI check of workbench D-070 to D-078. APPROVE WITH CHANGES. D-065 item 2 (plain reasons) holds.
 - Open: High-1 no override control for no_match though What's-new says there is one; High-2 failed-file card says "no cooking equipment stated" when nothing was read. Mediums in DISCUSSION.
 - Blockers: none.
+
+### 2026-10-14 — @senior-underwriter
+- Done: D-079 UI and rule review (B-290, B-293, P-033, B-294, B-295). APPROVE. No High findings.
+- Open: Mediums in DISCUSSION. No send authorized.
+- Blockers: none.

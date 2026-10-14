@@ -880,3 +880,14 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: build in `workbench.py` (main session, budget rule 3); cuisine swap rerun; fairness report gap + backlog; @responsible-ai review; @senior-underwriter UI check; wrap-up and push. Note: the saved runs carry no class-code field, so "a class code" has nothing to read yet; Spanish translations of the generic words stay (D-060).
 - Status: ACCEPTED
 - Amends: D-060 (Carrier B class list: cuisine and food-type words removed; a file named only by a cuisine word is no_match, overridable with a reason under D-057). Not a production approval. No send is authorized.
+
+## D-079 — B-290 bar words; B-293 bakery/coffee shop/deli; P-033 (B-291) negation words; B-294; B-295
+- Date / Owner: 2026-10-14 / @user
+- Context: @responsible-ai High B-290 ("bar" lets a cuisine word decide); B-291 missing negation words; B-293 bakery/coffee shop no_match; @senior-underwriter Highs B-294 (override claim) and B-295 (failed-extraction cooking line).
+- Options considered: none. The user's words.
+- Decision: In the user's words. "1. B-290: "bar", "tavern", "nightclub", "pub", "lounge" with no generic restaurant evidence → no_match as now; with restaurant evidence → senior referral, reason "possible bar/liquor exposure — confirm liquor sales". Self-checks: "sushi bar restaurant", "bar-b-q restaurant", "bbq restaurant", "sports bar", "tavern". 2. B-293: add bakery, coffee shop and deli to the generic food-service list (Carrier B, "restaurants and food service"). Rerun the cuisine swap. 3. approve change P-033 (B-291): add ningún, nada, w/o, isn't, removed, zero to the negation words. 4. B-294: remove the override claim from the "What's new" panel; the override form stays in the after-demo backlog. 5. B-295: a failed-extraction card shows "Not read — extraction failed" for cooking and every field, never "none stated". Sandbox screenshots. One @senior-underwriter check, High only. /wrap-up and push."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-14 (D-032).
+- Dissent: none
+- Follow-up tasks: built in the main session (budget rule 3); cuisine swap rerun; @senior-underwriter check; wrap-up and push. Orchestrator's reading: "as now" keeps each word's current result without restaurant evidence (bar, tavern, nightclub: prohibited no_match; pub, lounge: not on any list, overridable no_match); the senior referral comes after the missing-information and TIV holds; other prohibited words (cannabis, fireworks, ...) are unchanged. P-032 was never used; P-033 is its own number.
+- Status: ACCEPTED
+- Amends: D-078 (bakery, coffee shop, deli are generic evidence), D-074 (negation word list). Not a production approval. No send is authorized.

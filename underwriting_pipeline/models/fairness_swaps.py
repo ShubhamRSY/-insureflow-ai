@@ -36,10 +36,10 @@ BUSINESS = ["Nguyen Family Holdings", "Okafor and Daughters", "Al-Rashid Trading
 PERSONS = ["Maria Lopez", "Jamal Washington", "Mei Chen", "Olumide Adeyemi", "Priya Patel", "John Smith", "Fatima Al-Sayed",
            "Dmitri Ivanov", "Aiyana Redcloud", "Sung-min Park"]
 # D-078: cuisine and food-type words only. Generic restaurant evidence (restaurant, food service, kitchen, eatery, café, catering,
-# cocina, comedor) is never swapped, and no replacement contains it.
-CUISINE = re.compile(r"(?<!\w)(taquer[ií]a|panader[ií]a|pho|diner|pizzer[ií]a|pizza|bakery|bistro|deli|tacos?|bbq|barbecue|"
+# cocina, comedor; bakery, coffee shop, deli since D-079) is never swapped, and no replacement contains it.
+CUISINE = re.compile(r"(?<!\w)(taquer[ií]a|panader[ií]a|pho|diner|pizzer[ií]a|pizza|bistro|tacos?|bbq|barbecue|"
                      r"steakhouse|sushi|noodle house)(?!\w)", re.I)
-CUISINE_NEW = ["Taqueria", "Panadería", "Pho House", "Diner", "Pizzeria", "Soul Food", "Curry House", "Kosher Deli"]
+CUISINE_NEW = ["Taqueria", "Panadería", "Pho House", "Diner", "Pizzeria", "Soul Food", "Curry House", "Halal Cart"]
 EQUIPMENT_LINE = re.compile(r"^\s*(cooking equipment|hood and fire suppression|hood and suppression|hood|suppression)\s*:", re.I)
 FROM_NAME = re.compile(r"^From:\s*([^<\n]+?)\s*<", re.M)
 SCORE_KEYS = ("status", "scored", "points", "codes", "lines", "needs_review")
@@ -160,7 +160,7 @@ def markdown(res: dict) -> str:
     f = res["findings"]
     must = [x for x in f if set(x["diffs"]) - {"needs_review"} or x["kind"] != "cuisine"]  # D-078: a route change now breaks the rule
     route_only = [x for x in f if x["kind"] == "cuisine" and set(x["diffs"]) == {"needs_review"}]
-    L = ["# Name and cuisine swap tests (D-077, rerun under D-078)", "",
+    L = ["# Name and cuisine swap tests (D-077, rerun under D-079)", "",
          "- Orchestrator, main session, 2026-10-14. D-077 items 1 and 2. Synthetic. Not a production approval. Does not replace the @responsible-ai check of P-015 (B-270).",
          "- No model call (`llm_extract._post` raised); a scratch copy of the cache; no real workbench, log or outbox file written; no rule, prompt, scorer or score file changed.",
          f"- Cached files tested (SUB-001 to SUB-076 with a cached reply): {len(res['files'])}. Carry a score (a number, not Not scored or Provisional): {len(res['scored'])} ({', '.join(s[4:] for s in res['scored'])}).",

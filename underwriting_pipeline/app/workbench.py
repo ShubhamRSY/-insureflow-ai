@@ -43,7 +43,8 @@ MESSAGES: dict[str, tuple[bool, str]] = {}  # submission -> (ok, plain-words res
 WHATS_NEW = (
     ("2026-10-14", "P-015/B-264/B-265/B-266", "D-070", "The score shows \"Not scored — reason\" when a file is failed, incomplete or empty, and the cooking and hood lines; each code has a mark-wrong control (logged; the number does not change); the footer names the model and prompt version of the saved run; Suggested market shows only on senior referrals; a stale card lists the changed fields, old to new."),
     ("2026-10-14", "P-027 (B-268)", "D-071", "The cooking line names what was stated as not present (\"no fryer; gas grill\" counts the grill, not the fryer) and shows the quote, including on \"stated none\". Superseded by P-029, then P-030."),
-    ("2026-10-14", "B-286", "D-078", "The carrier class for a restaurant comes only from generic evidence (restaurant, food service, kitchen, eatery, café, catering, or stated cooking equipment), never from a cuisine or ethnic word. A file named only by a cuisine word shows no_match with that reason and can be overridden with a reason."),
+    ("2026-10-14", "B-290, B-293, P-033, B-295", "D-079", "A bar, tavern, nightclub, pub or lounge word next to restaurant evidence goes to a senior referral: \"possible bar/liquor exposure — confirm liquor sales\". Bakery, coffee shop and deli count as food service. More words mark a cooking line for review (ningún, nada, w/o, isn't, removed, zero). A card whose extraction failed shows \"Not read — extraction failed\" for cooking and every field."),
+    ("2026-10-14", "B-286", "D-078", "The carrier class for a restaurant comes only from generic evidence (restaurant, food service, kitchen, eatery, café, catering, or stated cooking equipment), never from a cuisine or ethnic word. A file named only by a cuisine word shows no_match with that reason."),
     ("2026-10-14", "P-028 (B-269)", "D-075", "Each saved run stores its extraction cache key (files, prompt version, OCR settings, model, host, temperature); the footer shows it in short form, and decision rows save it."),
     ("2026-10-14", "P-031 (B-279, B-280)", "D-074", "Cooking has two rules: a line with no negation word counts the hazards it names; a line with any negation word (no, none, not, without, never, don't, n/a, sin, nunca, ninguno, ninguna) is \"Cooking: needs review\" and the score stays provisional until you record present or none. Only the labelled line itself is read."),
     ("2026-10-14", "P-030 (B-276), B-278", "D-073", "Cooking: a negation directly before a hazard (\"no gas grill\") means none; any other line with a negation word (\"fryer, none\", \"none\", \"N/A\") is \"needs review\". While it is, the score reads \"Provisional — cooking not scored\"; an underwriter records present or none with a reason, logged with the run hash, and only then do points apply. The negation rule was simplified by P-031."),
@@ -82,13 +83,16 @@ PROHIBITED = ("bar", "bars", "nightclub", "nightclubs", "tavern", "taverns", "ca
               "cannabis", "marijuana", "marihuana", "dispensary", "dispensario", "fireworks", "firework", "explosives", "explosive",
               "fuegos artificiales", "explosivos", "armed security", "armed guard", "seguridad armada", "guardia armado",
               "student housing", "subsidized housing", "alojamiento estudiantil", "vivienda subsidiada")  # CAG/AG:45-49
+NOT_READ = "Not read — extraction failed"  # D-079 (B-295)
+BAR_WORDS = ("bar", "bars", "tavern", "taverns", "nightclub", "nightclubs", "pub", "pubs", "lounge", "lounges")  # D-079
+
 CLASSES = {
     "a": ("office", "offices", "oficina", "oficinas", "retail", "retail store", "dry retail", "storefront", "comercio minorista",
           "tienda minorista", "wholesale", "light wholesale", "mayoreo", "mayorista"),
     # D-078 (B-286): generic restaurant evidence only, never a cuisine or ethnic word; Spanish only as translations (D-060).
     "b": ("restaurant", "restaurants", "restaurante", "restaurantes", "food service", "foodservice", "servicio de alimentos",
           "kitchen", "kitchens", "cocina", "eatery", "eateries", "comedor", "cafe", "café", "cafeteria", "cafetería",
-          "catering", "banquetes"),
+          "catering", "banquetes", "bakery", "bakeries", "coffee shop", "coffee shops", "deli", "delis"),  # D-079 (B-293)
     "contractor": ("contractor", "contractors", "contratista", "roofing", "roofer", "techado", "techador", "handyman", "painter", "painting",
                    "pintor", "pintura", "carpenter", "carpentry", "carpintero", "carpintería", "flooring", "drywall", "plumbing", "electrician"),
     "habitational": ("habitational", "habitacional", "apartment", "apartments", "apartamento", "apartamentos", "flats", "multifamily",
@@ -122,13 +126,18 @@ def match(report: dict) -> dict:
     def out(route, note="", suggested="", overridable=False):
         return {"route": route, "note": note, "suggested": suggested, "overridable": overridable}
 
-    if ops and _has(ops, PROHIBITED):
+    food = bool(ops) and (_has(ops, CLASSES["b"]) or ((report.get("cooking") or {}).get("equipment") or {}).get("state") == "yes")
+    barred = bool(ops) and _has(ops, BAR_WORDS)
+    other_prohibited = bool(ops) and _has(ops, tuple(w for w in PROHIBITED if w not in BAR_WORDS))
+    if other_prohibited or (ops and _has(ops, PROHIBITED) and not food):
         return out("no_match", "prohibited class (AG:45-49)")
     if not report["complete"] or not ops:
         return out("hold", "missing information")
     tiv = _tiv(report)
     if tiv is None or tiv <= 0:
         return out("hold", "TIV missing or unreadable")  # D-061, B-203 (D-062): never read as 0 or negative
+    if barred and food:  # D-079 (B-290): a bar word with restaurant evidence is a person's call, not a rule's
+        return out("senior_referral", "possible bar/liquor exposure — confirm liquor sales")
     hit = [k for k, words in CLASSES.items() if _has(ops, words)]
     if "b" not in hit and ((report.get("cooking") or {}).get("equipment") or {}).get("state") == "yes":
         hit.append("b")  # D-078: stated cooking equipment is generic restaurant evidence
@@ -638,16 +647,19 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
             continue
         refused = report.get("status") in prepare.REFUSED_STATUSES
         field_rows = []
+        failed = report.get("status") == "extraction_failed"  # D-079 (B-295): nothing was read; never "none stated"
         for row in report["fields"]:
             note = ""
-            if row.get("needs_review") and row.get("value"):
+            if failed:
+                note = NOT_READ
+            elif row.get("needs_review") and row.get("value"):
                 note = "NEEDS REVIEW: " + (row.get("reason") or "flagged")
             elif row.get("reason") and not row.get("value"):
                 note = row["reason"]
             field_rows.append(
                 "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
                     html.escape(row["field_id"]),
-                    html.escape(row["value"] or "—"),
+                    html.escape(NOT_READ if failed else (row["value"] or "—")),
                     html.escape(_confidence(row)),
                     html.escape(row.get("source") or "—"),
                     html.escape(row.get("quote") or item["snippets"].get(row["field_id"]) or "—"),
@@ -1026,7 +1038,13 @@ if __name__ == "__main__":
             assert "<option>approve</option>" not in page
             assert "<h3>Missing</h3>" not in page
             assert "Carrier match:" not in page
-            assert "Score:" not in page and "Not scored — " in page and "Loss history: not scored" in page and "Cooking: not scored" in page
+            assert "Score:" not in page and "Not scored — " in page
+            if "FAILED" in page:  # D-079 (B-295): nothing was read
+                card_html = page.split("<article", 1)[1]  # the card only; What's new may quote old wording
+                assert "Cooking: Not read — extraction failed" in card_html and "none stated" not in card_html and "not stated" not in card_html
+                assert page.count(f"<td>{NOT_READ}</td>") >= 2 * len(item["report"]["fields"]), "value and note say not read on every field"
+            else:
+                assert "Loss history: not scored" in page and "Cooking: not scored" in page
             assert "<option>edit</option>" in page and "<option>decline</option>" in page
         assert "REJECTED" in render([card("all_values_rejected", status_reason=prepare.REJECT_REASON)], None)
         normal = card("complete", fields=[{"field_id": "operations", "value": "accounting office"}])
@@ -1100,11 +1118,23 @@ if __name__ == "__main__":
             assert m == {"route": "hold", "note": "TIV missing or unreadable", "suggested": "", "overridable": False}, (bad, m)
         assert route(r("oficina")) == "carrier_a" and route(r("")) == "hold"
         # D-078 (B-286): cuisine and ethnic words never decide the class. Alone they give the same no_match; with generic evidence the same carrier_b.
-        cuisines = ("taqueria", "panadería", "pho house", "diner", "pizzeria", "soul food", "curry house", "kosher deli", "bbq")  # "sushi bar" hits PROHIBITED "bar" (B-289)
+        cuisines = ("taqueria", "panadería", "pho house", "diner", "pizzeria", "soul food", "curry house", "halal cart", "bbq")  # "deli" is food service (D-079); bar words: see below
         assert {route(r(c)) for c in cuisines} == {"no_match"} and all(match(r(c))["overridable"] for c in cuisines)
         assert {route(r(f"{c} restaurant")) for c in cuisines} == {"carrier_b"}
         assert {route(r(f"{c}, food service")) for c in cuisines} == {"carrier_b"} and route(r("catering kitchen")) == "carrier_b"
         assert route(r("pho house", cooking={"equipment": {"state": "yes"}, "hood_suppression": {"state": "not_stated"}})) == "carrier_b", "stated cooking equipment is generic evidence"
+        # D-079 (B-290): bar words with restaurant evidence go to a person; without it, as before. (B-293): bakery, coffee shop, deli are food service.
+        bar_ref = {"route": "senior_referral", "note": "possible bar/liquor exposure — confirm liquor sales", "suggested": "", "overridable": False}
+        for ops in ("sushi bar restaurant", "bar-b-q restaurant", "pub and kitchen", "hotel lounge with catering"):
+            assert match(r(ops)) == bar_ref, (ops, match(r(ops)))
+        assert route(r("bbq restaurant")) == "carrier_b"
+        for ops in ("sports bar", "tavern", "nightclub"):
+            assert match(r(ops)) == {"route": "no_match", "note": "prohibited class (AG:45-49)", "suggested": "", "overridable": False}, ops
+        assert route(r("pub")) == "no_match" and match(r("nail lounge"))["overridable"], "pub, lounge alone: as before"
+        assert route(r("cannabis dispensary restaurant")) == "no_match", "other prohibited words are unchanged"
+        assert route(r("restaurant bar", None)) == "hold", "holds come before the referral"
+        for ops in ("bakery", "coffee shop", "deli"):
+            assert route(r(ops)) == "carrier_b", ops
         assert route(r("sprinklered apartments", "$4,000,000")) == "carrier_c"
         assert match(r("sprinklered apartments", "$6,000,000"))["note"] == OUT_TIV
         assert route(r("office")) == "carrier_a" and route(r("barley mill")) == "no_match"
@@ -1280,7 +1310,8 @@ if __name__ == "__main__":
                     pg = render(load_queue(), None)
                     for sid_ in ("SUB-910", "SUB-929"):
                         a = art(pg, sid_)
-                        assert "Not scored — " in a and "Score:" not in a and "Loss history: not scored" in a and "Cooking: not scored" in a and "Hood and suppression:" in a, sid_
+                        assert "Not scored — " in a and "Score:" not in a and "Hood and suppression:" in a, sid_
+                        assert ("Cooking: Not read — extraction failed" in a) if "FAILED" in a else ("Loss history: not scored" in a and "Cooking: not scored" in a), sid_
                     assert "Score: 0" in art(pg, "SUB-901") and "Cooking: not scored" in art(pg, "SUB-901")
                     # W1: a mark with no reason, an unknown id or an unknown code is refused; a mark leaves match() and the points unchanged.
                     stored("SUB-950", "complete", [{**r, "value": "restaurant, 2 stories"} if r["field_id"] == "operations" else {**r, "value": "Frame"} if r["field_id"] == "construction" else r for r in good])
