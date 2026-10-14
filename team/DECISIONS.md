@@ -704,3 +704,14 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: P-020 and P-021 in `underwriting_pipeline/ai/prepare.py` (@ai-engineer-assistant); the send gate call in `package.py` and B-203 in `workbench.py` (main session, budget rule 3); @compliance review of P-020; @senior-underwriter check of the TIV cases.
 - Status: ACCEPTED
 - Amends: nothing. An approved proposal is not a production approval; @model-risk can still block production. No send is authorized.
+
+## D-063 — P-022 approved (B-205, B-206, B-209); demo re-save; quick set of 15
+- Date / Owner: 2026-10-14 / @user
+- Context: @compliance on P-020 raised B-205 (manifest taken after extraction) and B-206 (dotfiles read by extraction, skipped by the manifest); @senior-underwriter raised B-209 ("50,000 sq ft" in the TIV field reads as $50,000). B-208: no saved run has a manifest. The quick set of 15 is owed after P-021 (D-022). LLM_BASE_URL and LLM_MODEL are now set in the shell.
+- Options considered: none. The user's words.
+- Decision: In the user's words. "2. P-022 (B-205, B-206, B-209 together): take the document manifest before extraction reads any file; skip dotfiles in both the manifest and extraction; a TIV containing an area unit (sq ft, sf, square feet) → hold. approve change P-022. Self-checks for each. 3. Re-save only the 3 demo submissions with today's code (one clean, one with missing info, one that fails safely); tell me which SUB numbers you picked. 4. Run the quick set of 15 owed under D-022, one run, and report the score field by field. One @compliance review of P-022, High only."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-14 (D-032: pasted text counts).
+- Dissent: none
+- Follow-up tasks: P-022 build and self-checks (@ai-engineer-assistant for `ai/`; B-209 in `workbench.py` main session, budget rule 3); re-save 3 demo submissions; quick set of 15, one run; @compliance review of P-022, High only.
+- Status: ACCEPTED
+- Amends: nothing. An approved proposal is not a production approval; @model-risk can still block production. No send is authorized.

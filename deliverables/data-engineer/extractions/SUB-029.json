@@ -1,0 +1,109 @@
+{
+  "submission": "SUB-029",
+  "status": "incomplete",
+  "error": null,
+  "complete": false,
+  "conflicts": [],
+  "needs_human": [],
+  "sprinklers": "yes",
+  "model_version": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "ocr_settings": "tesseract psm6; osd turn; deskew +-12; rule lift; x2 lanczos; pdf 200dpi",
+  "host": "api.groq.com",
+  "temperature": 0,
+  "fields": [
+    {
+      "field_id": "named_insured",
+      "value": "Fredericksburg Paper LLC",
+      "source": "email.md",
+      "confidence": 1.0,
+      "needs_review": false,
+      "start": 21,
+      "end": 45
+    },
+    {
+      "field_id": "premises_address",
+      "value": "410 Fredericksburg Rd, San Antonio, TX 78201",
+      "source": "schedule.xlsx",
+      "confidence": 1.0,
+      "needs_review": false,
+      "start": 75,
+      "end": 119
+    },
+    {
+      "field_id": "effective_date",
+      "value": null,
+      "source": null,
+      "confidence": 0.0,
+      "needs_review": true,
+      "start": null,
+      "end": null
+    },
+    {
+      "field_id": "operations",
+      "value": "light wholesale",
+      "source": "email.md",
+      "confidence": 1.0,
+      "needs_review": false,
+      "start": 47,
+      "end": 62
+    },
+    {
+      "field_id": "sales_or_payroll",
+      "value": "1800000",
+      "source": "schedule.xlsx",
+      "confidence": 1.0,
+      "needs_review": false,
+      "start": 149,
+      "end": 156
+    },
+    {
+      "field_id": "tiv_building",
+      "value": "900000",
+      "source": "schedule.xlsx",
+      "confidence": 1.0,
+      "needs_review": false,
+      "start": 120,
+      "end": 126
+    },
+    {
+      "field_id": "construction",
+      "value": "masonry",
+      "source": "schedule.xlsx",
+      "confidence": 1.0,
+      "needs_review": false,
+      "start": 127,
+      "end": 134
+    },
+    {
+      "field_id": "year_built",
+      "value": "1990",
+      "source": "schedule.xlsx",
+      "confidence": 1.0,
+      "needs_review": false,
+      "start": 135,
+      "end": 139
+    },
+    {
+      "field_id": "loss_run_valued_through",
+      "value": null,
+      "source": null,
+      "confidence": 0.0,
+      "needs_review": true,
+      "start": null,
+      "end": null
+    }
+  ],
+  "input_manifest": [
+    {
+      "name": "email.md",
+      "sha256": "50724f72f1b35885150cf27d0bd10211f3f485c121640cebd9082930861d19a0"
+    },
+    {
+      "name": "schedule.xlsx",
+      "sha256": "76580dc26d48ec4f89b7c8443e32bd943f4eb3a269149da0efa45f74228af66b"
+    }
+  ],
+  "hash_algorithm": "sha256",
+  "saved_hash": "d218da3bfcfe5571f184b17843156b013abe75da92c12fe4edbe2c4dd5643a7e"
+}

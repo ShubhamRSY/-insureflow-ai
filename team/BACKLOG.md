@@ -228,3 +228,7 @@ Also open from T-097, already in the register's Section D so not repeated as row
 | B-208 | P-020 | @software-engineer | Low: all 16 saved runs have no manifest, so every real send is refused until re-extracted (fail-closed, correct); plan the re-save before any demo send. | 2026-10-14 |
 | B-209 | T-083 | @software-engineer | Medium: `_tiv` uses `amount_value`, which also accepts a "sq ft"/"sf" suffix; a TIV field holding "50,000 sq ft" reads as $50,000 and routes to a carrier instead of holding. Reject area suffixes in `_tiv`. | 2026-10-14 |
 | B-210 | T-083 | @software-engineer | Low: "$0.0M"/"0K" parse to 0 and hold correctly; "-5000", "(5,000)" return None (hold). No negative test goes through the regex sign path; fine, but add "(5,000)" to the self-check. | 2026-10-14 |
+| B-211 | P-022 | @software-engineer | Low: area check misses metric and other forms ("sq m", "square meters", "ft2", "ft²"). | 2026-10-14 |
+| B-212 | P-022 | @software-engineer | Low: `workbench.facts()` keeps only the TIV digits for `points.score` (display only): "50,000 sq ft" → 50000, "$1.2M" → 12. | 2026-10-14 |
+| B-213 | P-022 | @ai-engineer-assistant | Low: manifest hashes files apart from the read, so a file changed and changed back during extraction is not detected. | 2026-10-14 |
+| B-214 | D-063 | @ai-engineer-assistant | Low: with LLM_* unset, extraction falls back to localhost Ollama instead of refusing; a dry run logged 16 failed rows (run 20261014T143300-63126). | 2026-10-14 |

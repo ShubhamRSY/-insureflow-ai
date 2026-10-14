@@ -1,10 +1,23 @@
 {
   "submission": "SUB-010",
+  "status": "complete",
+  "error": null,
+  "complete": true,
+  "conflicts": [],
+  "needs_human": [],
+  "sprinklers": "yes",
+  "model_version": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "ocr_settings": "tesseract psm6; osd turn; deskew +-12; rule lift; x2 lanczos; pdf 200dpi",
+  "host": "api.groq.com",
+  "temperature": 0,
   "fields": [
     {
       "field_id": "named_insured",
       "value": "Leon Creek Painting LLC",
       "source": "application.md",
+      "confidence": 1.0,
+      "needs_review": false,
       "start": 15,
       "end": 38
     },
@@ -12,6 +25,8 @@
       "field_id": "premises_address",
       "value": "600 Nogalitos St, San Antonio, TX 78204",
       "source": "application.md",
+      "confidence": 1.0,
+      "needs_review": false,
       "start": 57,
       "end": 96
     },
@@ -19,6 +34,8 @@
       "field_id": "effective_date",
       "value": "2027-02-15",
       "source": "application.md",
+      "confidence": 1.0,
+      "needs_review": false,
       "start": 113,
       "end": 123
     },
@@ -26,6 +43,8 @@
       "field_id": "operations",
       "value": "light contractor, interior painting, no roofing",
       "source": "application.md",
+      "confidence": 1.0,
+      "needs_review": false,
       "start": 151,
       "end": 198
     },
@@ -33,6 +52,8 @@
       "field_id": "sales_or_payroll",
       "value": "480000",
       "source": "application.md",
+      "confidence": 1.0,
+      "needs_review": false,
       "start": 217,
       "end": 223
     },
@@ -40,13 +61,17 @@
       "field_id": "tiv_building",
       "value": "0",
       "source": "application.md",
-      "start": 238,
-      "end": 239
+      "confidence": 1.0,
+      "needs_review": false,
+      "start": 58,
+      "end": 59
     },
     {
       "field_id": "construction",
       "value": "masonry",
       "source": "application.md",
+      "confidence": 1.0,
+      "needs_review": false,
       "start": 254,
       "end": 261
     },
@@ -54,6 +79,8 @@
       "field_id": "year_built",
       "value": "1962",
       "source": "application.md",
+      "confidence": 1.0,
+      "needs_review": false,
       "start": 274,
       "end": 278
     },
@@ -61,9 +88,30 @@
       "field_id": "loss_run_valued_through",
       "value": "2026-09-01",
       "source": "loss-runs.md",
+      "confidence": 1.0,
+      "needs_review": false,
       "start": 55,
       "end": 65
     }
   ],
-  "conflicts": []
+  "input_manifest": [
+    {
+      "name": "application.md",
+      "sha256": "d5971e59513637044ba6e7eb5890fdf17c915467fbdd9ce818ec71497d10deee"
+    },
+    {
+      "name": "email.md",
+      "sha256": "5da5611a3aa36a015a74f1ac9cd635ce8ebf82a2edb4e0de3ca8fde9e24a09de"
+    },
+    {
+      "name": "loss-runs.md",
+      "sha256": "92b168a5a4d42272c877a525191101a932d6c01047ed8b2c5a85c443865f2941"
+    },
+    {
+      "name": "schedule.csv",
+      "sha256": "f239091f3310e76066b5c26d9e986ee69457a96b6757377927e42a8b3b5bb5e1"
+    }
+  ],
+  "hash_algorithm": "sha256",
+  "saved_hash": "cfadd87ef2df70b95524b919e078211ca72c73fa16374eb289a05e2949c13725"
 }

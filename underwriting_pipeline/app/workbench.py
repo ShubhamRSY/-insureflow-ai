@@ -67,10 +67,15 @@ def _has(text: str, words) -> bool:
     return any(re.search(rf"(?<!\w){re.escape(w)}(?!\w)", text) for w in words)
 
 
+AREA_UNIT = re.compile(r"(?<![a-z])(sq\.?\s*f(?:ee|oo)?t\.?|sqft|sf|square\s+f(?:ee|oo)t)(?![a-z])", re.I)
+
+
 def _tiv(report: dict) -> int | None:
     """D-061: the existing normalizer (220k, $1.2M). None when missing, blank, "TBD" or unreadable."""
     for row in report["fields"]:
         if row["field_id"] == "tiv_building":
+            if AREA_UNIT.search(row["value"] or ""):
+                return None  # B-209 (P-022, D-063): an area is not a dollar amount
             return prepare.amount_value(row["value"] or "")
     return None
 
@@ -608,7 +613,8 @@ if __name__ == "__main__":
         assert match(r("office", "$8M"))["note"] == OUT_TIV and route(r("office", "$12,000,000")) == "senior_referral"
         assert route(r("office", "750K")) == "carrier_a" and route(r("office", "$1.2M")) == "carrier_a"
         assert route(r("office", "$1.2MM")) == "carrier_a" and route(r("office", "$5.1MM")) == "senior_referral"  # P-021
-        for bad in ("", "TBD", None, "$0", "0", "-$5,000"):  # B-203: 0 or negative holds
+        for bad in ("", "TBD", None, "$0", "0", "-$5,000",  # B-203: 0 or negative holds
+                    "50,000 sq ft", "50000 SF", "12,000 square feet", "8,000 sq. ft.", "9000sqft", "1 square foot"):  # B-209
             m = match(r("office", bad))
             assert m == {"route": "hold", "note": "TIV missing or unreadable", "suggested": "", "overridable": False}, (bad, m)
         assert route(r("taqueria")) == "carrier_b" and route(r("oficina")) == "carrier_a" and route(r("")) == "hold"

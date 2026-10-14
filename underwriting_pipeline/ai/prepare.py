@@ -757,6 +757,7 @@ def write_drafts(inbox: Path, draft_dir: Path, conflict_dir: Path) -> list[dict]
     extract_dir.mkdir(parents=True, exist_ok=True)
     reports = []
     for folder in sorted(p for p in inbox.iterdir() if p.is_dir() and p.name.startswith("SUB-")):
+        manifest = folder_manifest(folder)  # B-205 (P-022): taken before extraction reads any file
         report = process_submission(folder)
         reports.append(report)
         refused = report.get("status") in REFUSED_STATUSES
@@ -784,7 +785,7 @@ def write_drafts(inbox: Path, draft_dir: Path, conflict_dir: Path) -> list[dict]
                 side.unlink()
         payload = _saved_payload(report)
         payload["conflicts"] = conflicts_out
-        payload["input_manifest"] = folder_manifest(folder)
+        payload["input_manifest"] = manifest
         payload["hash_algorithm"] = HASH_ALGORITHM
         payload["saved_hash"] = hash_payload(payload, HASH_ALGORITHM)
         (extract_dir / f"{folder.name}.json").write_text(json.dumps(payload, indent=2) + "\n")
@@ -1235,4 +1236,23 @@ if __name__ == "__main__":
             _save_run(tmp / "data" / "extractions", "SUB-401", "incomplete")
             assert "no input manifest" in manifest_problem("SUB-401", tmp / "data" / "extractions", tmp / "inbox")
             assert manifest_problem("SUB-999", tmp / "data" / "extractions", tmp / "inbox")
+        # P-022 B-205: a file added while extraction runs is not in the saved manifest, so the send is refused.
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            sub = tmp / "inbox" / "SUB-402"
+            sub.mkdir(parents=True)
+            (sub / "application.md").write_text("Named insured: Example LLC\n")
+
+            def _writes_then_fails(*_a, **_k):
+                (sub / "late.md").write_text("added during extraction")
+                raise RuntimeError("model call failed: stub")
+
+            real_extract = llm_extract.llm_extract
+            llm_extract.llm_extract = _writes_then_fails
+            try:
+                write_drafts(tmp / "inbox", tmp / "pending", tmp / "data" / "conflicts")
+            finally:
+                llm_extract.llm_extract = real_extract
+            assert (sub / "late.md").exists()
+            assert "changed" in manifest_problem("SUB-402", tmp / "data" / "extractions", tmp / "inbox"), "late file must be refused"
         print("prepare ok")

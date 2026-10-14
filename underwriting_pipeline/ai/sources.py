@@ -183,7 +183,7 @@ def _csv_text(path: Path) -> str:
 
 def read_folder(folder: Path) -> list[dict]:
     docs = []
-    for path in sorted(p for p in folder.iterdir() if p.is_file()):
+    for path in sorted(p for p in folder.iterdir() if p.is_file() and not p.name.startswith(".")):  # B-206 (P-022): same rule as folder_manifest
         suffix = path.suffix.lower()
         needs_human = False
         ocr_confidence = None
@@ -220,4 +220,13 @@ if __name__ == "__main__":
     assert not human and "Masonry" in text and mean >= 40
     blank, human_blank, _blank_mean = _read_scan(Image.new("RGB", (400, 200), "white"))
     assert human_blank and blank == ""
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as tmp:  # B-206: a dotfile is neither read nor in the manifest
+        (Path(tmp) / "a.md").write_text("x")
+        (Path(tmp) / ".hidden.md").write_text("secret")
+        assert [d["name"] for d in read_folder(Path(tmp))] == ["a.md"]
+        from prepare import folder_manifest
+
+        assert [m["name"] for m in folder_manifest(Path(tmp))] == ["a.md"]
     print("sources ok")
