@@ -287,7 +287,7 @@ if __name__ == "__main__":
         return payload
 
     def full(**over):
-        vals = {f: "x" for f in prepare.FIELDS} | {"operations": "accounting office"} | over
+        vals = {f: "x" for f in prepare.FIELDS} | {"operations": "accounting office", "tiv_building": "$1,000,000"} | over
         return [{"field_id": f, "value": v, "source": "application.md", "start": 0, "end": 3} for f, v in vals.items()]
 
     office = full()

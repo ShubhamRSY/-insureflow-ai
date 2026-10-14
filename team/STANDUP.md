@@ -1419,3 +1419,8 @@ Blocked: No.
 - Done: T-083 review, APPROVE WITH CHANGES; one High (TIV "$8M" or blank passes the caps); Medium/Low B-199 to B-202.
 - Doing next: re-check after the TIV fix.
 - Blocked by / need from: @software-engineer to fix High-1.
+
+### 2026-10-14 — @senior-underwriter
+- Done: T-083 re-check after D-061 fix: APPROVE, no High. TIV now read by the existing normalizer; missing or unreadable holds; no $10M rule. Medium/Low B-203, B-204.
+- Doing next: nothing on T-083.
+- Blocked by / need from: none.

@@ -682,3 +682,14 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: T-083 (@software-engineer) builds D-059 as amended here. The input manifest is stored by `prepare.write_drafts()` under `underwriting_pipeline/ai/`; per D-017 that change is numbered P-020 and is built only after the user types "approve change P-020". Backlog: B-197, B-198.
 - Status: ACCEPTED
 - Amends: D-059 (accepted as amended above). Confirms the G2 hash basis of T-070 (was D-044). Not a production approval; lifts no veto (the @responsible-ai T-082 veto stands); authorizes no send.
+
+## D-061 — P-020 approved; T-083 TIV reading and the over-$5M rule
+- Date / Owner: 2026-10-14 / @user
+- Context: D-060 raised P-020 (an input-document manifest in each saved run; the send refuses on a mismatch). @senior-underwriter's T-083 High-1: the caps fail open on "$8M" and a blank TIV. The T-083 build made over-$10M a non-overridable no_match, which D-060 did not say.
+- Options considered: none. The user's words.
+- Decision: In the user's words. "approve change P-020" "T-083 fix: TIV is read with the existing number normalizer (the one that handles 220k and $1.2M), not a new parser. Missing, blank, "TBD" or unreadable TIV → hold, "TIV missing or unreadable". Self-checks for "$8M", "$1.2MM", "750K", blank and "TBD". Remove the over-$10M no_match rule: anything over $5M per location is senior referral, "outside pilot TIV limit (AG:16)", as D-060 says."
+- Rationale: The user typed this in this Claude Code session on 2026-10-14.
+- Dissent: none
+- Follow-up tasks: T-083 fix (main session, budget rule 3), then @senior-underwriter re-check. P-020 is approved and not yet built; it needs a build task (@ai-engineer-assistant for `prepare.py`, @software-engineer for the send gate). Note: the existing normalizer, `prepare.amount_value()`, returns None for "$1.2MM", so that value reads as unreadable → hold; widening it is a change under `underwriting_pipeline/ai/` and needs its own approval.
+- Status: ACCEPTED
+- Amends: D-060 (over $5M per location is senior referral; no over-$10M no_match). Approved proposal is not a production approval; @model-risk can still block production. No send is authorized.

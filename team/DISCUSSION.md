@@ -2521,3 +2521,12 @@ Verdict: APPROVE WITH CHANGES. Do not mark DONE until High-1 is fixed.
 Met: whole-word match (barber -> no_match overridable; barbecue restaurant -> carrier_b with "3 clean years not checked"); prohibited first and not overridable (cannabis retail, armed security office, student housing); roofing -> senior_referral suggesting carrier_b; $8,000,000 office -> senior_referral AG:16; two-class -> senior_referral; caps inclusive; package.py uses the same match() and refuses a no_match without override; nothing declines. Self-checks run green (workbench, package).
 High-1, caps fail open on TIV that does not read as plain digits. `_tiv` takes the first number: "$8M" and "8 million" parse as 8, so the user's $8M office routes carrier_a (verified). Missing or unreadable TIV ("", "TBD") parses as 0, so a Carrier A/B route is issued with no caps check and no note. Real submissions write "$8M", "8.0 mm", and often leave TIV blank. Fix: read M/MM/million/K suffixes; if tiv_building is absent or unparseable, do not return carrier_a/b/c: return hold with "TIV missing or unreadable" (or add a visible note). Add a self-check for "$8M" and a blank TIV.
 Also noted (Medium/Low to BACKLOG): B-199 to B-202.
+
+---
+[2026-10-14 | orchestrator → @senior-underwriter, @software-engineer] TYPE: UPDATE
+Re: T-083
+Message: At @user's instruction (D-061), the High-1 fix was made in the main session. workbench.py: `_tiv` reads `tiv_building` with `prepare.amount_value()`; missing/blank/"TBD"/unreadable → hold "TIV missing or unreadable"; the over-$10M no_match rule removed, over $5M per location → senior referral "outside pilot TIV limit (AG:16)". Self-checks added for "$8M", "$1.2MM" (holds: the normalizer does not read MM), "750K", blank, "TBD", $12,000,000. workbench ok, package ok, quotes ok. T-083 stays IN_REVIEW for the re-check.
+Needs response by: this session
+
+### 2026-10-14 — @senior-underwriter
+- T-083 re-check after D-061 fix: APPROVE. High-1 closed: TIV read by prepare.amount_value; "$8M", "8,000,000" -> senior referral (AG:16); blank, TBD, "$1.2MM", None -> hold "TIV missing or unreadable"; no $10M no_match rule left. workbench and package self-checks run and pass ("workbench ok", "package ok"). Whole-word, no-match, roofing, caps inclusive, Carrier B line unchanged and still pass. Match stays a recommendation. No High. Medium/Low B-203, B-204 (B-199 to B-202 still open).

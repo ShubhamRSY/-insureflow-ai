@@ -59,7 +59,7 @@ CLASSES = {
     "habitational": ("habitational", "habitacional", "apartment", "apartments", "apartamento", "apartamentos", "flats", "multifamily",
                      "multifamiliar", "duplex", "triplex", "fourplex"),
 }
-CAP_A, CAP_B, PILOT_TIV, CAP_MAX = 5_000_000, 2_000_000, 5_000_000, 10_000_000  # B cap provisional (@actuary, D-060); caps inclusive
+CAP_A, CAP_B, PILOT_TIV = 5_000_000, 2_000_000, 5_000_000  # B cap provisional (@actuary, D-060); caps inclusive
 OUT_TIV = "outside pilot TIV limit (AG:16)"
 
 
@@ -67,12 +67,12 @@ def _has(text: str, words) -> bool:
     return any(re.search(rf"(?<!\w){re.escape(w)}(?!\w)", text) for w in words)
 
 
-def _tiv(report: dict) -> float:
+def _tiv(report: dict) -> int | None:
+    """D-061: the existing normalizer (220k, $1.2M). None when missing, blank, "TBD" or unreadable."""
     for row in report["fields"]:
-        if row["field_id"] == "tiv_building" and row["value"]:
-            m = re.search(r"\d[\d,]*(?:\.\d+)?", row["value"])
-            return float(m.group().replace(",", "")) if m else 0.0
-    return 0.0
+        if row["field_id"] == "tiv_building":
+            return prepare.amount_value(row["value"] or "")
+    return None
 
 
 def match(report: dict) -> dict:
@@ -86,14 +86,14 @@ def match(report: dict) -> dict:
         return out("no_match", "prohibited class (AG:45-49)")
     if not report["complete"] or not ops:
         return out("hold", "missing information")
-    hit = [k for k, words in CLASSES.items() if _has(ops, words)]
     tiv = _tiv(report)
+    if tiv is None:
+        return out("hold", "TIV missing or unreadable")  # D-061: never read as 0
+    hit = [k for k, words in CLASSES.items() if _has(ops, words)]
     if not hit:
         return out("no_match", "readable class on no carrier list", overridable=True)
     if len(hit) > 1:
         return out("senior_referral", "class matches more than one carrier: " + ", ".join(hit))
-    if tiv > CAP_MAX:
-        return out("no_match", "over $10,000,000 TIV (no source for an override, D-060)")
     kind = hit[0]
     if kind == "contractor":
         return out("senior_referral", "contractor (AG:38); suggested market: carrier_b" + (f"; {OUT_TIV}" if tiv > PILOT_TIV else ""), suggested="carrier_b")
@@ -571,13 +571,13 @@ if __name__ == "__main__":
         assert logged["ai_version"].endswith("+rules-d015")
         fake = {
             "complete": True,
-            "fields": [{"field_id": "operations", "value": "bookkeeping office, no cooking"}],
+            "fields": [{"field_id": "operations", "value": "bookkeeping office, no cooking"}, {"field_id": "tiv_building", "value": "$900,000"}],
         }
         assert route(fake) == "carrier_a"
         held = {
             "complete": True,
             "sprinklers": "no",
-            "fields": [{"field_id": "operations", "value": "habitational, 8 units, no commercial cooking"}],
+            "fields": [{"field_id": "operations", "value": "habitational, 8 units, no commercial cooking"}, {"field_id": "tiv_building", "value": "$3,000,000"}],
         }
         ready = dict(held)
         ready["sprinklers"] = "yes"
@@ -585,9 +585,9 @@ if __name__ == "__main__":
         assert route({**held, "sprinklers": None}) == "hold"
         assert route(ready) == "carrier_c"
         # T-083: D-059 + D-060, written to the temp-free in-memory report only.
-        def r(ops, tiv="", **kw):
+        def r(ops, tiv="$1,000,000", **kw):
             f = [{"field_id": "operations", "value": ops}]
-            if tiv:
+            if tiv is not None:
                 f.append({"field_id": "tiv_building", "value": tiv})
             return {"complete": True, "fields": f, **kw}
 
@@ -604,7 +604,12 @@ if __name__ == "__main__":
         assert match(r("office and restaurant"))["route"] == "senior_referral"
         assert route(r("office", "$5,000,000")) == "carrier_a" and route(r("office", "$5,000,001")) == "senior_referral"
         assert route(r("restaurant", "$2,000,000")) == "carrier_b" and route(r("restaurant", "$2,000,001")) == "senior_referral"
-        assert route(r("office", "$10,000,001")) == "no_match" and not match(r("office", "$10,000,001"))["overridable"]
+        # D-061: the existing normalizer; missing or unreadable TIV holds; over $5M is senior referral, no $10M rule.
+        assert match(r("office", "$8M"))["note"] == OUT_TIV and route(r("office", "$12,000,000")) == "senior_referral"
+        assert route(r("office", "750K")) == "carrier_a"
+        for bad in ("$1.2MM", "", "TBD", None):  # "$1.2MM" is not read by prepare.amount_value, so it holds
+            m = match(r("office", bad))
+            assert m == {"route": "hold", "note": "TIV missing or unreadable", "suggested": "", "overridable": False}, (bad, m)
         assert route(r("taqueria")) == "carrier_b" and route(r("oficina")) == "carrier_a" and route(r("")) == "hold"
         assert route(r("sprinklered apartments", "$4,000,000")) == "carrier_c"
         assert match(r("sprinklered apartments", "$6,000,000"))["note"] == OUT_TIV

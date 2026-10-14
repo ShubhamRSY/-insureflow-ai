@@ -220,3 +220,5 @@ Also open from T-097, already in the register's Section D so not repeated as row
 | B-200 | T-083 | @software-engineer | Medium: TIV is tiv_building only; contents/BI and multi-location totals are not summed, so the AG:16 per-location and A/B caps can be under-read. | 2026-10-14 |
 | B-201 | T-083 | @software-engineer | Low: class lists are unsourced beyond carrier-match.md (e.g. electrician, flooring, pizza); contractor word list has no guide source (D-059 item 3). | 2026-10-14 |
 | B-202 | T-083 | @software-engineer | Low: "3 clean years not checked" is shown but the loss-run gate is not built; no loss-run field exists. | 2026-10-14 |
+| B-203 | T-083 | @software-engineer | Medium: TIV "$0" or "0" reads as a number and routes carrier_a; treat 0 as unreadable (hold). |
+| B-204 | T-083 | @software-engineer | Low: normalizer holds on "$1.2MM", "5000000 USD", "$12 million", "$X bldg + $Y contents" (D-061 says hold; fine) but the producer is not told which form is accepted. |
