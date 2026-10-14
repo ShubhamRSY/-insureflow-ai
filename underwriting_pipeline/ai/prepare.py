@@ -317,6 +317,18 @@ def sprinklers_yes(texts: dict) -> bool:
 COOKING_LABELS = {"equipment": ("cooking equipment:",), "hood_suppression": ("hood and fire suppression:", "hood and suppression:", "hood:", "suppression:")}
 HAZARD_TERMS = ("fryer", "fryers", "freidora", "freidoras", "open flame", "llama abierta", "charbroiler", "grill", "parrilla")
 NO_WORDS = re.compile(r"^(none|no|not|without|sin|ninguno|ninguna|n/a)\b")
+ITEM_SPLIT = re.compile(r"[;,/]|\b(?:and|or|y|o|with|con)\b")  # P-027: a negation covers only the item it directly precedes
+NONE_AFTER = re.compile(r":\s*(none|no|not|n/a|ninguno|ninguna)\s*$")  # "fryer: none"
+
+
+def _items(value: str) -> list[tuple[str, bool]]:
+    """P-027 (D-071): split a cooking line into items; each item is (text, negated). Whole words only."""
+    out = []
+    for item in ITEM_SPLIT.split(value):
+        item = item.strip(" .")
+        if item:
+            out.append((item, bool(NO_WORDS.match(item) or NONE_AFTER.search(item))))
+    return out
 
 
 def _without_name(blob: str, name: str | None, texts: dict) -> str:
@@ -344,10 +356,18 @@ def cooking_facts(texts: dict) -> dict:
             row = extract_labeled(text, labels)[0]
             if not row["value"]:
                 continue
-            value = row["value"].lower()
-            found = [t for t in HAZARD_TERMS if re.search(rf"\b{re.escape(t)}\b", value)] if key == "equipment" else []
-            state = "none" if NO_WORDS.match(value) else ("yes" if found else "other") if key == "equipment" else "stated"
-            fact = {"state": state, "terms": [] if state == "none" else found, "source": name, "start": row["start"], "end": row["end"], "quote": row["value"]}
+            items = _items(row["value"].lower())
+            present = " ; ".join(i for i, neg in items if not neg)
+            negated = " ; ".join(i for i, neg in items if neg)
+            has = lambda t, text: re.search(rf"\b{re.escape(t)}\b", text)
+            found = [t for t in HAZARD_TERMS if has(t, present)] if key == "equipment" else []
+            denied = [t for t in HAZARD_TERMS if has(t, negated)] if key == "equipment" else []
+            all_negated = all(neg for _, neg in items)
+            if key == "equipment":
+                state = "yes" if found else "none" if all_negated else "other"
+            else:
+                state = "none" if all_negated else "stated"
+            fact = {"state": state, "terms": found, "negated": denied, "source": name, "start": row["start"], "end": row["end"], "quote": row["value"]}
             break
         out[key] = fact
     return out
@@ -1389,6 +1409,19 @@ if __name__ == "__main__":
     assert cooking_facts({"a.md": "Cooking equipment: sin freidora\n"})["equipment"]["state"] == "none", "negated hazard gives no yes"
     assert cooking_facts({"a.md": "Cooking equipment: freidora y parrilla\n"})["equipment"]["terms"] == ["freidora", "parrilla"]
     assert cooking_facts({"a.md": "Cooking equipment: microwave\n"})["equipment"]["state"] == "other"
+    # P-027 (D-071): negation covers only the item it directly precedes; whole words.
+    cf = cooking_facts({"a.md": "Cooking equipment: no fryer; gas grill and charbroiler\n"})["equipment"]
+    assert cf["state"] == "yes" and cf["terms"] == ["charbroiler", "grill"] and cf["negated"] == ["fryer"] and cf["quote"], cf
+    cf = cooking_facts({"a.md": "Cooking equipment: no open flame\n"})["equipment"]
+    assert cf["state"] == "none" and cf["terms"] == [] and cf["negated"] == ["open flame"], cf
+    cf = cooking_facts({"a.md": "Cooking equipment: fryer: none\n"})["equipment"]
+    assert cf["state"] == "none" and cf["terms"] == [] and cf["negated"] == ["fryer"], cf
+    cf = cooking_facts({"a.md": "Cooking equipment: not a fryer, griddle\n"})["equipment"]
+    assert cf["state"] == "other" and cf["negated"] == ["fryer"], cf
+    cf = cooking_facts({"a.md": "Cooking equipment: notable grill\n"})["equipment"]
+    assert cf["state"] == "yes" and cf["negated"] == [], "whole words: notable is not not"
+    assert cooking_facts({"a.md": "Hood: without hood\n"})["hood_suppression"]["state"] == "none"
+    assert cooking_facts({"a.md": "Hood: without hood; Ansul suppression\n"})["hood_suppression"]["state"] == "stated"
     for text in ("Taqueria Fryer and Sons\nDescription of operations: restaurant, tacos\n", "Hood Street Books\nOpen Flame Yoga LLC\n", ""):
         assert cooking_facts({"a.md": text})["equipment"]["state"] == "not_stated" and cooking_facts({"a.md": text})["hood_suppression"]["state"] == "not_stated", "names, class and cuisine words are not facts"
     with tempfile.TemporaryDirectory() as tmp:

@@ -792,3 +792,14 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: B-222 table and P-015 `prepare.py` part (S3, T2) (@ai-engineer-assistant); P-015 `points.py`, reason-codes and problem-framing docs, T-067 name-swap test (@data-scientist); P-015 workbench part and B-264/B-265/B-266 with screenshots (@software-engineer); @model-risk check of B-222 and P-015; @responsible-ai check of P-015 fairness.
 - Status: ACCEPTED
 - Amends: D-069 item 1 as to B-260 (an identical re-save is not a change). Not a production approval; vetoes on T-017 and T-027 are lifted only by their holders. No send is authorized.
+
+## D-071 — P-027 approved (B-268): negation per item in cooking facts
+- Date / Owner: 2026-10-14 / @user
+- Context: @model-risk P-015 High (B-268): `cooking_facts` tests "no" only at the line start, so "no fryer; gas grill and charbroiler" reads "stated none". T-017 veto stands until fixed.
+- Options considered: none. The user's words.
+- Decision: In the user's words. "approve change P-027 (B-268). Negation applies only to the item it directly precedes: "no fryer; gas grill and charbroiler" → fryer none, gas grill present, charbroiler present. Whole-word matching, handles "no", "none", "without", "not". Self-checks for that line plus "no open flame", "fryer: none", and "without hood". Update the workbench if the cooking display changes, with one sandbox screenshot. Run self-checks, then one @model-risk re-check of P-027, High only. Commit, no wrap-up yet."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-14 (D-032).
+- Dissent: none
+- Follow-up tasks: built in the main session (budget rule 3, small edit; the weekly usage limit was hit); @model-risk re-check.
+- Status: ACCEPTED
+- Amends: P-015 S3 negation rule. Not a production approval. No send is authorized.

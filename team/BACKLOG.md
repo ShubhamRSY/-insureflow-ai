@@ -289,3 +289,7 @@ Also open from T-097, already in the register's Section D so not repeated as row
 | B-269 | P-015 | @user | Medium (decision): E2 cache key is null because prepare.py does not save it; saving it is an `ai/` change needing a P-###. | 2026-10-14 |
 | B-270 | D-070 | @pm | Owed: @responsible-ai fairness check of P-015 (dispatch stopped on the weekly usage limit, nothing written) and the @senior-underwriter UI check of the D-070 workbench (D-065). | 2026-10-14 |
 | B-271 | D-070 | @ai-engineer-assistant | Medium: only 15 of 60 development files are in the extraction cache, so B-222 (115 values) and T-067 (7 files, 1 scored) are thin; the P-016 drop analysis said 60 of 60 hits — reconcile. | 2026-10-14 |
+| B-272 | P-027 | @user | High (model-risk, open; T-017 veto stands): other separators ("but", ".", "&", " - ", "pero") let "no" cover the rest of the line, so a later hazard reads "stated none" (+25 missed). Resolve: a negation word denies only the first hazard term after it; self-checks for those lines. `ai/` change: needs "approve change P-###". | 2026-10-14 |
+| B-273 | P-027 | @ai-engineer-assistant | Medium: "/" splits "N/A", so equipment N/A shows "other" and hood N/A shows "stated" (score unchanged, display wrong). | 2026-10-14 |
+| B-274 | P-027 | @ai-engineer-assistant | Low: "no fryer or grill" scores +25 for grill; "fryer (none)", "fryer - none", "fryer not used" score +25. | 2026-10-14 |
+| B-275 | P-027 | @software-engineer | Low: the D-071 screenshot was taken before the P-027 "What's new" line was added. | 2026-10-14 |

@@ -1575,3 +1575,9 @@ Blocked: No.
   - P-015 L: an extraction_failed card says "no cooking equipment stated in the file".
   - P-015 L: V3 git slot reads not-recorded until P-017 (disclosed).
 - Next: re-check High-1 when fixed.
+
+### 2026-10-14 — @model-risk
+- Done: P-027 (B-268) re-check. Self-checks pass; the D-071 lines behave as specified.
+- Verdict: REJECT. Residual High: negation still swallows a later hazard when items are joined by but/./&/-/(/plus/pero ("no fryer but charbroiler" → stated none). T-017 veto stands.
+- Next: re-check once a fix (negation denies only the next hazard term) is approved by @user and built. Medium: "N/A" split by "/".
+- Blockers: needs an approve-change line from @user for the fix.
