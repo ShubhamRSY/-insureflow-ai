@@ -321,6 +321,34 @@ ITEM_SPLIT = re.compile(r"[;,/]|\b(?:and|or|y|o|with|con)\b")  # P-027: a negati
 NONE_AFTER = re.compile(r":\s*(none|no|not|n/a|ninguno|ninguna)\s*$")  # "fryer: none"
 
 
+NEG_WORD = re.compile(r"\b(no|none|not|without|sin|ninguno|ninguna)\b")  # P-029 (D-072)
+SCOPE_BREAK = re.compile(r"\bor\b|\bbut\b|\bpero\b|\bo\b|&|\s-\s|\.|;|,")  # a negation does not reach past these
+NEG_AFTER = re.compile(r"^\s*[:(\-–]?\s*(none|no|not)\b")  # "fryer: none", "fryer (none)", "fryer - none", "fryer not used"
+REASON_COOKING = "negation with more than one hazard term, or a hazard term past or/but/pero/&/-/period after a negation"
+
+
+def equipment_fact(value: str) -> tuple[str, list[str], list[str]]:
+    """P-029 (D-072): (state, present terms, negated terms). A negation word denies only the first hazard term directly
+    after it. A negation with two or more hazard terms, or with a hazard term past a scope break, is "needs_review":
+    no points until the underwriter decides. N/A is "not_stated" (B-273)."""
+    v = value.lower().strip()
+    if v in ("n/a", "na", "n.a."):
+        return "not_stated", [], []
+    hits = sorted((m.start(), m.end(), t) for t in HAZARD_TERMS for m in re.finditer(rf"\b{re.escape(t)}\b", v))
+    negs = [m.start() for m in NEG_WORD.finditer(v)]
+    if not hits:
+        return ("none" if negs else "other"), [], []
+    if negs and len(hits) > 1:
+        return "needs_review", [], []
+    start, end, term = hits[0]
+    before = [n for n in negs if n < start]
+    if before and SCOPE_BREAK.search(v[before[-1]:start]):
+        return "needs_review", [], []
+    if before or NEG_AFTER.match(v[end:]):
+        return "none", [], [term]
+    return "yes", [term] if len(hits) == 1 else [h[2] for h in hits], []
+
+
 def _items(value: str) -> list[tuple[str, bool]]:
     """P-027 (D-071): split a cooking line into items; each item is (text, negated). Whole words only."""
     out = []
@@ -356,18 +384,16 @@ def cooking_facts(texts: dict) -> dict:
             row = extract_labeled(text, labels)[0]
             if not row["value"]:
                 continue
-            items = _items(row["value"].lower())
-            present = " ; ".join(i for i, neg in items if not neg)
-            negated = " ; ".join(i for i, neg in items if neg)
-            has = lambda t, text: re.search(rf"\b{re.escape(t)}\b", text)
-            found = [t for t in HAZARD_TERMS if has(t, present)] if key == "equipment" else []
-            denied = [t for t in HAZARD_TERMS if has(t, negated)] if key == "equipment" else []
-            all_negated = all(neg for _, neg in items)
+            found, denied = [], []
             if key == "equipment":
-                state = "yes" if found else "none" if all_negated else "other"
+                state, found, denied = equipment_fact(row["value"])
+            elif row["value"].lower().strip() in ("n/a", "na", "n.a."):
+                state = "not_stated"  # B-273
             else:
-                state = "none" if all_negated else "stated"
+                state = "none" if all(neg for _, neg in _items(row["value"].lower())) else "stated"
             fact = {"state": state, "terms": found, "negated": denied, "source": name, "start": row["start"], "end": row["end"], "quote": row["value"]}
+            if state == "needs_review":
+                fact["reason"] = REASON_COOKING
             break
         out[key] = fact
     return out
@@ -1409,17 +1435,19 @@ if __name__ == "__main__":
     assert cooking_facts({"a.md": "Cooking equipment: sin freidora\n"})["equipment"]["state"] == "none", "negated hazard gives no yes"
     assert cooking_facts({"a.md": "Cooking equipment: freidora y parrilla\n"})["equipment"]["terms"] == ["freidora", "parrilla"]
     assert cooking_facts({"a.md": "Cooking equipment: microwave\n"})["equipment"]["state"] == "other"
-    # P-027 (D-071): negation covers only the item it directly precedes; whole words.
-    cf = cooking_facts({"a.md": "Cooking equipment: no fryer; gas grill and charbroiler\n"})["equipment"]
-    assert cf["state"] == "yes" and cf["terms"] == ["charbroiler", "grill"] and cf["negated"] == ["fryer"] and cf["quote"], cf
-    cf = cooking_facts({"a.md": "Cooking equipment: no open flame\n"})["equipment"]
-    assert cf["state"] == "none" and cf["terms"] == [] and cf["negated"] == ["open flame"], cf
-    cf = cooking_facts({"a.md": "Cooking equipment: fryer: none\n"})["equipment"]
-    assert cf["state"] == "none" and cf["terms"] == [] and cf["negated"] == ["fryer"], cf
-    cf = cooking_facts({"a.md": "Cooking equipment: not a fryer, griddle\n"})["equipment"]
-    assert cf["state"] == "other" and cf["negated"] == ["fryer"], cf
-    cf = cooking_facts({"a.md": "Cooking equipment: notable grill\n"})["equipment"]
-    assert cf["state"] == "yes" and cf["negated"] == [], "whole words: notable is not not"
+    # P-029 (D-072): a negation denies only the first hazard term directly after it; ambiguous lines need review.
+    eq = lambda line: cooking_facts({"a.md": f"Cooking equipment: {line}\n"})["equipment"]
+    for line in ("no fryer but charbroiler", "no fryer. gas grill", "no fryer & grill", "no fryer - grill", "sin freidora pero parrilla",
+                 "no fryer or grill", "no fryer; gas grill and charbroiler", "no microwave, fryer"):
+        f = eq(line)
+        assert f["state"] == "needs_review" and f["terms"] == [] and f["quote"] and f["reason"] == REASON_COOKING, (line, f)
+    assert eq("no open flame")["state"] == "none" and eq("no open flame")["negated"] == ["open flame"]
+    for line in ("fryer: none", "fryer (none)", "fryer - none", "fryer not used"):
+        assert eq(line)["state"] == "none" and eq(line)["negated"] == ["fryer"], (line, eq(line))
+    assert eq("fryer, no hood")["state"] == "yes", "a negation after the term, before another word, does not deny it"
+    assert eq("notable grill")["state"] == "yes", "whole words: notable is not not"
+    assert eq("N/A")["state"] == "not_stated" and eq("microwave")["state"] == "other"  # B-273
+    assert cooking_facts({"a.md": "Hood: N/A\n"})["hood_suppression"]["state"] == "not_stated"
     assert cooking_facts({"a.md": "Hood: without hood\n"})["hood_suppression"]["state"] == "none"
     assert cooking_facts({"a.md": "Hood: without hood; Ansul suppression\n"})["hood_suppression"]["state"] == "stated"
     for text in ("Taqueria Fryer and Sons\nDescription of operations: restaurant, tacos\n", "Hood Street Books\nOpen Flame Yoga LLC\n", ""):

@@ -1581,3 +1581,9 @@ Blocked: No.
 - Verdict: REJECT. Residual High: negation still swallows a later hazard when items are joined by but/./&/-/(/plus/pero ("no fryer but charbroiler" → stated none). T-017 veto stands.
 - Next: re-check once a fix (negation denies only the next hazard term) is approved by @user and built. Medium: "N/A" split by "/".
 - Blockers: needs an approve-change line from @user for the fix.
+
+### 2026-10-14 — @model-risk
+- Done: P-029 (B-272, B-274) and B-273 re-check (D-072). Self-checks pass; all ten D-072 lines behave as specified; B-272 and B-273 closed.
+- Verdict: REJECT. New High B-275 (regression): "no hood and gas grill", "sin campana con parrilla" → stated none (+25 missed); P-027 scored them. T-017 veto stands.
+- Next: re-check once @user approves and the team builds the fix (a negation denies only an adjacent or modifier-only hazard; otherwise needs_review).
+- Blockers: needs an approve-change line from @user.

@@ -33,7 +33,7 @@ NOT_SCORED = {
 
 def _hash_version() -> str:
     """V3 today = V2: a hash of the table, the fact word lists and the cooking term list, as PROMPT_VERSION is hashed."""
-    rules = [TABLE, HABITATIONAL_WORDS, CONTRACTING_WORDS, prepare.HAZARD_TERMS, prepare.NO_WORDS.pattern, prepare.ITEM_SPLIT.pattern, prepare.NONE_AFTER.pattern]  # P-027: the item rule moves the version
+    rules = [TABLE, HABITATIONAL_WORDS, CONTRACTING_WORDS, prepare.HAZARD_TERMS, prepare.NO_WORDS.pattern, prepare.ITEM_SPLIT.pattern, prepare.NONE_AFTER.pattern, prepare.NEG_WORD.pattern, prepare.SCOPE_BREAK.pattern, prepare.NEG_AFTER.pattern]  # P-027, P-029: the rules move the version
     return hashlib.sha256(json.dumps(rules, sort_keys=True).encode()).hexdigest()[:12]
 
 
@@ -65,6 +65,8 @@ def cooking_line(fact: dict) -> str:
     denied = f"; stated not present: {', '.join(fact['negated'])}" if fact.get("negated") else ""  # P-027 (D-071)
     if state == "yes":
         return f"COOKING +{TABLE['COOKING']} — {', '.join(fact.get('terms') or ['hazard'])} stated{denied}: \"{fact.get('quote')}\""
+    if state == "needs_review":  # P-029 (D-072): no cooking points until the underwriter decides
+        return f"Cooking: needs review — \"{fact.get('quote')}\""
     if state == "none":
         return "Cooking: stated none" + (f" — \"{fact.get('quote')}\"" if fact.get("quote") else "")
     if state == "other":
@@ -153,6 +155,9 @@ if __name__ == "__main__":
     p27 = {"state": "yes", "terms": ["charbroiler", "grill"], "negated": ["fryer"], "quote": "no fryer; gas grill and charbroiler"}
     assert cooking_line(p27) == 'COOKING +25 — charbroiler, grill stated; stated not present: fryer: "no fryer; gas grill and charbroiler"', cooking_line(p27)
     assert cooking_line({"state": "none", "negated": ["fryer"], "quote": "fryer: none"}) == 'Cooking: stated none — "fryer: none"' 
+    nr = {"state": "needs_review", "terms": [], "quote": "no fryer but charbroiler"}
+    assert cooking_line(nr) == 'Cooking: needs review — "no fryer but charbroiler"'
+    assert "COOKING" not in score_run(run(cooking={"equipment": nr, "hood_suppression": {"state": "not_stated"}}))["reason_codes"], "P-029: no points"
     assert score_run(run("x", yes))["lines"][1].startswith("COOKING +25 — fryer stated:")
     # M1: a complete file with no cooking fact keeps its number. H1: hood gives no points either way.
     h = {"hood_suppression": {"state": "stated", "quote": "wet chemical"}, "equipment": {"state": "not_stated"}}

@@ -803,3 +803,14 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: built in the main session (budget rule 3, small edit; the weekly usage limit was hit); @model-risk re-check.
 - Status: ACCEPTED
 - Amends: P-015 S3 negation rule. Not a production approval. No send is authorized.
+
+## D-072 — P-029 approved (B-272, B-274): ambiguous cooking lines go to needs review; B-273 N/A
+- Date / Owner: 2026-10-14 / @user
+- Context: @model-risk REJECT on P-027: other separators let "no" cover the rest of the line (B-272); "no fryer or grill" and "fryer (none)" variants (B-274); N/A shows "other" (B-273). T-017 veto stands.
+- Options considered: none. The user's words.
+- Decision: In the user's words. "approve change P-029 (B-272 and B-274): a negation word (no, none, not, without, sin) denies only the first hazard term directly after it. If a single line contains a negation word and more than one hazard term, or a hazard term after "or", "but", "pero", "&", "-" or a period following a negation, the cooking result is "Cooking: needs review" with the quote, handled by the existing needs-review acknowledgment, and no cooking points are added until the underwriter decides. Self-checks: "no fryer but charbroiler", "no fryer. gas grill", "no fryer & grill", "no fryer - grill", "sin freidora pero parrilla", "no fryer or grill", plus the earlier four. Also B-273: "N/A" displays as "not stated", not "other". Workbench update with one sandbox screenshot. One @model-risk re-check, High only. Commit, no wrap-up."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-14 (D-032).
+- Dissent: none
+- Follow-up tasks: built in the main session (budget rule 3; weekly usage limit); @model-risk re-check. Note: under this rule the D-071 line "no fryer; gas grill and charbroiler" (a negation and three hazard terms) is now "Cooking: needs review", not fryer none / grill present. P-028 was not used and is not reused.
+- Status: ACCEPTED
+- Amends: D-071 (P-027) for lines with a negation and more than one hazard term. Not a production approval. No send is authorized.

@@ -236,7 +236,10 @@ def agency_problem(target) -> str:
 
 def needs_review_ids(report: dict) -> list[str]:
     """Field ids of the rows the underwriter must acknowledge at approve (D-039, D-068): needs_review with a value. The one list."""
-    return [r["field_id"] for r in report.get("fields") or [] if r.get("needs_review") and r.get("value")]
+    ids = [r["field_id"] for r in report.get("fields") or [] if r.get("needs_review") and r.get("value")]
+    if ((report.get("cooking") or {}).get("equipment") or {}).get("state") == "needs_review":  # P-029 (D-072)
+        ids.append("cooking_equipment")
+    return ids
 
 
 def ack_problem(submission: str, report: dict) -> str:
@@ -664,4 +667,7 @@ if __name__ == "__main__":
                 assert "changed since extraction" in str(exc), exc
         finally:
             prepare.EXTRACT_DIR, DECISIONS_LOG, SENDS_LOG, prepare.INBOX_DIR = saved_dir, saved_log, saved_sends, saved_inbox
+    # P-029 (D-072): an ambiguous cooking line joins the one needs-review list, so the send gate waits for its acknowledgment.
+    assert needs_review_ids({"fields": [], "cooking": {"equipment": {"state": "needs_review"}}}) == ["cooking_equipment"]
+    assert needs_review_ids({"fields": [], "cooking": {"equipment": {"state": "yes"}}}) == []
     print("package ok")

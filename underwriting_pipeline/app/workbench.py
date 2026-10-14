@@ -42,7 +42,8 @@ MESSAGES: dict[str, tuple[bool, str]] = {}  # submission -> (ok, plain-words res
 # D-065 item 5: one line per user-visible feature: date, task or proposal, decision number, what an underwriter sees.
 WHATS_NEW = (
     ("2026-10-14", "P-015/B-264/B-265/B-266", "D-070", "The score shows \"Not scored — reason\" when a file is failed, incomplete or empty, and the cooking and hood lines; each code has a mark-wrong control (logged; the number does not change); the footer names the model and prompt version of the saved run; Suggested market shows only on senior referrals; a stale card lists the changed fields, old to new."),
-    ("2026-10-14", "P-027 (B-268)", "D-071", "The cooking line names what was stated as not present (\"no fryer; gas grill\" counts the grill, not the fryer) and shows the quote, including on \"stated none\"."),
+    ("2026-10-14", "P-027 (B-268)", "D-071", "The cooking line names what was stated as not present (\"no fryer; gas grill\" counts the grill, not the fryer) and shows the quote, including on \"stated none\". Superseded by P-029 for lines with a negation and more than one hazard term."),
+    ("2026-10-14", "P-029 (B-272, B-274), B-273", "D-072", "A cooking line with a negation and more than one hazard term (or a hazard term past or/but/pero/&/-/period) shows \"Cooking: needs review\" with the quote and adds no points; it is acknowledged at approve like any needs-review value. N/A shows as not stated."),
     ("2026-10-14", "P-026", "D-069", "Every approve logs the saved run's hash; a re-saved file shows \"Re-review needed: file changed since your approval\" and the send is refused for everyone until you approve and acknowledge again."),
     ("2026-10-14", "B-248", "D-069", "The sent date comes from one place, the Sent-on line in the package file, on the card and in quote tracking alike (older packages show \"not recorded\")."),
     ("2026-10-14", "B-252", "D-069", "A sandbox run (--sandbox) writes the page, logs and outboxes into a temporary copy; the real files are never touched."),
@@ -651,6 +652,9 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
             for row in report["fields"]
             if row.get("needs_review") and row.get("value")
         )
+        cook = (report.get("cooking") or {}).get("equipment") or {}
+        if cook.get("state") == "needs_review":  # P-029 (D-072): the same acknowledgment; no cooking points either way
+            acks += '<label><input type="checkbox" name="ack" value="cooking_equipment"> I checked cooking equipment: needs review, no points added (cited: {})</label><br>'.format(html.escape(cook.get("quote") or "—"))
         if acks and not refused:
             acks = f"<fieldset><legend>Needs-review values: acknowledge each to approve</legend>{acks}</fieldset>"
         else:
