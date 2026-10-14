@@ -1,5 +1,6 @@
 ---
 name: pm
+model: haiku
 description: "Role — Product Manager (@pm). Attach to a chat to make that agent the team's PM. Use for any turn, task, or review that belongs to @pm on the AI underwriting team."
 ---
 

@@ -1,5 +1,6 @@
 ---
 name: ml-engineer
+model: sonnet
 description: "Role — ML Engineer / MLOps (@ml-engineer). Use for any turn, task, or review that belongs to @ml-engineer on the AI underwriting team."
 ---
 

@@ -1,5 +1,6 @@
 ---
 name: software-engineer
+model: sonnet
 description: "Role — Software Engineer, application and integration (@software-engineer). Use for any turn, task, or review that belongs to @software-engineer on the AI underwriting team."
 ---
 

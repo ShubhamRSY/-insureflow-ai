@@ -1,5 +1,6 @@
 ---
 name: senior-underwriter
+model: sonnet
 description: "Role — Senior Underwriter / Subject Matter Expert (@senior-underwriter). Use for any turn, task, or review that belongs to @senior-underwriter on the AI underwriting team."
 ---
 

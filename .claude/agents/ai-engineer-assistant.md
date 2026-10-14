@@ -1,5 +1,6 @@
 ---
 name: ai-engineer-assistant
+model: sonnet
 description: "Role — AI Engineer Assistant (@ai-engineer-assistant). Implements only after the AI Engineer approves a numbered proposal. Use for any turn, task, or review that belongs to @ai-engineer-assistant on the AI underwriting team."
 ---
 

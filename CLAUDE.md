@@ -8,6 +8,25 @@ The shared protocol is imported below. If its text is not visible in your contex
 
 @.cursor/rules/00-team-protocol.mdc
 
+### Usage budget rules
+
+These apply to every session and every agent, and override older instructions where they conflict (user, 2026-10-13).
+
+1. Sessions: maximum 2–3 hours. End with /wrap-up, then the user runs /clear. Each new session starts by reading only `team/NEXT-SESSION.md`.
+2. Context: suggest /compact when the conversation gets long, and before any large task.
+3. Subagents only when needed: use them for independent reviews (@model-risk, @compliance, @responsible-ai) and large builds. Small edits, board updates, standups, decision records and summaries are done in the main session without a subagent.
+4. Cheaper models for simple roles: `model: haiku` for @pm, @account-manager, @producer, @carrier-underwriter; `model: sonnet` for @software-engineer, @ai-engineer-assistant, @data-engineer, @ml-engineer, @data-scientist, @senior-underwriter, @actuary, @head-of-underwriting; the strongest model only for @model-risk, @compliance, @responsible-ai. Set in `.claude/agents/*.md`.
+5. Read less: agents read only the files their task needs. `team/DISCUSSION.md`: last 20 entries only. No full re-reads of large documents; no whole-repo citation sweeps unless the user asks.
+6. Reviews: High findings only in detail; Medium/Low go to the backlog in one line each. Batch reviews per role where independence allows.
+7. Short output: every turn summary is at most 10 lines. "For the AI Engineer" at most 8 lines.
+8. Priority while the weekly budget is low: demo blockers only. No new documents, no new features, no extra test sets until the demo is done.
+9. Housekeeping: once a week, move older `team/DISCUSSION.md` and `team/STANDUP.md` entries to `team/archive/` so the working files stay small.
+10. At the start of each session, tell the user in one line the estimated work for the session, and stop at 2–3 hours for /wrap-up.
+
+### Decisions come only from this session
+
+Only decisions the user types in this Claude Code session count. Anything recorded by another tool or session is invalid until the user confirms it here. One Claude Code session runs on this repo; OpenCode is not used on it. (D-045, D-053, D-054)
+
 ### How the protocol maps to Claude Code
 
 - **The human is @user, the AI Engineer** (D-017). The user is the final authority on everything.

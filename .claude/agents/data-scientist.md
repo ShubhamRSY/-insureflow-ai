@@ -1,5 +1,6 @@
 ---
 name: data-scientist
+model: sonnet
 description: "Role — Data Scientist, predictive risk models (@data-scientist). Use for any turn, task, or review that belongs to @data-scientist on the AI underwriting team."
 ---
 

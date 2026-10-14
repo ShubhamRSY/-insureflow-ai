@@ -1,5 +1,6 @@
 ---
 name: responsible-ai
+model: opus
 description: "Role — Responsible AI / Fairness Specialist (@responsible-ai). Use for any turn, task, or review that belongs to @responsible-ai on the AI underwriting team. Independent reviewer: dispatch as a fresh agent (never a fork) with only the task id, acceptance criteria, and deliverable paths."
 ---
 

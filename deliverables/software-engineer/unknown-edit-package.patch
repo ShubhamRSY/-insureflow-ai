@@ -1,0 +1,95 @@
+diff --git a/underwriting_pipeline/app/package.py b/underwriting_pipeline/app/package.py
+index fa69c24..98ff1e8 100644
+--- a/underwriting_pipeline/app/package.py
++++ b/underwriting_pipeline/app/package.py
+@@ -7,17 +7,17 @@ for any actor including the user. The account manager can send only when the
+ agency rules pass, and must write a reason. No AI role can send.
+ Every other block keeps the user's override (D-017).
+ 
+-T-079: a carrier send also requires a logged underwriter approve; the send
+-reads the decision log itself and refuses unless the last decision for the
+-submission is approve, for every actor. The log is read as append-only JSONL.
+-"last" is the final matching line by insertion order (line number), because
+-the log records only a date and no time (B-104). Which ids count as an
+-underwriter is not answered by the log: the log takes any id and stores it
+-as-is (B-138, B-100), so this gate does not filter ids — it trusts the stored
+-rows. Both are raised as QUESTIONs in the handoff. The one case @user has not
+-decided, a decline earlier in the history followed by a later approve, is not
+-picked: the send refuses and leaves the file with a person (D-033 Amends).
+-No decision is passed in by the caller.
++T-079 / D-052: a carrier send also requires a logged underwriter approve; the
++send reads the decision log itself and refuses unless the last decision for
++the submission is approve, for every actor. The log is read as append-only
++JSONL. Latest decision wins (D-052 item 1): a decline followed by a later
++approve permits the send; an approve followed by a later decline refuses it.
++"last" is the final matching line by insertion order (line number), the
++tiebreak, because the log records only a date and no time (B-104; D-052 item
++2). Which ids count as an underwriter is not answered by the log: the log takes
++any id and stores it as-is (B-138, B-100), so this gate does not filter ids —
++it trusts the stored rows (D-052 item 3). No decision is passed in by the
++caller.
+ 
+ # ponytail: one markdown file per submission. Quote tracking is the from-carrier reply, add a tracker when a carrier answers.
+ 
+@@ -83,23 +83,20 @@ def _submission_rows(submission: str, log_path: Path = DECISIONS_LOG) -> list:
+ def _last_approve_decision(submission: str, log_path: Path = DECISIONS_LOG) -> str:
+     """Return empty string if the last decision for this submission is approve.
+ 
+-    "Last" is the final matching line by insertion order (line number) because the log records
+-    only a date and no time (B-104). The log takes any id and stores it as-is (B-138, B-100);
+-    this gate does not filter ids, it trusts the stored rows. No decision is passed in by the
+-    caller, and the caller's actor does not change the answer.
++    Latest decision wins (D-052 item 1): a decline followed by a later approve permits the send.
++    "Last" is the final matching line by insertion order (line number), the tiebreak, because the
++    log records only a date and no time (B-104; D-052 item 2). The log takes any id and stores it
++    as-is (B-138, B-100); this gate does not filter ids, it trusts the stored rows (D-052 item 3).
++    No decision is passed in by the caller, and the caller's actor does not change the answer.
+     """
+     rows = _submission_rows(submission, log_path)
+     if not rows:
+         return "no logged decision for this file"
++    # D-052 item 2: "last" is the final matching line by insertion (line) order — the tiebreak —
++    # because the log row carries a date and no time (B-104), so a same-day row cannot be ordered by it.
+     last = rows[-1]
+     action = (last.get("action") or "").strip()
+     if action == "approve":
+-        # T-079: a decline earlier in the history followed by a later approve is the one case
+-        # @user has not decided (D-033 Amends: "a logged underwriter approve with no later
+-        # decline"). Do not pick it: refuse and leave the file with a person.
+-        earlier_decline = any((row.get("action") or "").strip() == "decline" for row in rows[:-1])
+-        if earlier_decline:
+-            return "this file was declined and later approved; that case is not decided, waiting for @user"
+         return ""
+     if action == "decline":
+         return "the last logged decision is decline"
+@@ -151,7 +148,7 @@ def send_to_carrier(
+     log_path: Path = DECISIONS_LOG,
+ ) -> Path:
+     """T-071: read the status from the last saved run itself, before the actor is looked at, and refuse both refused statuses for every actor.
+-    T-079: also require the last logged decision is approve, for every actor. No decision is passed in by the caller.
++    T-079 / D-052: also require the last logged decision is approve, for every actor; latest decision wins. No decision is passed in by the caller.
+     """
+     report = prepare.read_saved_run(submission)  # G2: no file, hash differs, or unknown status -> refuse
+     status = report.get("status")
+@@ -343,16 +340,14 @@ if __name__ == "__main__":
+             override = send_to_carrier("SUB-194", "user", dest_dir, body, log_path=log)
+             assert override.read_text().startswith("Sent-by: user (override)")
+ 
+-            # T-079, the one case @user has not decided: declined then later approved. The code does
+-            # not pick a side; it refuses and leaves the file with a person, with that message.
++            # T-079 / D-052: latest decision wins. Declined, then later approved, now passes:
++            # the later deliberate approve is the governing decision (D-052 item 1).
+             save(ext, "SUB-304", "complete", complete=True, fields=office, sprinklers="no")
+             decide("SUB-304", "decline", reason="declined, then reopened")
+             decide("SUB-304", "approve")
+-            try:
+-                send_to_carrier("SUB-304", "user", dest_dir, body, log_path=log)
+-                raise SystemExit("declined-then-approved must wait for @user, so it must refuse")
+-            except ValueError as exc:
+-                assert "waiting for @user" in str(exc), exc
++            sent304 = send_to_carrier("SUB-304", "user", dest_dir, body, log_path=log)
++            assert sent304.read_text().startswith("Sent-by: user (override)")
++            assert _last_approve_decision("SUB-304", log) == ""
+         finally:
+             prepare.EXTRACT_DIR = saved_dir
+     print("package ok")

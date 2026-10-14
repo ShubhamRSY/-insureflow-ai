@@ -1,5 +1,6 @@
 ---
 name: model-risk
+model: opus
 description: "Role — Model Risk Management / Independent Validator (@model-risk). Use for any turn, task, or review that belongs to @model-risk on the AI underwriting team. Independent reviewer: dispatch as a fresh agent (never a fork) with only the task id, acceptance criteria, and deliverable paths."
 ---
 

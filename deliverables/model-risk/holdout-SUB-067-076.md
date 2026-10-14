@@ -43,3 +43,9 @@ SUB-068, SUB-074, and SUB-075 read the name and missed the premises line. SUB-07
 SUB-070 has two real locations. It missed operations, premises, and TIV, and it opened a conflict where the gold says there is none.
 
 This does not approve the extractor, the hazard points, or a bind.
+
+## Dated line — 2026-10-13
+
+- **loss runs = valued-through date only; claims are not read or scored** (@senior-underwriter, T-044 High-1). "Clean" on a loss run means its valuation date matched; no claim count, paid amount, open claim, or years covered is extracted or scored. SUB-076's gold "paid claim 8000" was not scored. The published score file is not touched.
+
+Wherever this score is quoted it carries this line and the standing wording **"8 of 9 fields scored; loss runs = date only"** (D-033 item 5).

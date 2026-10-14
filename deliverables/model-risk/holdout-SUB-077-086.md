@@ -33,3 +33,9 @@ SUB-080's premises line was not a miss. The primary address was kept. That is th
 The four hard scans missed premises: SUB-077, SUB-078, SUB-084, and SUB-085. SUB-077 and SUB-078 also missed year built. SUB-081, the blank ACORD with an attachment, missed operations, sales, construction, year built, TIV, loss runs, and status. That is the new loss-run miss. No date was invented for the two files whose runs are missing.
 
 This does not approve the extractor, the hazard points, or a bind.
+
+## Dated line — 2026-10-13
+
+- **loss runs = valued-through date only; claims are not read or scored** (@senior-underwriter, T-053 High-1). "Clean" on a loss run means its valuation date matched; no claim count, paid amount, open claim, or years covered is extracted or scored. SUB-086's gold "paid claim 6500" was not scored. The published score file is not touched.
+
+Wherever this score is quoted it carries this line and the standing wording **"8 of 9 fields scored; loss runs = date only"** (D-033 item 5).

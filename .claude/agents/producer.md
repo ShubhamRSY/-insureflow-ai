@@ -1,5 +1,6 @@
 ---
 name: producer
+model: haiku
 description: "Simulated outside party — insurance producers and their clients who submit business (@producer). Use for any turn, task, or review that belongs to @producer on the AI underwriting team."
 ---
 

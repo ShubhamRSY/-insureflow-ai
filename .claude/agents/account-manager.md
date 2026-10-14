@@ -1,5 +1,6 @@
 ---
 name: account-manager
+model: haiku
 description: "Simulated agency account manager (@account-manager). Approves producer requests and carrier sends only when the agency rules pass. Use for any turn, task, or review that belongs to @account-manager on the AI underwriting team."
 ---
 
