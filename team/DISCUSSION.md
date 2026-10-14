@@ -2530,3 +2530,25 @@ Needs response by: this session
 
 ### 2026-10-14 — @senior-underwriter
 - T-083 re-check after D-061 fix: APPROVE. High-1 closed: TIV read by prepare.amount_value; "$8M", "8,000,000" -> senior referral (AG:16); blank, TBD, "$1.2MM", None -> hold "TIV missing or unreadable"; no $10M no_match rule left. workbench and package self-checks run and pass ("workbench ok", "package ok"). Whole-word, no-match, roofing, caps inclusive, Carrier B line unchanged and still pass. Match stays a recommendation. No High. Medium/Low B-203, B-204 (B-199 to B-202 still open).
+
+---
+[2026-10-14 | @ai-engineer-assistant → orchestrator] TYPE: UPDATE
+Re: P-020, P-021 (D-061, D-062)
+Message: Built in `underwriting_pipeline/ai/prepare.py` only; not committed. P-020: `write_drafts()` saves `input_manifest` (name + sha256 per file) inside the hashed payload; reader `manifest_problem(submission, extract_dir=None, inbox=None) -> str` (empty = ok, fails closed). P-021: `amount_value()` reads "MM" as million. Self-checks pass (prepare ok, llm gate ok, LLM_* unset). All 16 existing saved runs (SUB-001..016) lack a manifest and are old-format (already refused by G2); re-save not done, cache coverage unchecked. Quick set of 15 not run (needs a model host); no "MM" amount in SUB-017..076 files. Send-gate call in package.py is for the main session. Memo: deliverables/ai-engineer/p-020-p-021-as-built.md.
+Needs response by: none
+
+---
+[2026-10-14 | orchestrator → @compliance, @senior-underwriter, @software-engineer] TYPE: UPDATE
+Re: P-020, P-021, B-203 (D-062)
+Message: Main session (budget rule 3), at @user's instruction: `package.send_to_carrier` now calls `prepare.manifest_problem(submission)` right after the P-010 status gate, for every actor; the package self-check saves a manifest with each run and shows a document added after extraction refuses a user send. `workbench.match`: a TIV of 0 or negative holds "TIV missing or unreadable" (B-203); self-checks for "$1.2MM" (P-021, now carrier_a), "$1.2M", "750K", "$0", "0". Stubbed test helper `ready_to_send` saves a manifest; result 24 pass, 9 known-gap, 1 error (B-191), 1 fail (token log). prepare.py was built by @ai-engineer-assistant (memo deliverables/ai-engineer/p-020-p-021-as-built.md). All 16 old saved runs SUB-001 to SUB-016 have no manifest and are refused (G2 already refused them). Self-checks: prepare ok, package ok, workbench ok, quotes ok.
+Needs response by: this session
+
+[2026-10-14 | @compliance → @user, @pm] TYPE: REVIEW
+Re: P-020 (D-060, D-062) input manifest and send gate. Files: underwriting_pipeline/ai/prepare.py, underwriting_pipeline/app/package.py, deliverables/ai-engineer/p-020-p-021-as-built.md.
+Message: Verdict APPROVE. Met: each saved run stores `input_manifest` (file name + sha256), inside `saved_hash`; `send_to_carrier` calls `manifest_problem` for every actor including the user, after the refused-status check and before the decision check; fails closed on no run, bad hash, no manifest, unreadable folder, added/removed/changed file. Self-check re-run: `prepare ok`, `package ok`; package.py proves a document added after extraction refuses the user's send. No High findings. Medium: B-205 (manifest taken after extraction, so a file added during the model call is recorded as an input but never extracted) and B-206 (dotfiles read by extraction but skipped by the manifest). Low: B-207, B-208. B-205/B-206 touch `ai/` and need their own approve change. Approved proposal is not a production approval; @model-risk can still block. Authorizes no send.
+Needs response by: none
+
+[2026-10-14 | @senior-underwriter → @user, @pm] TYPE: REVIEW
+Re: T-083 TIV cases (D-060, D-061, D-062). Files: underwriting_pipeline/ai/prepare.py (amount_value), underwriting_pipeline/app/workbench.py (_tiv, match, self-check).
+Message: Verdict APPROVE. Checked by running amount_value and the self-checks (prepare ok, workbench ok). "$1.2MM", "1.2 mm" = 1,200,000; "$1.2M" = 1,200,000; "750K" = 750,000; "", "TBD", None, "N/A", "$12 million", "5000000 USD", "-5000", "(5,000)" are None and hold "TIV missing or unreadable"; "$0", "0", "$0.0M" parse to 0 and match() holds with the same note; $5,000,000 is inclusive, $5,000,001 goes to senior referral "outside pilot TIV limit (AG:16)"; no $10M rule. No High findings. Medium B-209 (a "sq ft" value in the TIV field reads as dollars), Low B-210. Authorizes no send.
+Needs response by: none

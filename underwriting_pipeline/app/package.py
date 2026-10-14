@@ -232,6 +232,9 @@ def send_to_carrier(
     status = report.get("status")
     if status in prepare.REFUSED_STATUSES:
         raise ValueError(f"this file's status is {status}; it cannot be sent, for any actor including the user")
+    problem = prepare.manifest_problem(submission)  # P-020 (D-062): the input documents are the ones extracted, every actor
+    if problem:
+        raise ValueError(problem)
     problem = _decision_problem(submission)  # D-053, every actor
     if problem:
         raise ValueError(problem)
@@ -280,6 +283,10 @@ if __name__ == "__main__":
             "sprinklers": sprinklers,
             "fields": fields or [],
         }
+        folder = ext.parent / "inbox" / submission  # P-020: one input document, its manifest in the saved run
+        folder.mkdir(parents=True, exist_ok=True)
+        (folder / "application.md").write_text(f"SYNTHETIC application {submission}\n")
+        payload["input_manifest"] = prepare.folder_manifest(folder)
         payload["hash_algorithm"] = prepare.HASH_ALGORITHM
         payload["saved_hash"] = prepare.hash_payload(payload)
         ext.mkdir(parents=True, exist_ok=True)
@@ -304,9 +311,9 @@ if __name__ == "__main__":
             with log.open("a") as handle:
                 handle.write(json.dumps(row) + "\n")
 
-        saved_dir, saved_log, saved_sends = prepare.EXTRACT_DIR, DECISIONS_LOG, SENDS_LOG
+        saved_dir, saved_log, saved_sends, saved_inbox = prepare.EXTRACT_DIR, DECISIONS_LOG, SENDS_LOG, prepare.INBOX_DIR
         sends = tmp / "sends.jsonl"
-        prepare.EXTRACT_DIR, DECISIONS_LOG, SENDS_LOG = ext, log, sends
+        prepare.EXTRACT_DIR, DECISIONS_LOG, SENDS_LOG, prepare.INBOX_DIR = ext, log, sends, tmp / "inbox"
         try:
             dest_dir = tmp / "to-carrier"
             dest_dir.mkdir()
@@ -515,6 +522,17 @@ if __name__ == "__main__":
                 pass
             finally:
                 UNDERWRITERS = saved_uw
+
+            # P-020 (D-062): a document added after extraction refuses the send, for the user too.
+            save(ext, "SUB-320", "complete", complete=True, fields=office, sprinklers="no")
+            decide("SUB-320", "approve")
+            assert send_to_carrier("SUB-320", "user", dest_dir, user_line=LINE("SUB-320")).exists()
+            (tmp / "inbox" / "SUB-320" / "late-loss-run.pdf").write_bytes(b"added after extraction")
+            try:
+                send_to_carrier("SUB-320", "user", dest_dir, user_line=LINE("SUB-320"))
+                raise SystemExit("a document added after extraction must refuse the send")
+            except ValueError as exc:
+                assert "changed since extraction" in str(exc), exc
         finally:
-            prepare.EXTRACT_DIR, DECISIONS_LOG, SENDS_LOG = saved_dir, saved_log, saved_sends
+            prepare.EXTRACT_DIR, DECISIONS_LOG, SENDS_LOG, prepare.INBOX_DIR = saved_dir, saved_log, saved_sends, saved_inbox
     print("package ok")

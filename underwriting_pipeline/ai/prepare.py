@@ -21,6 +21,7 @@ ROOT = Path(__file__).resolve().parents[2]
 # G2 (D-029): the send gate reads the last saved run at this path. It never calls process_submission and never trusts a passed-in report.
 EXTRACT_DIR = ROOT / "deliverables" / "data-engineer" / "extractions"
 HASH_ALGORITHM = "sha256"
+INBOX_DIR = ROOT / "simulation" / "inbox"
 # P-010 part 1: these two statuses are refused for every actor, including the user. There is no override.
 REFUSED_STATUSES = ("extraction_failed", "all_values_rejected")
 REJECT_REASON = "the model answered but every value was rejected by the gate"
@@ -82,7 +83,7 @@ def _norm(value: str) -> str:
 
 _AMOUNT = re.compile(
     r"(?i)^(?:about|around|approximately|roughly)?\s*"
-    r"\$?\s*(\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?)\s*([kmb])?"
+    r"\$?\s*(\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?)\s*(mm|[kmb])?"
     r"(?:\s*(?:square\s+feet|sq\.?\s*ft\.?|sqft|sf))?\s*$"
 )
 _OPS_CLASS = (
@@ -97,7 +98,7 @@ _OPS_CLASS = (
 
 
 def amount_value(value: str) -> int | None:
-    """220k, $1.2M, 220,000, and 2,200 sq ft are numbers. A sentence is not."""
+    """220k, $1.2M, $1.2MM (million, P-021), 220,000, and 2,200 sq ft are numbers. A sentence is not."""
     if not value:
         return None
     match = _AMOUNT.match(value.strip())
@@ -105,7 +106,7 @@ def amount_value(value: str) -> int | None:
         return None
     number = float(match.group(1).replace(",", ""))
     suffix = (match.group(2) or "").lower()
-    factor = {"": 1, "k": 1_000, "m": 1_000_000, "b": 1_000_000_000}[suffix]
+    factor = {"": 1, "k": 1_000, "m": 1_000_000, "mm": 1_000_000, "b": 1_000_000_000}[suffix]
     return int(round(number * factor))
 
 
@@ -683,6 +684,32 @@ def read_saved_run(submission: str, extract_dir: Path | None = None) -> dict:
     return payload
 
 
+def folder_manifest(folder: Path) -> list[dict]:
+    """P-020 (D-060/D-062): file name and sha256 of every file in the submission folder (dotfiles skipped)."""
+    return [
+        {"name": p.name, "sha256": hashlib.sha256(p.read_bytes()).hexdigest()}
+        for p in sorted(folder.iterdir())
+        if p.is_file() and not p.name.startswith(".")
+    ]
+
+
+def manifest_problem(submission: str, extract_dir: Path | None = None, inbox: Path | None = None) -> str:
+    """P-020 send-gate check. Empty string = ok. Else the refusal reason. Fails closed: no manifest, no folder, any difference."""
+    try:
+        saved = read_saved_run(submission, extract_dir).get("input_manifest")
+    except ValueError as exc:
+        return str(exc)
+    if not isinstance(saved, list) or not saved:
+        return f"the saved run for {submission} has no input manifest; re-run extraction before sending"
+    try:
+        now = folder_manifest((Path(inbox) if inbox is not None else INBOX_DIR) / submission)
+    except OSError:
+        return f"the input folder for {submission} cannot be read; refusing"
+    if now != saved:
+        return f"the input documents for {submission} changed since extraction; re-run extraction before sending"
+    return ""
+
+
 def current_status(submission: str, extract_dir: Path | None = None) -> str:
     """The status of the last saved run, read, hash-checked, and validated by the gate itself (G2)."""
     return read_saved_run(submission, extract_dir)["status"]
@@ -757,6 +784,7 @@ def write_drafts(inbox: Path, draft_dir: Path, conflict_dir: Path) -> list[dict]
                 side.unlink()
         payload = _saved_payload(report)
         payload["conflicts"] = conflicts_out
+        payload["input_manifest"] = folder_manifest(folder)
         payload["hash_algorithm"] = HASH_ALGORITHM
         payload["saved_hash"] = hash_payload(payload, HASH_ALGORITHM)
         (extract_dir / f"{folder.name}.json").write_text(json.dumps(payload, indent=2) + "\n")
@@ -1018,6 +1046,7 @@ if __name__ == "__main__":
         assert amount_value("220k") == 220000
         assert amount_value("220,000") == 220000
         assert amount_value("$1.2M") == 1200000
+        assert amount_value("$1.2MM") == 1200000 and amount_value("750K") == 750000
         assert amount_value("2,200 sq ft") == 2200
         assert amount_value("2200 sf") == 2200
         assert amount_value("8 units") is None
@@ -1182,4 +1211,28 @@ if __name__ == "__main__":
                     pass
             finally:
                 globals()["EXTRACT_DIR"] = saved_dir
+        # P-020: manifest check on a real write_drafts() run in a temp folder.
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            sub = tmp / "inbox" / "SUB-400"
+            sub.mkdir(parents=True)
+            (sub / "application.md").write_text("Named insured: Example LLC\n")
+            real_extract = llm_extract.llm_extract
+            llm_extract.llm_extract = _raiser(RuntimeError("model call failed: stub"))  # the manifest is saved on any status
+            try:
+                write_drafts(tmp / "inbox", tmp / "pending", tmp / "data" / "conflicts")
+            finally:
+                llm_extract.llm_extract = real_extract
+            args = ("SUB-400", tmp / "data" / "extractions", tmp / "inbox")
+            assert manifest_problem(*args) == "", manifest_problem(*args)
+            (sub / "extra.md").write_text("new doc")
+            assert "changed" in manifest_problem(*args), "a new document must be refused"
+            (sub / "extra.md").unlink()
+            assert manifest_problem(*args) == ""
+            (sub / "application.md").write_text("Named insured: Other LLC\n")
+            assert "changed" in manifest_problem(*args), "changed bytes must be refused"
+            (sub / "application.md").write_text("Named insured: Example LLC\n")
+            _save_run(tmp / "data" / "extractions", "SUB-401", "incomplete")
+            assert "no input manifest" in manifest_problem("SUB-401", tmp / "data" / "extractions", tmp / "inbox")
+            assert manifest_problem("SUB-999", tmp / "data" / "extractions", tmp / "inbox")
         print("prepare ok")

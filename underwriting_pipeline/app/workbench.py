@@ -87,8 +87,8 @@ def match(report: dict) -> dict:
     if not report["complete"] or not ops:
         return out("hold", "missing information")
     tiv = _tiv(report)
-    if tiv is None:
-        return out("hold", "TIV missing or unreadable")  # D-061: never read as 0
+    if tiv is None or tiv <= 0:
+        return out("hold", "TIV missing or unreadable")  # D-061, B-203 (D-062): never read as 0 or negative
     hit = [k for k, words in CLASSES.items() if _has(ops, words)]
     if not hit:
         return out("no_match", "readable class on no carrier list", overridable=True)
@@ -606,8 +606,9 @@ if __name__ == "__main__":
         assert route(r("restaurant", "$2,000,000")) == "carrier_b" and route(r("restaurant", "$2,000,001")) == "senior_referral"
         # D-061: the existing normalizer; missing or unreadable TIV holds; over $5M is senior referral, no $10M rule.
         assert match(r("office", "$8M"))["note"] == OUT_TIV and route(r("office", "$12,000,000")) == "senior_referral"
-        assert route(r("office", "750K")) == "carrier_a"
-        for bad in ("$1.2MM", "", "TBD", None):  # "$1.2MM" is not read by prepare.amount_value, so it holds
+        assert route(r("office", "750K")) == "carrier_a" and route(r("office", "$1.2M")) == "carrier_a"
+        assert route(r("office", "$1.2MM")) == "carrier_a" and route(r("office", "$5.1MM")) == "senior_referral"  # P-021
+        for bad in ("", "TBD", None, "$0", "0", "-$5,000"):  # B-203: 0 or negative holds
             m = match(r("office", bad))
             assert m == {"route": "hold", "note": "TIV missing or unreadable", "suggested": "", "overridable": False}, (bad, m)
         assert route(r("taqueria")) == "carrier_b" and route(r("oficina")) == "carrier_a" and route(r("")) == "hold"

@@ -235,16 +235,17 @@ def ready_to_send(tmp: Path):
     report = prepare.process_submission(make_sub(tmp / "inbox", "SUB-T0001"))
     payload = prepare._saved_payload(report)
     payload["submission"] = "SUB-T0001"
+    payload["input_manifest"] = prepare.folder_manifest(tmp / "inbox" / "SUB-T0001")  # P-020 (D-062)
     payload["hash_algorithm"] = prepare.HASH_ALGORITHM
     payload["saved_hash"] = prepare.hash_payload(payload)
     (tmp / "extractions").mkdir()
     (tmp / "extractions" / "SUB-T0001.json").write_text(json.dumps(payload))
     (tmp / "decisions.jsonl").write_text(json.dumps({"seq": 1, "submission": "SUB-T0001", "action": "approve", "underwriter_id": "user", "reason": ""}) + "\n")
-    saved = (prepare.EXTRACT_DIR, package.DECISIONS_LOG, package.SENDS_LOG, package.INBOX)
-    prepare.EXTRACT_DIR, package.DECISIONS_LOG, package.SENDS_LOG, package.INBOX = tmp / "extractions", tmp / "decisions.jsonl", tmp / "sends.jsonl", tmp / "inbox"
+    saved = (prepare.EXTRACT_DIR, package.DECISIONS_LOG, package.SENDS_LOG, package.INBOX, prepare.INBOX_DIR)
+    prepare.EXTRACT_DIR, package.DECISIONS_LOG, package.SENDS_LOG, package.INBOX, prepare.INBOX_DIR = tmp / "extractions", tmp / "decisions.jsonl", tmp / "sends.jsonl", tmp / "inbox", tmp / "inbox"
 
     def restore():
-        prepare.EXTRACT_DIR, package.DECISIONS_LOG, package.SENDS_LOG, package.INBOX = saved
+        prepare.EXTRACT_DIR, package.DECISIONS_LOG, package.SENDS_LOG, package.INBOX, prepare.INBOX_DIR = saved
 
     return restore
 

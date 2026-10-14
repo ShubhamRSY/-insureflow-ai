@@ -1,15 +1,14 @@
 {
   "task": "T-095",
-  "run_at": "2026-10-14T14:06:10",
+  "run_at": "2026-10-14T14:16:47",
   "command": ".venv/bin/python -B deliverables/architecture/tests/test_system_design_stubbed.py",
   "python": "3.14.6",
   "model_calls": 0,
   "network_calls_attempted": 0,
   "files_changed_under_underwriting_pipeline_simulation_or_other_deliverables": [],
   "counts": {
-    "pass": 22,
-    "fail (known gap)": 8,
-    "skip": 3,
+    "pass": 24,
+    "fail (known gap)": 9,
     "error": 1,
     "fail": 1
   },
@@ -174,10 +173,17 @@
       "category": "failure",
       "kind": "as-is",
       "ref": "sources.py:125-127; prepare.py:518-520,578",
-      "outcome": "skip",
-      "detail": "needs the OCR packages: No module named 'pytesseract'",
-      "seconds": 0.03,
-      "measured": {}
+      "outcome": "pass",
+      "detail": "",
+      "seconds": 0.88,
+      "measured": {
+        "posts": 0,
+        "status": "incomplete",
+        "needs_human": [
+          "scan.png"
+        ],
+        "request_drafted": true
+      }
     },
     {
       "test": "a_folder_where_nothing_was_read_gets_no_missing_info_request",
@@ -199,10 +205,16 @@
       "category": "failure",
       "kind": "target",
       "ref": "G14; sources.py:133,139,191-199; prepare.py:502",
-      "outcome": "skip",
-      "detail": "needs the OCR packages: No module named 'pdfplumber'",
-      "seconds": 0.0,
-      "measured": {}
+      "outcome": "fail (known gap)",
+      "detail": "the whole submission stops: {'scan.png': 'UnidentifiedImageError', 'application-2.pdf': 'PdfminerException', 'schedule.xlsx': 'BadZipFile'}",
+      "seconds": 0.26,
+      "measured": {
+        "result_by_file": {
+          "scan.png": "UnidentifiedImageError",
+          "application-2.pdf": "PdfminerException",
+          "schedule.xlsx": "BadZipFile"
+        }
+      }
     },
     {
       "test": "text_past_120000_characters_is_listed_as_unread",
@@ -230,7 +242,7 @@
       "ref": "D-022; llm_extract.py:69-71,445-460",
       "outcome": "pass",
       "detail": "",
-      "seconds": 0.01,
+      "seconds": 0.0,
       "measured": {
         "posts": 1,
         "statuses": [
@@ -411,6 +423,7 @@
           "fields",
           "hash_algorithm",
           "host",
+          "input_manifest",
           "model_version",
           "needs_human",
           "ocr_settings",
@@ -436,18 +449,18 @@
         "local_milliseconds_per_submission": {
           "cold": {
             "n": 300,
-            "p50": 1.9703,
-            "p95": 2.9548,
-            "max": 6.201,
-            "mean": 2.1393,
+            "p50": 1.9218,
+            "p95": 2.0755,
+            "max": 23.5788,
+            "mean": 2.0786,
             "posts_so_far": 300
           },
           "warm": {
             "n": 300,
-            "p50": 1.6015,
-            "p95": 1.821,
-            "max": 6.3482,
-            "mean": 1.6851,
+            "p50": 1.5803,
+            "p95": 1.6608,
+            "max": 24.8485,
+            "mean": 1.7349,
             "posts_so_far": 300
           }
         },
@@ -478,7 +491,7 @@
       "ref": "llm_extract.py:338-360,386; bucket shape ASSUMED",
       "outcome": "pass",
       "detail": "",
-      "seconds": 0.14,
+      "seconds": 0.15,
       "measured": {
         "submissions": 60,
         "simulated_seconds": 677.1,
@@ -500,7 +513,7 @@
       "ref": "llm_extract.py:31,393-406; TASKS.md:715",
       "outcome": "pass",
       "detail": "",
-      "seconds": 0.31,
+      "seconds": 0.32,
       "measured": {
         "submitted": 150,
         "complete": 124,
@@ -519,10 +532,11 @@
       "kind": "target",
       "ref": "G20; NFR-007; llm_extract.py:447-487 (no lock)",
       "outcome": "fail (known gap)",
-      "detail": "4 model calls for one file, and 2 of 4 workers stopped with ['FileNotFoundError']",
+      "detail": "4 model calls for one file, and 3 of 4 workers stopped with ['FileNotFoundError']",
       "seconds": 0.06,
       "measured": {
         "workers_crashed": [
+          "FileNotFoundError",
           "FileNotFoundError",
           "FileNotFoundError"
         ],
@@ -539,7 +553,7 @@
       "kind": "as-is",
       "ref": "llm_extract.py:81-86; workbench.py:142-143",
       "outcome": "error",
-      "detail": "FileNotFoundError: [Errno 2] No such file or directory: '/var/folders/g4/nw3tvq1j6q7c8jjlxwf19c5c0000gn/T/t095-ncc91na3/tmprmmzjwwx/decisions.jsonl'",
+      "detail": "FileNotFoundError: [Errno 2] No such file or directory: '/var/folders/g4/nw3tvq1j6q7c8jjlxwf19c5c0000gn/T/t095-bq7oc6tu/tmp5jce2aqh/decisions.jsonl'",
       "seconds": 0.01,
       "measured": {}
     },
@@ -550,7 +564,7 @@
       "ref": "G3; NFR-006; workbench.py:86,234",
       "outcome": "fail (known gap)",
       "detail": "20 model calls were made inside the page load for a queue of 20",
-      "seconds": 0.08,
+      "seconds": 0.09,
       "measured": {
         "queue": 20,
         "posts_during_an_outage": 120,
@@ -566,10 +580,55 @@
       "category": "latency",
       "kind": "as-is",
       "ref": "sources.py:184-208; prepare.py:501-607; simulation/inbox read only",
-      "outcome": "skip",
-      "detail": "needs the OCR packages: No module named 'openpyxl'",
-      "seconds": 0.0,
-      "measured": {}
+      "outcome": "pass",
+      "detail": "",
+      "seconds": 35.57,
+      "measured": {
+        "folders": 86,
+        "files_read": 189,
+        "files_marked_needs_human": 0,
+        "folders_that_stopped": [],
+        "read_seconds": {
+          "typed only": {
+            "n": 48,
+            "p50": 0.0004,
+            "p95": 0.0044,
+            "max": 0.0065,
+            "mean": 0.0012
+          },
+          "with a pdf": {
+            "n": 20,
+            "p50": 0.0067,
+            "p95": 0.0158,
+            "max": 0.0162,
+            "mean": 0.0076
+          },
+          "with an image": {
+            "n": 18,
+            "p50": 1.732,
+            "p95": 2.6931,
+            "max": 2.7323,
+            "mean": 1.9574
+          }
+        },
+        "read_seconds_per_image_file": {
+          "n": 18,
+          "p50": 1.732,
+          "p95": 2.6931,
+          "max": 2.7323,
+          "mean": 1.9574
+        },
+        "gates_and_rules_seconds_with_a_stub_reply": {
+          "n": 86,
+          "p50": 0.0013,
+          "p95": 0.0028,
+          "max": 0.0057,
+          "mean": 0.0014
+        },
+        "pdftoppm_installed": false,
+        "tesseract_installed": true,
+        "note": "one machine, one run; a scanned PDF is not read here when pdftoppm is missing (G16)"
+      }
     },
     {
       "test": "a_second_run_over_unchanged_files_costs_no_tokens",
@@ -635,7 +694,7 @@
       "ref": "underwriting_pipeline/cache/token_log.jsonl and cache/extractions (read only)",
       "outcome": "fail",
       "detail": "28 call rows: the numbers in system-design.md were taken from 13",
-      "seconds": 0.0,
+      "seconds": 0.01,
       "measured": {
         "token_log_rows": 58,
         "calls": 28,

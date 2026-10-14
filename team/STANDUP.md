@@ -1424,3 +1424,18 @@ Blocked: No.
 - Done: T-083 re-check after D-061 fix: APPROVE, no High. TIV now read by the existing normalizer; missing or unreadable holds; no $10M rule. Medium/Low B-203, B-204.
 - Doing next: nothing on T-083.
 - Blocked by / need from: none.
+
+### 2026-10-14 — @ai-engineer-assistant
+- Done: P-020 (input manifest, `manifest_problem`) and P-021 ("MM" = million) built in prepare.py, self-checks pass.
+- Doing next: nothing until the quick set of 15 can run on a model host.
+- Blocked by / need from: main session wires `manifest_problem` into package.py; model host for the quick set.
+
+### 2026-10-14 — @compliance
+- Done: P-020 review, APPROVE (no High); B-205 to B-208 to backlog.
+- Doing next: nothing on P-020.
+- Blocked by / need from: none.
+
+### 2026-10-14 — @senior-underwriter
+- Done: T-083 TIV review, APPROVE (no High); B-209, B-210 to backlog.
+- Doing next: nothing on T-083.
+- Blocked by / need from: none.

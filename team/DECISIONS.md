@@ -693,3 +693,14 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: T-083 fix (main session, budget rule 3), then @senior-underwriter re-check. P-020 is approved and not yet built; it needs a build task (@ai-engineer-assistant for `prepare.py`, @software-engineer for the send gate). Note: the existing normalizer, `prepare.amount_value()`, returns None for "$1.2MM", so that value reads as unreadable → hold; widening it is a change under `underwriting_pipeline/ai/` and needs its own approval.
 - Status: ACCEPTED
 - Amends: D-060 (over $5M per location is senior referral; no over-$10M no_match). Approved proposal is not a production approval; @model-risk can still block production. No send is authorized.
+
+## D-062 — Build P-020; P-021 (amount_value reads "MM") approved; B-203 now
+- Date / Owner: 2026-10-14 / @user
+- Context: P-020 was approved in D-061 and not built. `prepare.amount_value()` does not read "MM" (D-061 note). B-203: a TIV of "$0" routes to carrier_a.
+- Options considered: none. The user's words.
+- Decision: In the user's words. "1. Build P-020: each saved run stores a sha256 manifest of the input documents; the send gate refuses if the current folder manifest differs. Self-check: add a new document after extraction → send refused. 2. Normalizer change (number it P-021): amount_value() reads "MM" as million, e.g. "$1.2MM" = 1,200,000. approve change P-021. Self-checks for "$1.2MM", "$1.2M", "750K". 3. B-203 now: TIV of 0 or negative → hold, "TIV missing or unreadable"."
+- Rationale: The user typed this in this Claude Code session on 2026-10-14.
+- Dissent: none
+- Follow-up tasks: P-020 and P-021 in `underwriting_pipeline/ai/prepare.py` (@ai-engineer-assistant); the send gate call in `package.py` and B-203 in `workbench.py` (main session, budget rule 3); @compliance review of P-020; @senior-underwriter check of the TIV cases.
+- Status: ACCEPTED
+- Amends: nothing. An approved proposal is not a production approval; @model-risk can still block production. No send is authorized.
