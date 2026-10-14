@@ -33,7 +33,7 @@ NOT_SCORED = {
 
 def _hash_version() -> str:
     """V3 today = V2: a hash of the table, the fact word lists and the cooking term list, as PROMPT_VERSION is hashed."""
-    rules = [TABLE, HABITATIONAL_WORDS, CONTRACTING_WORDS, prepare.HAZARD_TERMS, prepare.NO_WORDS.pattern, prepare.ITEM_SPLIT.pattern, prepare.NONE_AFTER.pattern, prepare.NEG_WORD.pattern, prepare.SCOPE_BREAK.pattern, prepare.NEG_AFTER.pattern]  # P-027, P-029: the rules move the version
+    rules = [TABLE, HABITATIONAL_WORDS, CONTRACTING_WORDS, prepare.HAZARD_TERMS, prepare.NO_WORDS.pattern, prepare.ITEM_SPLIT.pattern, prepare.NONE_AFTER.pattern, prepare.NEG_WORD.pattern, prepare.MODIFIER.pattern, sorted(prepare.CONNECTORS)]  # P-027, P-030: the rules move the version
     return hashlib.sha256(json.dumps(rules, sort_keys=True).encode()).hexdigest()[:12]
 
 
@@ -62,10 +62,14 @@ def facts(report: dict) -> dict:
 def cooking_line(fact: dict) -> str:
     """Three outcomes, never a silent zero."""
     state = fact.get("state", "not_stated")
+    call = fact.get("call")
+    if call:  # B-278 (D-073): the underwriter's recorded call on a needs-review line
+        said = f"underwriter recorded {call['call']} ({call['underwriter_id']}: {call['reason']})"
+        return (f"COOKING +{TABLE['COOKING']} — {said}" if state == "yes" else f"Cooking: {said}") + f": \"{fact.get('quote')}\""
     denied = f"; stated not present: {', '.join(fact['negated'])}" if fact.get("negated") else ""  # P-027 (D-071)
     if state == "yes":
         return f"COOKING +{TABLE['COOKING']} — {', '.join(fact.get('terms') or ['hazard'])} stated{denied}: \"{fact.get('quote')}\""
-    if state == "needs_review":  # P-029 (D-072): no cooking points until the underwriter decides
+    if state == "needs_review":  # P-030 (D-073): no cooking points until the underwriter records the call
         return f"Cooking: needs review — \"{fact.get('quote')}\""
     if state == "none":
         return "Cooking: stated none" + (f" — \"{fact.get('quote')}\"" if fact.get("quote") else "")
@@ -123,9 +127,22 @@ def score_run(report: dict) -> dict:
     lines = [LOSS_LINE, cooking_line(f["cooking_equipment"]), hood_line]
     out = {"scored": why is None, "points": None, "reason_codes": [], "not_scored_reason": why and f"Not scored — {why}",
            "lines": lines, "points_version": POINTS_VERSION}
-    if why is None:
+    if why is None and f["cooking_equipment"].get("state") == "needs_review":  # B-278 (D-073): never a normal number
+        out.update(scored=False, provisional=True, not_scored_reason="Provisional — cooking not scored")
+    elif why is None:
         out.update(score(f))
     return out
+
+
+def apply_cooking_call(report: dict, call: dict | None) -> dict:
+    """B-278 (D-073): a copy of the run with the underwriter's cooking call in place of a needs-review equipment fact.
+    Only a call for this run (same run_hash) counts; otherwise the run is returned unchanged (still provisional)."""
+    eq = ((report.get("cooking") or {}).get("equipment") or {})
+    if not call or eq.get("state") != "needs_review" or call.get("run_hash") != report.get("saved_hash"):
+        return report
+    state = "yes" if call["call"] == "present" else "none"
+    cooking = {**(report.get("cooking") or {}), "equipment": {**eq, "state": state, "terms": ["fryer or open flame"] if state == "yes" else [], "call": call}}
+    return {**report, "cooking": cooking}
 
 
 if __name__ == "__main__":
@@ -158,6 +175,14 @@ if __name__ == "__main__":
     nr = {"state": "needs_review", "terms": [], "quote": "no fryer but charbroiler"}
     assert cooking_line(nr) == 'Cooking: needs review — "no fryer but charbroiler"'
     assert "COOKING" not in score_run(run(cooking={"equipment": nr, "hood_suppression": {"state": "not_stated"}}))["reason_codes"], "P-029: no points"
+    # B-278 (D-073): provisional until the underwriter records the call for this run; points apply only after it.
+    pr = run(cooking={"equipment": nr, "hood_suppression": {"state": "not_stated"}}, saved_hash="h1")
+    got = score_run(pr)
+    assert got["points"] is None and got["not_scored_reason"] == "Provisional — cooking not scored" and got.get("provisional")
+    c = {"call": "present", "reason": "fryer seen on photos", "underwriter_id": "UW-001", "run_hash": "h1"}
+    assert "COOKING" in score_run(apply_cooking_call(pr, c))["reason_codes"] and score_run(apply_cooking_call(pr, c))["points"] is not None
+    assert "COOKING" not in score_run(apply_cooking_call(pr, {**c, "call": "none"}))["reason_codes"]
+    assert score_run(apply_cooking_call(pr, {**c, "run_hash": "old"}))["points"] is None, "a call for another run does not count"
     assert score_run(run("x", yes))["lines"][1].startswith("COOKING +25 — fryer stated:")
     # M1: a complete file with no cooking fact keeps its number. H1: hood gives no points either way.
     h = {"hood_suppression": {"state": "stated", "quote": "wet chemical"}, "equipment": {"state": "not_stated"}}

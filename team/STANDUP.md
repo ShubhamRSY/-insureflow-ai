@@ -1587,3 +1587,8 @@ Blocked: No.
 - Verdict: REJECT. New High B-275 (regression): "no hood and gas grill", "sin campana con parrilla" → stated none (+25 missed); P-027 scored them. T-017 veto stands.
 - Next: re-check once @user approves and the team builds the fix (a negation denies only an adjacent or modifier-only hazard; otherwise needs_review).
 - Blockers: needs an approve-change line from @user.
+
+### 2026-10-14 — @model-risk
+- Done: P-030/B-278 re-check (D-073). REJECT. B-278 closed (provisional score, logged cooking call per run hash). B-276 not closed: one negation still reaches across a hazard term or an unlisted connector ("no fryer plus grill", "sin freidora más parrilla" → none). T-017 veto stands.
+- Next: re-check only after @user approves a fix that makes the code match D-073 rule 2.
+- Blockers: needs @user (prepare.py change; D-073 says stop on a second reject).

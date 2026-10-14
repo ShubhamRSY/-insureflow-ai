@@ -814,3 +814,14 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: built in the main session (budget rule 3; weekly usage limit); @model-risk re-check. Note: under this rule the D-071 line "no fryer; gas grill and charbroiler" (a negation and three hazard terms) is now "Cooking: needs review", not fryer none / grill present. P-028 was not used and is not reused.
 - Status: ACCEPTED
 - Amends: D-071 (P-027) for lines with a negation and more than one hazard term. Not a production approval. No send is authorized.
+
+## D-073 — P-030 approved (B-276, replaces the P-029 rule); B-278 provisional score and underwriter cooking call
+- Date / Owner: 2026-10-14 / @user
+- Context: @model-risk REJECT on P-029: a negation carries across and/with/y/con (B-276). B-278: no control records the underwriter's cooking call. T-017 veto stands.
+- Options considered: none. The user's words.
+- Decision: In the user's words. "approve change P-030 (B-276, replacing the P-029 rule): (1) a line with no negation word: hazards present; (2) a negation word directly before a hazard term, with only modifiers between ("no gas grill"): that hazard none; (3) any other line containing a negation word (no, none, not, without, sin, n/a), in any position or language, including "fryer, none": "Cooking: needs review" with the quote, no points added. Self-checks: "no hood and gas grill", "sin campana con parrilla", "fryer, none", plus all earlier lines. B-278 now: while cooking is needs review, the score shows "Provisional — cooking not scored", never a normal number. Add a workbench control for the underwriter to record cooking present or none with a reason, logged with the run hash; points apply only after that. Sandbox screenshot. One @model-risk re-check, High only. If it is rejected again, stop and tell me; do not start another rule variant. Commit, no wrap-up."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-14 (D-032).
+- Dissent: none
+- Follow-up tasks: built in the main session (budget rule 3; weekly usage limit); @model-risk re-check. Orchestrator's reading, stated to @user: (2) applies only when every hazard term on the line is directly negated; a bare "none" or "N/A" equipment line falls under (3) (needs review), which replaces B-273 for the equipment line.
+- Status: ACCEPTED
+- Amends: D-072 (P-029 rule replaced). Not a production approval. No send is authorized.

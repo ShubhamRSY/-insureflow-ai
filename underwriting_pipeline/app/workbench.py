@@ -42,8 +42,9 @@ MESSAGES: dict[str, tuple[bool, str]] = {}  # submission -> (ok, plain-words res
 # D-065 item 5: one line per user-visible feature: date, task or proposal, decision number, what an underwriter sees.
 WHATS_NEW = (
     ("2026-10-14", "P-015/B-264/B-265/B-266", "D-070", "The score shows \"Not scored — reason\" when a file is failed, incomplete or empty, and the cooking and hood lines; each code has a mark-wrong control (logged; the number does not change); the footer names the model and prompt version of the saved run; Suggested market shows only on senior referrals; a stale card lists the changed fields, old to new."),
-    ("2026-10-14", "P-027 (B-268)", "D-071", "The cooking line names what was stated as not present (\"no fryer; gas grill\" counts the grill, not the fryer) and shows the quote, including on \"stated none\". Superseded by P-029 for lines with a negation and more than one hazard term."),
-    ("2026-10-14", "P-029 (B-272, B-274), B-273", "D-072", "A cooking line with a negation and more than one hazard term (or a hazard term past or/but/pero/&/-/period) shows \"Cooking: needs review\" with the quote and adds no points; it is acknowledged at approve like any needs-review value. N/A shows as not stated."),
+    ("2026-10-14", "P-027 (B-268)", "D-071", "The cooking line names what was stated as not present (\"no fryer; gas grill\" counts the grill, not the fryer) and shows the quote, including on \"stated none\". Superseded by P-029, then P-030."),
+    ("2026-10-14", "P-030 (B-276), B-278", "D-073", "Cooking: a negation directly before a hazard (\"no gas grill\") means none; any other line with a negation word (\"fryer, none\", \"none\", \"N/A\") is \"needs review\". While it is, the score reads \"Provisional — cooking not scored\"; an underwriter records present or none with a reason, logged with the run hash, and only then do points apply."),
+    ("2026-10-14", "P-029 (B-272, B-274), B-273", "D-072", "A cooking line with a negation and more than one hazard term (or a hazard term past or/but/pero/&/-/period) shows \"Cooking: needs review\" with the quote and adds no points; it is acknowledged at approve like any needs-review value. N/A shows as not stated. Rule replaced by P-030."),
     ("2026-10-14", "P-026", "D-069", "Every approve logs the saved run's hash; a re-saved file shows \"Re-review needed: file changed since your approval\" and the send is refused for everyone until you approve and acknowledge again."),
     ("2026-10-14", "B-248", "D-069", "The sent date comes from one place, the Sent-on line in the package file, on the card and in quote tracking alike (older packages show \"not recorded\")."),
     ("2026-10-14", "B-252", "D-069", "A sandbox run (--sandbox) writes the page, logs and outboxes into a temporary copy; the real files are never touched."),
@@ -200,7 +201,7 @@ def load_queue(only: str | None = None) -> list[dict]:
                 route=route(report),
                 note=match(report)["note"],
                 suggested=match(report)["suggested"],
-                score=points.score_run(report),
+                score=scored(folder.name, report),
                 marks=code_marks(folder.name),
                 snippets={r["field_id"]: snippet(folder, r) for r in report["fields"]},
             )
@@ -241,7 +242,7 @@ def mark_code(payload: dict) -> dict:
     report, problem = saved_report(sub)
     if report is None:
         raise ValueError(problem)
-    if code not in points.CODES or code not in points.score_run(report)["reason_codes"]:
+    if code not in points.CODES or code not in scored(sub, report)["reason_codes"]:
         raise ValueError(f"{code or 'no code'} is not a code shown for {sub}; codes cannot be added (A1)")
     row = {"submission": sub, "code": code, "reason": reason, "underwriter_id": actor, "date": date.today().isoformat(),
            "at": datetime.now().astimezone().isoformat(timespec="seconds"), "points_version": points.POINTS_VERSION, "run_hash": report.get("saved_hash")}
@@ -252,13 +253,62 @@ def mark_code(payload: dict) -> dict:
     return row
 
 
+def calls_path() -> Path:
+    return LOG.with_name("cooking_calls.jsonl")  # B-278 (D-073): a sibling log, like code marks; follows the sandbox
+
+
+def cooking_call_for(sub: str, report: dict) -> dict | None:
+    """The latest recorded cooking call for this submission and this run (same run_hash), or None."""
+    path, last = calls_path(), None
+    for line in path.read_text().splitlines() if path.is_file() else []:
+        try:
+            r = json.loads(line)
+        except ValueError:
+            continue
+        if isinstance(r, dict) and r.get("submission") == sub and r.get("run_hash") == report.get("saved_hash"):
+            last = r
+    return last
+
+
+def scored(sub: str, report: dict) -> dict:
+    """The one score the page shows and the decision row saves: the run with this run's cooking call applied, if any."""
+    return points.score_run(points.apply_cooking_call(report, cooking_call_for(sub, report)))
+
+
+def cooking_call(payload: dict) -> dict:
+    """B-278 (D-073): a listed underwriter records cooking present or none, with a reason, on a needs-review cooking line.
+    Logged with the run hash; points apply only after it, and only for that run."""
+    sub, call = (payload.get("submission") or "").strip(), (payload.get("call") or "").strip()
+    actor, reason = (payload.get("underwriter_id") or "").strip(), (payload.get("reason") or "").strip()
+    if not actor or actor not in package.underwriters():
+        raise ValueError("only an id on underwriters.json may record the cooking call")
+    if call not in ("present", "none"):
+        raise ValueError("choose present or none")
+    if not reason:
+        raise ValueError("a reason is required")
+    report, problem = saved_report(sub)
+    if report is None:
+        raise ValueError(problem)
+    if (payload.get("run_hash") or "") != report.get("saved_hash"):
+        raise ValueError("the file changed since this card was shown; reload and look again")
+    if ((report.get("cooking") or {}).get("equipment") or {}).get("state") != "needs_review":
+        raise ValueError("cooking on this file is not waiting for a call")
+    row = {"submission": sub, "call": call, "reason": reason, "underwriter_id": actor, "run_hash": report.get("saved_hash"),
+           "at": datetime.now().astimezone().isoformat(timespec="seconds"), "points_version": points.POINTS_VERSION}
+    with _LOG_LOCK:
+        calls_path().parent.mkdir(parents=True, exist_ok=True)
+        with calls_path().open("a") as handle:
+            handle.write(json.dumps(row) + "\n")
+    return row
+
+
 def run_record(sub: str) -> dict:
     """P-015 E2: score, codes, versions and model/prompt of the saved run at the click. Never the form, never the environment."""
     report, problem = saved_report(sub) if re.fullmatch(r"SUB-\d+", sub or "") else (None, "no saved run")
     if report is None:
         return {"points": None, "not_scored_reason": f"Not scored — {problem}", "reason_codes": [], "points_version": points.POINTS_VERSION,
                 "model_version": None, "prompt_version": None, "cache_key": None}
-    s = points.score_run(report)
+    s = scored(sub, report)
     return {"points": s["points"], "not_scored_reason": s["not_scored_reason"], "reason_codes": s["reason_codes"], "points_version": s["points_version"],
             "model_version": report.get("model_version"), "prompt_version": report.get("prompt_version"),
             "cache_key": None}  # the saved run does not hold the extraction cache key; saving it is a prepare.py change (P-###)
@@ -361,7 +411,7 @@ def _append(payload: dict, action: str, actor: str, reason: str, log_path: Path)
     return row
 
 
-REFUSED_AS = {"/decision": "Decision refused", "/mark-code": "Mark refused", "/close-subjectivity": "Not closed", "/send": "Send refused", "/approve-draft": "Request not approved"}
+REFUSED_AS = {"/decision": "Decision refused", "/mark-code": "Mark refused", "/cooking-call": "Cooking call refused", "/close-subjectivity": "Not closed", "/send": "Send refused", "/approve-draft": "Request not approved"}
 
 
 def act(path: str, payload: dict) -> tuple[str, bool, str]:
@@ -376,6 +426,9 @@ def act(path: str, payload: dict) -> tuple[str, bool, str]:
         if path == "/mark-code":
             row = mark_code(payload)
             return sub, True, f"Marked {row['code']} wrong by {row['underwriter_id']}. The number does not change."
+        if path == "/cooking-call":
+            row = cooking_call(payload)
+            return sub, True, f"Cooking recorded {row['call']} by {row['underwriter_id']} for this run. Points now apply."
         if path == "/close-subjectivity":
             quotes.close_subjectivity(*(payload.get(k, "") for k in ("submission", "carrier", "subjectivity", "underwriter_id", "reason")))
             return sub, True, "Subjectivity closed and logged."
@@ -549,6 +602,14 @@ def score_html(item: dict, report: dict) -> list[str]:
             '<button type="submit">Mark wrong</button> <small>logged; the number does not change</small></form>'
         )
     out += [f"<p>{html.escape(line)}</p>" for line in sc["lines"]]
+    if sc.get("provisional"):  # B-278 (D-073): the underwriter records the call; points apply only after it
+        out.append(
+            f'<form method="post" action="/cooking-call" class="mark"><b>Record cooking for this run</b> '
+            f'<input type="hidden" name="submission" value="{sid}"><input type="hidden" name="run_hash" value="{html.escape(report.get("saved_hash") or "")}">'
+            '<label><input type="radio" name="call" value="present" required> present</label> <label><input type="radio" name="call" value="none"> none</label> '
+            '<label>id <input name="underwriter_id" size="8" required></label> <label>reason <input name="reason" required></label> '
+            '<button type="submit">Record cooking</button> <small>logged with the run hash; points apply only after this</small></form>'
+        )
     return out
 
 
@@ -654,7 +715,7 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
         )
         cook = (report.get("cooking") or {}).get("equipment") or {}
         if cook.get("state") == "needs_review":  # P-029 (D-072): the same acknowledgment; no cooking points either way
-            acks += '<label><input type="checkbox" name="ack" value="cooking_equipment"> I checked cooking equipment: needs review, no points added (cited: {})</label><br>'.format(html.escape(cook.get("quote") or "—"))
+            acks += '<label><input type="checkbox" name="ack" value="cooking_equipment"> I checked cooking equipment: needs review; points only after the cooking call (cited: {})</label><br>'.format(html.escape(cook.get("quote") or "—"))
         if acks and not refused:
             acks = f"<fieldset><legend>Needs-review values: acknowledge each to approve</legend>{acks}</fieldset>"
         else:
@@ -729,6 +790,8 @@ def sandbox(tmp: Path) -> None:
     tmp = Path(tmp)
     if marks_path().is_file():
         shutil.copy2(marks_path(), tmp / "code_marks.jsonl")
+    if calls_path().is_file():
+        shutil.copy2(calls_path(), tmp / "cooking_calls.jsonl")
     for name, src in (("inbox", INBOX), ("extractions", prepare.EXTRACT_DIR), ("pending", PENDING), ("to-producer", TO_PRODUCER),
                       ("to-carrier", TO_CARRIER), ("from-carrier", quotes.FROM_CARRIER), ("cache", llm_extract.CACHE)):
         if src.is_dir() and name != "cache":  # the cache starts empty: a sandbox never reads or grows the real token log
@@ -1223,6 +1286,25 @@ if __name__ == "__main__":
                     assert "marked wrong by user: brick veneer" in a and "marked FRAME_CONSTRUCTION wrong" in a and 'action="/mark-code"' in a
                     assert "Score: 15" in a and "add a code" not in a.lower()
                     assert package.decisions("SUB-950", dlog) == []  # a mark is not a decision
+                    # B-278 (D-073): a needs-review cooking line is provisional; a listed underwriter records the call for this run; then points apply.
+                    stored("SUB-951", "complete", good)
+                    p951 = ext / "SUB-951.json"
+                    j = json.loads(p951.read_text()); j.pop("saved_hash")
+                    j["cooking"] = {"equipment": {"state": "needs_review", "terms": [], "negated": [], "quote": "fryer, none", "reason": prepare.REASON_COOKING},
+                                    "hood_suppression": {"state": "not_stated"}}
+                    j["saved_hash"] = prepare.hash_payload(j); p951.write_text(json.dumps(j))
+                    a = art(render(load_queue(), None), "SUB-951")
+                    assert "Provisional — cooking not scored" in a and "Score:" not in a and 'action="/cooking-call"' in a and 'value="cooking_equipment"' in a, a
+                    cc = {"submission": "SUB-951", "call": "present", "underwriter_id": "user", "reason": "fryer on the photos", "run_hash": j["saved_hash"]}
+                    for bad in ({"reason": ""}, {"underwriter_id": "UW-999"}, {"call": "maybe"}, {"run_hash": "stale"}):
+                        assert not act("/cooking-call", {**cc, **bad})[1], bad
+                    assert not calls_path().exists() or cooking_call_for("SUB-951", j) is None
+                    assert act("/cooking-call", cc)[1]
+                    q951 = {i["id"]: i for i in load_queue()}["SUB-951"]["score"]
+                    assert q951["scored"] and "COOKING" in q951["reason_codes"] and q951["points"] is not None, q951
+                    _a = art(render(load_queue(), None), "SUB-951")
+                    assert "underwriter recorded present (user: fryer on the photos)" in _a
+                    assert json.loads(calls_path().read_text().splitlines()[-1])["run_hash"] == j["saved_hash"]
                     # B-266: a stale card lists changed fields, old to new.
                     assert act("/decision", {"submission": "SUB-908", "underwriter_id": "user", "action": "approve", "reason": "again", "ack": ["named_insured"]})[1]
                     stored("SUB-908", "complete", [{**r, "value": "Other Co", "needs_review": True, "quote": "Acme", "reason": "r"} if r["field_id"] == "named_insured" else r for r in good])
