@@ -269,3 +269,8 @@ Also open from T-097, already in the register's Section D so not repeated as row
 | B-249 | D-067 | @software-engineer | Medium: the send form shows before an approve is logged. | 2026-10-14 |
 | B-250 | D-067 | @software-engineer | Medium: "already sent" date is the file mtime, so a resend moves it. | 2026-10-14 |
 | B-251 | D-067 | @software-engineer | Low: no warning when the carrier route changed since the first send. | 2026-10-14 |
+| B-252 | D-068 | @software-engineer | Low: sandbox `serve()` rewrites the real `workbench.html` (restored by git checkout); serve should write to the sandbox. | 2026-10-14 |
+| B-253 | D-068 | @software-engineer | Low: "Approve first" wording is jargon for an underwriter. | 2026-10-14 |
+| B-254 | D-068 | @software-engineer | Low: the "Already sent" line is dropped when an acknowledgment is open. | 2026-10-14 |
+| B-255 | D-068 | @software-engineer | Low: "Approve again" refusal does not say why the earlier approve did not cover the value. | 2026-10-14 |
+| B-256 | D-068 | @software-engineer | Low: after a send, a later edit/note decision shows the ack message instead of "latest decision is X". | 2026-10-14 |

@@ -85,16 +85,27 @@ def tally(rows: list[dict]) -> dict:
 
 
 # P-025 (D-067): check name -> stored field id. A hit on a field stored with the low-confidence scan reason is "hit (needs review)".
-CHECK_FIELD = {"sales": "sales_or_payroll", "tiv": "tiv_building", "loss_runs": "loss_run_valued_through"}
+CHECK_FIELD = {"sales": "sales_or_payroll", "tiv": "tiv_building", "loss_runs": "loss_run_valued_through", "premises": "premises_address"}
+STATUS_LIKE = ("status", "conflict")  # depend on every stored row, so any low-confidence row flags them (D-068 H1)
 NEEDS_REVIEW_HIT = "hit (needs review)"
 
 
 def split_review_hits(checks: dict, report: dict | None) -> dict:
-    """Computed here; the frozen scorers and published score files are not touched. status counts as such when any stored row is a low-confidence scan read."""
+    """Computed here; the frozen scorers and published score files are not touched. status and conflict count as such when any stored row is a low-confidence scan read."""
     if not report:
         return checks
     low = {r["field_id"] for r in report.get("fields") or [] if r.get("value") and r.get("reason") == llm_extract.REASON_LOW_SCAN}
-    return {k: (NEEDS_REVIEW_HIT if v == "hit" and (bool(low) if k == "status" else CHECK_FIELD.get(k, k) in low) else v) for k, v in checks.items()}
+    return {k: (NEEDS_REVIEW_HIT if v == "hit" and (bool(low) if k in STATUS_LIKE else CHECK_FIELD.get(k, k) in low) else v) for k, v in checks.items()}
+
+
+def _self_check() -> None:
+    row = {"sales": "hit", "conflict": "hit", "premises": "hit", "status": "hit", "tiv": "miss"}
+    flag = lambda fid: {"fields": [{"field_id": fid, "value": "x", "reason": llm_extract.REASON_LOW_SCAN}]}
+    low = split_review_hits(row, flag("premises_address"))
+    assert (low["conflict"], low["premises"], low["status"], low["sales"], low["tiv"]) == (NEEDS_REVIEW_HIT, NEEDS_REVIEW_HIT, NEEDS_REVIEW_HIT, "hit", "miss"), low
+    plain = split_review_hits(row, {"fields": [{"field_id": "premises_address", "value": "x", "reason": "other"}]})
+    assert plain == row, plain
+    print("regression_dev self-check ok")
 
 
 def score_retry(module, sid: str, score=None) -> dict:
@@ -160,6 +171,9 @@ def main() -> None:
 if __name__ == "__main__":
     import llm_extract
 
+    if sys.argv[1:2] == ["--self-check"]:
+        _self_check()
+        sys.exit(0)
     llm_extract.provider_guard(calling=False)  # P-008: print the host and the model. A refused host stops at its first model call, inside llm_extract
     if sys.argv[1:2] == ["--holdout"]:
         holdout(sys.argv[2])

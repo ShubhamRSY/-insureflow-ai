@@ -20,20 +20,24 @@ Changes vs P-024 (every other check identical):
 - SUB-067 conflict not_credited -> hit (no open conflict now that the values are stored)
 - SUB-074 tiv: no change in the scorer's mark (hit in both runs).
 
-| field | P-024 | P-025 hit | P-025 hit (needs review) | other |
-|---|---|---|---|---|
-| named_insured | 13 | 13 | 0 | miss 2 |
-| operations | 12 | 12 | 1 | miss 2 |
-| sales | 13 | 13 | 0 | miss 1, flagged 1 |
-| construction | 13 | 13 | 1 | miss 1 |
-| year_built | 15 | 15 | 0 | |
-| premises | 12 | 12 | 0 | miss 3 |
-| tiv | 14 | 14 | 0 | miss 1 |
-| loss_runs | 8 | 8 | 1 | not_credited 5, flagged 1 |
-| conflict | 12 | 13 | 0 | flagged 2 (P-024: not_credited 1) |
-| status | 12 | 12 | 1 | miss 2 |
+## Fix for @model-risk H1 (D-068 item 2, B-243, B-246)
+`regression_dev.py`: `split_review_hits` now treats `conflict` like `status` (a conflict hit on a submission where any stored row has the low-confidence reason is "hit (needs review)", never plain) and `CHECK_FIELD` adds premises -> premises_address. Self-check: `regression_dev.py --self-check` (flagged: conflict, premises, status go to "hit (needs review)", sales stays hit, tiv stays miss; unflagged row unchanged) prints "regression_dev self-check ok".
+Rerun: `evals/regression-quick-15-2026-10-14-P-025-fix.json`, model_calls 0, from_cache 15, failed attempts 0. Same cache, so only the labels moved. The earlier `regression-quick-15-2026-10-14-P-025.json` is kept unedited and its conflict count (13 plain hits) was the H1 error.
 
-No field's plain hit count dropped. Plain hits equal P-024; the five regained checks are in the separate column (conflict is a plain hit). The proposal expected SUB-067 status to stay a miss: it did.
+| field | P-024 hit | P-025 hit / needs review | P-025-fix hit | P-025-fix hit (needs review) | other (fix) |
+|---|---|---|---|---|---|
+| named_insured | 13 | 13 / 0 | 13 | 0 | miss 2 |
+| operations | 12 | 12 / 1 | 12 | 1 | miss 2 |
+| sales | 13 | 13 / 0 | 13 | 0 | miss 1, flagged 1 |
+| construction | 13 | 13 / 1 | 13 | 1 | miss 1 |
+| year_built | 15 | 15 / 0 | 15 | 0 | |
+| premises | 12 | 12 / 0 | 12 | 0 | miss 3 |
+| tiv | 14 | 14 / 0 | 14 | 0 | miss 1 |
+| loss_runs | 8 | 8 / 1 | 8 | 1 | not_credited 5, flagged 1 |
+| conflict | 12 | 13 / 0 | 10 | 3 | flagged 2 |
+| status | 12 | 12 / 1 | 12 | 1 | miss 2 |
+
+Only conflict moved against the first P-025 file: plain hits 13 -> 10, "hit (needs review)" 0 -> 3. Against P-024 the plain conflict count is 12 -> 10: two conflict hits that were plain in P-024 now sit on submissions that hold a low-confidence value, so they are labelled needs-review; the extraction did not get worse (total conflict hits 12 -> 13). Every other field: plain hit count equals P-024. No plain hit in this file comes from a low-confidence value, by construction of the split (checked for the ten fields above).
 
 ## Not done
 Screenshot (D-065 item 4) and @senior-underwriter UI check: not taken here; the workbench change is one What's new line and an existing label. The send gate still does not read needs_review (see proposal). Not a production approval; T-027 stands.

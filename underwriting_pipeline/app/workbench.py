@@ -38,6 +38,9 @@ BANNER = ""  # set by serve(); the sandbox screenshots label the page with it
 MESSAGES: dict[str, tuple[bool, str]] = {}  # submission -> (ok, plain-words result of the last action); shown once
 # D-065 item 5: one line per user-visible feature: date, task or proposal, decision number, what an underwriter sees.
 WHATS_NEW = (
+    ("2026-10-14", "B-244", "D-068", "A low-confidence scan value is a needs-review value: the send is refused for everyone until the latest approve acknowledged every one; the card names them."),
+    ("2026-10-14", "B-247", "D-068", "A resend writes a new package file (SUB-###-resend-N.md); earlier files are kept and the card lists every package file sent."),
+    ("2026-10-14", "B-249", "D-068", "The send form is hidden until an approve is logged; the card says \"Approve first\"."),
     ("2026-10-14", "B-231", "D-067", "Saved-run cards come first; every card with no usable saved run is folded into one closed section \"No saved run (N)\" with the reason and how a run is created."),
     ("2026-10-14", "B-232", "D-067", "The Send to carrier form names the carrier before you confirm; when there is no carrier or the file is refused or incomplete, the card says why there is no send."),
     ("2026-10-14", "B-233", "D-067", "A package already sent shows \"Already sent on <date> to <carrier>\"; a second send is refused unless you tick resend and write a reason, which is logged."),
@@ -265,9 +268,7 @@ def record_decision(payload: dict, log_path: Path) -> dict:
         return _append(payload, action, actor, reason, log_path)
 
 
-def needs_review_ids(report: dict) -> list[str]:
-    """Field ids of the rows the underwriter must acknowledge at approve: needs_review with a value."""
-    return [r["field_id"] for r in report.get("fields") or [] if r.get("needs_review") and r.get("value")]
+needs_review_ids = package.needs_review_ids  # D-068: one list, shared with the send gate
 
 
 def _append(payload: dict, action: str, actor: str, reason: str, log_path: Path) -> dict:
@@ -371,8 +372,14 @@ def _send_html(item: dict, report: dict, refused: bool, manifest: str) -> str:
     why = _no_send_reason(item, report, refused)
     if why:
         return f'<h3>Send to carrier</h3><p class="bad">No send: {html.escape(why)}.</p>'
+    if package._decision_problem(item["id"]):  # B-249 (D-068): no form before an approve is logged
+        return f'<h3>Send to carrier</h3><p class="bad">Approve first. No send form until an approve is logged ({html.escape(package._decision_problem(item["id"]))}).</p>'
+    unack = package.ack_problem(item["id"], report)  # B-244 (D-068)
+    if unack:
+        return f'<h3>Send to carrier</h3><p class="bad">Send refused: {html.escape(unack)}. Approve again and tick each one.</p>'
     when, to = package.sent_info(item["id"], TO_CARRIER)
-    already = f'<p class="msg ok">Already sent on {html.escape(when)} to {html.escape(to)}.</p>' if when else ""
+    files = package.sent_files(item["id"], TO_CARRIER)
+    already = f'<p class="msg ok">Already sent on {html.escape(when)} to {html.escape(to)}. Package files sent: {html.escape(", ".join(f.name for f in files))}.</p>' if when else ""
     resend = (
         '<label>Resend reason (required for a second send) <input name="resend_reason" size="30"></label> ' if when else ""
     )
@@ -885,7 +892,7 @@ if __name__ == "__main__":
                 assert "Send refused: this file's status is extraction_failed" in act("/send", {"submission": "SUB-910", "user_line": "send to carrier SUB-910"})[2]
                 assert act("/send", {"submission": "../x"})[2].startswith("Send refused: no such submission")
                 pg = render(load_queue(), None, {"SUB-901": (False, "Send refused: x")})
-                assert 'class="msg bad"' in pg and "Send refused: x" in pg and 'action="/send"' in pg
+                assert 'class="msg bad"' in pg and "Send refused: x" in pg and "Approve first" in pg and 'action="/send"' not in pg  # B-249
 
                 # item 1: a recorded approve, then the typed line. A wrong line is refused; the right one writes the package.
                 assert act("/decision", {"submission": "SUB-901", "underwriter_id": "user", "action": "approve", "reason": "ok"})[1]
@@ -910,6 +917,13 @@ if __name__ == "__main__":
                 stored("SUB-904", "complete", good)
                 assert act("/decision", {"submission": "SUB-904", "underwriter_id": "user", "action": "approve", "reason": "ok"})[1]
                 assert "The package goes to <b>carrier_a</b>" in render(load_queue(), None)
+                assert "SUB-901.md, SUB-901-resend-2.md" in render(load_queue(), None)  # B-247 card lists each file
+                # B-244: an approve logged before the run held low-confidence values does not cover them.
+                stored("SUB-905", "complete", [{**r, "needs_review": True} if r["field_id"] == "named_insured" else r for r in good])
+                with dlog.open("a") as h:
+                    h.write(json.dumps({"seq": 9000, "submission": "SUB-905", "action": "approve", "underwriter_id": "user", "reason": "ok"}) + "\n")
+                assert "Send refused: 1 value needs review and is not acknowledged (named_insured)" in render(load_queue(), None)
+                assert "not acknowledged (named_insured)" in act("/send", {"submission": "SUB-905", "user_line": "send to carrier SUB-905"})[2]
 
                 # item 13: the draft shows on the card; the user approves it (D-050); refused files cannot be approved.
                 PENDING.mkdir()

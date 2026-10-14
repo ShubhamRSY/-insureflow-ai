@@ -219,6 +219,29 @@ def agency_problem(target) -> str:
     return ""
 
 
+def needs_review_ids(report: dict) -> list[str]:
+    """Field ids of the rows the underwriter must acknowledge at approve (D-039, D-068): needs_review with a value. The one list."""
+    return [r["field_id"] for r in report.get("fields") or [] if r.get("needs_review") and r.get("value")]
+
+
+def ack_problem(submission: str, report: dict) -> str:
+    """D-068 (B-244): empty if the latest logged approve acknowledged every needs-review value of the saved run."""
+    rows = decisions(submission, DECISIONS_LOG)
+    done = set(rows[-1].get("acknowledged") or []) if rows else set()
+    open_ = [f for f in needs_review_ids(report) if f not in done]
+    if not open_:
+        return ""
+    n = len(open_)
+    return f"{n} value{'s' if n != 1 else ''} need{'' if n != 1 else 's'} review and {'are' if n != 1 else 'is'} not acknowledged ({', '.join(open_)})"
+
+
+def sent_files(submission: str, out_dir: Path) -> list[Path]:
+    """B-247: every package file sent for this submission, first send first."""
+    first = out_dir / f"{submission}.md"
+    more = sorted(out_dir.glob(f"{submission}-resend-*.md"), key=lambda p: int(p.stem.rsplit("-", 1)[1]))
+    return ([first] if first.is_file() else []) + more
+
+
 def sent_on(dest: Path) -> str:
     return datetime.fromtimestamp(dest.stat().st_mtime).date().isoformat()
 
@@ -270,10 +293,15 @@ def send_to_carrier(
         raise ValueError("packages go to to-carrier")
     if (carrier or "").strip() and name != "user":
         raise ValueError("only the user may override the carrier")
+    problem = ack_problem(submission, report)  # D-068 (B-244): every actor, user included
+    if problem:
+        raise ValueError(problem)
     dest = out_dir / f"{submission}.md"
     resend = (resend_reason or "").strip()
     if dest.exists() and not resend:
         raise ValueError(f"already sent on {sent_on(dest)}; a second send needs an explicit resend with a written reason")
+    if dest.exists():  # B-247: earlier package files are kept; the resend gets the next number
+        dest = out_dir / f"{submission}-resend-{len(sent_files(submission, out_dir)) + 1}.md"
     body = build_package(submission, carrier, reason if name == "user" else "")  # T-085: raises on an empty required field or no carrier; nothing is written yet
     out_dir.mkdir(parents=True, exist_ok=True)
     who = "user (override)" if name == "user" else "account-manager"
@@ -559,7 +587,21 @@ if __name__ == "__main__":
             send_to_carrier("SUB-320", "user", dest_dir, user_line=LINE("SUB-320"), resend_reason="carrier lost the file")
             last = json.loads(SENDS_LOG.read_text().splitlines()[-1])
             assert last["resend"] is True and last["resend_reason"] == "carrier lost the file"
-            assert "Resend-reason: carrier lost the file" in (dest_dir / "SUB-320.md").read_text()
+            assert "Resend-reason" not in (dest_dir / "SUB-320.md").read_text()  # B-247: first file unchanged
+            assert "Resend-reason: carrier lost the file" in (dest_dir / "SUB-320-resend-2.md").read_text() and last["package"].endswith("SUB-320-resend-2.md")
+            # D-068 (B-244): a needs-review value (SUB-038 shape: low-confidence scan rows) blocks the send until the approve acknowledged it.
+            low = full(named_insured="Acme")
+            low = [{**r, "needs_review": True} if r["field_id"] in ("named_insured", "operations") else r for r in low]
+            save(ext, "SUB-321", "complete", complete=True, fields=low, sprinklers="no")
+            decide("SUB-321", "approve")
+            try:
+                send_to_carrier("SUB-321", "user", dest_dir, user_line=LINE("SUB-321"))
+                raise SystemExit("unacknowledged needs-review values must refuse the send, for the user too")
+            except ValueError as exc:
+                assert "2 values need review and are not acknowledged (named_insured, operations)" in str(exc), exc
+            with log.open("a") as handle:
+                handle.write(json.dumps({"seq": 9001, "submission": "SUB-321", "action": "approve", "underwriter_id": "UW-001", "reason": "", "acknowledged": ["named_insured", "operations"]}) + "\n")
+            assert send_to_carrier("SUB-321", "user", dest_dir, user_line=LINE("SUB-321")).exists()
             (tmp / "inbox" / "SUB-320" / "late-loss-run.pdf").write_bytes(b"added after extraction")
             try:
                 send_to_carrier("SUB-320", "user", dest_dir, user_line=LINE("SUB-320"))

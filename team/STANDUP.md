@@ -1500,3 +1500,31 @@ Blocked: No.
 - L: SUB-067 still shows "Not read by extraction: scan.jpg" next to "Not read: none"; backlog from the earlier review.
 - L: a form with the resend box does not say who must confirm the carrier changed since the first send; show both if the route differs.
 - Blocked by / need from: none.
+
+## 2026-10-14 @software-engineer (D-068)
+- Done: B-244 (send gate refuses unacknowledged needs-review values, card shows it), B-247 (resend-N files kept), B-249 (Approve first); 3 screenshots, 3 What's new lines.
+- Doing next: none. Waiting on UI check and @model-risk re-check.
+- Blocked by / need from: none.
+
+## 2026-10-14 @ai-engineer-assistant (D-068)
+- Done: H1/B-243 in regression_dev.py (conflict like status, premises added, self-check); quick set rerun to P-025-fix.json (0 model calls); as-built doc fixed (B-246).
+- Doing next: none. Waiting on @model-risk re-check.
+- Blocked by / need from: none.
+
+## 2026-10-14 @model-risk (P-025 re-check, D-068)
+- Done: P-025 option D re-check: APPROVE; H1 (B-243) and H2 (B-244) closed; five self-checks pass with LLM_* unset; quick-15 fix file recomputed (0 model calls). T-027 production veto stands.
+- M: an acknowledgement is matched by field_id only, not bound to the value or run hash; a re-saved run with a new value in an acknowledged field passes the send gate without a fresh approve.
+- L: the D-068 self-check uses a synthetic SUB-321 "SUB-038 shape"; real SUB-038 is shown only in the screenshot (no saved run in the live extractions folder).
+- L: SUB-074 conflict is labelled needs-review from a low-scan row on a field outside the ten checks; conservative, but the as-built doc should name that field.
+- L: resend numbering is len(sent_files)+1, so a missing middle resend file would make the next resend overwrite the last one.
+- L: sent_info reads the carrier from the first package only; after a carrier-override resend the card shows the original carrier.
+- Blocked by / need from: none.
+
+## 2026-10-14 @senior-underwriter (D-068 UI check)
+- Did: UI check of B-244/B-247/B-249, workbench + package self-checks, 3 screenshots. APPROVE, no High.
+- Backlog (Low/Medium):
+- L: "Approve first" cites "no logged decision by a listed underwriter"; plain words would be "nobody has approved this file yet".
+- L: when a resend-ready file also has an unacknowledged value, the card drops the "Already sent" line; keep it visible.
+- L: the refusal reads "Approve again"; say that the previous approve did not cover the value (the run changed after approve).
+- L: after a send, rows[-1] being any later non-approve (edit/note) refuses with the ack message, not the "latest decision is X" message; wording may confuse.
+- Blocked by / need from: none.

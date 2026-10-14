@@ -759,3 +759,14 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: P-025 in `ai/`, the separate score column in the regression report, and the workbench label (@ai-engineer-assistant, D-065: backend + UI in the same task); B-231, B-232/B-233 (@software-engineer); quick set of 15; screenshots; @model-risk check of P-025; @senior-underwriter UI check.
 - Status: ACCEPTED
 - Amends: P-016 option C3/S2 behaviour on scans for values from 0.50 to below 0.75 (stored as needs-review, not dropped). Frozen scorers and published scores are not edited; the separate column is computed in the regression report. Not a production approval; the T-027 veto stands. No send is authorized.
+
+## D-068 — P-025 kept and fixed: H2 (B-244), H1 (B-243), B-247, send form after approve
+- Date / Owner: 2026-10-14 / @user
+- Context: @model-risk REJECT on P-025 (D-067): H1 score split, H2 send gate. @senior-underwriter Mediums on the send form.
+- Options considered: fix or roll back P-025. The user chose fix.
+- Decision: In the user's words. "P-025 is kept and fixed, not rolled back: 1. H2 (B-244): a low-confidence scan value is a needs-review value — one flag type, not two. It is covered by the existing acknowledgment at approve, and the send gate itself refuses while any needs-review value is unacknowledged, for every actor. Self-check: SUB-038 cannot be sent until its flagged values are acknowledged. 2. H1 (B-243): score accounting counts conflict like status and adds premises to the "hit (needs review)" split. Rerun the quick set into a new file and report both columns. 3. B-247: a resend writes a new package file; earlier package files are kept, never overwritten. 4. B-248: the send form is hidden until an approve is logged; show "Approve first" instead. UI updated for each, screenshots, one @model-risk re-check of P-025, High only."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-14 (D-032).
+- Dissent: none
+- Follow-up tasks: H2, B-247 and item 4 in `package.py`/`workbench.py` with screenshots (@software-engineer); H1 in `ai/regression_dev.py` and the quick set into a new file (@ai-engineer-assistant); @model-risk re-check of P-025.
+- Status: ACCEPTED
+- Amends: D-067 (P-025 stays). Note: item 4's behaviour is backlog line B-249 ("the send form shows before an approve is logged"); B-248 in the backlog is the SUB-009 sent-date mismatch and stays open. Not a production approval; the T-027 veto stands. No send is authorized.

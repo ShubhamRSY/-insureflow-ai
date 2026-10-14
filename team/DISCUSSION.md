@@ -2669,3 +2669,27 @@ Message: Verdict APPROVE. No High findings. Saved-run cards come first and the 8
 Backlog (Medium/Low, one line each): see STANDUP.
 - Doing next: none.
 - Blocked by / need from: none.
+
+---
+[2026-10-14 | @software-engineer → @model-risk, @senior-underwriter] TYPE: UPDATE
+Re: D-068 items 1, 3, 4 (B-244, B-247, B-249), package.py and workbench.py
+Message: H2: package.needs_review_ids is now the one list (workbench uses it); send_to_carrier refuses for every actor while the latest approve's `acknowledged` does not cover it, e.g. "2 values need review and are not acknowledged (named_insured, operations)". The card shows "Send refused: ..." (SUB-038 sandbox run from cache, model call patched to raise: 5 values). B-247: a resend writes SUB-###-resend-N.md; the first file is unchanged, sends.jsonl names the new file, the card lists every file. B-249: no send form until an approve is logged; the card says "Approve first". Self-checks in package.py and workbench.py pass (LLM_* unset); prepare.py, quotes.py, intake.py pass. Screenshots D-068-SUB-038-send-refused-unacknowledged, D-068-SUB-009-approve-first, D-068-SUB-009-resend-kept (sandbox temp logs, no real send). What's new: 3 lines. Not committed. @senior-underwriter: UI check, High only. @model-risk: re-check H2.
+
+---
+[2026-10-14 | @ai-engineer-assistant → @model-risk, @pm] TYPE: UPDATE
+Message: D-068 item 2 done (H1, B-243; B-246 text fixed). `regression_dev.py` split now counts conflict like status and adds premises -> premises_address; `--self-check` passes. Quick set rerun into `evals/regression-quick-15-2026-10-14-P-025-fix.json`: model_calls 0, from_cache 15, failed 0. Only conflict moved: plain 13 -> 10, hit (needs review) 0 -> 3 (SUB-038, SUB-067, SUB-074); all other fields unchanged; no plain hit comes from a low-confidence value. Plain conflict vs P-024 is 12 -> 10 because of relabelling, not worse extraction (total 12 -> 13). Table and fixed wording in `deliverables/ai-engineer/p-025-as-built.md`. Frozen scorers, published scores, the P-025 file: not edited. Not a production approval.
+- Needs response by: @model-risk (High-only re-check).
+
+---
+[2026-10-14 | @model-risk → @ai-engineer-assistant, @software-engineer, @pm] TYPE: REVIEW
+Re: P-025 option D re-check after D-068 (H1 B-243, H2 B-244)
+Message: Verdict APPROVE. H1 and H2 are closed; no new High. Re-run with LLM_* unset: llm_extract "llm gate ok", prepare ok, regression_dev --self-check ok, workbench ok, package ok.
+H1 closed: split_review_hits treats conflict like status and CHECK_FIELD maps premises. Recomputed from the three quick-15 files: tally(rows) equals counted; model_calls 0, from_cache 15, failed 0; P-024 and P-025 files unedited. Every check that differs from P-024 is now "hit (needs review)" (SUB-038 loss_runs/conflict/status, SUB-067 operations/construction/conflict, SUB-074 conflict); no plain hit exists that was not a plain hit in P-024. Plain conflict 12 -> 10 is a conservative relabel, not lost extraction.
+H2 closed: low-scan rows set needs_review True (llm_extract, prepare), so there is one list (package.needs_review_ids, shared with the workbench approve). send_to_carrier calls ack_problem for every actor, after the decision gate and before any file write; an approve logged without "acknowledged" fails closed. The package self-check refuses the send with 2 unacknowledged values and allows it once acknowledged; the SUB-038 screenshot shows the 5 needs-review values and "Send refused ... not acknowledged".
+Backlog (Medium/Low): see STANDUP. This is not a production approval: the T-027 veto stands. No send is authorized.
+
+## 2026-10-14 @senior-underwriter (REVIEW: D-065 item 3 UI check of D-068 workbench, B-244/B-247/B-249)
+Verdict: APPROVE. No High. Self-checks with LLM_* unset: workbench ok, package ok. Screenshots read.
+- B-244: SUB-038 card shows the five needs-review values with checkboxes and, under Send, "Send refused: 5 values need review and are not acknowledged (...). Approve again and tick each one." Plain reason, tells the underwriter the fix. Gate also in send_to_carrier for every actor.
+- B-249: SUB-009 shows "Approve first" and no form; B-247: resend card lists SUB-009.md, SUB-009-resend-2.md.
+- Not a production approval; no send authorized.
