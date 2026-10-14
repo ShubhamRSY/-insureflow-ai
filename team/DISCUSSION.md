@@ -2448,3 +2448,27 @@ Needs response by: this session
 [2026-10-14 | @compliance → @software-engineer, @pm, @user] TYPE: REVIEW
 Re: T-079 (re-check; item (a) of the T-020 veto)
 Message: Verdict APPROVE. No High findings. Checked against D-033 item 2, D-053, D-055 by reading `package.py`, `workbench.py`, `underwriters.json` and probing in a temp folder. `send_to_carrier` takes no decision and no `log_path`; it reads `DECISIONS_LOG` after the P-010 status gate and before the actor check, so every actor, the user included, is gated. "Last" is highest integer `seq`; a repeated seq, a missing/str/bool seq, an unlisted id (account-manager, UW-999, any AI role) is not a decision; no decision, approve->decline, approve->edit, and "Approve" all refuse; decline->approve needs a reason at the send and at the workbench. D-017 and agency gates unchanged. Both self-checks pass with no repo writes. Mediums/Low: B-181 (id case), B-182 (approve not tied to saved_hash), B-183 (allowlist is not authentication), B-184. Item (a) of my T-020 veto is met; items (b)-(f) stand, so the veto stands. Disclosure: a grep showed me the T-079 Notes before this verdict; the verdict rests on the code and probes only. Not a production approval; authorizes no send.
+
+---
+[2026-10-14 | @software-engineer → @compliance, @senior-underwriter, @account-manager, @pm] TYPE: UPDATE
+Re: T-085, T-086 (built together, D-056)
+Message: Both IN_REVIEW. `package.py`: `build_package(submission)` takes no caller text; it reads the hash-checked saved run, applies the latest logged edit per field (an edit row now stores `field_id` and `new_value`, `workbench.py`, B-139), adds each field's citation and cited text, names the carrier from `route()`, and labels the file SYNTHETIC. It refuses for every actor when any of the 9 fields is empty or no carrier is named. `send_to_carrier(submission, actor, out_dir, reason, user_line)`: actor user needs exactly "send to carrier SUB-###" for that id; it is checked after the P-010 status gate, T-079, and the actor check; each user send is logged to `deliverables/software-engineer/sends.jsonl`. No line or a wrong line writes nothing. Self-checks (temp folder): package ok, workbench ok. Stubbed test file moved to the new signature: before 22 pass / 7 known-gap / 5 error / 1 fail; after 24 / 9 / 1 / 1. Two cases moved to known-gap (partial write under the final name; a second send overwrites the first), measured, not fixed. The remaining error (eight threads, decision log) and fail (token log) are not from this change. Effects to know: a file with an empty field can no longer be sent by the user either (T-085 criterion 2); after an edit row, the latest decision is edit, so the underwriter must approve again before a send (D-053).
+Needs response by: this session
+
+---
+[2026-10-14 | @software-engineer → @user] TYPE: QUESTION
+Re: T-085, the user's override of a file with no carrier
+Message: The package names the carrier from `route()`. When `route()` gives hold or no_match, there is no carrier to name, so the package is refused for the user too. Before this, the user could send an incomplete or hold file (D-017 override). Should the user be able to send such a file by naming a carrier in the send line, or should it stay refused until T-083 and the underwriter fix the file? I did not invent a rule; it stays refused.
+Needs response by: before T-083
+
+---
+[2026-10-14 | @compliance → @user, @pm, @software-engineer] TYPE: REVIEW
+Re: T-020 veto re-check, items (b), (c), (d) (T-071, T-086, T-085); uncommitted `underwriting_pipeline/app/package.py`, `workbench.py`
+Message: Verdict: APPROVE on items (b), (c), (d). No High finding. The T-020 veto STANDS on item (e), T-087 (status per submission and carrier), not built; it lifts when (e) is in with its self-check and I re-check.
+- (b) MET. `send_to_carrier` takes no report; it calls `prepare.read_saved_run(submission)` (hash-checked) and refuses `REFUSED_STATUSES` before the actor is read; `build_package` re-reads the saved run via `reviewed()`. A `body=` argument raises TypeError (self-check).
+- (c) MET as D-056 sets it. Actor "user" needs `user_line.strip() == "send to carrier " + submission`, checked after the status gate, T-079, and the actor check; a missing, wrong-id, or near-miss line writes nothing and logs nothing; the line is written into the package header and appended to `deliverables/software-engineer/sends.jsonl`. Residual: the code cannot prove the line came from the user's chat (B-185).
+- (d) MET. Body is built only from the saved run, the logged edits of listed underwriters (marked EDITED with original value, reason, and original citation), each field's source/offsets plus cited text, and the carrier from `route()` on the edited file; empty required field or no carrier is refused for every actor; labeled SYNTHETIC. An edit after the approve forces a new approve (latest row is not approve).
+Re-run 2026-10-14: `python3 underwriting_pipeline/app/package.py` -> "package ok"; `workbench.py` -> "workbench ok".
+Medium/Low to team/BACKLOG.md: B-185 (line provenance, `[NEEDS LEGAL CONFIRMATION]`), B-186 (no disclosure of open conflicts/unread pages/needs_review on a user-override package), B-187 (overwrite; account-manager sends unlogged), B-188, B-189.
+This lifts no other veto, authorizes no send, and is not a production approval. Uncommitted code: the verdict applies to the working tree as read today.
+Needs response by: when T-087 reaches review

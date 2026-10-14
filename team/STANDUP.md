@@ -1376,3 +1376,13 @@ Blocked: No.
 - Done: T-079 re-check — APPROVE, no High. Item (a) of the T-020 veto met; the veto stands on (b)-(f). Medium/Low to B-181 to B-184.
 - Doing next: re-check T-020 items as T-085, T-086, T-087 reach review.
 - Blocked by / need from: @user: B-183 (id allowlist is not authentication) before any real file.
+
+### 2026-10-14 — @software-engineer
+- Done: T-085 and T-086 built together (D-056), IN_REVIEW. Package from the saved run with citations, edits (edit rows store field and new value), carrier, SYNTHETIC label; user send needs the exact line, logged. Self-checks pass; stubbed test updated and measured (24 pass, 9 known-gap, 1 error, 1 fail).
+- Doing next: T-087, T-083.
+- Blocked by / need from: @user: QUESTION on a user send of a file with no carrier. Reviewers: @compliance, @senior-underwriter, @account-manager.
+
+### 2026-10-14 — @compliance
+- Done: T-020 re-check of items (b), (c), (d) — all met, APPROVE, no High. Veto stands on (e) T-087 only. Medium/Low to B-185 to B-189.
+- Doing next: re-check T-020 item (e) when T-087 reaches review.
+- Blocked by / need from: @user: B-185 (the send line is not provenance-checked) before any real file.

@@ -1084,32 +1084,33 @@ D-004 (user, 2026-10-09): Sanger & Altgelt agency pipeline. Eight steps. No auto
 ### T-085 — Package built from the reviewed file
 - Owner: @software-engineer
 - Requested by: @user
-- Status: TODO
+- Status: IN_REVIEW
 - Priority: P0
 - Depends on: T-079, T-083
 - Reviewers: @compliance, @senior-underwriter, @account-manager
 - Acceptance criteria:
-  - [ ] "the package is built from the saved reviewed file with citations and the named carrier" (@compliance, T-020 (d)). No free text from the caller is the body
-  - [ ] "refuse when a required field is empty" (@senior-underwriter)
-  - [ ] The owner writes in the notes what "the underwriter's edits" are today. An edit stores no field and no new value (B-139, marked High, not on the demo path), so the package cannot carry an edit until that is fixed. Raise it as a QUESTION to @user; do not widen this task
-  - [ ] The package is labeled synthetic. One self-check in a temp folder
+  - [x] "the package is built from the saved reviewed file with citations and the named carrier" (@compliance, T-020 (d)). No free text from the caller is the body
+  - [x] "refuse when a required field is empty" (@senior-underwriter)
+  - [x] The owner writes in the notes what "the underwriter's edits" are today. An edit stores no field and no new value (B-139, marked High, not on the demo path), so the package cannot carry an edit until that is fixed. Raise it as a QUESTION to @user; do not widen this task
+  - [x] The package is labeled synthetic. One self-check in a temp folder
 - Output: underwriting_pipeline/app/package.py
-- Notes: D-033 item 4: "package built from the reviewed file". Line 6 of team/DEMO-BLOCKERS.md. Found by @senior-underwriter (T-020 High-2: "The sent SUB-002 package has no sales and no year built") and @compliance (T-020 H4, A-02). Does not authorize a send. Not a production approval. 2026-10-13, @pm, board maintenance: confirmed as item (d) of the remaining T-020 veto (@compliance re-look, team/DISCUSSION.md:2306/2311). Not started; TODO. No verdict from @pm.
+- Notes: D-033 item 4: "package built from the reviewed file". Line 6 of team/DEMO-BLOCKERS.md. Found by @senior-underwriter (T-020 High-2: "The sent SUB-002 package has no sales and no year built") and @compliance (T-020 H4, A-02). Does not authorize a send. Not a production approval. 2026-10-13, @pm, board maintenance: confirmed as item (d) of the remaining T-020 veto (@compliance re-look, team/DISCUSSION.md:2306/2311). Not started; TODO. No verdict from @pm. 2026-10-14, @software-engineer: built with T-086 under D-056. What "the underwriter's edits" are now: a workbench edit row stores `field_id` and `new_value` (workbench.py), and the package carries the latest edit per field by a listed underwriter, marked EDITED with the original value and citation. Edit rows with no field stay reason-only and are not carried. The carrier is `workbench.route()` on the edited saved run, as `agency_problem` already uses it; T-083 will replace that function and the package follows it. Open: a QUESTION to @user on the out-of-appetite user override (DISCUSSION). Self-check: `python underwriting_pipeline/app/package.py`.
 
 ### T-086 — A user send carries the user's exact line
 - Owner: @software-engineer
 - Requested by: @user
-- Status: TODO
+- Status: IN_REVIEW
 - Priority: P0
 - Depends on: T-085
 - Reviewers: @compliance, @account-manager
 - Acceptance criteria:
-  - [ ] "a user send must carry my exact "send to carrier SUB-###" line, matched to the submission id and logged" (D-035)
-  - [ ] A call with actor "user" and no such line, or a line for another submission, writes nothing
-  - [ ] The line gives no way past T-079 or the P-010 status gate
-  - [ ] One self-check in a temp folder
+  - [x] "a user send must carry my exact "send to carrier SUB-###" line, matched to the submission id and logged" (D-035)
+  - [x] A call with actor "user" and no such line, or a line for another submission, writes nothing
+  - [x] The line gives no way past T-079 or the P-010 status gate
+  - [x] One self-check in a temp folder
 - Output: underwriting_pipeline/app/package.py
-- Notes: D-035. Line 7 of team/DEMO-BLOCKERS.md. Found by @compliance (T-020 H3): "Any role that calls with actor "user" writes to to-carrier." Item (c) of what resolves the T-020 veto. No role writes that line for the user; it comes only from the user's own message in the chat. Does not authorize a send. 2026-10-13, @pm, board maintenance: confirmed as item (c) of the remaining T-020 veto (@compliance re-look, team/DISCUSSION.md:2306/2311). Not started; TODO. No verdict from @pm.
+- Notes: D-035. Line 7 of team/DEMO-BLOCKERS.md. Found by @compliance (T-020 H3): "Any role that calls with actor "user" writes to to-carrier." Item (c) of what resolves the T-020 veto. No role writes that line for the user; it comes only from the user's own message in the chat. Does not authorize a send. 2026-10-13, @pm, board maintenance: confirmed as item (c) of the remaining T-020 veto (@compliance re-look, team/DISCUSSION.md:2306/2311). Not started; TODO. No verdict from @pm. 2026-10-14, @software-engineer: built with T-085 under D-056. `send_to_carrier(submission, actor, out_dir, reason, user_line)`; the caller body is gone. The user's line is checked after the status gate, T-079, and the actor check, so it opens none. Each user send is logged in `deliverables/software-engineer/sends.jsonl` (a separate file, so a send row never reads as a decision) and in the package header.
+
 
 ### T-087 — Quote tracking from the carrier replies
 - Owner: @software-engineer

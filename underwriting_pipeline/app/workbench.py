@@ -134,6 +134,12 @@ def record_decision(payload: dict, log_path: Path) -> dict:
         raise ValueError("action must be approve, edit, or decline")
     if action in {"edit", "decline"} and not reason:
         raise ValueError("edit and decline require a reason")
+    field_id, new_value = (payload.get("field_id") or "").strip(), (payload.get("new_value") or "").strip()
+    if action != "edit" and (field_id or new_value):
+        raise ValueError("field_id and new_value belong to an edit")
+    if field_id or new_value:  # D-056 (B-139): an edit that changes a field stores the field and its new value
+        if field_id not in prepare.FIELDS or not new_value:
+            raise ValueError(f"an edit of a field needs field_id (one of {', '.join(prepare.FIELDS)}) and a new value")
     if action == "approve":
         submission = (payload.get("submission") or "").strip()
         # T-071: read the file's status from the last saved run itself. An approve is refused on either
@@ -166,6 +172,7 @@ def _append(payload: dict, action: str, actor: str, reason: str, log_path: Path)
         "action": action,
         "underwriter_id": actor,
         "reason": reason,
+        **({"field_id": payload["field_id"].strip(), "new_value": payload["new_value"].strip()} if (payload.get("field_id") or "").strip() else {}),
         "date": date.today().isoformat(),
         "ai_version": ai_version(),
         "bound": False,
@@ -254,6 +261,8 @@ def render(queue: list[dict], counts: dict | None = None) -> str:
 <label>Action
 <select name="action">{options}</select>
 </label>
+<label>Edited field <input name="field_id" placeholder="e.g. year_built"></label>
+<label>New value <input name="new_value"></label>
 <label>Reason <input name="reason"></label>
 <button type="submit">Record decision</button>
 </form>"""
@@ -422,6 +431,24 @@ if __name__ == "__main__":
                     pass
                 record_decision({"underwriter_id": "user", "action": "approve", "submission": "SUB-012", "reason": "loss runs arrived"}, check)
                 assert package.decisions("SUB-012", check)[-1]["action"] == "approve"
+
+                # D-056 (B-139): an edit row stores its field and new value; a half edit or a non-edit with them is refused.
+                record_decision({"underwriter_id": "user", "action": "edit", "submission": "SUB-012", "reason": "loss run", "field_id": "year_built", "new_value": " 1987 "}, check)
+                last = json.loads(check.read_text().splitlines()[-1])
+                assert last["field_id"] == "year_built" and last["new_value"] == "1987"
+                before = len(check.read_text().splitlines())
+                for bad in (
+                    {"action": "edit", "field_id": "year_built"},
+                    {"action": "edit", "new_value": "1987"},
+                    {"action": "edit", "field_id": "not_a_field", "new_value": "1"},
+                    {"action": "decline", "field_id": "year_built", "new_value": "1"},
+                ):
+                    try:
+                        record_decision({"underwriter_id": "user", "submission": "SUB-012", "reason": "x", **bad}, check)
+                        raise SystemExit(f"{bad} should fail")
+                    except ValueError:
+                        pass
+                assert len(check.read_text().splitlines()) == before
             finally:
                 prepare.EXTRACT_DIR = saved_dir
 

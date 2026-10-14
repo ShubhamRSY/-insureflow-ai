@@ -611,3 +611,14 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: T-079 (built by the orchestrator in the main session at the user's instruction; `underwriting_pipeline/app/underwriters.json` lists `user`, `UW-001`, `UW-002`), then @compliance re-check.
 - Status: ACCEPTED
 - Amends: answers the two points D-053 left open. Not a production approval; lifts no veto; authorizes no send.
+
+## D-056 — T-085 and T-086 built together; underwriter edits in the package; the stubbed test file is @software-engineer's
+- Date / Owner: 2026-10-14 / @user
+- Context: T-085 and T-086 both change `underwriting_pipeline/app/package.py`. T-085's third criterion says an edit stores no field and no new value (B-139), so a package cannot carry an edit, and was to be raised as a QUESTION. Who updates `deliverables/architecture/tests/test_system_design_stubbed.py` was pending.
+- Options considered: none. The user's instruction.
+- Decision: In the user's words. "Build T-085 and T-086 together, since both are in package.py: the package is built from the saved reviewed file with citations, underwriter edits and the named carrier; and a user send requires my exact "send to carrier SUB-###" line as an argument, matched to the submission id and logged. @software-engineer also updates the stubbed test file to the current send signature. Self-checks for each gate."
+- Rationale: The user typed this in this Claude Code session on 2026-10-14.
+- Dissent: none
+- Follow-up tasks: T-085, T-086 (@software-engineer), then @compliance re-check of T-020 items (b), (c), (d).
+- Status: ACCEPTED
+- Amends: T-085 criterion 3 (the package carries the underwriter's edits; the build may make an edit store its field and new value). Answers pending decision 5 (the stubbed test file). Not a production approval; lifts no veto; authorizes no send.

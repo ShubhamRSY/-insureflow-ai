@@ -17,6 +17,13 @@ that one log, never a timestamp; only ids in underwriters.json count, and AI
 roles never count. A row with no integer seq, a repeated seq, or an id not on
 the list is not a decision.
 
+T-085 / D-056: the package body is built here from the saved reviewed run (hash-checked), the cited text,
+the underwriter's logged edits (an edit row stores field_id and new_value), and the carrier named by
+workbench.route() on that edited file. The caller supplies no body. A package with an empty required
+field, or with no carrier named, is refused for every actor. It is labeled SYNTHETIC.
+T-086 / D-056: an actor "user" must pass the user's exact line "send to carrier SUB-###" for this
+submission. It is checked after every other gate, so it opens none of them, and it is logged to SENDS_LOG.
+
 # ponytail: one markdown file per submission. Quote tracking is the from-carrier reply, add a tracker when a carrier answers.
 
 Run: python underwriting_pipeline/app/package.py
@@ -32,6 +39,8 @@ sys.path.insert(0, str(ROOT / "underwriting_pipeline" / "ai"))
 import prepare
 
 DECISIONS_LOG = ROOT / "deliverables" / "software-engineer" / "decisions.jsonl"
+SENDS_LOG = ROOT / "deliverables" / "software-engineer" / "sends.jsonl"  # not DECISIONS_LOG: a send row must never read as a decision
+INBOX = ROOT / "simulation" / "inbox"
 UNDERWRITERS = Path(__file__).resolve().parent / "underwriters.json"
 AI_ROLES = {p.stem for p in (ROOT / ".claude" / "agents").glob("*.md")} | {"ai-engineer"}
 
@@ -67,12 +76,59 @@ def decisions(submission: str, log_path: Path) -> list[dict]:
     return rows
 
 
-def build_package(submission: str, summary: str) -> str:
+def _edits(submission: str) -> dict:
+    """The latest logged edit per field (highest seq) by a listed underwriter. Only edit rows with field_id and new_value count."""
+    out = {}
+    for row in decisions(submission, DECISIONS_LOG):
+        field, value = (row.get("field_id") or "").strip(), (row.get("new_value") or "").strip()
+        if (row.get("action") or "").strip() == "edit" and field and value:
+            out[field] = row
+    return out
+
+
+def reviewed(submission: str) -> dict:
+    """The saved run (G2, hash-checked) with the underwriter's edits applied. Fields are all of prepare.FIELDS."""
+    run = prepare.read_saved_run(submission)
+    edits = _edits(submission)
+    fields = []
+    by_id = {r.get("field_id"): r for r in run.get("fields") or []}
+    for field_id in prepare.FIELDS:
+        row = dict(by_id.get(field_id) or {"field_id": field_id, "value": None})
+        if field_id in edits:
+            row["edited_by"], row["edit_reason"] = edits[field_id]["underwriter_id"], edits[field_id].get("reason", "")
+            row["original_value"], row["value"] = row.get("value"), edits[field_id]["new_value"].strip()
+        fields.append(row)
+    return {**run, "fields": fields, "complete": all((r.get("value") or "").strip() for r in fields)}
+
+
+def build_package(submission: str) -> str:
+    """T-085: the whole body comes from the saved run, the log and route(). Refuses an empty required field or no carrier."""
+    submission = (submission or "").strip()
+    report = reviewed(submission)
+    empty = [r["field_id"] for r in report["fields"] if not (r.get("value") or "").strip()]
+    if empty:
+        raise ValueError(f"required field empty: {', '.join(empty)}")
+    carrier = _route(report)
+    if carrier not in {"carrier_a", "carrier_b", "carrier_c"}:
+        raise ValueError(f"no carrier is named for this file (match is {carrier})")
+    from workbench import snippet
+
+    lines = []
+    for r in report["fields"]:
+        cite = f"{r.get('source')} [{r.get('start')}:{r.get('end')}]" if r.get("source") else "no citation"
+        text = snippet(INBOX / submission, r)
+        cite += f' "{text.strip()}"' if text.strip() else ""
+        if "edited_by" in r:
+            cite = f"EDITED by {r['edited_by']} (was: {r['original_value'] or 'empty'}; reason: {r['edit_reason']}); original citation: {cite}"
+        lines.append(f"- {r['field_id']}: {r['value']}\n  Citation: {cite}")
     return (
         f"Package {submission}\n"
+        "SYNTHETIC: test data, not a real submission.\n"
         "Nothing has been declined. Nothing has been bound.\n"
         "The underwriter has not been replaced by this file.\n\n"
-        f"{summary.rstrip()}\n"
+        f"Carrier: {carrier}\n"
+        f"Sprinklers: {report.get('sprinklers') or 'not stated'}\n\n"
+        "Fields:\n" + "\n".join(lines) + "\n"
     )
 
 
@@ -144,15 +200,16 @@ def send_to_carrier(
     submission: str,
     actor: str,
     out_dir: Path,
-    body: str,
     reason: str = "",
+    user_line: str = "",
 ) -> Path:
     """T-071: read the status from the last saved run itself, before the actor is looked at, and refuse both refused statuses for every actor."""
+    submission = (submission or "").strip()
     report = prepare.read_saved_run(submission)  # G2: no file, hash differs, or unknown status -> refuse
     status = report.get("status")
     if status in prepare.REFUSED_STATUSES:
         raise ValueError(f"this file's status is {status}; it cannot be sent, for any actor including the user")
-    problem = _decision_problem((submission or "").strip())  # D-053, every actor
+    problem = _decision_problem(submission)  # D-053, every actor
     if problem:
         raise ValueError(problem)
     name = _actor(actor)
@@ -164,24 +221,27 @@ def send_to_carrier(
         problem = agency_problem(submission)
         if problem:
             raise ValueError(problem)
+    if name == "user" and (user_line or "").strip() != f"send to carrier {submission}":  # T-086, D-056: after every other gate
+        raise ValueError(f'a user send needs the exact line "send to carrier {submission}"')
     if out_dir.name != "to-carrier":
         raise ValueError("packages go to to-carrier")
-    if "Nothing has been declined" not in body or "Nothing has been bound" not in body:
-        raise ValueError("refusing a package that does not say it is not a decline or a bind")
+    body = build_package(submission)  # T-085: raises on an empty required field or no carrier; nothing is written yet
     out_dir.mkdir(parents=True, exist_ok=True)
     dest = out_dir / f"{submission}.md"
     who = "user (override)" if name == "user" else "account-manager"
     note = f"Reason: {reason.strip()}\n" if (reason or "").strip() else ""
-    dest.write_text(f"Sent-by: {who}\n{note}\n{body}")
+    line = f"User-line: {user_line.strip()}\n" if name == "user" else ""
+    dest.write_text(f"Sent-by: {who}\n{line}{note}\n{body}")
+    if name == "user":
+        SENDS_LOG.parent.mkdir(parents=True, exist_ok=True)
+        with SENDS_LOG.open("a") as handle:
+            handle.write(json.dumps({"submission": submission, "actor": name, "user_line": user_line.strip(), "package": str(dest)}) + "\n")
     return dest
 
 
 if __name__ == "__main__":
     import json
     import tempfile
-
-    body = build_package("SUB-000", "FICTIONAL office. Recommend Carrier A.")
-    assert "Nothing has been bound" in body
 
     def save(ext: Path, submission: str, status: str, complete=False, fields=None, needs_human=None, sprinklers=None):
         """A saved run shaped like prepare.write_drafts() writes, no model call. The hash is the reader's."""
@@ -201,7 +261,12 @@ if __name__ == "__main__":
         (ext / f"{submission}.json").write_text(json.dumps(payload))
         return payload
 
-    office = [{"field_id": "operations", "value": "accounting office"}]
+    def full(**over):
+        vals = {f: "x" for f in prepare.FIELDS} | {"operations": "accounting office"} | over
+        return [{"field_id": f, "value": v, "source": "application.md", "start": 0, "end": 3} for f, v in vals.items()]
+
+    office = full()
+    LINE = "send to carrier {}".format
     with tempfile.TemporaryDirectory() as tmp:
         tmp = Path(tmp)
         ext = tmp / "extractions"
@@ -214,8 +279,9 @@ if __name__ == "__main__":
             with log.open("a") as handle:
                 handle.write(json.dumps(row) + "\n")
 
-        saved_dir, saved_log = prepare.EXTRACT_DIR, DECISIONS_LOG
-        prepare.EXTRACT_DIR, DECISIONS_LOG = ext, log
+        saved_dir, saved_log, saved_sends = prepare.EXTRACT_DIR, DECISIONS_LOG, SENDS_LOG
+        sends = tmp / "sends.jsonl"
+        prepare.EXTRACT_DIR, DECISIONS_LOG, SENDS_LOG = ext, log, sends
         try:
             dest_dir = tmp / "to-carrier"
             dest_dir.mkdir()
@@ -224,7 +290,7 @@ if __name__ == "__main__":
             save(ext, "SUB-001", "complete", complete=True, fields=office, sprinklers="no")
             for actor in ("software-engineer", "ai-engineer-assistant", "@model-risk"):
                 try:
-                    send_to_carrier("SUB-001", actor, dest_dir, body)
+                    send_to_carrier("SUB-001", actor, dest_dir, user_line=LINE("SUB-001"))
                     raise SystemExit(f"a send as {actor} should fail")
                 except ValueError:
                     pass
@@ -234,7 +300,7 @@ if __name__ == "__main__":
                 save(ext, sub, status)
                 for actor in ("user", "user (override)", "@account-manager", "ai-engineer-assistant"):
                     try:
-                        send_to_carrier(sub, actor, dest_dir, body, reason="ready")
+                        send_to_carrier(sub, actor, dest_dir, reason="ready", user_line=LINE(sub))
                         raise SystemExit(f"{status} must be refused for {actor}")
                     except ValueError:
                         pass
@@ -243,7 +309,7 @@ if __name__ == "__main__":
 
             # T-071 (2): nothing saved, a changed hash, and an unknown status all refuse.
             try:
-                send_to_carrier("SUB-190", "user", dest_dir, body)
+                send_to_carrier("SUB-190", "user", dest_dir, user_line=LINE("SUB-190"))
                 raise SystemExit("a send with no saved run should fail")
             except ValueError:
                 pass
@@ -252,7 +318,7 @@ if __name__ == "__main__":
             tampered["status"] = "incomplete"
             (ext / "SUB-191.json").write_text(json.dumps(tampered))
             try:
-                send_to_carrier("SUB-191", "user", dest_dir, body)
+                send_to_carrier("SUB-191", "user", dest_dir, user_line=LINE("SUB-191"))
                 raise SystemExit("a changed saved run should fail")
 
             except ValueError:
@@ -263,7 +329,7 @@ if __name__ == "__main__":
             raw["saved_hash"] = prepare.hash_payload(raw)
             (ext / "SUB-192.json").write_text(json.dumps(raw))
             try:
-                send_to_carrier("SUB-192", "user", dest_dir, body)
+                send_to_carrier("SUB-192", "user", dest_dir, user_line=LINE("SUB-192"))
                 raise SystemExit("an unknown status should fail")
             except ValueError:
                 pass
@@ -274,25 +340,80 @@ if __name__ == "__main__":
             # The account-manager rules still gate a normal file.
             save(ext, "SUB-193", "complete", complete=True, fields=office, sprinklers="no")
             try:
-                send_to_carrier("SUB-193", "account-manager", dest_dir, body)
+                send_to_carrier("SUB-193", "account-manager", dest_dir)
                 raise SystemExit("missing reason should fail")
             except ValueError:
                 pass
-            save(ext, "SUB-194", "incomplete", complete=False, fields=office)
+            save(ext, "SUB-194", "incomplete", complete=False, fields=full(year_built=""))
             assert agency_problem("SUB-194") == "the file is not complete"
             try:
-                send_to_carrier("SUB-194", "account-manager", dest_dir, body, reason="ready")
+                send_to_carrier("SUB-194", "account-manager", dest_dir, reason="ready")
                 raise SystemExit("an incomplete send should fail")
             except ValueError:
                 pass
 
             # A good account-manager send, and the user's override on an incomplete file.
-            sent = send_to_carrier("SUB-193", "account-manager", dest_dir, body, reason="complete office file")
+            sent = send_to_carrier("SUB-193", "account-manager", dest_dir, reason="complete office file")
             text = sent.read_text()
             assert text.startswith("Sent-by: account-manager")
             assert "Reason: complete office file" in text
-            override = send_to_carrier("SUB-194", "user", dest_dir, body)
-            assert override.read_text().startswith("Sent-by: user (override)")
+            assert "SYNTHETIC" in text and "Carrier: carrier_a" in text and "application.md [0:3]" in text
+            # T-085: an empty required field is refused for the user too; the caller's text is not a body.
+            try:
+                send_to_carrier("SUB-194", "user", dest_dir, user_line=LINE("SUB-194"))
+                raise SystemExit("an empty required field should fail")
+            except ValueError as exc:
+                assert "year_built" in str(exc)
+            assert not (dest_dir / "SUB-194.md").exists()
+            try:
+                send_to_carrier("SUB-193", "user", dest_dir, body="free text body", user_line=LINE("SUB-193"))
+                raise SystemExit("a caller body should not be accepted")
+            except TypeError:
+                pass
+            # T-085: an edit stores its field and new value; the package carries it, labeled, with the original citation.
+            save(ext, "SUB-195", "incomplete", fields=full(year_built=""))
+            decide("SUB-195", "approve")
+            try:
+                build_package("SUB-195")
+                raise SystemExit("year_built is empty before the edit")
+            except ValueError:
+                pass
+            with log.open("a") as handle:
+                handle.write(json.dumps({"seq": 800, "submission": "SUB-195", "action": "edit", "underwriter_id": "UW-001", "reason": "from the loss run", "field_id": "year_built", "new_value": "1987"}) + "\n")
+                handle.write(json.dumps({"seq": 801, "submission": "SUB-195", "action": "approve", "underwriter_id": "UW-001", "reason": ""}) + "\n")
+            edited = build_package("SUB-195")
+            assert "year_built: 1987" in edited and "EDITED by UW-001" in edited and "from the loss run" in edited
+            # T-085: no carrier named (nightclub) -> refused.
+            save(ext, "SUB-196", "complete", complete=True, fields=full(operations="nightclub"))
+            decide("SUB-196", "approve")
+            try:
+                build_package("SUB-196")
+                raise SystemExit("no carrier should fail")
+            except ValueError as exc:
+                assert "no carrier" in str(exc)
+
+            # T-086: the user's exact line, matched to the id, logged; none or another file's line writes nothing.
+            sends.unlink(missing_ok=True)  # earlier user sends in this check logged here; start clean
+            if True:
+                for bad in ("", "send to carrier SUB-999", "Send to carrier SUB-194x", "send to carrier"):
+                    try:
+                        send_to_carrier("SUB-193", "user", dest_dir / "x" / "to-carrier", user_line=bad)
+                        raise SystemExit(f"line {bad!r} should fail")
+                    except ValueError:
+                        pass
+                assert not (dest_dir / "x").exists() and not sends.exists()
+                # The line opens no other gate: refused status, no approve, and decline-latest all still refuse.
+                for sub in ("SUB-101", "SUB-301", "SUB-302"):
+                    try:
+                        send_to_carrier(sub, "user", dest_dir, user_line=LINE(sub))
+                        raise SystemExit(f"the line must not get {sub} past its gate")
+                    except ValueError:
+                        pass
+                    assert not (dest_dir / f"{sub}.md").exists() and not sends.exists()
+                ok = send_to_carrier("SUB-195", "user", dest_dir, user_line=LINE("SUB-195"))
+                assert "User-line: send to carrier SUB-195" in ok.read_text()
+                logged = [json.loads(x) for x in sends.read_text().splitlines()]
+                assert len(logged) == 1 and logged[0]["submission"] == "SUB-195" and logged[0]["user_line"] == LINE("SUB-195")
 
             # T-079 / D-053: the log decides, for every actor, with no decision passed in.
             for sub in ("SUB-301", "SUB-302", "SUB-303", "SUB-304"):
@@ -306,11 +427,11 @@ if __name__ == "__main__":
             for sub, ok in (("SUB-301", False), ("SUB-302", False), ("SUB-303", False), ("SUB-304", True)):
                 for actor in ("user", "account-manager"):
                     try:
-                        send_to_carrier(sub, actor, dest_dir, body, reason="ready")
+                        send_to_carrier(sub, actor, dest_dir, reason="ready", user_line=LINE(sub))
                         assert ok, f"{sub} must be refused for {actor}"
                     except ValueError:
                         assert not ok, f"{sub} must pass for {actor}"
-            assert len(log.read_text().splitlines()) == 3 + 2 + 2 + 2 + 0 + 0  # history untouched by the sends
+            assert len(log.read_text().splitlines()) == 13  # history untouched by the sends
 
             # D-055: highest seq wins, not line order; an unlisted id or an AI role is not a decision;
             # a repeated seq refuses; no seq is not a decision; underwriters.json may not list an AI role.
@@ -328,7 +449,7 @@ if __name__ == "__main__":
             decide("SUB-309", "approve", reason="loss runs arrived", who="user")
             for sub, ok in (("SUB-305", True), ("SUB-306", False), ("SUB-307", False), ("SUB-308", False), ("SUB-309", True)):
                 try:
-                    send_to_carrier(sub, "user", dest_dir, body)
+                    send_to_carrier(sub, "user", dest_dir, user_line=LINE(sub))
                     assert ok, f"{sub} must be refused"
                 except ValueError:
                     assert not ok, f"{sub} must pass"
@@ -344,5 +465,5 @@ if __name__ == "__main__":
             finally:
                 UNDERWRITERS = saved_uw
         finally:
-            prepare.EXTRACT_DIR, DECISIONS_LOG = saved_dir, saved_log
+            prepare.EXTRACT_DIR, DECISIONS_LOG, SENDS_LOG = saved_dir, saved_log, saved_sends
     print("package ok")
