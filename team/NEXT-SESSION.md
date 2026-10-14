@@ -1,65 +1,54 @@
 # Next session
 
-Written 2026-10-13 by the orchestrator at wrap-up. Wrap-up commit: `6e68f1b` on `ai-team`, pushed to `origin/ai-team` (private). Read CLAUDE.md "Usage budget rules" first: demo blockers only, sessions of 2–3 hours, one-line estimate at the start.
+Written 2026-10-14 by the orchestrator at wrap-up. Wrap-up commit: `8649434` on `ai-team`, pushed to `origin/ai-team` (private). Read CLAUDE.md "Usage budget rules" first: demo blockers only, sessions of 2–3 hours, one-line estimate at the start.
 
 ## Where we stopped
 
-- Three architecture documents are written and IN_REVIEW: T-094 `architecture.md`, T-095 `system-design.md`, T-096 `low-level-design.md` (all in `deliverables/architecture/`). They describe `dd45467`; HEAD's `underwriting_pipeline/` is identical to it.
-- T-094 was approved twice by @model-risk and @compliance on an earlier version. Since then it was re-cited to `dd45467` and needs a second look. T-095 and T-096 have had no review.
-- **Stale in the documents, not fixed** (the turn was cut off by the usage limit):
-  - `architecture.md` still shows T-071 as TODO and the T-059 veto as open.
-  - Neither document states D-053 (the send rule) or D-054.
-- An OpenCode session ran alongside today. It committed an unreviewed T-079 build (`db7cbb1`), which was reverted in `5e0f180`. Both parts are kept as `deliverables/software-engineer/unknown-edit-package*.patch`. Its D-052 is superseded by D-053.
-- **Under D-054, the following are the user's to confirm** before anyone relies on them; this session did not write them:
-  - D-041 to D-044.
-  - P-019 and T-099 (move to Vertex AI and Document AI).
-  - T-100 and `deliverables/ml-engineer/gcp-migration.md`.
-  - `deliverables/ai-engineer/evals/scratch/`.
-- Self-checks at wrap-up, no model host set: llm_extract, prepare, intake, package, workbench and points all ok.
+- D-064: P-023 built (B-214): with LLM_BASE_URL or LLM_MODEL unset, extraction stops with a clear message, zero calls; Ollama only when the URL names localhost.
+- D-064: P-016 built as approved in D-039 (N2 H2 D2 R1 Q1 C3 S2 G2 L1 E1 P1 K1). `ai/` by @ai-engineer-assistant; workbench by @software-engineer: rows show "NEEDS REVIEW: reason" and the quote, `unread` rows show file/page/reason; approve is refused unless every needs-review value is acknowledged; the log row gains `acknowledged`. PROMPT_VERSION unchanged (82be09bd42f7). Memo `deliverables/ai-engineer/p-023-p-016-as-built.md`. Page not served in a browser.
+- @model-risk on P-016: **APPROVE WITH CHANGES**. **High-1 open (B-215):** when the model reports a conflict whose sides agree, each side's needs_review/reason/quote is dropped and the value is stored unflagged, so it is never acknowledged at approve (reproduced: "280,000" vs "$280k" from a scan). Resolve: keep each side's flag and citation; flag the stored value if any side was flagged; self-check. `ai/` change: @user decides whether it is a P-016 fix or a new P-###. Medium/Low B-216 to B-226.
+- Quick set of 15 after P-016, one run: 15 from cache, 0 model calls. Changes against the P-022 run: SUB-038 (scan) loss_runs and status hit→miss; SUB-067 (scan) operations and construction hit→miss, conflict hit→not_credited. SUB-074 unchanged. Cause: the C3/S2 scan gates drop low-OCR scan values.
+- Demo guide lists SUB-029 as "development-set file", plus SUB-010. The saved demo runs SUB-009/029/010 were saved before P-016 and lack quote/reason/unread keys; a re-save is cache-only for the extraction.
+- Earlier today (D-063): P-022 built, @compliance APPROVE; demo re-save SUB-009 (clean), SUB-029 (missing info), SUB-010 (TIV 0 hold).
+- Self-checks at wrap-up (no model host): llm_extract, prepare, intake, package, workbench, points all ok.
+- Standup entries this session: @ai-engineer-assistant, @software-engineer, @model-risk.
+- Still open: T-079, T-083, T-085, T-086, T-087 remaining reviewers; B-190, B-191, B-194, B-197, B-198 on the backlog; P-019, T-100, P-018 parked.
 - Not committed, left alone: `src/insureflow/`, `tests/`, `docs/rag/`, `scripts/`.
 
 ## Approved, not built
 
 | Proposal | Task |
 |---|---|
-| P-006 EasyOCR fallback | T-062, T-068 (12.6 of low-level-design lists what P-006 leaves unset) |
+| P-006 EasyOCR fallback | T-062, T-068 |
 | P-011 read-only published scores | T-072 |
 | P-015 score fixes | no build task |
-| P-016 citations, confidence, unread content | no build task |
 | P-017 commit hash and status in score output | with T-072 |
 | D-048 exits from `all_values_rejected` | no build task |
 | D-050 producer-request rule | T-098 |
-| D-053 send rule (latest decision approve; written reason if after a decline; full history kept) | T-079 rebuild |
-
-P-010 is built (T-070, T-071 DONE).
 
 ## Pending decisions for the user
 
-1. P-018 (error enum): waits on `approve change P-018`.
-2. Confirm or reject, per D-054: D-041 to D-044, P-019/T-099, T-100.
-3. T-079 points D-053 does not settle: how "last" is ordered (the log has a date, no time) and which ids count as an underwriter.
-4. OCR price basis in the cost model: Layout Parser at $10.00 per 1,000 pages (D-038) or Enterprise Document OCR at $1.50.
-5. Who updates the stubbed test file to the T-071 signatures (5 cases error at `dd45467`): @software-engineer or @ml-engineer.
+1. B-215 (P-016 High-1): fix under P-016, or number it P-024 and "approve change P-024".
+2. Re-save SUB-009, SUB-029, SUB-010 with the P-016 code (cache only) before the demo.
+3. The confidence-versus-hit table (B-222), which @model-risk needs for T-027 (b): a scorer-output change; say whether to build it.
+4. P-018 (parked). P-019/T-099 and T-100: parked. OCR price basis: $10.00 or $1.50 per 1,000 pages.
 
 ## Open vetoes and what resolves each
 
 | Task | Holder | Resolves when |
 |---|---|---|
 | T-017 | @model-risk, @responsible-ai | P-015 built and looked at again |
-| T-020 | @compliance | Items (a) to (f); (b) met by T-071; formal re-check pending |
-| T-027 | @model-risk (production) | P-016 built, then the new 20-file hold-out scored once (T-091 to T-093) |
-| T-082 | @responsible-ai (fairness) | As written in its veto message in `team/DISCUSSION.md`; D-042 does not lift it |
-
-T-059 and T-026 were lifted by @model-risk today.
+| T-027 | @model-risk (production) | High-1 (B-215) closed, the confidence-versus-hit table built, then the new 20-file hold-out (T-091 to T-093), gold first, scored once |
+| T-082 | @responsible-ai (fairness) | As written in its veto message in `team/DISCUSSION.md` |
 
 ## First 3 tasks next session
 
-1. T-079 rebuild by @software-engineer from the two saved patches, to D-053, then its reviewers (demo blocker 2).
-2. The next demo blockers in `team/DEMO-BLOCKERS.md` (T-085, T-086, T-087 for the T-020 veto items).
-3. Only after the demo, per budget rule 8: fix the stale lines above in `architecture.md`, then the reviews of T-094 (second look), T-095 and T-096.
+1. B-215 fix once @user approves it, with the self-check @model-risk asked for; then @model-risk re-checks High-1.
+2. Re-save the 3 demo runs with the P-016 code, and serve the workbench once on SUB-009 to see the needs-review list and the acknowledgment.
+3. The remaining reviewers of T-079, T-083, T-085, T-086, T-087; then @pm closes what is approved.
 
 ## For the AI Engineer
 
-- Pending proposals: P-018 waits on your approve line. P-019 needs your confirmation under D-054.
-- Latest eval scores: no new run this session. Baseline SUB-077 to 086: 2 of 8 scored fields at the D-013 pilot floor of 9/10 ("8 of 9 fields scored; loss runs = date only").
-- Top failure to fix next: a carrier send does not require a logged underwriter approve (T-079).
+- Pending proposals: B-215 needs your line (P-016 fix or P-024). Nothing else waiting.
+- Latest eval scores (quick-15 after P-016, cached): named_insured 13/15, operations 12, sales 13 (+1 flagged), construction 13, year_built 15, premises 12, tiv 14, loss_runs 8 (5 not credited, 1 miss, 1 flagged), conflict 12 (1 not credited, 2 flagged), status 12.
+- Top failure to fix next: B-215 (a flagged scan value can be approved without acknowledgment). On scores: SUB-074 (5 misses, unchanged).

@@ -1360,3 +1360,97 @@ Blocked: No.
 - Done: T-079 — `underwriting_pipeline/app/package.py` now requires a logged underwriter approve for a carrier send, for every actor including the user and the account manager (D-033 item 2; line 2 of team/DEMO-BLOCKERS.md; item (a) of the T-020 veto). The send reads the decision log itself (`DECISIONS_LOG`, `package.py:36`); no decision is passed in by the caller; the gate runs at `package.py:160`, before the actor is read. The agency gate and the T-071 status gate are unchanged, and `prepare.approve()`'s producer path is not touched (the gate lives in `send_to_carrier`, not `agency_problem`). Self-check temp-only, no model call: `package ok`, plus `workbench ok` and `prepare ok` re-run to confirm no regression. Commit `db7cbb1`, branch `ai-team`, no push.
 - Doing next: T-085 (d), T-086 (c), T-087 (e) — the other three T-020 veto items, when dispatched. T-079 stays TODO; I did not change its status.
 - Blocked by / need from: @compliance, @senior-underwriter, @account-manager, @model-risk: review T-079. @user: three QUESTIONs in the T-079 handoff — (1) the declined-then-approved case (undecided; code holds and refuses, leaving the file with a person); (2) "last" is ordered by log line because rows carry a date and no time (B-104); (3) which ids count as an underwriter — the log accepts any id (B-138, B-100).
+
+### 2026-10-14 — @software-engineer
+- Done: T-079 rebuilt to D-053 in underwriting_pipeline/app/package.py (latest logged decision must be approve, every actor; approve after decline needs a reason). Self-checks: package ok, workbench ok. IN_REVIEW.
+- Doing next: T-085, T-086, T-087 when dispatched.
+- Blocked by / need from: @user: two QUESTIONs (how "last" is ordered; which ids count as underwriter). Reviewers: T-079.
+
+### 2026-10-14 — @compliance
+- Written by the orchestrator at @user's instruction ("Add the missing @compliance standup for 2026-10-14"), from @compliance's review in team/DISCUSSION.md.
+- Done: T-079 review — APPROVE WITH CHANGES. One High: the caller-chosen `log_path` on `send_to_carrier`. Medium/Low to B-179, B-180.
+- Doing next: re-check T-079 after the fix; T-020 item (a) is met once the High is resolved.
+- Blocked by / need from: nothing.
+
+### 2026-10-14 — @compliance
+- Done: T-079 re-check — APPROVE, no High. Item (a) of the T-020 veto met; the veto stands on (b)-(f). Medium/Low to B-181 to B-184.
+- Doing next: re-check T-020 items as T-085, T-086, T-087 reach review.
+- Blocked by / need from: @user: B-183 (id allowlist is not authentication) before any real file.
+
+### 2026-10-14 — @software-engineer
+- Done: T-085 and T-086 built together (D-056), IN_REVIEW. Package from the saved run with citations, edits (edit rows store field and new value), carrier, SYNTHETIC label; user send needs the exact line, logged. Self-checks pass; stubbed test updated and measured (24 pass, 9 known-gap, 1 error, 1 fail).
+- Doing next: T-087, T-083.
+- Blocked by / need from: @user: QUESTION on a user send of a file with no carrier. Reviewers: @compliance, @senior-underwriter, @account-manager.
+
+### 2026-10-14 — @compliance
+- Done: T-020 re-check of items (b), (c), (d) — all met, APPROVE, no High. Veto stands on (e) T-087 only. Medium/Low to B-185 to B-189.
+- Doing next: re-check T-020 item (e) when T-087 reaches review.
+- Blocked by / need from: @user: B-185 (the send line is not provenance-checked) before any real file.
+
+### 2026-10-14 — @software-engineer
+- Done: T-087 quote tracking (quotes.py, workbench card) IN_REVIEW; D-057 item 1 carrier override in package.py. Self-checks pass.
+- Doing next: fix reviewer findings on T-087.
+- Blocked by / need from: @compliance, @senior-underwriter, @account-manager review of T-087; @senior-underwriter on whether a carrier "satisfied" closes a subjectivity.
+
+### 2026-10-14 — @compliance
+- Done: T-020 item (e) re-check on T-087: REJECT, veto stands. One High (status not read from the reply type; a DECLINE shows "quoted"; "none, subject to..." drops a subjectivity). Medium/Low B-192, B-193. D-057 override in package.py checked, no finding.
+- Doing next: re-check item (e) when @software-engineer returns T-087.
+- Blocked by / need from: @software-engineer, the High-1 fix and its self-check.
+
+### 2026-10-14 — @software-engineer
+- Done: T-087 High-1 fix (status from reply first line; exact-none subjectivity rule) and D-058 close form on the workbench. quotes/workbench/package self-checks ok. T-087 IN_REVIEW. Blockers: none.
+
+### 2026-10-14 — @compliance
+- Done: T-020 item (e) re-check on T-087: APPROVE, no High. Item (e) met; T-020 veto LIFTED (all six items met). Medium/Low B-194 to B-196.
+- Doing next: nothing on T-020; B-194 before any real carrier reply.
+- Blocked by / need from: none. B-190 (authenticated underwriter action) still required before real data.
+
+### 2026-10-14 — @head-of-underwriting
+- Done: D-059 PROPOSED (carrier match rules re-raised, each rule cited or marked uncited).
+- Doing next: nothing until @user decides D-059.
+- Blocked by / need from: @user on D-059; @actuary B and C caps; @responsible-ai Spanish variants and housing classes.
+
+### 2026-10-14 — @software-engineer
+- Done: T-083 carrier match to D-059/D-060 in workbench.py and package.py; self-checks pass; IN_REVIEW.
+- Doing next: nothing until review; P-020 manifest waits on the user's "approve change P-020".
+- Blocked by / need from: none.
+
+### 2026-10-14 — @senior-underwriter
+- Done: T-083 review, APPROVE WITH CHANGES; one High (TIV "$8M" or blank passes the caps); Medium/Low B-199 to B-202.
+- Doing next: re-check after the TIV fix.
+- Blocked by / need from: @software-engineer to fix High-1.
+
+### 2026-10-14 — @senior-underwriter
+- Done: T-083 re-check after D-061 fix: APPROVE, no High. TIV now read by the existing normalizer; missing or unreadable holds; no $10M rule. Medium/Low B-203, B-204.
+- Doing next: nothing on T-083.
+- Blocked by / need from: none.
+
+### 2026-10-14 — @ai-engineer-assistant
+- Done: P-020 (input manifest, `manifest_problem`) and P-021 ("MM" = million) built in prepare.py, self-checks pass.
+- Doing next: nothing until the quick set of 15 can run on a model host.
+- Blocked by / need from: main session wires `manifest_problem` into package.py; model host for the quick set.
+
+### 2026-10-14 — @compliance
+- Done: P-020 review, APPROVE (no High); B-205 to B-208 to backlog.
+- Doing next: nothing on P-020.
+- Blocked by / need from: none.
+
+### 2026-10-14 — @senior-underwriter
+- Done: T-083 TIV review, APPROVE (no High); B-209, B-210 to backlog.
+- Doing next: nothing on T-083.
+- Blocked by / need from: none.
+
+### 2026-10-14 — @ai-engineer-assistant
+- Done: P-023 (no default host or model) and P-016 `ai/` part built; self-checks pass; 15 of 15 quick cache keys still hit.
+- Doing next: quick set of 15 rerun and field comparison when a model host is set; @model-risk High-only review.
+- Blocked by / need from: @software-engineer for R1 display and the acknowledgment (rows `needs_review`, `reason`, `quote`; report `unread`).
+
+### 2026-10-14 — @software-engineer
+- Done: P-016 `app/` part: R1 display (reason, quote, unread rows) and needs-review acknowledgment at approve, logged.
+- Doing next: nothing; ready for the @model-risk High-only review.
+- Blocked by / need from: none.
+
+### 2026-10-14 — @model-risk
+- Done: independent review of the P-016 build and P-023. APPROVE WITH CHANGES; one High (conflict "all sides agree" path in prepare.py drops needs_review, so a scan value skips S2 and the D-039 acknowledgment). Self-checks, T-080 cases, SUB-078, SUB-067 recomputed with no model call.
+- Doing next: re-check High-1 when fixed. T-027 production veto stands.
+- Blocked by / need from: @user on whether the High-1 fix is inside P-016 or a new P-###.

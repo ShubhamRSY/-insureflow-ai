@@ -21,6 +21,7 @@ ROOT = Path(__file__).resolve().parents[2]
 # G2 (D-029): the send gate reads the last saved run at this path. It never calls process_submission and never trusts a passed-in report.
 EXTRACT_DIR = ROOT / "deliverables" / "data-engineer" / "extractions"
 HASH_ALGORITHM = "sha256"
+INBOX_DIR = ROOT / "simulation" / "inbox"
 # P-010 part 1: these two statuses are refused for every actor, including the user. There is no override.
 REFUSED_STATUSES = ("extraction_failed", "all_values_rejected")
 REJECT_REASON = "the model answered but every value was rejected by the gate"
@@ -80,11 +81,6 @@ def _norm(value: str) -> str:
     return "".join(ch for ch in value.lower() if ch.isalnum())
 
 
-_AMOUNT = re.compile(
-    r"(?i)^(?:about|around|approximately|roughly)?\s*"
-    r"\$?\s*(\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?)\s*([kmb])?"
-    r"(?:\s*(?:square\s+feet|sq\.?\s*ft\.?|sqft|sf))?\s*$"
-)
 _OPS_CLASS = (
     ("bar", ("nightclub", "night club", " bar", "bar ")),
     ("restaurant", ("restaurant", "taco", "kitchen")),
@@ -96,17 +92,7 @@ _OPS_CLASS = (
 )
 
 
-def amount_value(value: str) -> int | None:
-    """220k, $1.2M, 220,000, and 2,200 sq ft are numbers. A sentence is not."""
-    if not value:
-        return None
-    match = _AMOUNT.match(value.strip())
-    if not match:
-        return None
-    number = float(match.group(1).replace(",", ""))
-    suffix = (match.group(2) or "").lower()
-    factor = {"": 1, "k": 1_000, "m": 1_000_000, "b": 1_000_000_000}[suffix]
-    return int(round(number * factor))
+amount_value = llm_extract.amount_value  # P-016 N2: one reader of "220k" and "$1.2M" for the gate and for the merge
 
 
 def _ops_class(value: str) -> str | None:
@@ -342,15 +328,26 @@ def carrier_run_date(texts: dict) -> tuple[str, str, int, int] | None:
     return hits[0]
 
 
-def _set_cited(merged: dict, field: str, value: str, source: str, start: int, end: int) -> None:
+def _set_cited(merged: dict, field: str, value: str, source: str, start: int, end: int, texts: dict | None = None, scans: dict | None = None) -> None:
+    """Store a document-rule value, cited to its own match. P-016 G2: on a scan source it takes the cited-word score like any other value."""
+    confidence, flag, reason = 0.95, False, None
+    quote = texts[source][start:end] if texts and source in texts else None
+    if scans and source in scans:
+        confidence = min(confidence, llm_extract.cited_ocr_score(quote or value, value, scans[source]))
+        if confidence < llm_extract.MIN_CONFIDENCE:
+            return
+        if field == "loss_run_valued_through":  # S2
+            flag, reason = True, llm_extract.REASON_SCAN
     merged[field] = {
         "field_id": field,
         "value": value,
         "source": source,
         "start": start,
         "end": end,
-        "confidence": 0.95,
-        "needs_review": False,
+        "confidence": confidence,
+        "needs_review": flag,
+        "reason": reason,
+        "quote": quote,
     }
 
 
@@ -439,12 +436,12 @@ def apply_locations(merged: dict, conflicts: list, texts: dict) -> list[dict]:
     return locations
 
 
-def apply_document_rules(merged: dict, conflicts: list, texts: dict) -> None:
+def apply_document_rules(merged: dict, conflicts: list, texts: dict, scans: dict | None = None) -> None:
     """Cited document rules. They do not call the model and do not invent a date."""
     run = carrier_run_date(texts)
     if run:
         name, value, start, end = run
-        _set_cited(merged, "loss_run_valued_through", value, name, start, end)
+        _set_cited(merged, "loss_run_valued_through", value, name, start, end, texts, scans)
     for name, text in texts.items():
         low = text.lower()
         at = low.find("joisted masonry")
@@ -452,7 +449,7 @@ def apply_document_rules(merged: dict, conflicts: list, texts: dict) -> None:
             continue
         current = (merged["construction"]["value"] or "").lower()
         if current in {"", "masonry"}:
-            _set_cited(merged, "construction", text[at : at + len("joisted masonry")], name, at, at + len("joisted masonry"))
+            _set_cited(merged, "construction", text[at : at + len("joisted masonry")], name, at, at + len("joisted masonry"), texts, scans)
         break
     for name, text in texts.items():
         match = re.search(r"\bcook\s+([A-Za-z]+)", text)
@@ -462,7 +459,7 @@ def apply_document_rules(merged: dict, conflicts: list, texts: dict) -> None:
         current = (merged["operations"]["value"] or "").lower()
         if food in current and "restaurant" in current:
             break
-        _set_cited(merged, "operations", f"{food} restaurant", name, match.start(), match.end())
+        _set_cited(merged, "operations", f"{food} restaurant", name, match.start(), match.end(), texts, scans)
         break
     areas = _square_feet(texts)
     distinct = []
@@ -507,6 +504,19 @@ def extract_labeled(text: str, labels: tuple[str, ...]) -> list[dict]:
             return [{"field_id": "extra", "value": value, "start": start, "end": end}]
         offset += len(line)
     return [{"field_id": "extra", "value": None, "start": None, "end": None}]
+
+
+def unread_rows(docs: list[dict], not_sent: list[str]) -> list[dict]:
+    """P-016 (c). One row per file or page that was not read: {"file", "page" (None = the whole file), "reason"}."""
+    rows = []
+    for doc in docs:
+        pages = doc.get("unread_pages") or []
+        if doc.get("unread"):
+            rows.append({"file": doc["name"], "page": None, "reason": doc["unread"]})
+        elif doc.get("needs_human") and not pages:
+            rows.append({"file": doc["name"], "page": None, "reason": "scan not readable"})
+        rows += [{"file": doc["name"], "page": row["page"], "reason": row["reason"]} for row in pages]
+    return rows + [{"file": name, "page": None, "reason": f"not sent: text past {llm_extract.MAX_CHARS:,} characters"} for name in not_sent]
 
 
 def process_submission(folder: Path) -> dict:
@@ -575,7 +585,7 @@ def process_submission(folder: Path) -> dict:
             merged[item["field"]]["needs_review"] = True
         conflicts.append(item)
     _apply_reply(conflicts, texts.get("reply.md", ""))
-    apply_document_rules(merged, conflicts, texts)
+    apply_document_rules(merged, conflicts, texts, {doc["name"]: doc["ocr_words"] for doc in docs if doc.get("ocr_words")})
     locations = apply_locations(merged, conflicts, texts)
     blob = "\n".join(texts.values()).lower()
     extra = []
@@ -590,6 +600,8 @@ def process_submission(folder: Path) -> dict:
             if not any(cue in blob for cue in cues):
                 extra.append(label)
     needs_human = [doc["name"] for doc in docs if doc.get("needs_human")]
+    unread = unread_rows(docs, extracted.get("not_sent") or [])
+    needs_human += [row["file"] for row in unread if row["file"] not in needs_human]
     drop_premises_without_zip(merged, needs_human)
     if merged["premises_address"].get("value"):
         flag_invalid_address(merged["premises_address"])
@@ -604,6 +616,7 @@ def process_submission(folder: Path) -> dict:
     report["folder"] = folder.name
     report["sprinklers"] = "yes" if sprinklers_yes(texts) else "no"
     report["needs_human"] = needs_human
+    report["unread"] = unread
     report["locations"] = locations
     report["error"] = error
     report.update(_run_metadata())
@@ -683,6 +696,32 @@ def read_saved_run(submission: str, extract_dir: Path | None = None) -> dict:
     return payload
 
 
+def folder_manifest(folder: Path) -> list[dict]:
+    """P-020 (D-060/D-062): file name and sha256 of every file in the submission folder (dotfiles skipped)."""
+    return [
+        {"name": p.name, "sha256": hashlib.sha256(p.read_bytes()).hexdigest()}
+        for p in sorted(folder.iterdir())
+        if p.is_file() and not p.name.startswith(".")
+    ]
+
+
+def manifest_problem(submission: str, extract_dir: Path | None = None, inbox: Path | None = None) -> str:
+    """P-020 send-gate check. Empty string = ok. Else the refusal reason. Fails closed: no manifest, no folder, any difference."""
+    try:
+        saved = read_saved_run(submission, extract_dir).get("input_manifest")
+    except ValueError as exc:
+        return str(exc)
+    if not isinstance(saved, list) or not saved:
+        return f"the saved run for {submission} has no input manifest; re-run extraction before sending"
+    try:
+        now = folder_manifest((Path(inbox) if inbox is not None else INBOX_DIR) / submission)
+    except OSError:
+        return f"the input folder for {submission} cannot be read; refusing"
+    if now != saved:
+        return f"the input documents for {submission} changed since extraction; re-run extraction before sending"
+    return ""
+
+
 def current_status(submission: str, extract_dir: Path | None = None) -> str:
     """The status of the last saved run, read, hash-checked, and validated by the gate itself (G2)."""
     return read_saved_run(submission, extract_dir)["status"]
@@ -701,6 +740,8 @@ def _saved_payload(report: dict) -> dict:
                 "needs_review": row.get("needs_review"),
                 "start": row.get("start"),
                 "end": row.get("end"),
+                "quote": row.get("quote"),  # P-016 Q1: the exact cited text. The app shows it
+                "reason": row.get("reason"),  # P-016 R1: why the row is flagged or has no value
             }
         )
     return {
@@ -710,6 +751,7 @@ def _saved_payload(report: dict) -> dict:
         "complete": bool(report.get("complete")),
         "conflicts": report.get("conflicts") or [],
         "needs_human": report.get("needs_human") or [],
+        "unread": report.get("unread") or [],  # P-016 (c): file and page not read, with the reason
         "sprinklers": report.get("sprinklers"),
         "model_version": report.get("model_version"),
         "prompt_version": report.get("prompt_version"),
@@ -730,6 +772,7 @@ def write_drafts(inbox: Path, draft_dir: Path, conflict_dir: Path) -> list[dict]
     extract_dir.mkdir(parents=True, exist_ok=True)
     reports = []
     for folder in sorted(p for p in inbox.iterdir() if p.is_dir() and p.name.startswith("SUB-")):
+        manifest = folder_manifest(folder)  # B-205 (P-022): taken before extraction reads any file
         report = process_submission(folder)
         reports.append(report)
         refused = report.get("status") in REFUSED_STATUSES
@@ -757,6 +800,7 @@ def write_drafts(inbox: Path, draft_dir: Path, conflict_dir: Path) -> list[dict]
                 side.unlink()
         payload = _saved_payload(report)
         payload["conflicts"] = conflicts_out
+        payload["input_manifest"] = manifest
         payload["hash_algorithm"] = HASH_ALGORITHM
         payload["saved_hash"] = hash_payload(payload, HASH_ALGORITHM)
         (extract_dir / f"{folder.name}.json").write_text(json.dumps(payload, indent=2) + "\n")
@@ -1018,6 +1062,7 @@ if __name__ == "__main__":
         assert amount_value("220k") == 220000
         assert amount_value("220,000") == 220000
         assert amount_value("$1.2M") == 1200000
+        assert amount_value("$1.2MM") == 1200000 and amount_value("750K") == 750000
         assert amount_value("2,200 sq ft") == 2200
         assert amount_value("2200 sf") == 2200
         assert amount_value("8 units") is None
@@ -1182,4 +1227,67 @@ if __name__ == "__main__":
                     pass
             finally:
                 globals()["EXTRACT_DIR"] = saved_dir
-        print("prepare ok")
+        # P-020: manifest check on a real write_drafts() run in a temp folder.
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            sub = tmp / "inbox" / "SUB-400"
+            sub.mkdir(parents=True)
+            (sub / "application.md").write_text("Named insured: Example LLC\n")
+            real_extract = llm_extract.llm_extract
+            llm_extract.llm_extract = _raiser(RuntimeError("model call failed: stub"))  # the manifest is saved on any status
+            try:
+                write_drafts(tmp / "inbox", tmp / "pending", tmp / "data" / "conflicts")
+            finally:
+                llm_extract.llm_extract = real_extract
+            args = ("SUB-400", tmp / "data" / "extractions", tmp / "inbox")
+            assert manifest_problem(*args) == "", manifest_problem(*args)
+            (sub / "extra.md").write_text("new doc")
+            assert "changed" in manifest_problem(*args), "a new document must be refused"
+            (sub / "extra.md").unlink()
+            assert manifest_problem(*args) == ""
+            (sub / "application.md").write_text("Named insured: Other LLC\n")
+            assert "changed" in manifest_problem(*args), "changed bytes must be refused"
+            (sub / "application.md").write_text("Named insured: Example LLC\n")
+            _save_run(tmp / "data" / "extractions", "SUB-401", "incomplete")
+            assert "no input manifest" in manifest_problem("SUB-401", tmp / "data" / "extractions", tmp / "inbox")
+            assert manifest_problem("SUB-999", tmp / "data" / "extractions", tmp / "inbox")
+        # P-022 B-205: a file added while extraction runs is not in the saved manifest, so the send is refused.
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            sub = tmp / "inbox" / "SUB-402"
+            sub.mkdir(parents=True)
+            (sub / "application.md").write_text("Named insured: Example LLC\n")
+
+            def _writes_then_fails(*_a, **_k):
+                (sub / "late.md").write_text("added during extraction")
+                raise RuntimeError("model call failed: stub")
+
+            real_extract = llm_extract.llm_extract
+            llm_extract.llm_extract = _writes_then_fails
+            try:
+                write_drafts(tmp / "inbox", tmp / "pending", tmp / "data" / "conflicts")
+            finally:
+                llm_extract.llm_extract = real_extract
+            assert (sub / "late.md").exists()
+            assert "changed" in manifest_problem("SUB-402", tmp / "data" / "extractions", tmp / "inbox"), "late file must be refused"
+        # P-016 Q1, R1, (c), G2, N2. No model call.
+    saved = _saved_payload({"fields": [{"field_id": "year_built", "value": "1942", "quote": "Year built: 1942", "reason": "number or date read from a scan", "needs_review": True}], "unread": [{"file": "a.pdf", "page": 2, "reason": "x"}]})
+    assert saved["fields"][0]["quote"] == "Year built: 1942" and saved["fields"][0]["reason"] and saved["unread"][0]["page"] == 2, "the saved file carries quote, reason, and unread"
+    assert amount_value is llm_extract.amount_value and amount_value("$1.2M") == 1200000, "one reader for amounts (N2)"
+    with tempfile.TemporaryDirectory() as tmp:
+        (Path(tmp) / "a.md").write_text("Named insured: Example LLC")
+        (Path(tmp) / "b.docx").write_text("x")
+        real = llm_extract.llm_extract
+        llm_extract.llm_extract = lambda docs: {"fields": [], "conflicts": [], "not_sent": ["a.md"]}
+        try:
+            report = process_submission(Path(tmp))
+        finally:
+            llm_extract.llm_extract = real
+        assert {(r["file"], r["reason"]) for r in report["unread"]} == {("b.docx", "file type .docx is not read"), ("a.md", "not sent: text past 120,000 characters")}
+        assert set(report["needs_human"]) >= {"a.md", "b.docx"}, "every unread file is also in needs_human, as a list of names"
+    merged_g2 = {f: {"field_id": f, "value": None, "needs_review": True} for f in FIELDS}
+    apply_document_rules(merged_g2, [], {"s.jpg": "Valued through: 2026-01-01", "n.md": "No known loss letter"}, {"s.jpg": [["Valued", 0.9], ["through:", 0.9], ["2026-01-01", 0.5]]})
+    assert merged_g2["loss_run_valued_through"]["value"] is None, "G2: a document rule on a scan takes the cited-word score"
+    apply_document_rules(merged_g2, [], {"s.jpg": "Valued through: 2026-01-01", "n.md": "No known loss letter"}, {"s.jpg": [["Valued", 0.9], ["through:", 0.9], ["2026-01-01", 0.9]]})
+    assert merged_g2["loss_run_valued_through"]["value"] == "2026-01-01" and merged_g2["loss_run_valued_through"]["needs_review"], "G2/S2: passes at 0.9, kept and flagged"
+    print("prepare ok")

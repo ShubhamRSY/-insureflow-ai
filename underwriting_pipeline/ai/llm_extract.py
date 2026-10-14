@@ -1,8 +1,11 @@
 """LLM extraction. Groq or any OpenAI-compatible host comes from the environment.
 
-    LLM_BASE_URL   default http://localhost:11434/v1  (Ollama)
-    LLM_MODEL      default qwen2.5:7b when the host is local
+    LLM_BASE_URL   required. No default. Ollama runs only when this explicitly names localhost (http://localhost:11434/v1)
+    LLM_MODEL      required. No default.
     LLM_API_KEY    required for a remote host; local host uses the dummy "ollama"
+
+P-023 (B-214, D-064). If LLM_BASE_URL or LLM_MODEL is unset the run stops with a clear message before any call and
+before any cache read or write. A refusal is a stop, not "no data" and not a failed extraction.
 
 A 429 waits and retries. Do not put a real key in a file in this project.
 
@@ -25,8 +28,7 @@ import urllib.request
 from pathlib import Path
 
 MIN_CONFIDENCE = 0.75
-DEFAULT_BASE = "http://localhost:11434/v1"
-DEFAULT_MODEL = "qwen2.5:7b"
+MAX_CHARS = 120000  # P-016 L1: text sent to the model in one call
 DEFAULT_KEY = "ollama"
 MAX_WAIT = float(os.environ.get("LLM_MAX_WAIT") or 60)  # seconds to wait on one 429; a batch scorer sets this higher
 
@@ -61,7 +63,7 @@ RUN = os.environ.get("LLM_RUN_ID") or f"{time.strftime('%Y%m%dT%H%M%S')}-{os.get
 def _host() -> str:
     """The host name in LLM_BASE_URL: no scheme, port, or path, and never the key (P-014, O1)."""
     try:
-        return urllib.parse.urlsplit((os.environ.get("LLM_BASE_URL") or DEFAULT_BASE).rstrip("/")).hostname or ""
+        return urllib.parse.urlsplit((os.environ.get("LLM_BASE_URL") or "").rstrip("/")).hostname or ""
     except ValueError:
         return ""
 
@@ -173,20 +175,25 @@ def _safe(message: str) -> str:
 
 
 def _local(base: str) -> bool:
-    host = base.lower()
-    return "localhost" in host or "127.0.0.1" in host
+    try:
+        return urllib.parse.urlsplit(base).hostname in ("localhost", "127.0.0.1", "::1")
+    except ValueError:
+        return False
+
+
+UNSET = "refused: LLM_BASE_URL and LLM_MODEL must both be set in the shell. There is no default host and no default model. For Ollama set LLM_BASE_URL=http://localhost:11434/v1 on purpose. No model was called."
 
 
 def endpoint_settings() -> dict:
-    base = (os.environ.get("LLM_BASE_URL") or DEFAULT_BASE).rstrip("/")
+    base = (os.environ.get("LLM_BASE_URL") or "").rstrip("/")
     model = os.environ.get("LLM_MODEL") or ""
     key = os.environ.get("LLM_API_KEY") or ""
+    if not base or not model:  # P-023: no default host and no default model
+        raise RuntimeError(UNSET)
     if _local(base):
-        return {"base": base, "model": model or DEFAULT_MODEL, "key": key or DEFAULT_KEY}
+        return {"base": base, "model": model, "key": key or DEFAULT_KEY}
     if not key:
         raise RuntimeError("LLM_API_KEY is not set. Do not write the key into a file.")
-    if not model:
-        raise RuntimeError("LLM_MODEL is not set.")
     return {"base": base, "model": model, "key": key}
 
 
@@ -204,8 +211,10 @@ def provider_guard(calling: bool = True) -> dict:
 
     The refusal is SystemExit, not an error a caller turns into "extraction_failed": the run stops.
     """
-    base = (os.environ.get("LLM_BASE_URL") or DEFAULT_BASE).rstrip("/")
-    model = os.environ.get("LLM_MODEL") or (DEFAULT_MODEL if _local(base) else "(LLM_MODEL not set)")
+    base = (os.environ.get("LLM_BASE_URL") or "").rstrip("/")
+    model = os.environ.get("LLM_MODEL") or ""
+    if not base or not model:  # P-023: stop the run, no call, no cache read or write. SystemExit, so prepare.py does not turn it into a failed extraction.
+        raise SystemExit(UNSET)
     allowed = (os.environ.get("ALLOW_PROVIDER") or "").strip()
     line = _safe(f"provider {base} model {model}" + (f" ALLOW_PROVIDER={allowed}" if allowed else ""))
     if line not in _announced:
@@ -254,10 +263,140 @@ def find_quote(text: str, quote: str) -> tuple[int, int] | None:
     return match.start(), match.end()
 
 
-def accept_field(item: dict, docs: dict[str, str], ocr_confidence: dict | None = None) -> dict:
+# P-016 (D-039). Exact citations: no quote match, no value. The value must be inside the quote.
+_AMOUNT = re.compile(
+    r"(?i)^(?:about|around|approximately|roughly)?\s*"
+    r"\$?\s*(\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?)\s*(mm|[kmb])?"
+    r"(?:\s*(?:square\s+feet|sq\.?\s*ft\.?|sqft|sf))?\s*$"
+)
+
+
+def amount_value(value: str) -> int | None:
+    """220k, $1.2M, $1.2MM (million, P-021), 220,000, and 2,200 sq ft are numbers. A sentence is not. (Moved here from prepare.py for N2; rules unchanged.)"""
+    if not value:
+        return None
+    match = _AMOUNT.match(value.strip())
+    if not match:
+        return None
+    number = float(match.group(1).replace(",", ""))
+    suffix = (match.group(2) or "").lower()
+    factor = {"": 1, "k": 1_000, "m": 1_000_000, "mm": 1_000_000, "b": 1_000_000_000}[suffix]
+    return int(round(number * factor))
+
+
+NUMBER_FIELDS = ("sales_or_payroll", "tiv_building", "year_built", "square_feet")
+DATE_FIELDS = ("effective_date", "loss_run_valued_through")
+TEXT_FIELDS = ("named_insured", "premises_address")
+SOFT_FIELDS = ("operations", "construction")
+_NUM = re.compile(r"(?<![\d.,])\d[\d,]*(?:\.\d+)?(?:\s?(?:mm|[kmb])\b)?", re.I)
+_DATE_SHAPE = re.compile(r"\d{4}-\d{2}-\d{2}|\d{1,2}/\d{1,2}/\d{2,4}")
+_DATES = re.compile(r"\d{4}-\d{2}-\d{2}|\d{1,2}[/.-]\d{1,2}[/.-]\d{4}|[A-Za-z]{3,9}\.?\s+\d{1,2}(?:st|nd|rd|th)?,?\s+\d{4}|\d{1,2}(?:st|nd|rd|th)?\s+[A-Za-z]{3,9}\.?,?\s+\d{4}")
+REASON_QUOTE = "quote not found in {}"
+REASON_VALUE = "value not inside the cited text"
+REASON_REWORDED = "value is not in the cited text (translated or reworded)"
+REASON_SCAN = "number or date read from a scan"
+
+
+def _squash(text: str) -> str:
+    return " ".join(text.casefold().split())
+
+
+def _quote_numbers(quote: str) -> set[int]:
+    """Whole numbers in the quote (N2: amount_value reads 1.2M). H2: a number joined to other digits by - or / is not whole, except inside a date."""
+    found = set()
+    for match in _NUM.finditer(quote):
+        raw = match.group(0).rstrip(",")
+        before, after = quote[max(0, match.start() - 2) : match.start()], quote[match.end() : match.end() + 2]
+        joined = bool(re.search(r"\d[-/]$", before) or re.match(r"[-/]\d", after))
+        if joined and not any(m.start() <= match.start() and match.end() <= m.end() for m in _DATE_SHAPE.finditer(quote)):
+            continue
+        number = amount_value(raw)
+        if number is not None:
+            found.add(number)
+    return found
+
+
+def _quote_dates(quote: str) -> set:
+    """D2: ISO dates, and dates in a short fixed list of formats. A day-first or month-first date that cannot be told apart is skipped."""
+    import datetime
+
+    found = set()
+    for match in _DATES.finditer(quote):
+        raw = match.group(0)
+        try:
+            if re.fullmatch(r"\d{4}-\d{2}-\d{2}", raw):
+                found.add(datetime.date.fromisoformat(raw))
+            elif re.fullmatch(r"\d{1,2}[/.-]\d{1,2}[/.-]\d{4}", raw):
+                one, two, year = (int(x) for x in re.split(r"[/.-]", raw))
+                if one > 12 or one == two:
+                    found.add(datetime.date(year, two, one))
+                elif two > 12:
+                    found.add(datetime.date(year, one, two))
+                # both could be the month: not stored
+            else:
+                clean = re.sub(r"(?<=\d)(st|nd|rd|th)", "", raw.replace(",", " ").replace(".", " "))
+                for form in ("%B %d %Y", "%b %d %Y", "%d %B %Y", "%d %b %Y"):
+                    try:
+                        found.add(datetime.datetime.strptime(" ".join(clean.split()), form).date())
+                        break
+                    except ValueError:
+                        continue
+        except ValueError:
+            continue
+    return found
+
+
+def value_in_span(field_id: str, value: str, span_text: str) -> str | None:
+    """P-016 (a). None when the value is inside the cited text. Else the reason it is not.
+
+    A name or address: its characters are in the quote (case and runs of spaces ignored). A number: one whole number in the
+    quote equals it. A date: it parses, and the same day is in the quote. Operations and construction that are not in the
+    quote come back as REASON_REWORDED: the caller keeps them flagged. Any other field is not checked.
+    """
+    import datetime
+
+    value = str(value).strip()
+    if field_id in TEXT_FIELDS:
+        return None if _squash(value) in _squash(span_text) else REASON_VALUE
+    if field_id in NUMBER_FIELDS:
+        number = amount_value(value)
+        return None if number is not None and number in _quote_numbers(span_text) else REASON_VALUE
+    if field_id in DATE_FIELDS:
+        try:
+            day = datetime.date.fromisoformat(value)
+        except ValueError:
+            return "the date does not parse"
+        return None if day in _quote_dates(span_text) else REASON_VALUE
+    if field_id in SOFT_FIELDS:
+        low = _squash(span_text)
+        return None if all(word in low for word in _squash(value).split()) else REASON_REWORDED
+    return None
+
+
+def _tokens(text: str) -> list[str]:
+    return re.findall(r"[a-z0-9]+", text.casefold())
+
+
+def cited_ocr_score(quote: str, value: str, words: list) -> float:
+    """P-016 (b), option C3. The lowest Tesseract score among the quote's words that hold the value (all the quote's words if none do).
+
+    A cited word that is not in the page's word list counts as 0. A word seen more than once takes its lowest score.
+    # ponytail: the word list has no position in the text, so a repeated word takes its lowest score. Add boxes if that costs too many right values.
+    """
+    scores: dict[str, float] = {}
+    for word, score in words:
+        for token in _tokens(word):
+            scores[token] = min(score, scores.get(token, 1.0))
+    held = set(_tokens(value))
+    cited = [token for token in _tokens(quote) if token in held] or _tokens(quote)
+    return min((scores.get(token, 0.0) for token in cited), default=0.0)
+
+
+def accept_field(item: dict, docs: dict[str, str], ocr_confidence: dict | None = None, ocr_words: dict | None = None) -> dict:
     """Drop anything that is uncited or below the confidence line. Never keep a guess.
 
-    A scanned source uses the Tesseract word score. A typed file keeps the model score.
+    A scanned source gets the lower of the model score and the OCR score of the cited words (P-016 C3). A typed file keeps the model score.
+    A scan with no word list takes the page score, as before. P-016: no quote match, no value; the value must be in the quote.
     """
     field_id = item.get("field_id") or item.get("field")
     value = item.get("value")
@@ -268,8 +407,14 @@ def accept_field(item: dict, docs: dict[str, str], ocr_confidence: dict | None =
     except (TypeError, ValueError):
         model_confidence = 0.0
     confidence = model_confidence
-    if ocr_confidence and source in ocr_confidence:
-        confidence = ocr_confidence[source]
+    on_scan = bool(ocr_confidence and source in ocr_confidence)
+    cited = None
+    if on_scan:
+        if ocr_words and ocr_words.get(source):
+            cited = cited_ocr_score(quote, str(value or ""), ocr_words[source])
+        else:
+            cited = ocr_confidence[source]
+        confidence = min(model_confidence, cited)
     base = {
         "field_id": field_id,
         "value": None,
@@ -278,19 +423,34 @@ def accept_field(item: dict, docs: dict[str, str], ocr_confidence: dict | None =
         "end": None,
         "confidence": confidence,
         "model_confidence": model_confidence,
+        "ocr_cited_confidence": cited,
         "needs_review": True,
+        "reason": None,
+        "quote": None,
     }
     if value is None or str(value).strip() == "" or str(value).lower() == "null":
         return base
     if confidence < MIN_CONFIDENCE:
+        base["reason"] = f"confidence {confidence:.2f} is under {MIN_CONFIDENCE}"
         return base
     text = docs.get(source, "")
-    span = find_quote(text, quote) or find_quote(text, str(value))
+    span = find_quote(text, quote)  # P-016 N: the old fallback to the value's own characters is gone
     if span is None:
         base["confidence"] = 0.0
+        base["reason"] = REASON_QUOTE.format(source or "no file")
         return base
-    if field_id == "loss_run_valued_through" and "no known loss" in text[span[0] : span[1]].lower():
+    cited_text = text[span[0] : span[1]]
+    if field_id == "loss_run_valued_through" and "no known loss" in cited_text.lower():
         return base
+    problem = value_in_span(field_id, value, cited_text)
+    flag, reason = False, None
+    if problem == REASON_REWORDED:
+        flag, reason = True, problem
+    elif problem:
+        base["reason"] = problem
+        return base
+    if on_scan and field_id in NUMBER_FIELDS + DATE_FIELDS:  # S2
+        flag, reason = True, REASON_SCAN
     return {
         "field_id": field_id,
         "value": str(value).strip(),
@@ -299,7 +459,10 @@ def accept_field(item: dict, docs: dict[str, str], ocr_confidence: dict | None =
         "end": span[1],
         "confidence": confidence,
         "model_confidence": model_confidence,
-        "needs_review": False,
+        "ocr_cited_confidence": cited,
+        "needs_review": flag,
+        "reason": reason,
+        "quote": cited_text,
     }
 
 
@@ -420,12 +583,18 @@ def _post(settings: dict, payload: dict) -> dict:
 
 def llm_extract(docs: list[dict]) -> dict:
     settings = provider_guard(calling=False)  # refused only below, when the cache has no result and a model call is next
-    parts = []
+    docs = [doc for doc in docs if not doc.get("unread")]  # P-016 (c): a file type that is not read, or a file that cannot be opened, never reaches the model or the key
+    parts, not_sent, size = [], [], 0
     for doc in docs:
         if doc.get("needs_human"):
-            parts.append(f"--- file: {doc['name']} ---\nUNREADABLE. Do not guess any field from this file.")
+            part = f"--- file: {doc['name']} ---\nUNREADABLE. Do not guess any field from this file."
         else:
-            parts.append(f"--- file: {doc['name']} ---\n{doc['text']}")
+            part = f"--- file: {doc['name']} ---\n{doc['text']}"
+        if size + len(part) + (2 if parts else 0) > MAX_CHARS:  # P-016 L1: files go whole, in order; one that does not fit is listed, never cut
+            not_sent.append(doc["name"])
+            continue
+        size += len(part) + (2 if parts else 0)
+        parts.append(part)
     packed = "\n\n".join(parts)
     payload = {
         "model": settings["model"],
@@ -433,7 +602,7 @@ def llm_extract(docs: list[dict]) -> dict:
         "response_format": {"type": "json_object"},
         "messages": [
             {"role": "system", "content": SYSTEM},
-            {"role": "user", "content": packed[:120000]},
+            {"role": "user", "content": packed},
         ],
     }
     names = [doc["name"] for doc in docs]
@@ -491,11 +660,12 @@ def llm_extract(docs: list[dict]) -> dict:
         for doc in docs
         if doc.get("ocr_confidence") is not None
     }
-    fields = [accept_field(item, by_name, ocr_confidence) for item in parsed.get("fields") or []]
+    ocr_words = {doc["name"]: doc["ocr_words"] for doc in docs if doc.get("ocr_words")}
+    fields = [accept_field(item, by_name, ocr_confidence, ocr_words) for item in parsed.get("fields") or []]
     conflicts = []
     for item in parsed.get("conflicts") or []:
         sides = [
-            accept_field({**side, "field_id": item.get("field")}, by_name, ocr_confidence) for side in item.get("values") or []
+            accept_field({**side, "field_id": item.get("field")}, by_name, ocr_confidence, ocr_words) for side in item.get("values") or []
         ]
         kept = [side for side in sides if side["value"]]
         if len(kept) >= 2 and len({side["value"] for side in kept}) > 1:
@@ -508,10 +678,12 @@ def llm_extract(docs: list[dict]) -> dict:
                     "resolved_by": None,
                 }
             )
-    return {"fields": fields, "conflicts": conflicts}
+    return {"fields": fields, "conflicts": conflicts, "not_sent": not_sent}
 
 
 if __name__ == "__main__":
+    LOCAL_BASE, LOCAL_MODEL = "http://localhost:11434/v1", "qwen2.5:7b"  # the self-check names localhost on purpose (P-023); the module has no default
+    os.environ["LLM_BASE_URL"], os.environ["LLM_MODEL"] = LOCAL_BASE, LOCAL_MODEL
     _budget.update(limit=6000.0, remaining=6000.0, at=time.time())
     began = time.time()
     _pace(3000)
@@ -642,7 +814,7 @@ if __name__ == "__main__":
         queue = list(script)
 
         def urlopen(request, timeout=None):
-            assert request.full_url.startswith(DEFAULT_BASE), "the stub only stands in for localhost"
+            assert request.full_url.startswith(LOCAL_BASE), "the stub only stands in for localhost"
             item = queue.pop(0)
             if isinstance(item, Exception):
                 raise item
@@ -656,7 +828,7 @@ if __name__ == "__main__":
         return [json.loads(line) for line in log.read_text().splitlines()] if log.exists() else []
 
     time.sleep = waits.append
-    for name in ("LLM_BASE_URL", "LLM_MODEL", "LLM_API_KEY", "ALLOW_PROVIDER"):
+    for name in ("LLM_API_KEY", "ALLOW_PROVIDER"):
         os.environ.pop(name, None)
     try:
         with tempfile.TemporaryDirectory() as tmp:
@@ -668,7 +840,7 @@ if __name__ == "__main__":
             assert log[0]["attempt"] == 1 and log[0]["retry_in"] == 13 and "tokens per day" in log[0]["detail"] and log[0]["files"] == ["a.md"]
             assert log[1]["attempt"] == 2 and log[1]["retry_in"] == 2 and waits == [13.0, 2], "each wait before a retry is saved, and saved before the wait"
             assert log[2]["attempts"] == 3 and log[2]["total_tokens"] == 50, "the reply's row says how many posts it took"
-            assert budget()["last_24_hours"][DEFAULT_MODEL] == {"calls": 1, "tokens": 50}, "a failed attempt is not counted as a call"
+            assert budget()["last_24_hours"][LOCAL_MODEL] == {"calls": 1, "tokens": 50}, "a failed attempt is not counted as a call"
             assert failure_counts() == {"rate_limit_429": 1, "timeout": 1, "other": 0, "reply_not_usable": 0}
 
         with tempfile.TemporaryDirectory() as tmp:
@@ -714,7 +886,7 @@ if __name__ == "__main__":
             assert failure_counts() == {"rate_limit_429": 0, "timeout": 0, "other": 1, "reply_not_usable": 2}, f"reply_not_usable is missing from the failure totals: {failure_counts()}"
             logged = [row["event"] for row in rows()[-5:] if row.get("event")]
             assert logged == ["reply_not_usable", "reply_not_usable", "other"] and sum(failure_counts().values()) == len(logged), "the totals match the token log"
-            assert not (CACHE / "extractions" / f"{cache_key(empty, DEFAULT_MODEL)}.json").exists(), "an unusable reply is still never saved"
+            assert not (CACHE / "extractions" / f"{cache_key(empty, LOCAL_MODEL)}.json").exists(), "an unusable reply is still never saved"
             assert rows()[-5]["attempts"] == 1 and rows()[-3]["attempts"] == 1, "counting the cause does not change a later call's attempt count"
 
         # P-014. The token log survives a cut line, and a run's totals can be rebuilt from the file alone.
@@ -724,10 +896,10 @@ if __name__ == "__main__":
             CACHE = Path(tmp)
             CALL_LOG.clear()
             USAGE.clear()
-            old_row = json.dumps({"at": "x", "epoch": int(time.time()), "model": DEFAULT_MODEL, "files": ["old.md"], "total_tokens": 11, "attempts": 1})
+            old_row = json.dumps({"at": "x", "epoch": int(time.time()), "model": LOCAL_MODEL, "files": ["old.md"], "total_tokens": 11, "attempts": 1})
             cut = b'{"at": "2026-10-11T00:00:00", "epoch": 17'  # a run killed during the write: no end, no line break
             (CACHE / "token_log.jsonl").write_bytes(old_row.encode() + b"\n" + cut)
-            assert budget()["skipped_lines"] == 1 and budget()["last_24_hours"][DEFAULT_MODEL] == {"calls": 1, "tokens": 11}, "a cut last line must be skipped and counted, not stop the report"
+            assert budget()["skipped_lines"] == 1 and budget()["last_24_hours"][LOCAL_MODEL] == {"calls": 1, "tokens": 11}, "a cut last line must be skipped and counted, not stop the report"
             os.environ["LLM_API_KEY"] = fake_key
             RUN = "run-a"
             host(http(429, "Rate limit reached (TPM)", "1"), answer)
@@ -751,7 +923,7 @@ if __name__ == "__main__":
             assert rebuilt["run-a"] == {"hosts": ["localhost"], "model_calls": memory["model_calls"], "from_cache": memory["from_cache"], "tokens": memory["tokens"], "failed_attempts": failure_counts()}, f"the totals rebuilt from the file differ from the run's own: {rebuilt}"
             assert failure_counts() == {"rate_limit_429": 1, "timeout": 0, "other": 0, "reply_not_usable": 1}
             assert rebuilt["no run id"]["model_calls"] == 1 and rebuilt["no run id"]["tokens"] == 11, "a row written before P-014 is read, under 'no run id'"
-            assert budget()["last_24_hours"][DEFAULT_MODEL] == {"calls": 3, "tokens": 68}, "a cache hit is not counted as a call"
+            assert budget()["last_24_hours"][LOCAL_MODEL] == {"calls": 3, "tokens": 68}, "a cache hit is not counted as a call"
             RUN = "run-b"  # a second run into the same log
             USAGE.clear()
             CALL_LOG.clear()
@@ -762,7 +934,7 @@ if __name__ == "__main__":
             new = [row for row in _log_rows()[0] if row.get("run")]
             assert [row["run"] for row in new] == ["run-a"] * 5 + ["run-b"] and len(new) == len(_log_rows()[0]) - 1, "every new row carries its own run id"
             assert all(row["host"] == "localhost" and re.fullmatch(r"[0-9a-f]{64}", row["key"] or "") for row in new), "every new row carries the host name and the cache key"
-            assert {row["key"] for row in new} == {cache_key(page, DEFAULT_MODEL), cache_key(empty, DEFAULT_MODEL)}
+            assert {row["key"] for row in new} == {cache_key(page, LOCAL_MODEL), cache_key(empty, LOCAL_MODEL)}
             assert [row.get("event") for row in new] == ["rate_limit_429", None, "cache_hit", None, "reply_not_usable", "cache_hit"]
             assert fake_key not in (CACHE / "token_log.jsonl").read_text(errors="replace") and "Bearer" not in (CACHE / "token_log.jsonl").read_text(errors="replace"), "no row holds the API key"
             RUN = f"named-{fake_key}"  # a run id that someone set to the key by mistake is not written either
@@ -772,16 +944,16 @@ if __name__ == "__main__":
             RUN = "run-c"
 
             # D-030. The host name and the temperature are in the cache key.
-            here = cache_key(page, DEFAULT_MODEL)
+            here = cache_key(page, LOCAL_MODEL)
             old_files = [[doc["name"], doc.get("sha256"), doc.get("ocr"), doc.get("needs_human", False), doc["text"]] for doc in page]
-            assert here != hashlib.sha256(json.dumps([PROMPT_VERSION, DEFAULT_MODEL, old_files]).encode()).hexdigest(), "the key from before P-014 must not reach a new result"
+            assert here != hashlib.sha256(json.dumps([PROMPT_VERSION, LOCAL_MODEL, old_files]).encode()).hexdigest(), "the key from before P-014 must not reach a new result"
             os.environ["LLM_BASE_URL"] = "http://127.0.0.1:11434/v1"
-            assert cache_key(page, DEFAULT_MODEL) != here, "another host is another key"
+            assert cache_key(page, LOCAL_MODEL) != here, "another host is another key"
             os.environ["LLM_BASE_URL"] = "http://localhost:9999/other/path"
-            assert cache_key(page, DEFAULT_MODEL) == here, "the key holds the host name only: no port, no path"
-            os.environ.pop("LLM_BASE_URL")
+            assert cache_key(page, LOCAL_MODEL) == here, "the key holds the host name only: no port, no path"
+            os.environ["LLM_BASE_URL"] = LOCAL_BASE
             TEMPERATURE = 1
-            assert cache_key(page, DEFAULT_MODEL) != here, "another temperature is another key"
+            assert cache_key(page, LOCAL_MODEL) != here, "another temperature is another key"
             left = host(answer)
             llm_extract(page)
             assert not left and _log_rows()[0][-1].get("event") is None, "a result saved at another temperature is not reused: the model is called"
@@ -868,13 +1040,9 @@ if __name__ == "__main__":
     assert scan["value"] is None and scan["model_confidence"] == 0.99
     assert good["model_confidence"] == 0.9
     assert docs["application.md"][good["start"] : good["end"]] == "Named insured: Example LLC"
-    os.environ.pop("LLM_BASE_URL", None)
-    os.environ.pop("LLM_MODEL", None)
     os.environ.pop("LLM_API_KEY", None)
     settings = endpoint_settings()
-    assert settings["base"] == DEFAULT_BASE
-    assert settings["model"] == DEFAULT_MODEL
-    assert settings["key"] == DEFAULT_KEY
+    assert settings["base"] == LOCAL_BASE and settings["model"] == LOCAL_MODEL and settings["key"] == DEFAULT_KEY, "an explicit localhost still works (Ollama)"
 
     # P-008. The provider guard. No model is called here: a post would fail the check.
     import contextlib
@@ -898,9 +1066,38 @@ if __name__ == "__main__":
         return False, said.getvalue()
 
     paid = {"LLM_BASE_URL": "https://api.openai.com/v1", "LLM_MODEL": "gpt-x", "LLM_API_KEY": "TEST_NOT_A_REAL_KEY"}
-    refused, said = guard()
-    assert not refused and f"provider {DEFAULT_BASE} model {DEFAULT_MODEL}" in said, "localhost (Ollama) is allowed, and is the default"
-    assert not guard(LLM_BASE_URL="http://127.0.0.1:11434/v1")[0]
+    refused, said = guard(LLM_BASE_URL=LOCAL_BASE, LLM_MODEL=LOCAL_MODEL)
+    assert not refused and f"provider {LOCAL_BASE} model {LOCAL_MODEL}" in said, "localhost (Ollama) is allowed when named"
+    assert not guard(LLM_BASE_URL="http://127.0.0.1:11434/v1", LLM_MODEL=LOCAL_MODEL)[0]
+    # P-023 (B-214). Unset settings: refused, no HTTP attempt, no cache write, and not a failed extraction.
+    attempts = []
+
+    def _post(settings, payload):  # noqa: F811
+        attempts.append(1)
+        raise AssertionError("an unset setting reached the model")
+
+    real_open = urllib.request.urlopen
+    urllib.request.urlopen = lambda *a, **k: attempts.append(1)
+    try:
+        with tempfile.TemporaryDirectory() as tmp:
+            CACHE = Path(tmp)
+            for env in ({}, {"LLM_BASE_URL": LOCAL_BASE}, {"LLM_MODEL": LOCAL_MODEL}, {"LLM_BASE_URL": EXPECTED_BASE, "LLM_API_KEY": "k9k9k9"}, {"LLM_MODEL": "m", "LLM_API_KEY": "k9k9k9"}):
+                for run in (provider_guard, lambda: provider_guard(calling=False), lambda: llm_extract(page)):
+                    refused, said = guard(run, **env)
+                    assert refused and "LLM_BASE_URL and LLM_MODEL must both be set" in said and "no default" in said.lower(), f"unset settings must be refused with a clear message: {env}"
+            assert not attempts, "an unset setting made an HTTP attempt"
+            assert list(CACHE.rglob("*")) == [], "an unset setting wrote to the cache or the token log"
+            try:
+                guard(endpoint_settings)
+                os.environ.pop("LLM_BASE_URL", None)
+                endpoint_settings()
+                raise AssertionError("endpoint_settings must refuse an unset host")
+            except RuntimeError:
+                pass
+        assert USAGE == [] and failure_counts() == dict.fromkeys(FAILURE_KINDS, 0), "a refusal is not a call and not a failed attempt"
+    finally:
+        urllib.request.urlopen = real_open
+    assert not _local("https://example.test/localhost/v1") and _local("http://localhost:11434/v1"), "Ollama only when the host name is localhost"
     for remote in ("https://localhost.example.test/v1", "https://example.test/localhost/v1", "https://example.test/v1?h=127.0.0.1"):
         assert guard(LLM_BASE_URL=remote, LLM_MODEL="m", LLM_API_KEY="k9k9k9")[0], f"{remote} is not this machine"
     refused, said = guard(**paid)
@@ -936,6 +1133,81 @@ if __name__ == "__main__":
         assert guard(lambda: llm_extract(empty), **paid)[0], "the next file has no saved result: the run stops before the call"
         assert guard(lambda: llm_extract(empty), **paid, ALLOW_PROVIDER="openai")[0], "a wrong ALLOW_PROVIDER does not let the call through"
         assert budget()["this_run"]["model_calls"] == 0
+        USAGE.clear()
+    # P-016. Each lettered option, no model call.
+    def one(field, value, quote, text, conf=0.9, scan=None, words=None):
+        return accept_field({"field_id": field, "value": value, "source": "f", "quote": quote, "confidence": conf}, {"f": text}, {"f": scan} if scan is not None else None, {"f": words} if words else None)
+
+    # N (no value fallback): the quote is not in the file, so no value, even if the value's characters are there.
+    for field, value, text in (("year_built", "1990", "Phone 210-555-1990"), ("tiv_building", "850000", "Policy no. 8500001"), ("construction", "Masonry", "Prior carrier: Masonry Mutual")):
+        row = one(field, value, "an invented quote", text)
+        assert row["value"] is None and row["reason"] == "quote not found in f" and row["needs_review"], field
+    # N2: the value is read from the quote by amount_value ($1.2M, 220k). Digits that sit inside a longer number are not the number.
+    assert one("tiv_building", "1200000", "TIV $1.2M", "TIV $1.2M")["value"] == "1200000"
+    assert one("tiv_building", "220000", "TIV 220k", "TIV 220k")["value"] == "220000"
+    assert one("sales_or_payroll", "10", "Sales: 2010000", "Sales: 2010000")["reason"] == REASON_VALUE, "10 is not inside 2010000"
+    assert one("year_built", "2021", "Year built: 1948", "Year built: 1948")["reason"] == REASON_VALUE
+    assert one("tiv_building", "850000", "Policy no. 8500001", "Policy no. 8500001")["value"] is None
+    assert one("tiv_building", "850000", "TIV: 850,000", "TIV: 850,000")["quote"] == "TIV: 850,000"
+    # H2: a number joined to other digits by - or / is not whole. A date keeps its numbers.
+    assert one("year_built", "1990", "210-555-1990", "Call 210-555-1990")["reason"] == REASON_VALUE
+    assert one("year_built", "1990", "Year built: 1990", "Year built: 1990")["value"] == "1990"
+    assert one("year_built", "1990", "Built 1990-1991", "Built 1990-1991")["value"] is None
+    # D2: ISO, or a fixed list of formats that parse to the same day. A date that does not parse, or cannot be told apart, is not stored.
+    for day, written in (("2026-11-01", "2026-11-01"), ("2026-11-01", "November 1, 2026"), ("2026-11-01", "1 Nov 2026"), ("2026-11-13", "11/13/2026"), ("2026-11-13", "13/11/2026")):
+        assert one("effective_date", day, f"Effective: {written}", f"Effective: {written}")["value"] == day, written
+    for bad_date in ("2O2H-01-O1", "RO2F-O1-01", "A2F-O1-O1", "2026-13-45"):
+        row = one("effective_date", bad_date, f"Effective: {bad_date}", f"Effective: {bad_date}")
+        assert row["value"] is None and row["reason"] == "the date does not parse", bad_date
+    assert one("effective_date", "2026-01-02", "Effective: 01/02/2026", "Effective: 01/02/2026")["value"] is None, "day-first and month-first cannot be told apart"
+    assert one("loss_run_valued_through", "2026-01-05", "Valued through: 2026-01-06", "Valued through: 2026-01-06")["value"] is None, "the value must be the date in the quote"
+    # Names and addresses: the value is in the quote, case and runs of spaces ignored.
+    assert one("named_insured", "ACME  llc", "Named insured: Acme LLC", "Named insured: Acme LLC")["value"] == "ACME  llc"
+    assert one("named_insured", "Other LLC", "Named insured: Acme LLC", "Named insured: Acme LLC")["reason"] == REASON_VALUE
+    # Translated or reworded operations and construction are kept and flagged (R1: flag only, the value still counts).
+    row = one("construction", "masonry", "Construccion: mamposteria", "Construccion: mamposteria")
+    assert row["value"] == "masonry" and row["needs_review"] and row["reason"] == REASON_REWORDED
+    assert not one("operations", "taqueria", "Operaciones: taqueria", "Operaciones: taqueria")["needs_review"]
+    # Q1: the exact cited text is on the row, and it is the text between start and end.
+    row = one("named_insured", "Acme LLC", "Named   insured:\nAcme LLC", "Named insured:\n Acme LLC")
+    assert row["quote"] == "Named insured:\n Acme LLC" and "Named insured:\n Acme LLC"[0:4] == row["quote"][:4]
+    # C3 and S2: on a scan the gate is the lower of the model score and the lowest cited word that holds the value; a scan number or date stays flagged.
+    words = [["Year", 0.95], ["built:", 0.9], ["1942", 0.6], ["Name:", 0.99], ["Acme", 0.99], ["LLC", 0.97]]
+    low = one("year_built", "1942", "Year built: 1942", "Year built: 1942", conf=0.99, scan=0.9, words=words)
+    assert low["value"] is None and low["ocr_cited_confidence"] == 0.6, "the cited word '1942' scored 0.6"
+    assert one("named_insured", "Acme LLC", "Name: Acme LLC", "Name: Acme LLC", conf=0.99, scan=0.5, words=words)["confidence"] == 0.97, "the page score is not used when the words are known; the lowest word that holds the value is"
+    assert one("named_insured", "Acme LLC", "Name: Acme LLC", "Name: Acme LLC", conf=0.6, scan=0.9, words=words)["value"] is None, "the model's 0.6 is the lower score"
+    assert one("named_insured", "Zed LLC", "Name: Zed LLC", "Name: Zed LLC", conf=0.99, scan=0.9, words=words)["value"] is None, "a cited word not in the word list counts as 0"
+    ok = one("year_built", "1942", "Year built: 1942", "Year built: 1942", conf=0.99, scan=0.9, words=[["Year", 0.9], ["built:", 0.9], ["1942", 0.85]])
+    assert ok["value"] == "1942" and ok["needs_review"] and ok["reason"] == REASON_SCAN, "S2: a number from a scan that passes the gate is kept flagged"
+    assert not one("named_insured", "Acme LLC", "Name: Acme LLC", "Name: Acme LLC", conf=0.99, scan=0.9, words=words)["needs_review"], "S2 marks numbers and dates only"
+    assert one("year_built", "1942", "Year built: 1942", "Year built: 1942", conf=0.99)["needs_review"] is False, "a typed file keeps the model score and no flag"
+    assert one("named_insured", "Acme LLC", "Acme LLC", "Acme LLC", scan=0.2)["value"] is None, "a scan with no word list takes the page score, as before"
+    # L1: files go whole and in order; one that does not fit is listed and not cut. No model call.
+    sent = []
+
+    def _post(settings, payload):  # noqa: F811
+        sent.append(payload["messages"][1]["content"])
+        return {"choices": [{"message": {"content": json.dumps({"fields": [{"field_id": "named_insured", "value": "Example LLC", "source": "a.md", "quote": "Example LLC", "confidence": 0.9}]})}}], "usage": {"total_tokens": 1}}
+
+    real_max, MAX_CHARS = MAX_CHARS, 200
+    try:
+        with tempfile.TemporaryDirectory() as tmp:
+            CACHE = Path(tmp)
+            os.environ.update(LLM_BASE_URL=LOCAL_BASE, LLM_MODEL=LOCAL_MODEL)
+            big = [{"name": "a.md", "text": "Named insured: Example LLC", "sha256": "1"}, {"name": "big.md", "text": "x" * 500, "sha256": "2"}, {"name": "z.md", "text": "tail", "sha256": "3"}]
+            out = llm_extract(big)
+            assert out["not_sent"] == ["big.md"] and "xxx" not in sent[0] and "z.md" in sent[0], "big.md is listed, not cut, and the files after it are still sent"
+            assert llm_extract(big)["not_sent"] == ["big.md"] and len(sent) == 1, "the list is the same on a saved result"
+            # (c1, E1) a file the reader did not open never reaches the model or the key.
+            unreadable = big[:1] + [{"name": "x.docx", "text": "", "needs_human": True, "unread": "file type .docx is not read"}]
+            assert cache_key([d for d in unreadable if not d.get("unread")], LOCAL_MODEL) == cache_key(big[:1], LOCAL_MODEL)
+            llm_extract(unreadable)
+            assert len(sent) == 2 and "x.docx" not in sent[1], "an unread file is not sent"
+            llm_extract(big[:1])
+            assert len(sent) == 2, "and it does not change the key: the same files without it are a cache hit"
+    finally:
+        MAX_CHARS = real_max
         USAGE.clear()
     banned = re.compile("dot" + "env|" + r"""["'/]\.env\b""")  # no pipeline file may load a settings file
     for source in Path(__file__).resolve().parents[1].rglob("*.py"):

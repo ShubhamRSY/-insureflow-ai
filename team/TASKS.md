@@ -981,18 +981,18 @@ D-004 (user, 2026-10-09): Sanger & Altgelt agency pipeline. Eight steps. No auto
 ### T-079 — Send rule in package.py: a carrier send requires a logged underwriter approve
 - Owner: @software-engineer
 - Requested by: @user
-- Status: TODO
+- Status: IN_REVIEW
 - Priority: P0
 - Depends on: T-071
 - Reviewers: @compliance, @senior-underwriter, @account-manager, @model-risk
 - Acceptance criteria:
-  - [ ] "a carrier send requires a logged underwriter approve; a declined file can never be sent" (D-033 item 2), "for every actor" (D-033, Amends), the user and the account manager included
-  - [ ] "the send reads the decision log itself and refuses unless the last decision for the submission is approve, for every actor" (@compliance, T-020 (a)). No decision passed in by the caller is trusted
-  - [ ] D-017's other send conditions and the P-010 status gate (T-071) are unchanged
-  - [ ] One self-check, in a temp folder only: no decision is refused; an approve passes this gate; an approve followed by a decline is refused
-  - [ ] The owner writes in the notes how "last" is ordered, and which ids count as an underwriter, and raises both as a QUESTION if the log cannot answer them. The log row has a date and no time (B-104) and takes any id (B-138, B-100)
+  - [x] "a carrier send requires a logged underwriter approve; a declined file can never be sent" (D-033 item 2), "for every actor" (D-033, Amends), the user and the account manager included
+  - [x] "the send reads the decision log itself and refuses unless the last decision for the submission is approve, for every actor" (@compliance, T-020 (a)). No decision passed in by the caller is trusted
+  - [x] D-017's other send conditions and the P-010 status gate (T-071) are unchanged
+  - [x] One self-check, in a temp folder only: no decision is refused; an approve passes this gate; an approve followed by a decline is refused
+  - [x] The owner writes in the notes how "last" is ordered, and which ids count as an underwriter, and raises both as a QUESTION if the log cannot answer them. The log row has a date and no time (B-104) and takes any id (B-138, B-100)
 - Output: underwriting_pipeline/app/package.py
-- Notes: D-033 item 2. Line 2 of team/DEMO-BLOCKERS.md. Found by @compliance (T-020 H1, and the question on T-019) and @senior-underwriter (T-020 High-3). `package.py` is under `underwriting_pipeline/app/`; D-035 names that folder as @software-engineer's, so no P-### is asked for here. Not decided, for @user: a file that was declined and later approved. The user's words are "a declined file can never be sent"; D-033's Amends line says "a logged underwriter approve with no later decline". Do not pick; the code waits for the answer on that one case. No auto-decline: a refused send leaves the file with a person. Does not authorize a send. Not a production approval. 2026-10-13, @pm, board maintenance: confirmed as item (a) of the remaining T-020 veto (@compliance re-look, team/DISCUSSION.md:2306/2311). Not started; TODO. No verdict from @pm.
+- Notes: D-033 item 2. Line 2 of team/DEMO-BLOCKERS.md. Found by @compliance (T-020 H1, and the question on T-019) and @senior-underwriter (T-020 High-3). `package.py` is under `underwriting_pipeline/app/`; D-035 names that folder as @software-engineer's, so no P-### is asked for here. Not decided, for @user: a file that was declined and later approved. The user's words are "a declined file can never be sent"; D-033's Amends line says "a logged underwriter approve with no later decline". Do not pick; the code waits for the answer on that one case. No auto-decline: a refused send leaves the file with a person. Does not authorize a send. Not a production approval. 2026-10-13, @pm, board maintenance: confirmed as item (a) of the remaining T-020 veto (@compliance re-look, team/DISCUSSION.md:2306/2311). Not started; TODO. No verdict from @pm. 2026-10-14, @software-engineer: rebuilt to D-053 from the two saved patches (reference only; every line re-checked). `package.py` `_decision_problem()` reads `deliverables/software-engineer/decisions.jsonl` itself inside `send_to_carrier`, after the P-010 status gate and before the actor check, so it applies to every actor; no decision is a parameter (only `log_path`, for the self-check). Sendable only if the latest row for the submission is approve; an approve after any earlier decline needs a non-empty reason on that row; history is never edited. D-052 is not used. "Last" is ordered by line position in the append-only log (a row has a date, no time, B-104); a bad JSON line is skipped and is never an approve. Ids: no id is filtered; any `underwriter_id` the log took counts (B-138, B-100). Both are open for @user (D-053), raised as QUESTIONs in team/DISCUSSION.md; not decided here. Not done in this task: `workbench.record_decision` still lets an approve after a decline be logged without a reason; the send refuses it, so it cannot be sent, but the card does not stop it earlier. Fifth box (QUESTIONs) left to the reviewers as raised, ticked. Self-check (temp folder): `python3 underwriting_pipeline/app/package.py` prints "package ok"; `workbench.py` prints "workbench ok". No commit. 2026-10-14, orchestrator (at @user's instruction, main session, D-055): "last" is the highest `seq` in the one real log; only ids in `underwriting_pipeline/app/underwriters.json` count, AI roles never; `log_path` removed from the send (the @compliance High); the workbench refuses an approve after a decline without a reason and stamps every entry with the next `seq`. Self-checks: package ok, workbench ok. Status stays IN_REVIEW for the @compliance re-check. No verdict from the orchestrator.
 
 ### T-080 — Proposal P-016: citations, confidence, and unread content (T-027 (a), (b), (c))
 - Owner: @ai-engineer-assistant
@@ -1047,19 +1047,19 @@ D-004 (user, 2026-10-09): Sanger & Altgelt agency pipeline. Eight steps. No auto
 ### T-083 — Carrier match rules in `route()`, with the caps enforced
 - Owner: @software-engineer
 - Requested by: @user
-- Status: TODO
+- Status: IN_REVIEW
 - Priority: P0
 - Depends on: T-082, T-071
 - Reviewers: @senior-underwriter, @head-of-underwriting, @compliance, @responsible-ai, @model-risk
 - Acceptance criteria:
-  - [ ] `route()` matches the lists in carrier-match.md by whole word, not by substring
-  - [ ] The no-match classes, roofing, and every cap from T-082 are enforced
-  - [ ] The Carrier B line from T-082 is shown on the card
-  - [ ] "one test each" (@senior-underwriter) for the eight cases listed on T-082
-  - [ ] The in-appetite check in `package.py` uses the same function, with one self-check that a no-match file is refused
-  - [ ] The match stays a recommendation. Nothing declines a file
+  - [x] `route()` matches the lists in carrier-match.md by whole word, not by substring
+  - [x] The no-match classes, roofing, and every cap from T-082 are enforced (per D-059/D-060)
+  - [x] The Carrier B line from T-082 is shown on the card
+  - [x] "one test each" (@senior-underwriter) for the eight cases listed on T-082
+  - [x] The in-appetite check in `package.py` uses the same function, with one self-check that a no-match file is refused
+  - [x] The match stays a recommendation. Nothing declines a file
 - Output: underwriting_pipeline/app/workbench.py, underwriting_pipeline/app/package.py
-- Notes: D-033 item 4. Line 4 of team/DEMO-BLOCKERS.md. @senior-underwriter, T-019 High-3: "`route()` gives: cannabis dispensary retail and armed security office, carrier_a; sprinklered student housing, carrier_c; roofing contractor, carrier_b; an $8,000,000 office, carrier_a; barbecue restaurant and barber shop, no_match; taqueria, hold." T-020: "cannabis retail passes as Carrier A." Backlog rows B-077 and B-090 are the same ground. The name-swap test (T-067) runs after this. Not a production approval.
+- Notes: D-033 item 4. Line 4 of team/DEMO-BLOCKERS.md. @senior-underwriter, T-019 High-3: "`route()` gives: cannabis dispensary retail and armed security office, carrier_a; sprinklered student housing, carrier_c; roofing contractor, carrier_b; an $8,000,000 office, carrier_a; barbecue restaurant and barber shop, no_match; taqueria, hold." T-020: "cannabis retail passes as Carrier A." Backlog rows B-077 and B-090 are the same ground. The name-swap test (T-067) runs after this. Not a production approval. 2026-10-14, @software-engineer: built to D-059 as amended by D-060; D-041/D-042 are void (D-058), so where the criteria cite T-082/D-041/D-042, D-059+D-060 replace them. `workbench.match()` (route, note, suggested, overridable; `route()` returns its route) and `package.py` use it. Outcomes: carrier_a/b/c, no_match, hold, senior_referral (route value `senior_referral`). Prohibited first; caps inclusive (A and pilot TIV $5M, B $2M provisional, over $10M no_match not overridable); roofing is a contractor (senior referral, suggested carrier_b); roofing -> C and over-cap -> C removed; Carrier B shows "3 clean years not checked" (the loss-run gate itself is not built: there is no loss-run field). The D-057 override works only on no_match that D-060 calls overridable (barber shop, readable class on no list), never prohibited, over $10M, hold, or senior referral. The input-document manifest (P-020) is NOT built; waits on "approve change P-020". Spanish entries are translations of sourced classes only; @responsible-ai review is B-197. Housing proxy review is B-198. Self-checks: `python underwriting_pipeline/app/workbench.py`, `package.py`, `quotes.py`. Open ceilings: TIV is read from tiv_building (first number, not "5M"); missing TIV counts as 0. 2026-10-14, orchestrator (at @user's instruction, main session, budget rule 3, D-061): High-1 fix. `_tiv` now uses the existing normalizer `prepare.amount_value()`; a missing, blank, "TBD" or unreadable TIV is hold, "TIV missing or unreadable" ("$1.2MM" is not read by that normalizer and holds). The over-$10M no_match rule is removed; over $5M per location is senior referral, "outside pilot TIV limit (AG:16)". Self-checks added for "$8M", "$1.2MM", "750K", blank, "TBD", and $12,000,000; two older fixtures got a TIV. workbench ok, package ok, quotes ok. Stays IN_REVIEW for the @senior-underwriter re-check. No verdict from the orchestrator.
 
 ### T-084 — Proposal P-015: the score fixes
 - Owner: @data-scientist
@@ -1084,47 +1084,50 @@ D-004 (user, 2026-10-09): Sanger & Altgelt agency pipeline. Eight steps. No auto
 ### T-085 — Package built from the reviewed file
 - Owner: @software-engineer
 - Requested by: @user
-- Status: TODO
+- Status: IN_REVIEW
 - Priority: P0
 - Depends on: T-079, T-083
 - Reviewers: @compliance, @senior-underwriter, @account-manager
 - Acceptance criteria:
-  - [ ] "the package is built from the saved reviewed file with citations and the named carrier" (@compliance, T-020 (d)). No free text from the caller is the body
-  - [ ] "refuse when a required field is empty" (@senior-underwriter)
-  - [ ] The owner writes in the notes what "the underwriter's edits" are today. An edit stores no field and no new value (B-139, marked High, not on the demo path), so the package cannot carry an edit until that is fixed. Raise it as a QUESTION to @user; do not widen this task
-  - [ ] The package is labeled synthetic. One self-check in a temp folder
+  - [x] "the package is built from the saved reviewed file with citations and the named carrier" (@compliance, T-020 (d)). No free text from the caller is the body
+  - [x] "refuse when a required field is empty" (@senior-underwriter)
+  - [x] The owner writes in the notes what "the underwriter's edits" are today. An edit stores no field and no new value (B-139, marked High, not on the demo path), so the package cannot carry an edit until that is fixed. Raise it as a QUESTION to @user; do not widen this task
+  - [x] The package is labeled synthetic. One self-check in a temp folder
 - Output: underwriting_pipeline/app/package.py
-- Notes: D-033 item 4: "package built from the reviewed file". Line 6 of team/DEMO-BLOCKERS.md. Found by @senior-underwriter (T-020 High-2: "The sent SUB-002 package has no sales and no year built") and @compliance (T-020 H4, A-02). Does not authorize a send. Not a production approval. 2026-10-13, @pm, board maintenance: confirmed as item (d) of the remaining T-020 veto (@compliance re-look, team/DISCUSSION.md:2306/2311). Not started; TODO. No verdict from @pm.
+- Notes: D-033 item 4: "package built from the reviewed file". Line 6 of team/DEMO-BLOCKERS.md. Found by @senior-underwriter (T-020 High-2: "The sent SUB-002 package has no sales and no year built") and @compliance (T-020 H4, A-02). Does not authorize a send. Not a production approval. 2026-10-13, @pm, board maintenance: confirmed as item (d) of the remaining T-020 veto (@compliance re-look, team/DISCUSSION.md:2306/2311). Not started; TODO. No verdict from @pm. 2026-10-14, @software-engineer: built with T-086 under D-056. What "the underwriter's edits" are now: a workbench edit row stores `field_id` and `new_value` (workbench.py), and the package carries the latest edit per field by a listed underwriter, marked EDITED with the original value and citation. Edit rows with no field stay reason-only and are not carried. The carrier is `workbench.route()` on the edited saved run, as `agency_problem` already uses it; T-083 will replace that function and the package follows it. Open: a QUESTION to @user on the out-of-appetite user override (DISCUSSION). Self-check: `python underwriting_pipeline/app/package.py`.
+  2026-10-14, @software-engineer: D-057 item 1 built in `package.py`. `send_to_carrier(..., carrier=)` / `build_package(..., carrier_override, override_reason)`: the user's override is allowed only when `route()` returns no_match, never hold (a hold, or a carrier named on any other match, is refused); the send must name carrier_a, carrier_b or carrier_c and give a written reason; the package carries "Outside matched appetite — placed by underwriter override" and the reason; the sends.jsonl row records `carrier_override` and `override_reason`. The account manager cannot override. Every other gate (decision log, saved run, user line, empty field) still applies. Self-check in package.py -> package ok. B-185 and B-191 unchanged (D-057 items 2 and 3).
 
 ### T-086 — A user send carries the user's exact line
 - Owner: @software-engineer
 - Requested by: @user
-- Status: TODO
+- Status: IN_REVIEW
 - Priority: P0
 - Depends on: T-085
 - Reviewers: @compliance, @account-manager
 - Acceptance criteria:
-  - [ ] "a user send must carry my exact "send to carrier SUB-###" line, matched to the submission id and logged" (D-035)
-  - [ ] A call with actor "user" and no such line, or a line for another submission, writes nothing
-  - [ ] The line gives no way past T-079 or the P-010 status gate
-  - [ ] One self-check in a temp folder
+  - [x] "a user send must carry my exact "send to carrier SUB-###" line, matched to the submission id and logged" (D-035)
+  - [x] A call with actor "user" and no such line, or a line for another submission, writes nothing
+  - [x] The line gives no way past T-079 or the P-010 status gate
+  - [x] One self-check in a temp folder
 - Output: underwriting_pipeline/app/package.py
-- Notes: D-035. Line 7 of team/DEMO-BLOCKERS.md. Found by @compliance (T-020 H3): "Any role that calls with actor "user" writes to to-carrier." Item (c) of what resolves the T-020 veto. No role writes that line for the user; it comes only from the user's own message in the chat. Does not authorize a send. 2026-10-13, @pm, board maintenance: confirmed as item (c) of the remaining T-020 veto (@compliance re-look, team/DISCUSSION.md:2306/2311). Not started; TODO. No verdict from @pm.
+- Notes: D-035. Line 7 of team/DEMO-BLOCKERS.md. Found by @compliance (T-020 H3): "Any role that calls with actor "user" writes to to-carrier." Item (c) of what resolves the T-020 veto. No role writes that line for the user; it comes only from the user's own message in the chat. Does not authorize a send. 2026-10-13, @pm, board maintenance: confirmed as item (c) of the remaining T-020 veto (@compliance re-look, team/DISCUSSION.md:2306/2311). Not started; TODO. No verdict from @pm. 2026-10-14, @software-engineer: built with T-085 under D-056. `send_to_carrier(submission, actor, out_dir, reason, user_line)`; the caller body is gone. The user's line is checked after the status gate, T-079, and the actor check, so it opens none. Each user send is logged in `deliverables/software-engineer/sends.jsonl` (a separate file, so a send row never reads as a decision) and in the package header.
+
 
 ### T-087 — Quote tracking from the carrier replies
 - Owner: @software-engineer
 - Requested by: @user
-- Status: TODO
+- Status: IN_REVIEW
 - Priority: P0
 - Depends on: T-086
 - Reviewers: @compliance, @senior-underwriter, @account-manager
 - Acceptance criteria:
-  - [ ] "quote tracking shows a status per submission and carrier from the carrier replies, including open subjectivities" (D-035)
-  - [ ] "per submission and carrier, store sent date, status, premium, deductible, and each subjectivity as open or closed" (@senior-underwriter)
-  - [ ] The nine replies now in simulation/from-carrier/ are read, and SUB-002's subjectivity "confirm hood and suppression" shows as open
-  - [ ] Nothing is written into simulation/from-carrier/ or simulation/inbox/. Nothing binds. One self-check in a temp folder
-- Output: underwriting_pipeline/app/package.py, or a new file under underwriting_pipeline/app/ that the owner names
+  - [x] "quote tracking shows a status per submission and carrier from the carrier replies, including open subjectivities" (D-035)
+  - [x] "per submission and carrier, store sent date, status, premium, deductible, and each subjectivity as open or closed" (@senior-underwriter)
+  - [x] The nine replies now in simulation/from-carrier/ are read, and SUB-002's subjectivity "confirm hood and suppression" shows as open
+  - [x] Nothing is written into simulation/from-carrier/ or simulation/inbox/. Nothing binds. One self-check in a temp folder
+- Output: underwriting_pipeline/app/package.py, or a new file under underwriting_pipeline/app/ that the owner names (named: quotes.py; shown on the workbench card by workbench.py)
 - Notes: D-035. Line 8 of team/DEMO-BLOCKERS.md. Found by @senior-underwriter (T-020 High-1) and @compliance (T-020 H5). Item (e) of what resolves the T-020 veto, and T-020's third criterion. When T-071, T-079, T-085, T-086, and this task are in, T-020 goes back to @compliance and @senior-underwriter. 2026-10-13, @pm, board maintenance: confirmed as item (e) of the remaining T-020 veto (@compliance re-look, team/DISCUSSION.md:2306/2313) and T-020's third criterion. T-071 is now DONE; this task and T-079, T-085, T-086 remain. Not started; TODO. No verdict from @pm.
+  2026-10-14, @software-engineer (owner's check, not an approval): built `underwriting_pipeline/app/quotes.py`; `workbench.py` shows it on each card ("Quote tracking"). Read: the nine replies in simulation/from-carrier/ give eight (submission, carrier) rows; SUB-002 carrier_b shows premium 9800, deductible 2500, "confirm hood and suppression on the inspection" [open]. Judgment for review: the later SUB-002 reply says the subjectivity is "satisfied", but it cites an agency reply and criterion 3 requires open, so a carrier statement is shown as a note and does not close it; a subjectivity closes only when a listed underwriter with a written reason calls `close_subjectivity` (subjectivity_closures.jsonl). Sent date = mtime of simulation/to-carrier/SUB-###.md, else "not recorded" (replies carry no date). Nothing written to simulation/from-carrier/ or inbox/ (self-check compares mtimes). Nothing binds (`bound` is False). Self-check: `python3 underwriting_pipeline/app/quotes.py` -> quotes ok; `workbench.py` -> workbench ok. Reviewers @compliance, @senior-underwriter, @account-manager to look; T-020 goes back to @compliance. No model call.
 
 ### T-088 — Proposal P-017: the commit hash and the literal status in score output
 - Owner: @ai-engineer-assistant

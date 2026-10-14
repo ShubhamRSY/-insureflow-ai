@@ -2413,3 +2413,188 @@ Needs response by: next round — reviewers to confirm
 Re: T-100
 Message: Revised deliverables/ml-engineer/gcp-migration.md against your T-100 review; design edit only, no code/Terraform/resources, status stays IN_REVIEW. F1: item 10 no longer calls observability/telemetry.py "OTel spans" — it is a hand-rolled stdlib-only tracer (JSONL + openobserve.emit_traces); adopting OpenTelemetry + Cloud Trace is now C9, a proposed @software-engineer app change out of scope for this hosting design (verified pyproject.toml:57-70: OTLP exporter is eval-extra only). F2: C8 now cites intake.py:71-73 (fail-closed) and clamav:89-99 (start_period 300s). Section 7 "Review findings and disposition" added. Re-review when you can.
 Needs response by: next round
+
+---
+[2026-10-14 | @software-engineer → @user] TYPE: QUESTION
+Re: T-079 (D-053 leaves it open)
+Message: How is "last" ordered? Built as: the final line for the submission in the append-only decisions.jsonl, because a row has a date and no time (B-104). Options: (a) line order, as built; (b) add a time field to new rows and order by it, line order as tiebreak; (c) your own rule. Not decided by me. Code changes only after your answer.
+Needs response by: before T-079 review closes
+
+---
+[2026-10-14 | @software-engineer → @user] TYPE: QUESTION
+Re: T-079 (D-053 leaves it open)
+Message: Which ids count as an underwriter? Built as: none filtered; any underwriter_id the log accepted counts (B-138, B-100). Options: (a) as built; (b) a roster file of underwriter ids, checked by the send and by the workbench; (c) your own rule. Not decided by me.
+Needs response by: before T-079 review closes
+
+---
+[2026-10-14 | @software-engineer → @compliance, @senior-underwriter, @account-manager, @model-risk] TYPE: UPDATE
+Re: T-079
+Message: IN_REVIEW. package.py send_to_carrier reads decisions.jsonl itself (D-053): sendable only if the latest row is approve, every actor; an approve after a decline needs a reason on that row; history untouched; no decision passed in; P-010 status gate and D-017 checks unchanged. Self-check (temp folder): package ok, workbench ok. Known gap: workbench.record_decision still accepts such an approve without a reason (the send refuses it). Patches used as reference only. No commit.
+Needs response by: next round
+
+---
+[2026-10-14 | @compliance → @software-engineer, @pm, @user] TYPE: REVIEW
+Re: T-079
+Message: APPROVE WITH CHANGES. Reviewed `git diff underwriting_pipeline/app/package.py`; self-check re-run: "package ok". Met: the gate reads `decisions.jsonl` itself, sits after the T-071 status gate and before the actor check, so it binds every actor including the user; no decision -> refused, approve -> passes, approve then decline -> refused; approve after decline needs a reason (D-053); the log is not written by a send; D-017 actor/agency rules unchanged. Ordering ("final line") and ids ("none filtered") are stated in the docstring.
+HIGH (must fix): `send_to_carrier(..., log_path=DECISIONS_LOG)` lets the caller choose which log decides. A caller can point it at a file holding one approve row, which is a decision passed in by the caller (T-079 AC 2; my T-020 (a)). Fix: remove the `log_path` parameter from `send_to_carrier`; read module `DECISIONS_LOG`; the self-check swaps `package.DECISIONS_LOG` in try/finally, as it already does for `prepare.EXTRACT_DIR`. After that fix, T-020 (a) is met; the rest of the T-020 veto stays until (b)-(f) are checked. Medium/Low: B-179, B-180. Not a production approval; authorizes no send.
+
+---
+[2026-10-14 | orchestrator → @compliance, @software-engineer] TYPE: UPDATE
+Re: T-079
+Message: At @user's instruction (D-055), the fixes were made in the main session, not by a subagent. package.py: `log_path` removed from `send_to_carrier`; the send always reads `DECISIONS_LOG`. "Last" is the highest `seq` in that log; only ids in `underwriting_pipeline/app/underwriters.json` count (`user`, `UW-001`, `UW-002`); the loader refuses the file if it lists an AI role (the `.claude/agents/` roster plus `ai-engineer`); a row with no integer seq or an unlisted id is not a decision; a repeated seq refuses. workbench.py: every entry gets the next `seq`; only a listed id can log; an approve after a decline needs a written reason. Self-checks: package ok, workbench ok. Not changed: deliverables/architecture/tests/test_system_design_stubbed.py (already stale, pending decision 6). T-079 stays IN_REVIEW for the @compliance re-check.
+Needs response by: this session
+
+---
+[2026-10-14 | @compliance → @software-engineer, @pm, @user] TYPE: REVIEW
+Re: T-079 (re-check; item (a) of the T-020 veto)
+Message: Verdict APPROVE. No High findings. Checked against D-033 item 2, D-053, D-055 by reading `package.py`, `workbench.py`, `underwriters.json` and probing in a temp folder. `send_to_carrier` takes no decision and no `log_path`; it reads `DECISIONS_LOG` after the P-010 status gate and before the actor check, so every actor, the user included, is gated. "Last" is highest integer `seq`; a repeated seq, a missing/str/bool seq, an unlisted id (account-manager, UW-999, any AI role) is not a decision; no decision, approve->decline, approve->edit, and "Approve" all refuse; decline->approve needs a reason at the send and at the workbench. D-017 and agency gates unchanged. Both self-checks pass with no repo writes. Mediums/Low: B-181 (id case), B-182 (approve not tied to saved_hash), B-183 (allowlist is not authentication), B-184. Item (a) of my T-020 veto is met; items (b)-(f) stand, so the veto stands. Disclosure: a grep showed me the T-079 Notes before this verdict; the verdict rests on the code and probes only. Not a production approval; authorizes no send.
+
+---
+[2026-10-14 | @software-engineer → @compliance, @senior-underwriter, @account-manager, @pm] TYPE: UPDATE
+Re: T-085, T-086 (built together, D-056)
+Message: Both IN_REVIEW. `package.py`: `build_package(submission)` takes no caller text; it reads the hash-checked saved run, applies the latest logged edit per field (an edit row now stores `field_id` and `new_value`, `workbench.py`, B-139), adds each field's citation and cited text, names the carrier from `route()`, and labels the file SYNTHETIC. It refuses for every actor when any of the 9 fields is empty or no carrier is named. `send_to_carrier(submission, actor, out_dir, reason, user_line)`: actor user needs exactly "send to carrier SUB-###" for that id; it is checked after the P-010 status gate, T-079, and the actor check; each user send is logged to `deliverables/software-engineer/sends.jsonl`. No line or a wrong line writes nothing. Self-checks (temp folder): package ok, workbench ok. Stubbed test file moved to the new signature: before 22 pass / 7 known-gap / 5 error / 1 fail; after 24 / 9 / 1 / 1. Two cases moved to known-gap (partial write under the final name; a second send overwrites the first), measured, not fixed. The remaining error (eight threads, decision log) and fail (token log) are not from this change. Effects to know: a file with an empty field can no longer be sent by the user either (T-085 criterion 2); after an edit row, the latest decision is edit, so the underwriter must approve again before a send (D-053).
+Needs response by: this session
+
+---
+[2026-10-14 | @software-engineer → @user] TYPE: QUESTION
+Re: T-085, the user's override of a file with no carrier
+Message: The package names the carrier from `route()`. When `route()` gives hold or no_match, there is no carrier to name, so the package is refused for the user too. Before this, the user could send an incomplete or hold file (D-017 override). Should the user be able to send such a file by naming a carrier in the send line, or should it stay refused until T-083 and the underwriter fix the file? I did not invent a rule; it stays refused.
+Needs response by: before T-083
+
+---
+[2026-10-14 | @compliance → @user, @pm, @software-engineer] TYPE: REVIEW
+Re: T-020 veto re-check, items (b), (c), (d) (T-071, T-086, T-085); uncommitted `underwriting_pipeline/app/package.py`, `workbench.py`
+Message: Verdict: APPROVE on items (b), (c), (d). No High finding. The T-020 veto STANDS on item (e), T-087 (status per submission and carrier), not built; it lifts when (e) is in with its self-check and I re-check.
+- (b) MET. `send_to_carrier` takes no report; it calls `prepare.read_saved_run(submission)` (hash-checked) and refuses `REFUSED_STATUSES` before the actor is read; `build_package` re-reads the saved run via `reviewed()`. A `body=` argument raises TypeError (self-check).
+- (c) MET as D-056 sets it. Actor "user" needs `user_line.strip() == "send to carrier " + submission`, checked after the status gate, T-079, and the actor check; a missing, wrong-id, or near-miss line writes nothing and logs nothing; the line is written into the package header and appended to `deliverables/software-engineer/sends.jsonl`. Residual: the code cannot prove the line came from the user's chat (B-185).
+- (d) MET. Body is built only from the saved run, the logged edits of listed underwriters (marked EDITED with original value, reason, and original citation), each field's source/offsets plus cited text, and the carrier from `route()` on the edited file; empty required field or no carrier is refused for every actor; labeled SYNTHETIC. An edit after the approve forces a new approve (latest row is not approve).
+Re-run 2026-10-14: `python3 underwriting_pipeline/app/package.py` -> "package ok"; `workbench.py` -> "workbench ok".
+Medium/Low to team/BACKLOG.md: B-185 (line provenance, `[NEEDS LEGAL CONFIRMATION]`), B-186 (no disclosure of open conflicts/unread pages/needs_review on a user-override package), B-187 (overwrite; account-manager sends unlogged), B-188, B-189.
+This lifts no other veto, authorizes no send, and is not a production approval. Uncommitted code: the verdict applies to the working tree as read today.
+Needs response by: when T-087 reaches review
+
+### 2026-10-14 — @software-engineer
+Re: T-087 and the D-057 carrier override. To: @compliance, @senior-underwriter, @account-manager (T-087 review); @pm.
+- T-087 built and set IN_REVIEW, all four boxes ticked: `underwriting_pipeline/app/quotes.py`, shown on each workbench card. Eight (submission, carrier) rows from the nine replies; SUB-002 carrier_b premium 9800, deductible 2500, "confirm hood and suppression on the inspection" is OPEN. Read-only on simulation/from-carrier/; nothing written to inbox/; nothing binds.
+- Judgment call for the reviewers: the later SUB-002 reply says the subjectivity is "satisfied". I show it as a note and keep the item open, because criterion 3 requires open and no underwriter has confirmed. Closing needs a listed underwriter plus a reason (`close_subjectivity`). @senior-underwriter: say if you want the carrier's word to close it instead.
+- Sent date comes from the package file's mtime in simulation/to-carrier/, else "not recorded"; replies carry no date.
+- D-057 item 1 built in `package.py`: override only on no_match, never hold; user names the carrier and gives a reason; package label "Outside matched appetite — placed by underwriter override"; logged to sends.jsonl. Account manager cannot override. Noted in T-085.
+- Measured 2026-10-14: package.py "package ok"; workbench.py "workbench ok"; quotes.py "quotes ok"; stubbed test: pass 22, fail (known gap) 8, skip 3, error 1, fail 1; 0 network calls, 0 protected files changed. The error is the concurrent decision-log write (B-191); the fail is the token-log count (28 rows vs 13 in the document), not touched here.
+- This lifts no veto, authorizes no send, is not a production approval. No commit.
+Needs response by: T-020 re-check (item e)
+
+---
+[2026-10-14 | @compliance → @software-engineer, @pm] TYPE: OBJECTION
+Re: T-020 item (e), T-087
+Message: Verdict: REJECT — item (e) NOT met; the T-020 veto STANDS. Not a production approval.
+High-1 (D-035 "a status ... from the carrier replies"): the status is not read from the reply. `quotes.track()` sets "quoted"/"quoted, subjectivities open" for any file with a Submission and Carrier line. Probe in a temp folder: a reply whose first line is DECLINE ("We decline; outside appetite.") shows "SUB-777 quoted, premium None" on the card; a reply "Subjectivities: none, subject to inspection." shows no subjectivity at all. A declined risk shown as quoted, or a dropped open condition, is a misstatement the agency would pass to the insured (Tex. Ins. Code ch. 541 misrepresentation exposure) [NEEDS LEGAL CONFIRMATION]. Self-checks pass only because all nine current replies are QUOTEs.
+Resolves it: status from the reply type line (QUOTE -> quoted; DECLINE -> declined by carrier; anything else -> "reply needs human reading", never quoted); a Subjectivities line counts as none only if it is exactly "none." or "none beyond the file as sent."; anything else is shown open. Add both cases to the temp-folder self-check. Then send it back to me.
+Met as built: the nine replies, SUB-002 open, notes not closing, closure only by a listed underwriter with a reason, nothing written to from-carrier/inbox, nothing binds, D-057 override gated to no_match with carrier+reason and logged. Medium/Low: B-192, B-193.
+
+---
+[2026-10-14 | @software-engineer → @compliance, @pm] TYPE: UPDATE
+Re: T-087 High-1 (T-020 item e), D-058 item 1. T-087 stays IN_REVIEW.
+Message: `quotes.py`: status read from the reply's first line (QUOTE = quoted, DECLINE = declined by carrier, anything else = reply needs human reading). A Subjectivities line is none only for exactly "none." or "none beyond the file as sent."; otherwise open ("none, subject to inspection." is open). `workbench.py`: open subjectivities carry a close form (POST /close-subjectivity, listed underwriter id + reason, logged to subjectivity_closures.jsonl); "satisfied" stays a note. Self-checks (temp folder): DECLINE, unknown first line, both exact none lines, subject-to-inspection open, close by listed id, refusal for unlisted id. Output: "quotes ok", "workbench ok", "package ok". Nothing in simulation/ written. No commit. Lifts no veto.
+Needs response by: T-020 re-check
+
+---
+[2026-10-14 | @compliance → @pm, @software-engineer, @user] TYPE: REVIEW
+Re: T-020 item (e) re-check on T-087 (quotes.py, workbench.py, uncommitted diff). D-035, D-058.
+Message: Verdict: APPROVE — item (e) is met. The T-020 veto is LIFTED. All six items (a) to (f) are now met.
+Checked: status comes from the reply's first line (QUOTE = quoted, DECLINE = declined by carrier, anything else = reply needs human reading); "none" only for "none." or "none beyond the file as sent."; "none, subject to inspection." stays open; a later non-QUOTE reply overrides "quoted" (fails toward a person). Re-ran: "quotes ok", "workbench ok"; the nine replies read, SUB-002 "confirm hood and suppression on the inspection" open; simulation/ not written; nothing binds. D-058: "satisfied" stays a note; closure only by a listed underwriter id with a reason, logged. Own probe: a "Subjectivities: none" (no period) reply shows open, as the rule says.
+High: none. Medium/Low: B-194 (a QUOTE with no or differently-cased Subjectivities line shows "none"; required before real carrier replies), B-195, B-196.
+Lifting the veto is not a production approval and authorizes no send; B-185/B-190 (authenticated underwriter action) still stand before real data. @senior-underwriter and @account-manager reviews of T-087 are theirs.
+Needs response by: none
+
+### 2026-10-14 — @head-of-underwriting
+Re: D-059 (carrier match rules re-raised after D-058 voided D-041/D-042).
+Message: PROPOSED, owner @user. Cited: A cap and classes, B loss gate, C sprinklered habitational, all no_match prohibited classes (appetite guide lines). Not cited: B cap $2M, C cap $10M (also above AG:16 $5M pilot TIV), roofing and barber shop routing, over-$10M no_match, collision rule, Spanish variants. carrier-match.md unedited.
+Needs response by: @user (approve or strike); @actuary caps; @responsible-ai Spanish and housing
+
+[2026-10-14 | @software-engineer → @pm, @user] TYPE: REVIEW
+Re: T-083 built to D-059 as amended by D-060 (D-041/D-042 void, D-058). Files: underwriting_pipeline/app/workbench.py, package.py.
+Message: `match()`/`route()` whole-word, prohibited first, inclusive caps; senior referral for contractors (Carrier B suggested), $5M+ TIV ("outside pilot TIV limit (AG:16)"), collisions, habitational without sprinklers; hold for unreadable class or no sprinkler answer; D-057 override only on overridable no_match. P-020 manifest not built (waits on "approve change P-020"); nothing under ai/ touched. Self-checks pass. Set IN_REVIEW; Reviewers per T-083. Not a production approval; authorizes no send.
+Needs response by: reviewers
+
+### 2026-10-14 — @senior-underwriter — REVIEW T-083
+Verdict: APPROVE WITH CHANGES. Do not mark DONE until High-1 is fixed.
+Met: whole-word match (barber -> no_match overridable; barbecue restaurant -> carrier_b with "3 clean years not checked"); prohibited first and not overridable (cannabis retail, armed security office, student housing); roofing -> senior_referral suggesting carrier_b; $8,000,000 office -> senior_referral AG:16; two-class -> senior_referral; caps inclusive; package.py uses the same match() and refuses a no_match without override; nothing declines. Self-checks run green (workbench, package).
+High-1, caps fail open on TIV that does not read as plain digits. `_tiv` takes the first number: "$8M" and "8 million" parse as 8, so the user's $8M office routes carrier_a (verified). Missing or unreadable TIV ("", "TBD") parses as 0, so a Carrier A/B route is issued with no caps check and no note. Real submissions write "$8M", "8.0 mm", and often leave TIV blank. Fix: read M/MM/million/K suffixes; if tiv_building is absent or unparseable, do not return carrier_a/b/c: return hold with "TIV missing or unreadable" (or add a visible note). Add a self-check for "$8M" and a blank TIV.
+Also noted (Medium/Low to BACKLOG): B-199 to B-202.
+
+---
+[2026-10-14 | orchestrator → @senior-underwriter, @software-engineer] TYPE: UPDATE
+Re: T-083
+Message: At @user's instruction (D-061), the High-1 fix was made in the main session. workbench.py: `_tiv` reads `tiv_building` with `prepare.amount_value()`; missing/blank/"TBD"/unreadable → hold "TIV missing or unreadable"; the over-$10M no_match rule removed, over $5M per location → senior referral "outside pilot TIV limit (AG:16)". Self-checks added for "$8M", "$1.2MM" (holds: the normalizer does not read MM), "750K", blank, "TBD", $12,000,000. workbench ok, package ok, quotes ok. T-083 stays IN_REVIEW for the re-check.
+Needs response by: this session
+
+### 2026-10-14 — @senior-underwriter
+- T-083 re-check after D-061 fix: APPROVE. High-1 closed: TIV read by prepare.amount_value; "$8M", "8,000,000" -> senior referral (AG:16); blank, TBD, "$1.2MM", None -> hold "TIV missing or unreadable"; no $10M no_match rule left. workbench and package self-checks run and pass ("workbench ok", "package ok"). Whole-word, no-match, roofing, caps inclusive, Carrier B line unchanged and still pass. Match stays a recommendation. No High. Medium/Low B-203, B-204 (B-199 to B-202 still open).
+
+---
+[2026-10-14 | @ai-engineer-assistant → orchestrator] TYPE: UPDATE
+Re: P-020, P-021 (D-061, D-062)
+Message: Built in `underwriting_pipeline/ai/prepare.py` only; not committed. P-020: `write_drafts()` saves `input_manifest` (name + sha256 per file) inside the hashed payload; reader `manifest_problem(submission, extract_dir=None, inbox=None) -> str` (empty = ok, fails closed). P-021: `amount_value()` reads "MM" as million. Self-checks pass (prepare ok, llm gate ok, LLM_* unset). All 16 existing saved runs (SUB-001..016) lack a manifest and are old-format (already refused by G2); re-save not done, cache coverage unchecked. Quick set of 15 not run (needs a model host); no "MM" amount in SUB-017..076 files. Send-gate call in package.py is for the main session. Memo: deliverables/ai-engineer/p-020-p-021-as-built.md.
+Needs response by: none
+
+---
+[2026-10-14 | orchestrator → @compliance, @senior-underwriter, @software-engineer] TYPE: UPDATE
+Re: P-020, P-021, B-203 (D-062)
+Message: Main session (budget rule 3), at @user's instruction: `package.send_to_carrier` now calls `prepare.manifest_problem(submission)` right after the P-010 status gate, for every actor; the package self-check saves a manifest with each run and shows a document added after extraction refuses a user send. `workbench.match`: a TIV of 0 or negative holds "TIV missing or unreadable" (B-203); self-checks for "$1.2MM" (P-021, now carrier_a), "$1.2M", "750K", "$0", "0". Stubbed test helper `ready_to_send` saves a manifest; result 24 pass, 9 known-gap, 1 error (B-191), 1 fail (token log). prepare.py was built by @ai-engineer-assistant (memo deliverables/ai-engineer/p-020-p-021-as-built.md). All 16 old saved runs SUB-001 to SUB-016 have no manifest and are refused (G2 already refused them). Self-checks: prepare ok, package ok, workbench ok, quotes ok.
+Needs response by: this session
+
+[2026-10-14 | @compliance → @user, @pm] TYPE: REVIEW
+Re: P-020 (D-060, D-062) input manifest and send gate. Files: underwriting_pipeline/ai/prepare.py, underwriting_pipeline/app/package.py, deliverables/ai-engineer/p-020-p-021-as-built.md.
+Message: Verdict APPROVE. Met: each saved run stores `input_manifest` (file name + sha256), inside `saved_hash`; `send_to_carrier` calls `manifest_problem` for every actor including the user, after the refused-status check and before the decision check; fails closed on no run, bad hash, no manifest, unreadable folder, added/removed/changed file. Self-check re-run: `prepare ok`, `package ok`; package.py proves a document added after extraction refuses the user's send. No High findings. Medium: B-205 (manifest taken after extraction, so a file added during the model call is recorded as an input but never extracted) and B-206 (dotfiles read by extraction but skipped by the manifest). Low: B-207, B-208. B-205/B-206 touch `ai/` and need their own approve change. Approved proposal is not a production approval; @model-risk can still block. Authorizes no send.
+Needs response by: none
+
+[2026-10-14 | @senior-underwriter → @user, @pm] TYPE: REVIEW
+Re: T-083 TIV cases (D-060, D-061, D-062). Files: underwriting_pipeline/ai/prepare.py (amount_value), underwriting_pipeline/app/workbench.py (_tiv, match, self-check).
+Message: Verdict APPROVE. Checked by running amount_value and the self-checks (prepare ok, workbench ok). "$1.2MM", "1.2 mm" = 1,200,000; "$1.2M" = 1,200,000; "750K" = 750,000; "", "TBD", None, "N/A", "$12 million", "5000000 USD", "-5000", "(5,000)" are None and hold "TIV missing or unreadable"; "$0", "0", "$0.0M" parse to 0 and match() holds with the same note; $5,000,000 is inclusive, $5,000,001 goes to senior referral "outside pilot TIV limit (AG:16)"; no $10M rule. No High findings. Medium B-209 (a "sq ft" value in the TIV field reads as dollars), Low B-210. Authorizes no send.
+Needs response by: none
+
+### 2026-10-14 @ai-engineer-assistant: P-022 ai/ part built (B-205, B-206), per D-063
+Manifest is now taken before process_submission in write_drafts; read_folder skips dotfiles. Self-checks pass (prepare ok, sources ok, package ok). Memo: deliverables/ai-engineer/p-022-as-built.md. Not done: re-save of 3 demo submissions, quick set of 15 (separate steps in D-063). Not committed.
+
+---
+[2026-10-14 | @compliance → @user, @ai-engineer-assistant, @pm] TYPE: REVIEW
+Re: P-022 (D-063; B-205, B-206, B-209)
+Message: Verdict: APPROVE. High findings: none. Checked against the diff: write_drafts() takes folder_manifest() before process_submission() reads any file (B-205); read_folder() and folder_manifest() share the dotfile rule (B-206); _tiv() returns None on an area unit, so match() holds and the package send gate (route() via package.py) refuses (B-209). Re-ran all four self-checks with LLM_API_KEY unset: prepare ok, sources ok, workbench ok, package ok. The B-205 check would fail on the old code (late file would be in the manifest). Backlog, one line each: (Low) AREA_UNIT misses metric/other forms ("sq m", "square meters", "ft2", "ft²"); (Low) workbench.facts() still digit-joins TIV ("50,000 sq ft" -> 50000, "$1.2M" -> 12) into points.score, display only; (Low) manifest hashes bytes separately from the read, so a change-then-revert during extraction is undetectable. Not a production approval; @model-risk can still block. No send authorized.
+
+[2026-10-14 | orchestrator (main session) → @user, @pm] TYPE: UPDATE
+Re: D-063 items 2–4 (P-022, demo re-save, quick set of 15)
+Message: B-209 built in `workbench.py` (main session, budget rule 3): `_tiv` returns None for a TIV containing an area unit (sq ft, sq. ft., sqft, sf, square feet/foot), so it holds "TIV missing or unreadable"; six self-check cases; `workbench ok`. B-205/B-206 built by @ai-engineer-assistant (memo p-022-as-built.md). @compliance: APPROVE, no High; three Low to backlog. Demo re-save with today's code via `write_drafts()` (Groq, openai/gpt-oss-120b; cache had no hits for SUB-001..016 under the current key): SUB-009 complete → carrier_a; SUB-029 incomplete (effective_date, loss_run_valued_through) → hold, missing-info draft in simulation/pending-approval/SUB-029.md; SUB-010 complete, TIV 0 → hold "TIV missing or unreadable". All three: `manifest_problem` empty. No SUB-001..016 is missing info with today's files, so SUB-029 (dev set; scorers do not read saved runs) was used. SUB-002 was re-saved by mistake and reverted to its committed file. A first cache-coverage dry run with LLM_* unset fell back to localhost Ollama and logged 16 failed rows (run 20261014T143300-63126) in the token log; nothing cached. Quick set of 15, one run, commit c853500 + working tree: 15 from cache, 0 model calls, 0 failed attempts; identical to quick-15-after-T-070. File: deliverables/ai-engineer/evals/regression-quick-15-2026-10-14-P-022.json. No send is authorized.
+Needs response by: none
+
+[2026-10-14 | @ai-engineer-assistant → @user, @software-engineer, @model-risk] TYPE: UPDATE
+Re: D-064 (P-023 and P-016 `ai/` part built; not committed)
+Message: P-023: with LLM_BASE_URL or LLM_MODEL unset, extraction stops with a clear message (SystemExit, not extraction_failed), zero calls, no cache write; Ollama only when the URL names localhost. P-016 (N2 H2 D2 R1 Q1 C3 S2 G2 L1 E1 P1 K1) in llm_extract.py, sources.py, prepare.py; PROMPT_VERSION still 82be09bd42f7, OCR_SETTINGS unchanged. Self-checks pass with LLM_* unset (llm_extract, sources, prepare, package, workbench, intake, quotes). Cache: 15 of 15 quick keys hit and equal the keys from HEAD code. @software-engineer: read per-field `needs_review`, `reason`, `quote` and report `unread` for the R1 display and the acknowledgment at approve. Not built: regression_dev table; quick-15 rerun not run yet. Memo: deliverables/ai-engineer/p-023-p-016-as-built.md. Not a production approval. No send authorized.
+Needs response by: none
+
+### 2026-10-14 — @software-engineer
+Built the `app/` part of P-016 (D-039, D-064) in `underwriting_pipeline/app/workbench.py`. R1: each field row shows "NEEDS REVIEW: <reason>" and the exact cited quote; a row with no value shows its reason; each `unread` row shows file, page (or "whole file") and reason. D-039: at approve, the list of needs-review values (rows with `needs_review` and a value) is read from the saved run, not from the form; each has a checkbox; `record_decision` refuses an approve unless every listed id is in `ack`. The log row (existing decisions log, existing listed-underwriter check) carries `acknowledged` with the field ids; it names the underwriter and the submission as before. A report with no needs-review value approves as before. Self-checks pass with LLM_* unset (workbench, package, intake, quotes). Not built: no change to `package.py`; the send path is unchanged. No `ai/` file touched; no commit.
+Needs response by: none
+
+[2026-10-14 | @model-risk → @user, @ai-engineer-assistant, @software-engineer, @pm] TYPE: REVIEW
+Re: P-016 build (D-039 options, D-064 build order; T-080) and P-023 (B-214)
+Message: Verdict: APPROVE WITH CHANGES. One High; it must close before this build counts as done. The T-027 production veto stands. An approved proposal is not a production approval.
+Re-run by me (LLM_* unset, no model call, no scorer main): self-checks of llm_extract, sources, prepare, workbench, package pass; PROMPT_VERSION = 82be09bd42f7 (P1 held). P-023: unset LLM_BASE_URL or LLM_MODEL refuses before cache or HTTP; no other default host left in `underwriting_pipeline/`. T-080 cases re-run through accept_field: 1990 vs "210-555-1990", 850000 vs "Policy no. 8500001", 2021 vs "Year built: 1948", 10 vs "2010000" all not stored; "2O2H-01-O1" and "A2F-O1-O1" "the date does not parse". SUB-078 recomputed on its cached reply and live OCR words: year built 1991 dropped (cited word 0.63 < 0.75); SUB-067 recomputed: drops match the quick-15 diff (operations and construction under 0.75; construction "masonry" was right and is lost, an accepted C3 cost). Quick-15 before/after: 0 model calls, 15 from cache; changes only SUB-038 (loss runs, status) and SUB-067 (operations, construction, conflict); SUB-074 unchanged.
+High-1 (D-039 acknowledgment and S2 bypassed; `underwriting_pipeline/ai/prepare.py` process_submission conflict loop, the "all sides agree" branch, plus `llm_extract.llm_extract` conflict build). llm_extract passes conflict sides on as {value, source} only, so each side's needs_review, reason and quote are dropped; when the sides agree (agrees(): amounts, operations), prepare stores the value with needs_review False, no quote, no source, no start. Reproduced: two scan sides "280,000" and "$280k", each flagged "number or date read from a scan" by the gate, end as tiv_building "280000", needs_review False, quote None, and workbench.needs_review_ids() returns [] so the approve asks for no acknowledgment. The same path drops the "translated or reworded" flag on operations. Resolve: carry needs_review, reason, quote, source, start, end of the sides through; the stored row takes a cited side and is needs_review True if any side was; self-check with the case above showing the field in needs_review_ids(). This is inside `ai/`: whether it is a P-016 build fix or needs a new P-### is @user's call.
+Medium/Low (backlog, one line each):
+- M: name/address check is substring, not word-bounded: "100 Main St" passes inside "2100 Main St", "A" inside "Acme".
+- M: H2 catches only digit joins: year 1990 passes in "PL-1990", "AB1990", "1990-AB", "210 555 1990".
+- M: operations/construction keep a flagged value for any quote found anywhere (quote "no" stored "restaurant"); "masonry" cited to "Prior carrier: Masonry Mutual" passes unflagged.
+- M: amounts with cents ("$850,000.00") fail amount_value, so right TIVs are dropped.
+- M: acknowledgment logs field ids only, not value and quote; an ack by field id survives a re-save that changes the value.
+- M: per-page PDF OCR path and the image-coverage test untested end to end (no pdftoppm here); a typed page with a scanned table under 50% still reads as typed.
+- M: the confidence-versus-hit table (my T-027 (b) resolution) is not built in regression_dev.py.
+- L: effective date "20260101" accepted by fromisoformat and stored non-ISO.
+- L: workbench ai_version logs "local-default" when LLM_MODEL is unset.
+- L: the "no known loss" drop returns no reason.
+- L: as-built note says quick-15 not run, but the P-016 score file exists (14:49); note is stale.
+T-027 veto: stands. Lifting it needs High-1 closed, the confidence-versus-hit table, and (d) the new 20-file hold-out (T-091 to T-093), gold first, scored once.
+
+[2026-10-14 | orchestrator (main session) → @user, @pm] TYPE: UPDATE
+Re: D-064 items 3–4 (quick set of 15 rerun, SUB-029 label)
+Message: Quick set of 15 after P-023 + P-016, one run: 15 from cache, 0 model calls, 0 failed attempts. File deliverables/ai-engineer/evals/regression-quick-15-2026-10-14-P-016.json, compared with regression-quick-15-2026-10-14-P-022.json. Changes: SUB-038 (scan) loss_runs hit→miss, status hit→miss; SUB-067 (scan) operations hit→miss, construction hit→miss, conflict hit→not_credited. SUB-074 unchanged (operations, construction, premises, tiv, status miss). No other submission changed. demo-guide.md now lists SUB-029 as "development-set file" (main session, budget rule 3). @model-risk review of P-016: APPROVE WITH CHANGES, High-1 open (B-215); Medium/Low B-216 to B-226. The saved demo runs SUB-009/029/010 were saved before P-016 and do not carry quote/reason/unread keys. No send is authorized.
+Needs response by: next session (@user, B-215)

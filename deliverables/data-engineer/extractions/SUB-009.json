@@ -1,10 +1,23 @@
 {
   "submission": "SUB-009",
+  "status": "complete",
+  "error": null,
+  "complete": true,
+  "conflicts": [],
+  "needs_human": [],
+  "sprinklers": "yes",
+  "model_version": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "ocr_settings": "tesseract psm6; osd turn; deskew +-12; rule lift; x2 lanczos; pdf 200dpi",
+  "host": "api.groq.com",
+  "temperature": 0,
   "fields": [
     {
       "field_id": "named_insured",
       "value": "Frio Paper Wholesale LLC",
       "source": "application.md",
+      "confidence": 1.0,
+      "needs_review": false,
       "start": 15,
       "end": 39
     },
@@ -12,6 +25,8 @@
       "field_id": "premises_address",
       "value": "1800 Factor St, San Antonio, TX 78208",
       "source": "application.md",
+      "confidence": 1.0,
+      "needs_review": false,
       "start": 58,
       "end": 95
     },
@@ -19,6 +34,8 @@
       "field_id": "effective_date",
       "value": "2027-03-01",
       "source": "application.md",
+      "confidence": 1.0,
+      "needs_review": false,
       "start": 112,
       "end": 122
     },
@@ -26,6 +43,8 @@
       "field_id": "operations",
       "value": "light wholesale, paper goods, no cold storage",
       "source": "application.md",
+      "confidence": 1.0,
+      "needs_review": false,
       "start": 150,
       "end": 195
     },
@@ -33,6 +52,8 @@
       "field_id": "sales_or_payroll",
       "value": "2400000",
       "source": "application.md",
+      "confidence": 1.0,
+      "needs_review": false,
       "start": 214,
       "end": 221
     },
@@ -40,6 +61,8 @@
       "field_id": "tiv_building",
       "value": "4100000",
       "source": "application.md",
+      "confidence": 1.0,
+      "needs_review": false,
       "start": 236,
       "end": 243
     },
@@ -47,6 +70,8 @@
       "field_id": "construction",
       "value": "noncombustible",
       "source": "application.md",
+      "confidence": 1.0,
+      "needs_review": false,
       "start": 258,
       "end": 272
     },
@@ -54,6 +79,8 @@
       "field_id": "year_built",
       "value": "1995",
       "source": "application.md",
+      "confidence": 1.0,
+      "needs_review": false,
       "start": 285,
       "end": 289
     },
@@ -61,9 +88,30 @@
       "field_id": "loss_run_valued_through",
       "value": "2026-08-31",
       "source": "loss-runs.md",
+      "confidence": 1.0,
+      "needs_review": false,
       "start": 56,
       "end": 66
     }
   ],
-  "conflicts": []
+  "input_manifest": [
+    {
+      "name": "application.md",
+      "sha256": "8d323ef4f53f0d08bf1c1fa8a13b38b8b5aaeac446be48ffff6e292cae6f8dea"
+    },
+    {
+      "name": "email.md",
+      "sha256": "f32d364ae6035abb46a8caed4ca6b5b3c8f7f410afdab2c109772048746add54"
+    },
+    {
+      "name": "loss-runs.md",
+      "sha256": "a0161d07033b566355efc64aacf1cbcedfd17d4e17a4dfe06662b9e43ea04416"
+    },
+    {
+      "name": "schedule.csv",
+      "sha256": "bb117dd614392f75cc258a8a200235ab31acc18fd46ecbbf32619b160fee079c"
+    }
+  ],
+  "hash_algorithm": "sha256",
+  "saved_hash": "f600f099273614099211dc7228eefca3cdeeca9b391fc92227e3adef43bbceef"
 }

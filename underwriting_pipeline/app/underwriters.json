@@ -1,0 +1,8 @@
+{
+  "note": "D-055: only these ids count as an underwriter on the decision log. The user plus named synthetic underwriters. AI roles never count; package.underwriters() refuses this file if one is listed.",
+  "underwriters": [
+    {"id": "user", "name": "the AI Engineer (the user)"},
+    {"id": "UW-001", "name": "Dana Reyes (synthetic)"},
+    {"id": "UW-002", "name": "Sam Okafor (synthetic)"}
+  ]
+}

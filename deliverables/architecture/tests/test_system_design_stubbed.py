@@ -228,6 +228,28 @@ def spread(values: list[float]) -> dict:
     }
 
 
+def ready_to_send(tmp: Path):
+    """D-056: a send now reads its own saved run, decision log, and cited fields. Save a good run and an approve in tmp.
+    Returns a restore function; the module paths point at tmp until it is called."""
+    host()
+    report = prepare.process_submission(make_sub(tmp / "inbox", "SUB-T0001"))
+    payload = prepare._saved_payload(report)
+    payload["submission"] = "SUB-T0001"
+    payload["input_manifest"] = prepare.folder_manifest(tmp / "inbox" / "SUB-T0001")  # P-020 (D-062)
+    payload["hash_algorithm"] = prepare.HASH_ALGORITHM
+    payload["saved_hash"] = prepare.hash_payload(payload)
+    (tmp / "extractions").mkdir()
+    (tmp / "extractions" / "SUB-T0001.json").write_text(json.dumps(payload))
+    (tmp / "decisions.jsonl").write_text(json.dumps({"seq": 1, "submission": "SUB-T0001", "action": "approve", "underwriter_id": "user", "reason": ""}) + "\n")
+    saved = (prepare.EXTRACT_DIR, package.DECISIONS_LOG, package.SENDS_LOG, package.INBOX, prepare.INBOX_DIR)
+    prepare.EXTRACT_DIR, package.DECISIONS_LOG, package.SENDS_LOG, package.INBOX, prepare.INBOX_DIR = tmp / "extractions", tmp / "decisions.jsonl", tmp / "sends.jsonl", tmp / "inbox", tmp / "inbox"
+
+    def restore():
+        prepare.EXTRACT_DIR, package.DECISIONS_LOG, package.SENDS_LOG, package.INBOX, prepare.INBOX_DIR = saved
+
+    return restore
+
+
 class Skip(Exception):
     pass
 
@@ -446,7 +468,8 @@ def a_cut_line_in_the_token_log_is_skipped_and_the_next_row_is_whole(tmp, clock,
 @case("failure", "target", "package.py:77-80 (plain write_text)")
 def a_run_killed_during_the_send_write_leaves_no_partial_package(tmp, clock, m):
     out = tmp / "to-carrier"
-    body = package.build_package("SUB-T0001", "SYNTHETIC office. " * 40)
+    restore = ready_to_send(tmp)
+    body = package.build_package("SUB-T0001")
     real_write = pathlib.Path.write_text
 
     def cut(self, data, *args, **kwargs):
@@ -455,11 +478,12 @@ def a_run_killed_during_the_send_write_leaves_no_partial_package(tmp, clock, m):
 
     pathlib.Path.write_text = cut
     try:
-        package.send_to_carrier("SUB-T0001", "user", out, body)
+        package.send_to_carrier("SUB-T0001", "user", out, user_line="send to carrier SUB-T0001")
     except KeyboardInterrupt:
         pass
     finally:
         pathlib.Path.write_text = real_write
+        restore()
     left = out / "SUB-T0001.md"
     m.update(file_exists=left.exists(), bytes_left=left.stat().st_size if left.exists() else 0, bytes_whole=len(body) + len("Sent-by: user (override)\n\n"))
     assert not left.exists(), f"a half-written package of {left.stat().st_size} bytes sits under the final name in to-carrier"
@@ -468,13 +492,18 @@ def a_run_killed_during_the_send_write_leaves_no_partial_package(tmp, clock, m):
 @case("failure", "target", "G10; package.py:77,80")
 def a_second_send_does_not_replace_the_first(tmp, clock, m):
     out = tmp / "to-carrier"
-    package.send_to_carrier("SUB-T0001", "user", out, package.build_package("SUB-T0001", "SYNTHETIC first package"))
+    restore = ready_to_send(tmp)
     try:
-        package.send_to_carrier("SUB-T0001", "user", out, package.build_package("SUB-T0001", "SYNTHETIC second package"))
-        refused = False
-    except ValueError:
-        refused = True
-    kept = any("first package" in path.read_text() for path in out.iterdir())
+        package.send_to_carrier("SUB-T0001", "user", out, user_line="send to carrier SUB-T0001")
+        first = (out / "SUB-T0001.md").read_text()
+        try:
+            package.send_to_carrier("SUB-T0001", "user", out, reason="second send", user_line="send to carrier SUB-T0001")
+            refused = False
+        except ValueError:
+            refused = True
+    finally:
+        restore()
+    kept = any(path.read_text() == first for path in out.iterdir())
     m.update(second_send_refused=refused, first_package_still_on_disk=kept, files=sorted(path.name for path in out.iterdir()))
     assert refused or kept, "the second send overwrote the first and no record of the first is left"
 
@@ -522,12 +551,11 @@ def a_saved_reply_400_days_old_is_served_with_no_call(tmp, clock, m):
 
 @case("send", "as-is", "D-017; package.py:61-63; prepare.py:676-678")
 def no_ai_role_can_send_or_approve(tmp, clock, m):
-    body = package.build_package("SUB-T0001", "SYNTHETIC")
     draft = tmp / "SUB-T0001.md"
     draft.write_text("Nothing has been declined.\n")
     refused = 0
     for role in ("ml-engineer", "ai-engineer-assistant", "software-engineer", "orchestrator", ""):
-        for call in (lambda: package.send_to_carrier("SUB-T0001", role, tmp / "to-carrier", body), lambda: prepare.approve(draft, role, tmp / "to-producer")):
+        for call in (lambda: package.send_to_carrier("SUB-T0001", role, tmp / "to-carrier", user_line="send to carrier SUB-T0001"), lambda: prepare.approve(draft, role, tmp / "to-producer")):
             try:
                 call()
             except ValueError:
@@ -539,11 +567,10 @@ def no_ai_role_can_send_or_approve(tmp, clock, m):
 def a_failed_file_is_refused_for_the_user_and_the_account_manager_when_the_report_is_passed(tmp, clock, m):
     host(handler=lambda request: http(500, "stub: boom"))
     report = prepare.process_submission(make_sub(tmp / "inbox", "SUB-T0001"))
-    body = package.build_package("SUB-T0001", "SYNTHETIC")
     refused = 0
     for actor in ("user", "account-manager"):
         try:
-            package.send_to_carrier("SUB-T0001", actor, tmp / "to-carrier", body, reason="ready", report=report)
+            package.send_to_carrier("SUB-T0001", actor, tmp / "to-carrier", reason="ready", user_line="send to carrier SUB-T0001")
         except ValueError:
             refused += 1
     assert report["status"] == "extraction_failed" and refused == 2 and not (tmp / "to-carrier").exists()
@@ -555,7 +582,7 @@ def a_failed_file_is_refused_when_the_caller_leaves_the_report_out(tmp, clock, m
     report = prepare.process_submission(make_sub(tmp / "inbox", "SUB-T0001"))
     assert report["status"] == "extraction_failed"
     try:
-        dest = package.send_to_carrier("SUB-T0001", "user", tmp / "to-carrier", package.build_package("SUB-T0001", "SYNTHETIC"))
+        dest = package.send_to_carrier("SUB-T0001", "user", tmp / "to-carrier", user_line="send to carrier SUB-T0001")
     except ValueError:
         return
     m.update(written=dest.name)
@@ -568,7 +595,7 @@ def a_send_with_no_logged_underwriter_approve_is_refused(tmp, clock, m):
     report = prepare.process_submission(make_sub(tmp / "inbox", "SUB-T0001"))
     m.update(status=report["status"], route=workbench.route(report))
     try:
-        package.send_to_carrier("SUB-T0001", "account-manager", tmp / "to-carrier", package.build_package("SUB-T0001", "SYNTHETIC"), reason="complete office file", report=report)
+        package.send_to_carrier("SUB-T0001", "account-manager", tmp / "to-carrier", reason="complete office file")
     except ValueError as exc:
         m.update(refused_because=str(exc))
         return

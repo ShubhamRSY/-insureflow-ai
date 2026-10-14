@@ -600,3 +600,129 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Status: ACCEPTED
 - Amends: nothing. It adds to D-017 and D-045.
 
+
+## D-055 — T-079: how "last" is ordered, and which ids count as an underwriter
+- Date / Owner: 2026-10-14 / @user
+- Context: D-053 left two T-079 points open (QUESTIONs from @software-engineer, team/DISCUSSION.md, 2026-10-14): how "last" is ordered when a log row has a date and no time (B-104), and which ids count as an underwriter (B-138, B-100, B-179).
+- Options considered: line order, a time field, or a sequence number; any id, or a list of underwriter ids.
+- Decision: In the user's words. "'last' decision = highest sequence number in the one real decision log (add a sequence number to every entry), never timestamps. Underwriter ids = only ids listed in a config file of underwriters (me plus named synthetic underwriters); AI roles never count." And: "Remove the log_path parameter from the send; it always reads the one real decision log." "The workbench refuses to log an approve after a decline without a written reason."
+- Rationale: The user typed this in this Claude Code session on 2026-10-14.
+- Dissent: none
+- Follow-up tasks: T-079 (built by the orchestrator in the main session at the user's instruction; `underwriting_pipeline/app/underwriters.json` lists `user`, `UW-001`, `UW-002`), then @compliance re-check.
+- Status: ACCEPTED
+- Amends: answers the two points D-053 left open. Not a production approval; lifts no veto; authorizes no send.
+
+## D-056 — T-085 and T-086 built together; underwriter edits in the package; the stubbed test file is @software-engineer's
+- Date / Owner: 2026-10-14 / @user
+- Context: T-085 and T-086 both change `underwriting_pipeline/app/package.py`. T-085's third criterion says an edit stores no field and no new value (B-139), so a package cannot carry an edit, and was to be raised as a QUESTION. Who updates `deliverables/architecture/tests/test_system_design_stubbed.py` was pending.
+- Options considered: none. The user's instruction.
+- Decision: In the user's words. "Build T-085 and T-086 together, since both are in package.py: the package is built from the saved reviewed file with citations, underwriter edits and the named carrier; and a user send requires my exact "send to carrier SUB-###" line as an argument, matched to the submission id and logged. @software-engineer also updates the stubbed test file to the current send signature. Self-checks for each gate."
+- Rationale: The user typed this in this Claude Code session on 2026-10-14.
+- Dissent: none
+- Follow-up tasks: T-085, T-086 (@software-engineer), then @compliance re-check of T-020 items (b), (c), (d).
+- Status: ACCEPTED
+- Amends: T-085 criterion 3 (the package carries the underwriter's edits; the build may make an edit store its field and new value). Answers pending decision 5 (the stubbed test file). Not a production approval; lifts no veto; authorizes no send.
+
+## D-057 — Carrier override on no_match; B-185 a prototype limit; the concurrent log write before pilot
+- Date / Owner: 2026-10-14 / @user
+- Context: @software-engineer's QUESTION on T-085: when `route()` gives hold or no_match there is no carrier to name, so the package is refused even for the user. @compliance B-185: the code cannot prove the send line came from the user. The stubbed test's concurrent decision-log write errors.
+- Options considered: none. The user's rules.
+- Decision: In the user's words. "1. Carrier override: allowed only when route() returns no_match, never hold. My send must name the carrier and give a written reason; the package shows "Outside matched appetite — placed by underwriter override"; all logged. 2. B-185: accepted as a prototype limit. Production requires an authenticated underwriter action (login/SSO, audit log) before any real data. Backlog it as required-before-real-data. 3. The concurrent decision-log write error goes to the backlog as required-before-pilot."
+- Rationale: The user typed this in this Claude Code session on 2026-10-14.
+- Dissent: none
+- Follow-up tasks: the override in `package.py` (@software-engineer, with T-087); B-190 (required before real data); B-191 (required before pilot).
+- Status: ACCEPTED
+- Amends: answers the T-085 QUESTION. No automatic decline and no automatic bind are unchanged. Not a production approval; lifts no veto; authorizes no send.
+
+## D-058 — Subjectivity closing; D-043 confirmed; D-041, D-042, D-044 void
+- Date / Owner: 2026-10-14 / @user
+- Context: T-087 asked whether a carrier's "satisfied" closes a subjectivity. D-041 to D-044 were recorded outside this session and waited for the user's confirmation under D-054.
+- Options considered: none. The user's rules.
+- Decision: In the user's words. "1. Subjectivities: a carrier's "satisfied" never closes one automatically. It is attached as evidence on the workbench, and a listed underwriter closes it with a logged one-click action. 2. D-041 to D-044: confirm D-043 (my P-010 approval). Void D-041, D-042 and D-044 as unverified; re-raise anything still needed as a new decision for me."
+- Rationale: The user typed this in this Claude Code session on 2026-10-14.
+- Dissent: none
+- Follow-up tasks: T-087 (@software-engineer). Re-raise as new decisions for @user, if still needed: the carrier match lists and caps (were D-041, D-042; T-082, T-083 rest on them) and the G2 hash basis and P-018 (were D-044; T-070 was built on that basis).
+- Status: ACCEPTED
+- Amends: D-043 is confirmed. D-041, D-042, and D-044 are void and are not relied on; their text stays unedited as a record. Not a production approval; lifts no veto; authorizes no send.
+
+## D-059 — Carrier match rules re-raised (were D-041, D-042; T-082, T-083)
+- Date / Owner: 2026-10-14 / @user (proposed by @head-of-underwriting)
+- Context: D-058 voided D-041 and D-042 as unverified; the user asked for the rules again, whole-word / class-code, caps per carrier, prohibited classes and bars as no_match, each citing the carrier appetite guide. "CAG" = deliverables/head-of-underwriting/carrier-appetite.md (same text as simulation/carriers.md); "AG" = appetite-guide.md. Full lists and Spanish variants stay in carrier-match.md (not edited here).
+- Decision (PROPOSED):
+  1. Method: whole word or exact phrase, case-insensitive, never substring (`bar` is not in `barber`/`barbecue`). Spanish variants as listed in carrier-match.md; the guides cite none, so they are my addition and need @responsible-ai.
+  2. Carrier A: offices, dry retail, light wholesale; TIV <= $5,000,000 inclusive. Cited CAG:5 (cap and classes); AG:29-31 for class limits. Barber shop and other personal services: no source in a guide (nearest is AG:30 storefront); keep only if you approve.
+  3. Carrier B: restaurants / food service and light contractors; loss gate 3 clean years, a no-known-loss letter never satisfies it. Cited CAG:6, AG:59. Cap $2,000,000: NOT cited, no guide states it, provisional pending @actuary. The light-contractor word list has no source either (AG:38 sends all contractors to senior referral).
+  4. Carrier C: sprinklered habitational (CAG:7). Cap $10,000,000: NOT cited, provisional pending @actuary, and above AG:16 (TIV > $5M per location is out of pilot), so it needs your waiver or a lower cap. Roofing and over-cap offices to C: no source in a guide, my reading only.
+  5. no_match for all three: bars, nightclubs, taverns (AG:46); cannabis (AG:47); fireworks, explosives (AG:48); armed security (AG:49); student and subsidized housing (AG:45, @responsible-ai proxy review still owed). Over $10,000,000 and "readable class on no list": no source, my rule. no_match is a recommendation, never a producer decline (AG:9, AG:57 give the decline to a human).
+  6. hold (not no_match): class unreadable, or habitational with no sprinkler answer; habitational with sprinklers "no" is a senior referral (AG:61).
+  7. Two carriers match: senior referral / hold, never silently the first carrier (no guide source; my rule).
+  8. Caps are inclusive; prohibited classes are checked first. Underwriter chooses; no auto-decline.
+- Rationale: Profitability first; every rule without a source is labeled so you can strike it. Uncited caps must not be enforced as fact until @actuary signs.
+- Dissent (who, why): none recorded; @actuary cap signoff and @responsible-ai housing review not yet obtained.
+- Follow-up tasks: @actuary to confirm B and C caps; @responsible-ai on item 1 Spanish and item 5 housing; then T-083.
+- Status: PROPOSED
+- Amends: replaces void D-041 and D-042. Changes no code. Authorizes no send. Not a production approval.
+
+## D-060 — D-059 approved with changes; hash basis confirmed; input manifest raised as P-020; P-018 parked
+- Date / Owner: 2026-10-14 / @user
+- Context: D-059 (PROPOSED by @head-of-underwriting) re-raised the carrier match rules voided by D-058. The hash basis and P-018 (were D-044) were re-raised to the user in this session.
+- Options considered: none. The user's words.
+- Decision: In the user's words. "approve D-059 with these changes:
+  - Matching approved; Spanish variants allowed only as translations of sourced classes; @responsible-ai review goes to the backlog.
+  - Barber shop: not in Carrier A (no source) → no_match, overridable with a reason under D-057.
+  - Carrier B: $2M cap provisional until @actuary confirms. Contractors follow AG:38: senior referral, with Carrier B shown as the suggested market.
+  - Carrier C: no waiver. Follow AG:16: TIV over $5M per location is outside the pilot → senior referral labelled "outside pilot TIV limit (AG:16)". Remove roofing → C and over-cap offices → C.
+  - $8M office expected result: senior referral, outside pilot TIV limit.
+  - no_match list approved; "readable class on no list" → no_match, overridable with a reason; housing proxy review backlogged as required-before-pilot.
+  - Items 6, 7, 8 approved.
+  Hash basis confirmed as built, plus one addition: each saved run also stores a sha256 manifest of the input documents (file names and content hashes), and the send gate refuses if the current folder manifest differs. This is a small demo-path fix.
+  P-018 stays parked."
+- Rationale: The user typed this in this Claude Code session on 2026-10-14.
+- Dissent: none
+- Follow-up tasks: T-083 (@software-engineer) builds D-059 as amended here. The input manifest is stored by `prepare.write_drafts()` under `underwriting_pipeline/ai/`; per D-017 that change is numbered P-020 and is built only after the user types "approve change P-020". Backlog: B-197, B-198.
+- Status: ACCEPTED
+- Amends: D-059 (accepted as amended above). Confirms the G2 hash basis of T-070 (was D-044). Not a production approval; lifts no veto (the @responsible-ai T-082 veto stands); authorizes no send.
+
+## D-061 — P-020 approved; T-083 TIV reading and the over-$5M rule
+- Date / Owner: 2026-10-14 / @user
+- Context: D-060 raised P-020 (an input-document manifest in each saved run; the send refuses on a mismatch). @senior-underwriter's T-083 High-1: the caps fail open on "$8M" and a blank TIV. The T-083 build made over-$10M a non-overridable no_match, which D-060 did not say.
+- Options considered: none. The user's words.
+- Decision: In the user's words. "approve change P-020" "T-083 fix: TIV is read with the existing number normalizer (the one that handles 220k and $1.2M), not a new parser. Missing, blank, "TBD" or unreadable TIV → hold, "TIV missing or unreadable". Self-checks for "$8M", "$1.2MM", "750K", blank and "TBD". Remove the over-$10M no_match rule: anything over $5M per location is senior referral, "outside pilot TIV limit (AG:16)", as D-060 says."
+- Rationale: The user typed this in this Claude Code session on 2026-10-14.
+- Dissent: none
+- Follow-up tasks: T-083 fix (main session, budget rule 3), then @senior-underwriter re-check. P-020 is approved and not yet built; it needs a build task (@ai-engineer-assistant for `prepare.py`, @software-engineer for the send gate). Note: the existing normalizer, `prepare.amount_value()`, returns None for "$1.2MM", so that value reads as unreadable → hold; widening it is a change under `underwriting_pipeline/ai/` and needs its own approval.
+- Status: ACCEPTED
+- Amends: D-060 (over $5M per location is senior referral; no over-$10M no_match). Approved proposal is not a production approval; @model-risk can still block production. No send is authorized.
+
+## D-062 — Build P-020; P-021 (amount_value reads "MM") approved; B-203 now
+- Date / Owner: 2026-10-14 / @user
+- Context: P-020 was approved in D-061 and not built. `prepare.amount_value()` does not read "MM" (D-061 note). B-203: a TIV of "$0" routes to carrier_a.
+- Options considered: none. The user's words.
+- Decision: In the user's words. "1. Build P-020: each saved run stores a sha256 manifest of the input documents; the send gate refuses if the current folder manifest differs. Self-check: add a new document after extraction → send refused. 2. Normalizer change (number it P-021): amount_value() reads "MM" as million, e.g. "$1.2MM" = 1,200,000. approve change P-021. Self-checks for "$1.2MM", "$1.2M", "750K". 3. B-203 now: TIV of 0 or negative → hold, "TIV missing or unreadable"."
+- Rationale: The user typed this in this Claude Code session on 2026-10-14.
+- Dissent: none
+- Follow-up tasks: P-020 and P-021 in `underwriting_pipeline/ai/prepare.py` (@ai-engineer-assistant); the send gate call in `package.py` and B-203 in `workbench.py` (main session, budget rule 3); @compliance review of P-020; @senior-underwriter check of the TIV cases.
+- Status: ACCEPTED
+- Amends: nothing. An approved proposal is not a production approval; @model-risk can still block production. No send is authorized.
+
+## D-063 — P-022 approved (B-205, B-206, B-209); demo re-save; quick set of 15
+- Date / Owner: 2026-10-14 / @user
+- Context: @compliance on P-020 raised B-205 (manifest taken after extraction) and B-206 (dotfiles read by extraction, skipped by the manifest); @senior-underwriter raised B-209 ("50,000 sq ft" in the TIV field reads as $50,000). B-208: no saved run has a manifest. The quick set of 15 is owed after P-021 (D-022). LLM_BASE_URL and LLM_MODEL are now set in the shell.
+- Options considered: none. The user's words.
+- Decision: In the user's words. "2. P-022 (B-205, B-206, B-209 together): take the document manifest before extraction reads any file; skip dotfiles in both the manifest and extraction; a TIV containing an area unit (sq ft, sf, square feet) → hold. approve change P-022. Self-checks for each. 3. Re-save only the 3 demo submissions with today's code (one clean, one with missing info, one that fails safely); tell me which SUB numbers you picked. 4. Run the quick set of 15 owed under D-022, one run, and report the score field by field. One @compliance review of P-022, High only."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-14 (D-032: pasted text counts).
+- Dissent: none
+- Follow-up tasks: P-022 build and self-checks (@ai-engineer-assistant for `ai/`; B-209 in `workbench.py` main session, budget rule 3); re-save 3 demo submissions; quick set of 15, one run; @compliance review of P-022, High only.
+- Status: ACCEPTED
+- Amends: nothing. An approved proposal is not a production approval; @model-risk can still block production. No send is authorized.
+
+## D-064 — P-023 approved (B-214); build P-016; quick set of 15 rerun; SUB-029 label
+- Date / Owner: 2026-10-14 / @user
+- Context: B-214: with LLM_* unset, extraction fell back to localhost Ollama and made 16 failed calls (D-063 session). P-016 was approved in D-039 (N2 H2 D2 R1 Q1 C3 S2 G2 L1 E1 P1 K1, plus the needs-review acknowledgment at approve) and not built. SUB-029 (development set) is a demo submission (D-063).
+- Options considered: none. The user's words.
+- Decision: In the user's words. "1. B-214 as P-023: if LLM_BASE_URL or LLM_MODEL is unset, extraction refuses with a clear error; no default to localhost. Ollama runs only when LLM_BASE_URL explicitly points to localhost. approve change P-023. Self-check: unset settings → refused, zero calls. 2. Build P-016 (honest citations, scan confidence, unread pages flagged) as approved in D-039, including the needs-review acknowledgment at approve. No prompt change, so re-score on cached results where possible. 3. Rerun the quick set of 15 and compare field by field with today's run, with special attention to SUB-074 and SUB-067. 4. Label SUB-029 in the demo guide as "development-set file". One @model-risk review of P-016, High only."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-14 (D-032).
+- Dissent: none
+- Follow-up tasks: P-023 and the P-016 `ai/` part (@ai-engineer-assistant); the P-016 acknowledgment at approve and the R1 flag display in `underwriting_pipeline/app/` (@software-engineer, D-039); quick set of 15 rerun compared with `regression-quick-15-2026-10-14-P-022.json`; demo-guide label; @model-risk review of P-016, High only.
+- Status: ACCEPTED
+- Amends: nothing. An approved proposal is not a production approval; lifting the T-027 veto is @model-risk's call. No send is authorized.

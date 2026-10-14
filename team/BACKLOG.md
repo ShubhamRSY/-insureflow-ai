@@ -193,3 +193,54 @@ Recorded at closure, not decided by @pm. Two of the three are already in `delive
 | B-153 | T-097 | @compliance | Lifting the T-020 veto (misrepresentation to a carrier; `arch §8.2` items (a)–(f), `package.py`) is @compliance's call, after the package/send build is checked against (a)–(f). The T-097 close does not lift it and is not a production approval. @pm cannot lift a veto. | 2026-10-13 |
 
 Also open from T-097, already in the register's Section D so not repeated as rows here: Q9 — whether D-017 item 3's "complete" was meant for producer requests (changes FR-025, NFR-020) — stays with @user (register D-5); the NFR-058–NFR-061 pilot success-metric and go/no-go numbers are @head-of-underwriting's (register D-2).
+
+| ID | Task | Owner | Follow-up | Date |
+|---|---|---|---|---|
+| B-179 | T-079 | @user | Medium: the D-053 gate counts an approve from any underwriter_id, including an AI-role or account-manager id typed into the workbench; D-017 says no AI role approves. Needs the user's ruling on which ids count (open since D-053). | 2026-10-14 |
+| B-180 | T-079 | @software-engineer | Low: an `edit` after an approve, or a reasonless re-approve after an earlier decline that was already explained, refuses the send. Fails closed; document it for the underwriter. | 2026-10-14 |
+| B-181 | T-079 | @software-engineer | Medium: submission ids match exactly at both log and send; a decline logged as `sub-001` is not seen for `SUB-001`, so an approve without a reason passes (reproduced in a temp log). Normalize the id, or refuse a decision for a submission with no saved run. | 2026-10-14 |
+| B-182 | T-079 | @software-engineer | Medium: an approve is not tied to the saved run (`saved_hash`); after a re-extraction the old approve still opens the send. Record the hash on the approve row and require a match at send. | 2026-10-14 |
+| B-183 | T-079 | @user | Medium: underwriters.json is an id allowlist, not authentication; anyone at the workbench or with write access to decisions.jsonl can log as `user`. Acceptable for the synthetic demo only `[NEEDS LEGAL CONFIRMATION]` before real files. | 2026-10-14 |
+| B-184 | T-079 | @software-engineer | Low: `_LOG_LOCK` is per process; two workbench processes could issue the same seq (the send then fails closed on the repeat). | 2026-10-14 |
+| B-185 | T-086 | @user | Medium: the user's line is a string argument; the code cannot tell whether it came from the user's own chat message, so any caller that types it with actor "user" can write to to-carrier. Provenance is a process control only (D-017, D-056) `[NEEDS LEGAL CONFIRMATION]` before real files. | 2026-10-14 |
+| B-186 | T-085 | @software-engineer | Medium: on a user-override send the package does not tell the carrier about open conflicts, unread pages (`needs_human`), or values still `needs_review`; disclose them in the package header (A-02, misrepresentation to a carrier). | 2026-10-14 |
+| B-187 | T-086 | @software-engineer | Medium: a second send overwrites `to-carrier/SUB-###.md`, and an account-manager send is logged nowhere but that file, so the record of what was sent is lost; append-only send log for every actor, with the package hash and a date. | 2026-10-14 |
+| B-188 | T-085 | @software-engineer | Low: `agency_problem` checks complete/appetite on the unedited run while the package routes on the edited run; the two can disagree. | 2026-10-14 |
+| B-189 | T-086 | @software-engineer | Low: `sends.jsonl` rows carry no date or seq, and the package is written before the log row, so a failed log write leaves an unlogged send. | 2026-10-14 |
+| B-190 | T-086, B-185, B-183 | @software-engineer | REQUIRED BEFORE REAL DATA (D-057): an authenticated underwriter action (login/SSO, audit log) for every decision and send. B-185 is accepted as a prototype limit until then. | 2026-10-14 |
+| B-191 | T-079, T-096 | @software-engineer | REQUIRED BEFORE PILOT (D-057): concurrent writes to the decision log (the stubbed test's eight-thread case errors; B-184's per-process lock). | 2026-10-14 |
+| B-192 | T-087 | @software-engineer | Medium: `sent_date` is the file mtime of `to-carrier/SUB-###.md`, not a logged send, and not per carrier (SUB-002 has a separate `SUB-002-to-carrier-b.md`); a checkout or rewrite changes it. Read the date from the append-only send log (B-187, B-189). | 2026-10-14 |
+| B-193 | T-087 | @software-engineer | Low: a closure matches the exact subjectivity text, so a carrier re-wording reopens it; acceptable (fails toward open), note it on the card. | 2026-10-14 |
+| B-194 | T-087 | @software-engineer | Medium, REQUIRED BEFORE REAL CARRIER REPLIES: a QUOTE with no `Subjectivities:` line, or the header in another case (`SUBJECTIVITIES:`), shows "subjectivities: none" (probe: SUB-900, SUB-901). Show "not stated in the reply — needs human reading" instead; add one self-check. | 2026-10-14 |
+| B-195 | T-087 | @software-engineer | Low: the exact-none match is case-insensitive ("None." passes); acceptable, note it or match case exactly per the user's words. | 2026-10-14 |
+| B-196 | T-087, B-190 | @software-engineer | Low: /close-subjectivity takes a typed underwriter id with no login; same prototype limit as B-185/B-190, covered by B-190 before real data. | 2026-10-14 |
+| B-197 | T-083, D-060 | @responsible-ai | Review the Spanish variants (allowed only as translations of sourced classes) in the carrier match. | 2026-10-14 |
+| B-198 | T-083, D-060 | @responsible-ai | REQUIRED BEFORE PILOT (D-060): proxy review of the housing no_match classes (student and subsidized housing). | 2026-10-14 |
+| B-199 | T-083 | @software-engineer | Medium: `bar` whole-word matches "bar-b-q", "salad bar", "restaurant, no bar" and sends them to prohibited no_match; hyphen and negation not handled. Recommendation only, but wrong for a restaurant. | 2026-10-14 |
+| B-200 | T-083 | @software-engineer | Medium: TIV is tiv_building only; contents/BI and multi-location totals are not summed, so the AG:16 per-location and A/B caps can be under-read. | 2026-10-14 |
+| B-201 | T-083 | @software-engineer | Low: class lists are unsourced beyond carrier-match.md (e.g. electrician, flooring, pizza); contractor word list has no guide source (D-059 item 3). | 2026-10-14 |
+| B-202 | T-083 | @software-engineer | Low: "3 clean years not checked" is shown but the loss-run gate is not built; no loss-run field exists. | 2026-10-14 |
+| B-203 | T-083 | @software-engineer | Medium: TIV "$0" or "0" reads as a number and routes carrier_a; treat 0 as unreadable (hold). |
+| B-204 | T-083 | @software-engineer | Low: normalizer holds on "$1.2MM", "5000000 USD", "$12 million", "$X bldg + $Y contents" (D-061 says hold; fine) but the producer is not told which form is accepted. |
+| B-205 | P-020 | @ai-engineer-assistant | Medium: `write_drafts()` takes `input_manifest` after `process_submission()`; a file added during extraction is in the manifest but was never extracted, so the gate passes. Take the manifest before extraction (refuse to save if it differs after). Needs approve change. | 2026-10-14 |
+| B-206 | P-020 | @ai-engineer-assistant | Medium: `folder_manifest` skips dotfiles but `sources.read_folder` reads them; a dotfile added/changed after extraction is not refused. Use the same file filter in both. Needs approve change. | 2026-10-14 |
+| B-207 | P-020 | @ai-engineer-assistant | Low: as-built note says "prepare.py only" and "package.py must call manifest_problem"; package.py now calls it. Update the note. | 2026-10-14 |
+| B-208 | P-020 | @software-engineer | Low: all 16 saved runs have no manifest, so every real send is refused until re-extracted (fail-closed, correct); plan the re-save before any demo send. | 2026-10-14 |
+| B-209 | T-083 | @software-engineer | Medium: `_tiv` uses `amount_value`, which also accepts a "sq ft"/"sf" suffix; a TIV field holding "50,000 sq ft" reads as $50,000 and routes to a carrier instead of holding. Reject area suffixes in `_tiv`. | 2026-10-14 |
+| B-210 | T-083 | @software-engineer | Low: "$0.0M"/"0K" parse to 0 and hold correctly; "-5000", "(5,000)" return None (hold). No negative test goes through the regex sign path; fine, but add "(5,000)" to the self-check. | 2026-10-14 |
+| B-211 | P-022 | @software-engineer | Low: area check misses metric and other forms ("sq m", "square meters", "ft2", "ft²"). | 2026-10-14 |
+| B-212 | P-022 | @software-engineer | Low: `workbench.facts()` keeps only the TIV digits for `points.score` (display only): "50,000 sq ft" → 50000, "$1.2M" → 12. | 2026-10-14 |
+| B-213 | P-022 | @ai-engineer-assistant | Low: manifest hashes files apart from the read, so a file changed and changed back during extraction is not detected. | 2026-10-14 |
+| B-214 | D-063 | @ai-engineer-assistant | Low: with LLM_* unset, extraction falls back to localhost Ollama instead of refusing; a dry run logged 16 failed rows (run 20261014T143300-63126). | 2026-10-14 |
+| B-215 | P-016 | @ai-engineer-assistant | High (model-risk, open): a conflict whose sides agree drops each side's needs_review/reason/quote; value stored unflagged, so no acknowledgment at approve. Fix needs @user: P-016 fix or new P-###. | 2026-10-14 |
+| B-216 | P-016 | @ai-engineer-assistant | Medium: name/address check is substring, not word-bounded ("100 Main St" in "2100 Main St"). | 2026-10-14 |
+| B-217 | P-016 | @ai-engineer-assistant | Medium: H2 catches only digit joins; 1990 passes in "PL-1990", "AB1990", "210 555 1990". | 2026-10-14 |
+| B-218 | P-016 | @ai-engineer-assistant | Medium: operations/construction keep a flagged value for any quote found anywhere ("masonry" from "Masonry Mutual"). | 2026-10-14 |
+| B-219 | P-016 | @ai-engineer-assistant | Medium: amounts with cents ("$850,000.00") fail amount_value; right TIVs dropped. | 2026-10-14 |
+| B-220 | P-016 | @software-engineer | Medium: acknowledgment logs field ids only, not value and quote; survives a re-save that changes the value. | 2026-10-14 |
+| B-221 | P-016 | @ai-engineer-assistant | Medium: per-page PDF OCR path untested end to end (no pdftoppm); typed page with a scanned table under 50% reads as typed. | 2026-10-14 |
+| B-222 | P-016 | @ai-engineer-assistant | Medium: confidence-versus-hit table (T-027 (b)) not built in regression_dev.py. | 2026-10-14 |
+| B-223 | P-016 | @ai-engineer-assistant | Low: effective date "20260101" accepted and stored non-ISO. | 2026-10-14 |
+| B-224 | P-016 | @software-engineer | Low: workbench ai_version logs "local-default" when LLM_MODEL is unset. | 2026-10-14 |
+| B-225 | P-016 | @ai-engineer-assistant | Low: the "no known loss" drop returns no reason. | 2026-10-14 |
+| B-226 | P-016 | @ai-engineer-assistant | Low: as-built memo says quick-15 not run; the P-016 score file exists. | 2026-10-14 |
