@@ -73,6 +73,12 @@ def cache_key(docs: list[dict], model: str) -> str:
     return hashlib.sha256(json.dumps([PROMPT_VERSION, model, _host(), TEMPERATURE, files]).encode()).hexdigest()
 
 
+def key_for(docs: list[dict]) -> str | None:
+    """P-028 (D-075): the cache key llm_extract() uses for these documents, without a call. None if LLM_MODEL is unset."""
+    model = os.environ.get("LLM_MODEL")
+    return cache_key([doc for doc in docs if not doc.get("unread")], model) if model else None
+
+
 def _log_row(row: dict) -> dict:
     """One row in the token log. P-014: every row starts on a new line and carries the run id and the host name.
 

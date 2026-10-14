@@ -301,3 +301,5 @@ Also open from T-097, already in the register's Section D so not repeated as row
 | B-281 | P-031 | @ai-engineer-assistant | Low: a negation right after "/" is skipped ("grill/no fryer", "fryer/none" score present; safe direction). | 2026-10-14 |
 | B-282 | P-031 | @ai-engineer-assistant | Low: absence words not on the user's list ("w/o", "removed", "zero", "isn't") score present. | 2026-10-14 |
 | B-283 | P-031 | @ai-engineer-assistant | Low: items written on the line after "Cooking equipment:" read as not stated; cooking_facts docstring still lists the old "none" state. | 2026-10-14 |
+| B-284 | P-028 | @ai-engineer-assistant | Medium: the P-028 self-check stubs llm_extract and compares key_for to itself; add a check that the stored key equals the real cache file name of a cached run. | 2026-10-14 |
+| B-285 | P-028 | @software-engineer | Low: the footer cuts the fallback text to "not recorded" even for runs that never called the model; a key is saved for extraction_failed runs without saying so. | 2026-10-14 |

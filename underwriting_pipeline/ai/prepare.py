@@ -9,6 +9,7 @@ Inbox: python underwriting_pipeline/ai/prepare.py simulation/inbox simulation/pe
 
 import hashlib
 import json
+import os
 import re
 import sys
 import tempfile
@@ -629,6 +630,7 @@ def process_submission(folder: Path) -> dict:
     error = None
     rejected = False
     readable = [doc for doc in docs if doc.get("text") and not doc.get("needs_human")]
+    key = llm_extract.key_for(docs) if readable else None  # P-028 (D-075): the extraction cache key; None when no model call is made
     if not readable:
         extracted = {"fields": [], "conflicts": []}
     else:
@@ -719,6 +721,7 @@ def process_submission(folder: Path) -> dict:
     report["locations"] = locations
     report["error"] = error
     report.update(_run_metadata())
+    report["cache_key"] = key  # P-028 (D-075)
     # D-024: an answered reply the gate rejected is not a failed call, and it gets no request and no draft.
     if error:
         report["status"] = "extraction_failed"
@@ -858,6 +861,7 @@ def _saved_payload(report: dict) -> dict:
         "ocr_settings": report.get("ocr_settings"),
         "host": report.get("host"),
         "temperature": report.get("temperature"),
+        "cache_key": report.get("cache_key"),  # P-028 (D-075): the extraction cache key, under saved_hash
         "fields": fields,
     }
 
@@ -1465,4 +1469,26 @@ if __name__ == "__main__":
             assert ask(nm, "bookkeeping office") == base, f"T2: the name {nm!r} must not start the cooking ask"
         assert ask("Plain Holdings LLC", "taqueria, tacos") == base, "T2: a cuisine word does not start the ask"
         assert "cooking equipment" in ask("Plain Holdings LLC", "restaurant"), "a class word still asks the producer"
+    # P-028 (D-075): a saved run's stored cache key equals the key recomputed from its inputs; a changed file changes it.
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp = Path(tmp)
+        sub = tmp / "inbox" / "SUB-403"
+        sub.mkdir(parents=True)
+        (sub / "application.md").write_text("Named insured: Example LLC\n")
+        saved_env = {k: os.environ.get(k) for k in ("LLM_MODEL", "LLM_BASE_URL")}
+        os.environ.update(LLM_MODEL="key-check-model", LLM_BASE_URL="http://localhost:11434/v1")
+        real_extract = llm_extract.llm_extract
+        llm_extract.llm_extract = lambda *_a, **_k: {"fields": [], "conflicts": []}  # no model call
+        try:
+            write_drafts(tmp / "inbox", tmp / "pending", tmp / "data" / "conflicts")
+            run = read_saved_run("SUB-403", tmp / "data" / "extractions")
+            again = llm_extract.key_for(sources.read_folder(sub))
+            assert run["cache_key"] and run["cache_key"] == again, (run.get("cache_key"), again)
+            assert again == llm_extract.cache_key(sources.read_folder(sub), "key-check-model")
+            (sub / "application.md").write_text("Named insured: Other LLC\n")
+            assert llm_extract.key_for(sources.read_folder(sub)) != run["cache_key"], "a changed file is another key"
+        finally:
+            llm_extract.llm_extract = real_extract
+            for k, v in saved_env.items():
+                os.environ.pop(k, None) if v is None else os.environ.__setitem__(k, v)
     print("prepare ok")

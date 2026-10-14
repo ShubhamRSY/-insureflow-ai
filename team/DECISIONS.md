@@ -836,3 +836,14 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: built in the main session (budget rule 3; weekly usage limit); @model-risk re-check.
 - Status: ACCEPTED
 - Amends: D-073 (rule 2 removed; P-030 rule 3 becomes rule 2). Not a production approval. No send is authorized.
+
+## D-075 — P-028 approved (B-269): each saved run stores its extraction cache key
+- Date / Owner: 2026-10-14 / @user
+- Context: P-015 E2 saves the cache key in decision rows, but the saved run did not hold it, so it was null (B-269). The frontend files api.js, SignupPage.jsx and SignupPage.test.jsx are the user's and stay unstaged.
+- Options considered: none. The user's words.
+- Decision: In the user's words. "approve change P-028 (B-269): each saved run stores its extraction cache key (hash of file contents, prompt version, OCR settings, model, host, temperature). The workbench footer shows it in short form. Self-check: a saved run's stored key matches the key recomputed from its inputs. One sandbox screenshot. One @model-risk check, High only. Commit, no wrap-up."
+- Rationale: The user typed this in this Claude Code session on 2026-10-14.
+- Dissent: none
+- Follow-up tasks: built in the main session (budget rule 3; weekly usage limit); @model-risk check. Note: P-028 was skipped in D-072 and never used, so this is its first use, not a reuse. The existing `llm_extract.cache_key` already hashes file name, sha256, OCR settings, needs-human flag, text, prompt version, model, host and temperature; it is stored as is, so the extraction cache is not invalidated.
+- Status: ACCEPTED
+- Amends: P-015 E2 (the cache key is now recorded). Not a production approval. No send is authorized.

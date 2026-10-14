@@ -43,6 +43,7 @@ MESSAGES: dict[str, tuple[bool, str]] = {}  # submission -> (ok, plain-words res
 WHATS_NEW = (
     ("2026-10-14", "P-015/B-264/B-265/B-266", "D-070", "The score shows \"Not scored — reason\" when a file is failed, incomplete or empty, and the cooking and hood lines; each code has a mark-wrong control (logged; the number does not change); the footer names the model and prompt version of the saved run; Suggested market shows only on senior referrals; a stale card lists the changed fields, old to new."),
     ("2026-10-14", "P-027 (B-268)", "D-071", "The cooking line names what was stated as not present (\"no fryer; gas grill\" counts the grill, not the fryer) and shows the quote, including on \"stated none\". Superseded by P-029, then P-030."),
+    ("2026-10-14", "P-028 (B-269)", "D-075", "Each saved run stores its extraction cache key (files, prompt version, OCR settings, model, host, temperature); the footer shows it in short form, and decision rows save it."),
     ("2026-10-14", "P-031 (B-279, B-280)", "D-074", "Cooking has two rules: a line with no negation word counts the hazards it names; a line with any negation word (no, none, not, without, never, don't, n/a, sin, nunca, ninguno, ninguna) is \"Cooking: needs review\" and the score stays provisional until you record present or none. Only the labelled line itself is read."),
     ("2026-10-14", "P-030 (B-276), B-278", "D-073", "Cooking: a negation directly before a hazard (\"no gas grill\") means none; any other line with a negation word (\"fryer, none\", \"none\", \"N/A\") is \"needs review\". While it is, the score reads \"Provisional — cooking not scored\"; an underwriter records present or none with a reason, logged with the run hash, and only then do points apply. The negation rule was simplified by P-031."),
     ("2026-10-14", "P-029 (B-272, B-274), B-273", "D-072", "A cooking line with a negation and more than one hazard term (or a hazard term past or/but/pero/&/-/period) shows \"Cooking: needs review\" with the quote and adds no points; it is acknowledged at approve like any needs-review value. N/A shows as not stated. Rule replaced by P-030."),
@@ -312,7 +313,7 @@ def run_record(sub: str) -> dict:
     s = scored(sub, report)
     return {"points": s["points"], "not_scored_reason": s["not_scored_reason"], "reason_codes": s["reason_codes"], "points_version": s["points_version"],
             "model_version": report.get("model_version"), "prompt_version": report.get("prompt_version"),
-            "cache_key": None}  # the saved run does not hold the extraction cache key; saving it is a prepare.py change (P-###)
+            "cache_key": report.get("cache_key")}  # P-028 (D-075): from the saved run; null for a run saved before P-028
 
 
 def field_values(report: dict) -> dict:
@@ -559,12 +560,15 @@ def footer_html(queue: list[dict] | None = None) -> str:
             for i in queue or [] if i.get("report")}
     if not runs:
         return "<footer><p>Model and prompt version: no saved run on this page</p></footer>"
+    keys = "".join(f"<li>{html.escape(i['id'])}: {html.escape((i['report'].get('cache_key') or 'not recorded (saved before P-028)')[:12])}</li>"
+                   for i in queue or [] if i.get("report"))
+    keys = f"<p>Extraction cache key of each saved run (short form; files, prompt, OCR settings, model, host, temperature):</p><ul>{keys}</ul>"  # P-028 (D-075)
     kinds = set(runs.values())
     if len(kinds) == 1:
         m, p = next(iter(kinds))
-        return f"<footer><p>Model (saved run): {html.escape(m)} · Prompt version (saved run): {html.escape(p)}</p></footer>"
+        return f"<footer><p>Model (saved run): {html.escape(m)} · Prompt version (saved run): {html.escape(p)}</p>{keys}</footer>"
     rows = "".join(f"<li>{html.escape(k)}: model {html.escape(m)} · prompt {html.escape(p)}</li>" for k, (m, p) in runs.items())
-    return f"<footer><p>Model and prompt version of each saved run (they differ):</p><ul>{rows}</ul></footer>"
+    return f"<footer><p>Model and prompt version of each saved run (they differ):</p><ul>{rows}</ul>{keys}</footer>"
 
 
 def stale_changes(sub: str, report: dict) -> str:

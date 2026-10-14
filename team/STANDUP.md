@@ -1597,3 +1597,8 @@ Blocked: No.
 - Done: P-031 (B-279, B-280) re-check, D-074. APPROVE. B-279 and B-280 closed; no equipment line can read "none" any more. T-017 veto lifted on my side. Not a production approval; no send authorized.
 - Next: 4 Lows to backlog (slash before "no", unlisted absence words, items on next line, stale docstring).
 - Blockers: none on my side.
+
+### 2026-10-14 — @model-risk
+- Done: P-028 (B-269) review — APPROVE, no High findings. Four self-checks pass; independent re-run confirms the stored key equals the real llm_extract cache key.
+- Next: Medium (self-check tied to the real cache file) and two Lows to backlog.
+- Blocked: nothing.
