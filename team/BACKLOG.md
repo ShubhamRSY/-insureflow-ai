@@ -214,3 +214,9 @@ Also open from T-097, already in the register's Section D so not repeated as row
 | B-194 | T-087 | @software-engineer | Medium, REQUIRED BEFORE REAL CARRIER REPLIES: a QUOTE with no `Subjectivities:` line, or the header in another case (`SUBJECTIVITIES:`), shows "subjectivities: none" (probe: SUB-900, SUB-901). Show "not stated in the reply — needs human reading" instead; add one self-check. | 2026-10-14 |
 | B-195 | T-087 | @software-engineer | Low: the exact-none match is case-insensitive ("None." passes); acceptable, note it or match case exactly per the user's words. | 2026-10-14 |
 | B-196 | T-087, B-190 | @software-engineer | Low: /close-subjectivity takes a typed underwriter id with no login; same prototype limit as B-185/B-190, covered by B-190 before real data. | 2026-10-14 |
+| B-197 | T-083, D-060 | @responsible-ai | Review the Spanish variants (allowed only as translations of sourced classes) in the carrier match. | 2026-10-14 |
+| B-198 | T-083, D-060 | @responsible-ai | REQUIRED BEFORE PILOT (D-060): proxy review of the housing no_match classes (student and subsidized housing). | 2026-10-14 |
+| B-199 | T-083 | @software-engineer | Medium: `bar` whole-word matches "bar-b-q", "salad bar", "restaurant, no bar" and sends them to prohibited no_match; hyphen and negation not handled. Recommendation only, but wrong for a restaurant. | 2026-10-14 |
+| B-200 | T-083 | @software-engineer | Medium: TIV is tiv_building only; contents/BI and multi-location totals are not summed, so the AG:16 per-location and A/B caps can be under-read. | 2026-10-14 |
+| B-201 | T-083 | @software-engineer | Low: class lists are unsourced beyond carrier-match.md (e.g. electrician, flooring, pizza); contractor word list has no guide source (D-059 item 3). | 2026-10-14 |
+| B-202 | T-083 | @software-engineer | Low: "3 clean years not checked" is shown but the loss-run gate is not built; no loss-run field exists. | 2026-10-14 |

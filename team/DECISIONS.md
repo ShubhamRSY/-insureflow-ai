@@ -644,3 +644,41 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: T-087 (@software-engineer). Re-raise as new decisions for @user, if still needed: the carrier match lists and caps (were D-041, D-042; T-082, T-083 rest on them) and the G2 hash basis and P-018 (were D-044; T-070 was built on that basis).
 - Status: ACCEPTED
 - Amends: D-043 is confirmed. D-041, D-042, and D-044 are void and are not relied on; their text stays unedited as a record. Not a production approval; lifts no veto; authorizes no send.
+
+## D-059 — Carrier match rules re-raised (were D-041, D-042; T-082, T-083)
+- Date / Owner: 2026-10-14 / @user (proposed by @head-of-underwriting)
+- Context: D-058 voided D-041 and D-042 as unverified; the user asked for the rules again, whole-word / class-code, caps per carrier, prohibited classes and bars as no_match, each citing the carrier appetite guide. "CAG" = deliverables/head-of-underwriting/carrier-appetite.md (same text as simulation/carriers.md); "AG" = appetite-guide.md. Full lists and Spanish variants stay in carrier-match.md (not edited here).
+- Decision (PROPOSED):
+  1. Method: whole word or exact phrase, case-insensitive, never substring (`bar` is not in `barber`/`barbecue`). Spanish variants as listed in carrier-match.md; the guides cite none, so they are my addition and need @responsible-ai.
+  2. Carrier A: offices, dry retail, light wholesale; TIV <= $5,000,000 inclusive. Cited CAG:5 (cap and classes); AG:29-31 for class limits. Barber shop and other personal services: no source in a guide (nearest is AG:30 storefront); keep only if you approve.
+  3. Carrier B: restaurants / food service and light contractors; loss gate 3 clean years, a no-known-loss letter never satisfies it. Cited CAG:6, AG:59. Cap $2,000,000: NOT cited, no guide states it, provisional pending @actuary. The light-contractor word list has no source either (AG:38 sends all contractors to senior referral).
+  4. Carrier C: sprinklered habitational (CAG:7). Cap $10,000,000: NOT cited, provisional pending @actuary, and above AG:16 (TIV > $5M per location is out of pilot), so it needs your waiver or a lower cap. Roofing and over-cap offices to C: no source in a guide, my reading only.
+  5. no_match for all three: bars, nightclubs, taverns (AG:46); cannabis (AG:47); fireworks, explosives (AG:48); armed security (AG:49); student and subsidized housing (AG:45, @responsible-ai proxy review still owed). Over $10,000,000 and "readable class on no list": no source, my rule. no_match is a recommendation, never a producer decline (AG:9, AG:57 give the decline to a human).
+  6. hold (not no_match): class unreadable, or habitational with no sprinkler answer; habitational with sprinklers "no" is a senior referral (AG:61).
+  7. Two carriers match: senior referral / hold, never silently the first carrier (no guide source; my rule).
+  8. Caps are inclusive; prohibited classes are checked first. Underwriter chooses; no auto-decline.
+- Rationale: Profitability first; every rule without a source is labeled so you can strike it. Uncited caps must not be enforced as fact until @actuary signs.
+- Dissent (who, why): none recorded; @actuary cap signoff and @responsible-ai housing review not yet obtained.
+- Follow-up tasks: @actuary to confirm B and C caps; @responsible-ai on item 1 Spanish and item 5 housing; then T-083.
+- Status: PROPOSED
+- Amends: replaces void D-041 and D-042. Changes no code. Authorizes no send. Not a production approval.
+
+## D-060 — D-059 approved with changes; hash basis confirmed; input manifest raised as P-020; P-018 parked
+- Date / Owner: 2026-10-14 / @user
+- Context: D-059 (PROPOSED by @head-of-underwriting) re-raised the carrier match rules voided by D-058. The hash basis and P-018 (were D-044) were re-raised to the user in this session.
+- Options considered: none. The user's words.
+- Decision: In the user's words. "approve D-059 with these changes:
+  - Matching approved; Spanish variants allowed only as translations of sourced classes; @responsible-ai review goes to the backlog.
+  - Barber shop: not in Carrier A (no source) → no_match, overridable with a reason under D-057.
+  - Carrier B: $2M cap provisional until @actuary confirms. Contractors follow AG:38: senior referral, with Carrier B shown as the suggested market.
+  - Carrier C: no waiver. Follow AG:16: TIV over $5M per location is outside the pilot → senior referral labelled "outside pilot TIV limit (AG:16)". Remove roofing → C and over-cap offices → C.
+  - $8M office expected result: senior referral, outside pilot TIV limit.
+  - no_match list approved; "readable class on no list" → no_match, overridable with a reason; housing proxy review backlogged as required-before-pilot.
+  - Items 6, 7, 8 approved.
+  Hash basis confirmed as built, plus one addition: each saved run also stores a sha256 manifest of the input documents (file names and content hashes), and the send gate refuses if the current folder manifest differs. This is a small demo-path fix.
+  P-018 stays parked."
+- Rationale: The user typed this in this Claude Code session on 2026-10-14.
+- Dissent: none
+- Follow-up tasks: T-083 (@software-engineer) builds D-059 as amended here. The input manifest is stored by `prepare.write_drafts()` under `underwriting_pipeline/ai/`; per D-017 that change is numbered P-020 and is built only after the user types "approve change P-020". Backlog: B-197, B-198.
+- Status: ACCEPTED
+- Amends: D-059 (accepted as amended above). Confirms the G2 hash basis of T-070 (was D-044). Not a production approval; lifts no veto (the @responsible-ai T-082 veto stands); authorizes no send.

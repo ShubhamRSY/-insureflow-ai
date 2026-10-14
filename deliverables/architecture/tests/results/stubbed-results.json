@@ -1,6 +1,6 @@
 {
   "task": "T-095",
-  "run_at": "2026-10-14T13:53:02",
+  "run_at": "2026-10-14T14:06:10",
   "command": ".venv/bin/python -B deliverables/architecture/tests/test_system_design_stubbed.py",
   "python": "3.14.6",
   "model_calls": 0,
@@ -230,7 +230,7 @@
       "ref": "D-022; llm_extract.py:69-71,445-460",
       "outcome": "pass",
       "detail": "",
-      "seconds": 0.0,
+      "seconds": 0.01,
       "measured": {
         "posts": 1,
         "statuses": [
@@ -293,7 +293,7 @@
       "ref": "package.py:77-80 (plain write_text)",
       "outcome": "fail (known gap)",
       "detail": "a half-written package of 512 bytes sits under the final name in to-carrier",
-      "seconds": 0.0,
+      "seconds": 0.01,
       "measured": {
         "file_exists": true,
         "bytes_left": 512,
@@ -431,23 +431,23 @@
       "ref": "prepare.py:501-607; llm_extract.py:421-511",
       "outcome": "pass",
       "detail": "",
-      "seconds": 1.2,
+      "seconds": 1.24,
       "measured": {
         "local_milliseconds_per_submission": {
           "cold": {
             "n": 300,
-            "p50": 1.9129,
-            "p95": 2.5657,
-            "max": 7.8084,
-            "mean": 2.0364,
+            "p50": 1.9703,
+            "p95": 2.9548,
+            "max": 6.201,
+            "mean": 2.1393,
             "posts_so_far": 300
           },
           "warm": {
             "n": 300,
-            "p50": 1.5954,
-            "p95": 1.7067,
-            "max": 5.4832,
-            "mean": 1.633,
+            "p50": 1.6015,
+            "p95": 1.821,
+            "max": 6.3482,
+            "mean": 1.6851,
             "posts_so_far": 300
           }
         },
@@ -539,7 +539,7 @@
       "kind": "as-is",
       "ref": "llm_extract.py:81-86; workbench.py:142-143",
       "outcome": "error",
-      "detail": "FileNotFoundError: [Errno 2] No such file or directory: '/var/folders/g4/nw3tvq1j6q7c8jjlxwf19c5c0000gn/T/t095-2ys1hl1a/tmpe8t3_4is/decisions.jsonl'",
+      "detail": "FileNotFoundError: [Errno 2] No such file or directory: '/var/folders/g4/nw3tvq1j6q7c8jjlxwf19c5c0000gn/T/t095-ncc91na3/tmprmmzjwwx/decisions.jsonl'",
       "seconds": 0.01,
       "measured": {}
     },
@@ -550,7 +550,7 @@
       "ref": "G3; NFR-006; workbench.py:86,234",
       "outcome": "fail (known gap)",
       "detail": "20 model calls were made inside the page load for a queue of 20",
-      "seconds": 0.09,
+      "seconds": 0.08,
       "measured": {
         "queue": 20,
         "posts_during_an_outage": 120,
@@ -635,7 +635,7 @@
       "ref": "underwriting_pipeline/cache/token_log.jsonl and cache/extractions (read only)",
       "outcome": "fail",
       "detail": "28 call rows: the numbers in system-design.md were taken from 13",
-      "seconds": 0.01,
+      "seconds": 0.0,
       "measured": {
         "token_log_rows": 58,
         "calls": 28,

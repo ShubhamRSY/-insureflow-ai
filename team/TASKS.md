@@ -1047,19 +1047,19 @@ D-004 (user, 2026-10-09): Sanger & Altgelt agency pipeline. Eight steps. No auto
 ### T-083 — Carrier match rules in `route()`, with the caps enforced
 - Owner: @software-engineer
 - Requested by: @user
-- Status: TODO
+- Status: IN_REVIEW
 - Priority: P0
 - Depends on: T-082, T-071
 - Reviewers: @senior-underwriter, @head-of-underwriting, @compliance, @responsible-ai, @model-risk
 - Acceptance criteria:
-  - [ ] `route()` matches the lists in carrier-match.md by whole word, not by substring
-  - [ ] The no-match classes, roofing, and every cap from T-082 are enforced
-  - [ ] The Carrier B line from T-082 is shown on the card
-  - [ ] "one test each" (@senior-underwriter) for the eight cases listed on T-082
-  - [ ] The in-appetite check in `package.py` uses the same function, with one self-check that a no-match file is refused
-  - [ ] The match stays a recommendation. Nothing declines a file
+  - [x] `route()` matches the lists in carrier-match.md by whole word, not by substring
+  - [x] The no-match classes, roofing, and every cap from T-082 are enforced (per D-059/D-060)
+  - [x] The Carrier B line from T-082 is shown on the card
+  - [x] "one test each" (@senior-underwriter) for the eight cases listed on T-082
+  - [x] The in-appetite check in `package.py` uses the same function, with one self-check that a no-match file is refused
+  - [x] The match stays a recommendation. Nothing declines a file
 - Output: underwriting_pipeline/app/workbench.py, underwriting_pipeline/app/package.py
-- Notes: D-033 item 4. Line 4 of team/DEMO-BLOCKERS.md. @senior-underwriter, T-019 High-3: "`route()` gives: cannabis dispensary retail and armed security office, carrier_a; sprinklered student housing, carrier_c; roofing contractor, carrier_b; an $8,000,000 office, carrier_a; barbecue restaurant and barber shop, no_match; taqueria, hold." T-020: "cannabis retail passes as Carrier A." Backlog rows B-077 and B-090 are the same ground. The name-swap test (T-067) runs after this. Not a production approval.
+- Notes: D-033 item 4. Line 4 of team/DEMO-BLOCKERS.md. @senior-underwriter, T-019 High-3: "`route()` gives: cannabis dispensary retail and armed security office, carrier_a; sprinklered student housing, carrier_c; roofing contractor, carrier_b; an $8,000,000 office, carrier_a; barbecue restaurant and barber shop, no_match; taqueria, hold." T-020: "cannabis retail passes as Carrier A." Backlog rows B-077 and B-090 are the same ground. The name-swap test (T-067) runs after this. Not a production approval. 2026-10-14, @software-engineer: built to D-059 as amended by D-060; D-041/D-042 are void (D-058), so where the criteria cite T-082/D-041/D-042, D-059+D-060 replace them. `workbench.match()` (route, note, suggested, overridable; `route()` returns its route) and `package.py` use it. Outcomes: carrier_a/b/c, no_match, hold, senior_referral (route value `senior_referral`). Prohibited first; caps inclusive (A and pilot TIV $5M, B $2M provisional, over $10M no_match not overridable); roofing is a contractor (senior referral, suggested carrier_b); roofing -> C and over-cap -> C removed; Carrier B shows "3 clean years not checked" (the loss-run gate itself is not built: there is no loss-run field). The D-057 override works only on no_match that D-060 calls overridable (barber shop, readable class on no list), never prohibited, over $10M, hold, or senior referral. The input-document manifest (P-020) is NOT built; waits on "approve change P-020". Spanish entries are translations of sourced classes only; @responsible-ai review is B-197. Housing proxy review is B-198. Self-checks: `python underwriting_pipeline/app/workbench.py`, `package.py`, `quotes.py`. Open ceilings: TIV is read from tiv_building (first number, not "5M"); missing TIV counts as 0.
 
 ### T-084 — Proposal P-015: the score fixes
 - Owner: @data-scientist

@@ -1404,3 +1404,18 @@ Blocked: No.
 - Done: T-020 item (e) re-check on T-087: APPROVE, no High. Item (e) met; T-020 veto LIFTED (all six items met). Medium/Low B-194 to B-196.
 - Doing next: nothing on T-020; B-194 before any real carrier reply.
 - Blocked by / need from: none. B-190 (authenticated underwriter action) still required before real data.
+
+### 2026-10-14 — @head-of-underwriting
+- Done: D-059 PROPOSED (carrier match rules re-raised, each rule cited or marked uncited).
+- Doing next: nothing until @user decides D-059.
+- Blocked by / need from: @user on D-059; @actuary B and C caps; @responsible-ai Spanish variants and housing classes.
+
+### 2026-10-14 — @software-engineer
+- Done: T-083 carrier match to D-059/D-060 in workbench.py and package.py; self-checks pass; IN_REVIEW.
+- Doing next: nothing until review; P-020 manifest waits on the user's "approve change P-020".
+- Blocked by / need from: none.
+
+### 2026-10-14 — @senior-underwriter
+- Done: T-083 review, APPROVE WITH CHANGES; one High (TIV "$8M" or blank passes the caps); Medium/Low B-199 to B-202.
+- Doing next: re-check after the TIV fix.
+- Blocked by / need from: @software-engineer to fix High-1.

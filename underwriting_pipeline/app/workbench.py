@@ -11,6 +11,7 @@ Serve: python underwriting_pipeline/app/workbench.py --serve
 import html
 import json
 import os
+import re
 import sys
 import threading
 from datetime import date
@@ -40,21 +41,80 @@ def _ops(report: dict) -> str:
     return ""
 
 
-def route(report: dict) -> str:
+# D-059 as amended by D-060. Whole word or exact phrase, case-insensitive, never substring.
+# Spanish entries are translations of sourced classes only (D-060); @responsible-ai review is B-197.
+# ponytail: plain lists in code; move to a data file when @head-of-underwriting edits them often.
+PROHIBITED = ("bar", "bars", "nightclub", "nightclubs", "tavern", "taverns", "cantina", "taberna", "antro", "discoteca",
+              "cannabis", "marijuana", "marihuana", "dispensary", "dispensario", "fireworks", "firework", "explosives", "explosive",
+              "fuegos artificiales", "explosivos", "armed security", "armed guard", "seguridad armada", "guardia armado",
+              "student housing", "subsidized housing", "alojamiento estudiantil", "vivienda subsidiada")  # CAG/AG:45-49
+CLASSES = {
+    "a": ("office", "offices", "oficina", "oficinas", "retail", "retail store", "dry retail", "storefront", "comercio minorista",
+          "tienda minorista", "wholesale", "light wholesale", "mayoreo", "mayorista"),
+    "b": ("restaurant", "restaurants", "restaurante", "restaurantes", "cafe", "café", "cafeteria", "cafetería", "coffee shop", "diner", "deli",
+          "bakery", "panaderia", "panadería", "pizzeria", "pizzería", "pizza", "steakhouse", "barbecue", "bbq", "taqueria", "taquería",
+          "tacos", "taco"),
+    "contractor": ("contractor", "contractors", "contratista", "roofing", "roofer", "techado", "techador", "handyman", "painter", "painting",
+                   "pintor", "pintura", "carpenter", "carpentry", "carpintero", "carpintería", "flooring", "drywall", "plumbing", "electrician"),
+    "habitational": ("habitational", "habitacional", "apartment", "apartments", "apartamento", "apartamentos", "flats", "multifamily",
+                     "multifamiliar", "duplex", "triplex", "fourplex"),
+}
+CAP_A, CAP_B, PILOT_TIV, CAP_MAX = 5_000_000, 2_000_000, 5_000_000, 10_000_000  # B cap provisional (@actuary, D-060); caps inclusive
+OUT_TIV = "outside pilot TIV limit (AG:16)"
+
+
+def _has(text: str, words) -> bool:
+    return any(re.search(rf"(?<!\w){re.escape(w)}(?!\w)", text) for w in words)
+
+
+def _tiv(report: dict) -> float:
+    for row in report["fields"]:
+        if row["field_id"] == "tiv_building" and row["value"]:
+            m = re.search(r"\d[\d,]*(?:\.\d+)?", row["value"])
+            return float(m.group().replace(",", "")) if m else 0.0
+    return 0.0
+
+
+def match(report: dict) -> dict:
+    """route: carrier_a/b/c, no_match, hold or senior_referral. overridable only for no_match (D-057). Never declines."""
     ops = _ops(report)
-    if any(word in ops for word in ("bar", "nightclub", "firework", "explosive")):
-        return "no_match"
-    if not report["complete"]:
-        return "hold"
-    if any(word in ops for word in ("habitational", "apartment", "flats")):
-        if report.get("sprinklers") == "yes" or "sprinklers yes" in ops or "sprinklered" in ops:
-            return "carrier_c"
-        return "hold"
-    if any(word in ops for word in ("restaurant", "taco", "kitchen", "contractor", "painting")):
-        return "carrier_b"
-    if any(word in ops for word in ("office", "retail", "wholesale")):
-        return "carrier_a"
-    return "hold"
+
+    def out(route, note="", suggested="", overridable=False):
+        return {"route": route, "note": note, "suggested": suggested, "overridable": overridable}
+
+    if ops and _has(ops, PROHIBITED):
+        return out("no_match", "prohibited class (AG:45-49)")
+    if not report["complete"] or not ops:
+        return out("hold", "missing information")
+    hit = [k for k, words in CLASSES.items() if _has(ops, words)]
+    tiv = _tiv(report)
+    if not hit:
+        return out("no_match", "readable class on no carrier list", overridable=True)
+    if len(hit) > 1:
+        return out("senior_referral", "class matches more than one carrier: " + ", ".join(hit))
+    if tiv > CAP_MAX:
+        return out("no_match", "over $10,000,000 TIV (no source for an override, D-060)")
+    kind = hit[0]
+    if kind == "contractor":
+        return out("senior_referral", "contractor (AG:38); suggested market: carrier_b" + (f"; {OUT_TIV}" if tiv > PILOT_TIV else ""), suggested="carrier_b")
+    if kind == "habitational":
+        spr = report.get("sprinklers")
+        if spr == "yes" or "sprinklers yes" in ops or (_has(ops, ("sprinklered",)) and spr != "no"):
+            return out("senior_referral", OUT_TIV) if tiv > PILOT_TIV else out("carrier_c")
+        if spr == "no" or _has(ops, ("unsprinklered", "no sprinklers", "sprinklers no")):
+            return out("senior_referral", "habitational without sprinklers (AG:61)")
+        return out("hold", "habitational: sprinkler answer missing")
+    if tiv > PILOT_TIV:
+        return out("senior_referral", OUT_TIV)
+    if kind == "a":
+        return out("carrier_a")
+    if tiv > CAP_B:
+        return out("senior_referral", "over Carrier B TIV cap $2,000,000 (provisional)")
+    return out("carrier_b", "3 clean years not checked")
+
+
+def route(report: dict) -> str:
+    return match(report)["route"]
 
 
 def facts(report: dict) -> dict:
@@ -98,6 +158,7 @@ def load_queue(only: str | None = None) -> list[dict]:
                 "files": files,
                 "ignored": ignored,
                 "route": route(report),
+                "note": match(report)["note"],
                 "score": points.score(facts(report)),
                 "snippets": {row["field_id"]: snippet(folder, row) for row in report["fields"]},
             }
@@ -239,7 +300,7 @@ def render(queue: list[dict], counts: dict | None = None) -> str:
         if not refused:
             lines += [
                 f"<p>Score: {item['score']['points']} · {html.escape(', '.join(item['score']['reason_codes']) or 'none')} · not a price</p>",
-                f"<p>Carrier match: {html.escape(item['route'])} · recommendation only</p>",
+                f"<p>Carrier match: {html.escape(item['route'])}{html.escape(' · ' + item['note']) if item.get('note') else ''} · recommendation only</p>",
             ]
         lines += [
             f"<p>Extraction: {html.escape(extraction)}</p>",
@@ -520,7 +581,33 @@ if __name__ == "__main__":
         }
         ready = dict(held)
         ready["sprinklers"] = "yes"
-        assert route(held) == "hold"
+        assert route(held) == "senior_referral"  # D-059 item 6: sprinklers "no" (AG:61)
+        assert route({**held, "sprinklers": None}) == "hold"
         assert route(ready) == "carrier_c"
+        # T-083: D-059 + D-060, written to the temp-free in-memory report only.
+        def r(ops, tiv="", **kw):
+            f = [{"field_id": "operations", "value": ops}]
+            if tiv:
+                f.append({"field_id": "tiv_building", "value": tiv})
+            return {"complete": True, "fields": f, **kw}
+
+        m = match(r("barber shop"))
+        assert m["route"] == "no_match" and m["overridable"]
+        assert route(r("barbecue restaurant")) == "carrier_b" and match(r("Barbecue Restaurant"))["note"] == "3 clean years not checked"
+        m = match(r("accounting office", "$8,000,000"))
+        assert m["route"] == "senior_referral" and m["note"] == "outside pilot TIV limit (AG:16)"
+        for ops in ("cannabis dispensary retail", "armed security office", "sprinklered student housing", "Bar and grill", "fireworks"):
+            m = match(r(ops, sprinklers="yes"))
+            assert m["route"] == "no_match" and not m["overridable"], ops
+        m = match(r("roofing contractor"))
+        assert m["route"] == "senior_referral" and m["suggested"] == "carrier_b"
+        assert match(r("office and restaurant"))["route"] == "senior_referral"
+        assert route(r("office", "$5,000,000")) == "carrier_a" and route(r("office", "$5,000,001")) == "senior_referral"
+        assert route(r("restaurant", "$2,000,000")) == "carrier_b" and route(r("restaurant", "$2,000,001")) == "senior_referral"
+        assert route(r("office", "$10,000,001")) == "no_match" and not match(r("office", "$10,000,001"))["overridable"]
+        assert route(r("taqueria")) == "carrier_b" and route(r("oficina")) == "carrier_a" and route(r("")) == "hold"
+        assert route(r("sprinklered apartments", "$4,000,000")) == "carrier_c"
+        assert match(r("sprinklered apartments", "$6,000,000"))["note"] == OUT_TIV
+        assert route(r("office")) == "carrier_a" and route(r("barley mill")) == "no_match"
         assert "COOKING" not in points.score(facts(fake))["reason_codes"]
         print("workbench ok")

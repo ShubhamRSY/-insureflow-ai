@@ -2505,3 +2505,19 @@ Checked: status comes from the reply's first line (QUOTE = quoted, DECLINE = dec
 High: none. Medium/Low: B-194 (a QUOTE with no or differently-cased Subjectivities line shows "none"; required before real carrier replies), B-195, B-196.
 Lifting the veto is not a production approval and authorizes no send; B-185/B-190 (authenticated underwriter action) still stand before real data. @senior-underwriter and @account-manager reviews of T-087 are theirs.
 Needs response by: none
+
+### 2026-10-14 — @head-of-underwriting
+Re: D-059 (carrier match rules re-raised after D-058 voided D-041/D-042).
+Message: PROPOSED, owner @user. Cited: A cap and classes, B loss gate, C sprinklered habitational, all no_match prohibited classes (appetite guide lines). Not cited: B cap $2M, C cap $10M (also above AG:16 $5M pilot TIV), roofing and barber shop routing, over-$10M no_match, collision rule, Spanish variants. carrier-match.md unedited.
+Needs response by: @user (approve or strike); @actuary caps; @responsible-ai Spanish and housing
+
+[2026-10-14 | @software-engineer → @pm, @user] TYPE: REVIEW
+Re: T-083 built to D-059 as amended by D-060 (D-041/D-042 void, D-058). Files: underwriting_pipeline/app/workbench.py, package.py.
+Message: `match()`/`route()` whole-word, prohibited first, inclusive caps; senior referral for contractors (Carrier B suggested), $5M+ TIV ("outside pilot TIV limit (AG:16)"), collisions, habitational without sprinklers; hold for unreadable class or no sprinkler answer; D-057 override only on overridable no_match. P-020 manifest not built (waits on "approve change P-020"); nothing under ai/ touched. Self-checks pass. Set IN_REVIEW; Reviewers per T-083. Not a production approval; authorizes no send.
+Needs response by: reviewers
+
+### 2026-10-14 — @senior-underwriter — REVIEW T-083
+Verdict: APPROVE WITH CHANGES. Do not mark DONE until High-1 is fixed.
+Met: whole-word match (barber -> no_match overridable; barbecue restaurant -> carrier_b with "3 clean years not checked"); prohibited first and not overridable (cannabis retail, armed security office, student housing); roofing -> senior_referral suggesting carrier_b; $8,000,000 office -> senior_referral AG:16; two-class -> senior_referral; caps inclusive; package.py uses the same match() and refuses a no_match without override; nothing declines. Self-checks run green (workbench, package).
+High-1, caps fail open on TIV that does not read as plain digits. `_tiv` takes the first number: "$8M" and "8 million" parse as 8, so the user's $8M office routes carrier_a (verified). Missing or unreadable TIV ("", "TBD") parses as 0, so a Carrier A/B route is issued with no caps check and no note. Real submissions write "$8M", "8.0 mm", and often leave TIV blank. Fix: read M/MM/million/K suffixes; if tiv_building is absent or unparseable, do not return carrier_a/b/c: return hold with "TIV missing or unreadable" (or add a visible note). Add a self-check for "$8M" and a blank TIV.
+Also noted (Medium/Low to BACKLOG): B-199 to B-202.

@@ -118,8 +118,8 @@ def build_package(submission: str, carrier_override: str = "", override_reason: 
     carrier, label = _route(report), ""
     chosen = (carrier_override or "").strip().lower()
     if chosen:  # D-057 item 1
-        if carrier != "no_match":
-            raise ValueError(f"a carrier override is allowed only when the match is no_match (match is {carrier})")
+        if carrier != "no_match" or not _overridable(report):
+            raise ValueError(f"a carrier override is allowed only on an overridable no_match (match is {carrier})")
         if chosen not in CARRIERS:
             raise ValueError(f"the override must name carrier_a, carrier_b or carrier_c, not {chosen!r}")
         if not (override_reason or "").strip():
@@ -156,6 +156,12 @@ def _route(report: dict) -> str:
     from workbench import route
 
     return route(report)
+
+
+def _overridable(report: dict) -> bool:
+    from workbench import match
+
+    return match(report)["overridable"]  # D-060: only the no_match cases it names, never hold or senior referral
 
 
 def _submission_of(target) -> str:
@@ -403,7 +409,7 @@ if __name__ == "__main__":
             edited = build_package("SUB-195")
             assert "year_built: 1987" in edited and "EDITED by UW-001" in edited and "from the loss run" in edited
             # T-085: no carrier named (nightclub) -> refused.
-            save(ext, "SUB-196", "complete", complete=True, fields=full(operations="nightclub"))
+            save(ext, "SUB-196", "complete", complete=True, fields=full(operations="barber shop"))
             decide("SUB-196", "approve")
             try:
                 build_package("SUB-196")
@@ -435,12 +441,13 @@ if __name__ == "__main__":
                 assert len(logged) == 1 and logged[0]["submission"] == "SUB-195" and logged[0]["user_line"] == LINE("SUB-195")
 
             # D-057 item 1: override only on no_match, with carrier and reason; never hold; logged.
-            save(ext, "SUB-401", "complete", complete=True, fields=full(operations="nightclub"))
-            save(ext, "SUB-402", "complete", complete=True, fields=full(operations="mixed use"))
-            for sub in ("SUB-401", "SUB-402"):
+            save(ext, "SUB-401", "complete", complete=True, fields=full(operations="barber shop"))
+            save(ext, "SUB-402", "complete", complete=True, fields=full(operations="apartments, 8 units"))
+            save(ext, "SUB-403", "complete", complete=True, fields=full(operations="nightclub"))
+            for sub in ("SUB-401", "SUB-402", "SUB-403"):
                 decide(sub, "approve")
             sends.unlink(missing_ok=True)
-            for sub, kw in (("SUB-402", dict(carrier="carrier_a", reason="x")), ("SUB-401", dict(reason="x")), ("SUB-401", dict(carrier="carrier_a")),
+            for sub, kw in (("SUB-402", dict(carrier="carrier_a", reason="x")), ("SUB-403", dict(carrier="carrier_a", reason="x")), ("SUB-401", dict(reason="x")), ("SUB-401", dict(carrier="carrier_a")),
                             ("SUB-401", dict(carrier="carrier_z", reason="x")), ("SUB-193", dict(carrier="carrier_b", reason="x"))):
                 try:
                     send_to_carrier(sub, "user", dest_dir, user_line=LINE(sub), **kw)
@@ -475,7 +482,7 @@ if __name__ == "__main__":
                         assert ok, f"{sub} must be refused for {actor}"
                     except ValueError:
                         assert not ok, f"{sub} must pass for {actor}"
-            assert len(log.read_text().splitlines()) == 15  # history untouched by the sends
+            assert len(log.read_text().splitlines()) == 16  # history untouched by the sends
 
             # D-055: highest seq wins, not line order; an unlisted id or an AI role is not a decision;
             # a repeated seq refuses; no seq is not a decision; underwriters.json may not list an AI role.
