@@ -1,11 +1,12 @@
 # Next session
 
-Written 2026-10-14 by the orchestrator at wrap-up. Wrap-up commit: `75d0dbd` on `ai-team`, pushed to `origin/ai-team` (private). Read CLAUDE.md "Usage budget rules" first: demo blockers only, sessions of 2–3 hours, one-line estimate at the start.
+Written 2026-10-14 by the orchestrator at wrap-up. Wrap-up commit: `69cca3a` on `ai-team`, pushed to `origin/ai-team` (private). Read CLAUDE.md "Usage budget rules" first: demo blockers only, sessions of 2–3 hours, one-line estimate at the start.
 
 ## Where we stopped
 
-- T-087 quote tracking is built (`underwriting_pipeline/app/quotes.py`, shown on each workbench card), IN_REVIEW. Nine replies give eight submission-and-carrier rows. SUB-002 carrier_b's "confirm hood and suppression" shows as open. A subjectivity closes only when a listed underwriter logs it with a reason. Sent date comes from the package file's mtime.
-- @compliance re-checked T-020 item (e): **REJECT**. High-1: `track()` sets "quoted" for any reply; a DECLINE reply shows as quoted, and "none, subject to inspection." shows no subjectivity. What resolves it, in @compliance's words: take the status from the reply's first line (QUOTE → quoted, DECLINE → declined by carrier, anything else → "reply needs human reading"); treat a subjectivity line as none only when it says exactly "none." or "none beyond the file as sent."; show anything else open; add both cases to the self-check. Medium/Low: B-192, B-193.
+- T-087 High-1 is fixed in `underwriting_pipeline/app/quotes.py` and `workbench.py`. The status comes from the reply's first line: QUOTE is quoted, DECLINE is declined by carrier, anything else is "reply needs human reading". A subjectivity is none only for exactly "none." or "none beyond the file as sent.". Per D-058, a carrier's "satisfied" is evidence only, and a listed underwriter closes a subjectivity with a logged one-click action on the workbench (`deliverables/software-engineer/subjectivity_closures.jsonl`). The form was checked in the rendered card only; the server was not run.
+- @compliance re-checked T-020 item (e): **APPROVE**. **The T-020 veto is lifted**: all six items, (a) to (f), are met. Medium/Low: B-194 (Medium, before real carrier replies: a QUOTE with no Subjectivities line, or with the header in other capitals, shows "none"), B-195, B-196.
+- D-058 recorded: D-043 confirmed; D-041, D-042, D-044 void as unverified.
 - The D-057 carrier override is built in `package.py`: no_match only, never hold; the user names the carrier and gives a reason; the label "Outside matched appetite — placed by underwriter override"; logged in `sends.jsonl`. @compliance: no finding.
 - D-057 recorded. B-190 (required before real data: authenticated underwriter action) and B-191 (required before pilot: concurrent decision-log writes) are on the backlog.
 - T-085 and T-086 are IN_REVIEW. @compliance approved T-020 items (b), (c), (d).
@@ -38,18 +39,17 @@ Written 2026-10-14 by the orchestrator at wrap-up. Wrap-up commit: `75d0dbd` on 
 | Task | Holder | Resolves when |
 |---|---|---|
 | T-017 | @model-risk, @responsible-ai | P-015 built and looked at again |
-| T-020 | @compliance | Item (e): fix T-087 High-1 as @compliance wrote it; (a) to (d) are met |
 | T-027 | @model-risk (production) | P-016 built, then the new 20-file hold-out scored once (T-091 to T-093) |
 | T-082 | @responsible-ai (fairness) | As written in its veto message in `team/DISCUSSION.md` |
 
 ## First 3 tasks next session
 
-1. @software-engineer fixes T-087 High-1 exactly as @compliance wrote it, then @compliance re-checks T-020 item (e). That is the last item of the T-020 veto.
-2. The remaining reviewers of T-079, T-085, T-086, T-087 (@senior-underwriter, @account-manager; @model-risk for T-079).
-3. T-083 carrier match (blocked on the @responsible-ai T-082 veto), or only after the demo: `architecture.md` stale lines and the reviews of T-094 to T-096.
+1. The remaining reviewers of T-079, T-085, T-086, T-087 (@senior-underwriter, @account-manager; @model-risk for T-079), and @senior-underwriter's look at T-020; then @pm closes what is approved.
+2. Re-raise for the user what D-058 voided and is still needed: the carrier match lists and caps (T-082, T-083) and the G2 hash basis and P-018.
+3. Only after the demo: `architecture.md` stale lines and the reviews of T-094 to T-096; B-194 before any real carrier reply.
 
 ## For the AI Engineer
 
 - Pending proposals: P-018 (parked); P-019 (parked, needs D-054 confirmation).
 - Latest eval scores: no new run. Baseline SUB-077 to 086: 2 of 8 scored fields at the D-013 pilot floor of 9/10.
-- Top failure to fix next: quote tracking reads every reply as "quoted"; a carrier decline shows as quoted (T-087 High-1).
+- Top failure to fix next: the carrier match has no accepted rules since D-058 voided D-041/D-042 (T-083 is blocked; `route()` still matches substrings).
