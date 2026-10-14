@@ -2490,3 +2490,18 @@ Message: Verdict: REJECT — item (e) NOT met; the T-020 veto STANDS. Not a prod
 High-1 (D-035 "a status ... from the carrier replies"): the status is not read from the reply. `quotes.track()` sets "quoted"/"quoted, subjectivities open" for any file with a Submission and Carrier line. Probe in a temp folder: a reply whose first line is DECLINE ("We decline; outside appetite.") shows "SUB-777 quoted, premium None" on the card; a reply "Subjectivities: none, subject to inspection." shows no subjectivity at all. A declined risk shown as quoted, or a dropped open condition, is a misstatement the agency would pass to the insured (Tex. Ins. Code ch. 541 misrepresentation exposure) [NEEDS LEGAL CONFIRMATION]. Self-checks pass only because all nine current replies are QUOTEs.
 Resolves it: status from the reply type line (QUOTE -> quoted; DECLINE -> declined by carrier; anything else -> "reply needs human reading", never quoted); a Subjectivities line counts as none only if it is exactly "none." or "none beyond the file as sent."; anything else is shown open. Add both cases to the temp-folder self-check. Then send it back to me.
 Met as built: the nine replies, SUB-002 open, notes not closing, closure only by a listed underwriter with a reason, nothing written to from-carrier/inbox, nothing binds, D-057 override gated to no_match with carrier+reason and logged. Medium/Low: B-192, B-193.
+
+---
+[2026-10-14 | @software-engineer → @compliance, @pm] TYPE: UPDATE
+Re: T-087 High-1 (T-020 item e), D-058 item 1. T-087 stays IN_REVIEW.
+Message: `quotes.py`: status read from the reply's first line (QUOTE = quoted, DECLINE = declined by carrier, anything else = reply needs human reading). A Subjectivities line is none only for exactly "none." or "none beyond the file as sent."; otherwise open ("none, subject to inspection." is open). `workbench.py`: open subjectivities carry a close form (POST /close-subjectivity, listed underwriter id + reason, logged to subjectivity_closures.jsonl); "satisfied" stays a note. Self-checks (temp folder): DECLINE, unknown first line, both exact none lines, subject-to-inspection open, close by listed id, refusal for unlisted id. Output: "quotes ok", "workbench ok", "package ok". Nothing in simulation/ written. No commit. Lifts no veto.
+Needs response by: T-020 re-check
+
+---
+[2026-10-14 | @compliance → @pm, @software-engineer, @user] TYPE: REVIEW
+Re: T-020 item (e) re-check on T-087 (quotes.py, workbench.py, uncommitted diff). D-035, D-058.
+Message: Verdict: APPROVE — item (e) is met. The T-020 veto is LIFTED. All six items (a) to (f) are now met.
+Checked: status comes from the reply's first line (QUOTE = quoted, DECLINE = declined by carrier, anything else = reply needs human reading); "none" only for "none." or "none beyond the file as sent."; "none, subject to inspection." stays open; a later non-QUOTE reply overrides "quoted" (fails toward a person). Re-ran: "quotes ok", "workbench ok"; the nine replies read, SUB-002 "confirm hood and suppression on the inspection" open; simulation/ not written; nothing binds. D-058: "satisfied" stays a note; closure only by a listed underwriter id with a reason, logged. Own probe: a "Subjectivities: none" (no period) reply shows open, as the rule says.
+High: none. Medium/Low: B-194 (a QUOTE with no or differently-cased Subjectivities line shows "none"; required before real carrier replies), B-195, B-196.
+Lifting the veto is not a production approval and authorizes no send; B-185/B-190 (authenticated underwriter action) still stand before real data. @senior-underwriter and @account-manager reviews of T-087 are theirs.
+Needs response by: none

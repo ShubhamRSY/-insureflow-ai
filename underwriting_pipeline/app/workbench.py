@@ -301,13 +301,16 @@ def serve(port: int = 8765, only: str | None = None) -> None:
             self.wfile.write(body)
 
         def do_POST(self):
-            if self.path != "/decision":
+            if self.path not in ("/decision", "/close-subjectivity"):
                 self.send_error(404)
                 return
             size = int(self.headers.get("Content-Length", "0"))
             payload = {k: v[0] for k, v in parse_qs(self.rfile.read(size).decode()).items()}
             try:
-                record_decision(payload, LOG)
+                if self.path == "/decision":
+                    record_decision(payload, LOG)
+                else:
+                    quotes.close_subjectivity(*(payload.get(k, "") for k in ("submission", "carrier", "subjectivity", "underwriter_id", "reason")))
             except ValueError as exc:
                 self.send_response(400)
                 self.end_headers()
@@ -499,6 +502,8 @@ if __name__ == "__main__":
         page2 = render([sub2], None)
         assert "carrier_b: quoted, subjectivities open" in page2 and "confirm hood and suppression on the inspection [open]" in page2 and "not bound" in page2
         assert "No carrier reply on file" in page_ok
+        # D-058: the open subjectivity has a close form posting to /close-subjectivity (listed id + reason, logged)
+        assert 'action="/close-subjectivity"' in page2
 
         assert logged["sent_to_carrier"] is False
         assert logged["reason"] == "self-check"

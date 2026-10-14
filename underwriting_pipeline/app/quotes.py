@@ -77,8 +77,13 @@ def track(from_dir: Path = None, to_dir: Path = None, closures: Path = None) -> 
             m = re.search(rf"^{name}:\s*(\d+)", text, re.I | re.M)
             if m:
                 row[name] = int(m[1])
+        first = text.strip().splitlines()[0].strip().upper() if text.strip() else ""
+        kind = {"QUOTE": "quoted", "DECLINE": "declined by carrier"}.get(first, "reply needs human reading")  # D-035: read from the reply, never assumed
+        if kind != "quoted" or not row["status"]:
+            row["status"] = kind
         m = re.search(r"^Subjectivities:\s*(.+)$", text, re.M)
-        if m and not re.match(r"(none\b|none\.)", m[1].strip(), re.I) and not m[1].lower().startswith("none beyond"):
+        # only these two exact lines mean none; anything else is shown open (T-020 item e)
+        if m and m[1].strip().lower() not in ("none.", "none beyond the file as sent."):
             for item in re.split(r"[;]", m[1].strip().rstrip(".")):
                 row["subjectivities"].append({"text": item.strip(), "state": "open"})
         for sentence in re.findall(r"[^.\n]*\bsatisfied\b[^.\n]*\.?", text):
@@ -90,7 +95,8 @@ def track(from_dir: Path = None, to_dir: Path = None, closures: Path = None) -> 
                 s["state"] = "closed"
                 s["closed_by"], s["closed_reason"] = c["underwriter_id"], c["reason"]
         open_n = sum(s["state"] == "open" for s in row["subjectivities"])
-        row["status"] = "quoted, subjectivities open" if open_n else "quoted"
+        if row["status"] == "quoted" and open_n:
+            row["status"] = "quoted, subjectivities open"
         pkg = to_dir / f"{sub}.md"
         row["sent_date"] = date.fromtimestamp(pkg.stat().st_mtime).isoformat() if pkg.exists() else "not recorded"
         row["bound"] = False
@@ -108,6 +114,10 @@ def html_for(submission: str) -> str:
         subs = "; ".join(f"{s['text']} [{s['state']}]" for s in r["subjectivities"]) or "none"
         out.append(f"<p>{html.escape(r['carrier'])}: {html.escape(r['status'])} · sent {html.escape(r['sent_date'])} · premium {r['premium']} · deductible {r['deductible']} · subjectivities: {html.escape(subs)} · not bound</p>")
         out += [f"<p>Note: {html.escape(n)}</p>" for n in r["notes"]]
+        for s in r["subjectivities"]:  # D-058: a listed underwriter closes it, one logged action
+            if s["state"] == "open":
+                f = "".join(f'<input type="hidden" name="{k}" value="{html.escape(v, quote=True)}">' for k, v in (("submission", submission), ("carrier", r["carrier"]), ("subjectivity", s["text"])))
+                out.append(f'<form method="post" action="/close-subjectivity">{f}<input name="underwriter_id" placeholder="underwriter id" required> <input name="reason" placeholder="reason" required> <button>Close: {html.escape(s["text"])}</button></form>')
     return "".join(out)
 
 
@@ -136,5 +146,18 @@ if __name__ == "__main__":
         close_subjectivity("SUB-002", "carrier_b", sub2["subjectivities"][0]["text"], "user", "inspection report seen", path=log)
         again = {(r["submission"], r["carrier"]): r for r in track(closures=log)}[("SUB-002", "carrier_b")]
         assert again["status"] == "quoted" and again["subjectivities"][0]["state"] == "closed"
+    with tempfile.TemporaryDirectory() as tmp:  # T-020 item (e): status from the reply, "none" only when exact
+        t = Path(tmp); (t / "f").mkdir()
+        def reply(name, first, sub, extra=""):
+            (t / "f" / name).write_text(f"{first}\nCarrier: A\nSubmission: {sub}\n{extra}\n")
+        reply("1.md", "DECLINE", "SUB-777", "We decline; outside appetite.")
+        reply("2.md", "MAYBE", "SUB-778", "Premium: 100\nSubjectivities: none.")
+        reply("3.md", "QUOTE", "SUB-779", "Subjectivities: none.")
+        reply("4.md", "QUOTE", "SUB-780", "Subjectivities: none beyond the file as sent.")
+        reply("5.md", "QUOTE", "SUB-781", "Subjectivities: none, subject to inspection.")
+        got = {r["submission"]: r for r in track(t / "f", t / "t", t / "none.jsonl")}
+        assert got["SUB-777"]["status"] == "declined by carrier" and got["SUB-778"]["status"] == "reply needs human reading"
+        assert got["SUB-779"]["status"] == got["SUB-780"]["status"] == "quoted" and not got["SUB-779"]["subjectivities"] and not got["SUB-780"]["subjectivities"]
+        assert got["SUB-781"]["status"] == "quoted, subjectivities open" and got["SUB-781"]["subjectivities"][0]["state"] == "open"
     assert before == sorted((p.name, p.stat().st_mtime) for p in FROM_CARRIER.glob("*"))  # read only
     print("quotes ok")

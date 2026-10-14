@@ -29,10 +29,9 @@ Written 2026-10-14 by the orchestrator at wrap-up. Wrap-up commit: `75d0dbd` on 
 
 ## Pending decisions for the user
 
-1. D-041 to D-044: confirm or reject under D-054.
-2. T-087: should a carrier's "satisfied" close a subjectivity, or only a listed underwriter's logged close (as built)? @software-engineer asks @senior-underwriter.
-4. P-018: waits on `approve change P-018` (parked). P-019/T-099 and T-100: parked.
-5. OCR price basis in the cost model: $10.00 or $1.50 per 1,000 pages.
+1. Re-raise as new decisions for the user what D-058 voided and is still needed: the carrier match lists and caps (D-041, D-042; T-082, T-083) and the G2 hash basis and P-018 (D-044).
+2. P-018: waits on `approve change P-018` (parked). P-019/T-099 and T-100: parked.
+3. OCR price basis in the cost model: $10.00 or $1.50 per 1,000 pages.
 
 ## Open vetoes and what resolves each
 

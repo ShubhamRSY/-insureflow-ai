@@ -633,3 +633,14 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: the override in `package.py` (@software-engineer, with T-087); B-190 (required before real data); B-191 (required before pilot).
 - Status: ACCEPTED
 - Amends: answers the T-085 QUESTION. No automatic decline and no automatic bind are unchanged. Not a production approval; lifts no veto; authorizes no send.
+
+## D-058 — Subjectivity closing; D-043 confirmed; D-041, D-042, D-044 void
+- Date / Owner: 2026-10-14 / @user
+- Context: T-087 asked whether a carrier's "satisfied" closes a subjectivity. D-041 to D-044 were recorded outside this session and waited for the user's confirmation under D-054.
+- Options considered: none. The user's rules.
+- Decision: In the user's words. "1. Subjectivities: a carrier's "satisfied" never closes one automatically. It is attached as evidence on the workbench, and a listed underwriter closes it with a logged one-click action. 2. D-041 to D-044: confirm D-043 (my P-010 approval). Void D-041, D-042 and D-044 as unverified; re-raise anything still needed as a new decision for me."
+- Rationale: The user typed this in this Claude Code session on 2026-10-14.
+- Dissent: none
+- Follow-up tasks: T-087 (@software-engineer). Re-raise as new decisions for @user, if still needed: the carrier match lists and caps (were D-041, D-042; T-082, T-083 rest on them) and the G2 hash basis and P-018 (were D-044; T-070 was built on that basis).
+- Status: ACCEPTED
+- Amends: D-043 is confirmed. D-041, D-042, and D-044 are void and are not relied on; their text stays unedited as a record. Not a production approval; lifts no veto; authorizes no send.

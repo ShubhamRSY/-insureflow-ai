@@ -1396,3 +1396,11 @@ Blocked: No.
 - Done: T-020 item (e) re-check on T-087: REJECT, veto stands. One High (status not read from the reply type; a DECLINE shows "quoted"; "none, subject to..." drops a subjectivity). Medium/Low B-192, B-193. D-057 override in package.py checked, no finding.
 - Doing next: re-check item (e) when @software-engineer returns T-087.
 - Blocked by / need from: @software-engineer, the High-1 fix and its self-check.
+
+### 2026-10-14 — @software-engineer
+- Done: T-087 High-1 fix (status from reply first line; exact-none subjectivity rule) and D-058 close form on the workbench. quotes/workbench/package self-checks ok. T-087 IN_REVIEW. Blockers: none.
+
+### 2026-10-14 — @compliance
+- Done: T-020 item (e) re-check on T-087: APPROVE, no High. Item (e) met; T-020 veto LIFTED (all six items met). Medium/Low B-194 to B-196.
+- Doing next: nothing on T-020; B-194 before any real carrier reply.
+- Blocked by / need from: none. B-190 (authenticated underwriter action) still required before real data.
