@@ -1,21 +1,27 @@
 # Next session
 
-Written 2026-10-14 by the orchestrator at wrap-up. Wrap-up commit: `8c77f8d` on `ai-team`, pushed to `origin/ai-team` (private). Budget rule 8: demo blockers only (weekly limit resets 2026-10-17). Standing rules: D-065 (backend + UI), D-069 (sandbox only). The frontend/ files are the user's and are never staged. **Run every pipeline command with `.venv/bin/python`** (Playwright screenshots use the system python3, sandbox only). SUB-087–106 is development data.
+Written 2026-10-15 by the orchestrator at wrap-up. Wrap-up commit: `1c5b838` on `ai-team`, pushed to `origin/ai-team` (private). Budget rule 8: demo blockers only (weekly limit resets 2026-10-17). Standing rules: D-065, D-069. The frontend/ files are the user's and are never staged. **Run every pipeline command with `.venv/bin/python`** (Playwright screenshots: system python3, sandbox only). SUB-087–106 is development data.
 
 ## Where we stopped
 
-- D-083 built in the main session:
-  - **P-036** (B-304). In `llm_extract.py` (words, same_address, split_schedule) and `prepare.py` (agrees, fuller):
-    - Two values agree when they are identical once case, punctuation, "&"/"and", St/Rd/Ave/Dr and spacing are normalized.
-    - A street-only short form agrees with the full address only when it has a street type, and the full form adds only city, state and ZIP: no unit and no direction.
-    - Any differing number stays a conflict, and every pair of sides must agree.
-    - Operations agree on the same class, or when all business words of the shorter wording are in the fuller one.
-    - Schedule addresses become locations only when every non-schedule side agrees with the same schedule row. Otherwise everything stays a conflict.
-    - The card keeps the fuller value, shows each other quote with its file after "also:", and the review note says "merged: N documents agree".
-  - @model-risk: REJECT ×3 (H1–H6), then **APPROVE** on the 4th check. @senior-underwriter UI check: APPROVE WITH CHANGES; both Highs (file name, merged note) fixed. Screenshot `D-083-P-036-also-quoted.png`.
-  - **B-305**: `eval_holdout_107.py` for SUB-107–126 compares addresses without parenthetical notes. Committed in `0bf3cf2`, before any submission or gold exists.
-  - Development check (`deliverables/ai-engineer/analysis/dev-SUB-087-106-D-083-comparison.md`): premises 7 → 11 and construction 13 → 16. Scans now read but OCR noise empties fields on SUB-088, 097 and 101 (B-311). Run-to-run variation is about ±1–2 per field.
-  - Smoke test: 8 of 8 types read. Quick-15 unchanged vs D-082.
+- D-084 built in the main session:
+  - **P-037** (B-311): a typed or structured value is never replaced by a scan read. A differing scan read keeps the typed value and flags it NEEDS REVIEW ("scan read differs: …; the typed value is kept — check against the page"). A scan still fills an empty field. This applies to the model's fields, the model's conflicts and the document rules, all using one scan list. @model-risk: REJECT (H1, document rules), then **APPROVE**. @senior-underwriter UI: **APPROVE**. Screenshot `D-084-P-037-scan-differs.png`.
+  - **Rates on every score report** (`regression_dev.py`: value_metrics, summarize, add_metrics):
+    - Silent error = a value is shown, it is wrong, and nothing flags it.
+    - Automation = the value is correct and not flagged.
+    - An empty field counts as flagged. Files with a failed call are left out of the rates and counted apart.
+    - @model-risk: no High.
+    - Results: dev check (D-083 replies, current code) 2.2% / 63.3% over 180 values; quick-15 1.7% / 70.0% over 120.
+  - **Model comparison** (`deliverables/ai-engineer/analysis/model-compare-D-084.md`, uncached, same code):
+
+    | | qwen/qwen3.8-27b | openai/gpt-oss-20b | openai/gpt-oss-120b |
+    |---|---|---|---|
+    | Silent error rate | 1.7% | 2.1% | 1.9% |
+    | Automation rate | 71.7% | 59.0% | 60.2% |
+    | Files run | 20 | 20 (4 failed: invalid JSON) | 12 (stopped: daily token limit hit at SUB-099) |
+    | Tokens per file | 1,579 | 2,788 | 2,762 |
+    | Seconds per file | 35.4 (incl. 35 per-minute 429 waits) | 58.6 | 12.7 before the limit |
+    | Weak spot | sales 6/20 | — | — |
 - Self-checks at wrap-up (.venv, no host): all six ok.
 
 ## Approved, not built
@@ -29,9 +35,9 @@ Written 2026-10-14 by the orchestrator at wrap-up. Wrap-up commit: `8c77f8d` on 
 
 ## Pending decisions for the user
 
-1. B-311 / B-301: noisy scan OCR competes with typed facts. A fix (e.g. prefer typed sources over a low-confidence scan read, or P-006 EasyOCR) needs a P-###.
-2. When to build the next hold-out SUB-107–126 (gold first, scorer `eval_holdout_107.py` ready, `smoke_readers.py` first).
-3. Mediums B-306 to B-310 (P-036 edge cases) before or after the hold-out.
+1. Model choice for the next hold-out: qwen/qwen3.8-27b led on automation and every field but sales (6/20). A model switch is a P-### (D-017).
+2. B-313: confirm the reading that a P-037 "needs-review conflict" is a flag acknowledged at approve, not an open conflict that blocks the send.
+3. When to build hold-out SUB-107–126 (gold first; scorer `eval_holdout_107.py` ready; run `smoke_readers.py` first).
 
 ## Open vetoes and what resolves each
 
@@ -42,14 +48,12 @@ Written 2026-10-14 by the orchestrator at wrap-up. Wrap-up commit: `8c77f8d` on 
 
 ## First 3 tasks next session
 
-1. @ai-engineer-assistant: proposal for B-311 (scan OCR noise vs typed facts).
-2. B-299: show the TIV reason alongside the liquor referral.
-3. If @user says so: T-091/T-092 for SUB-107–126 (submissions, then gold), scorer already committed.
+1. @ai-engineer-assistant: why qwen misses sales (6/20). Error analysis only, from the D-084 qwen run.
+2. The user's model decision (1), then the hold-out SUB-107–126 if they say so.
+3. B-299: show the TIV reason alongside the liquor referral.
 
 ## For the AI Engineer
 
-- Pending proposals: none open. B-311 needs a new P-###.
-- Latest eval scores:
-  - Quick-15 (D-083, hit / needs review): named_insured 13/0, operations 12/1, sales 13/0, construction 13/2, year_built 15/0, premises 12/0, tiv 14/0, loss_runs 8/1, conflict 10/3, status 12/1.
-  - Dev SUB-087–106 (D-083, hit of 20): named 17, premises 11, effective date 13, operations 11, sales 10 (+1 needs review), TIV 14, construction 16, year built 12, loss runs 13.
-- Top failure to fix next: B-311, noisy scan text overriding typed facts.
+- Pending proposals: none open. A model switch would need a P-###.
+- Latest eval scores: quick-15 (D-084, gpt-oss-120b): silent error 1.7%, automation 70.0%; hits as D-083. Model comparison as in the table above.
+- Top failure to fix next: qwen sales 6/20, if qwen is chosen; otherwise gpt-oss-120b's daily token budget for a 20-file run.
