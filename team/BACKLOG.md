@@ -334,3 +334,6 @@ Also open from T-097, already in the register's Section D so not repeated as row
 | B-314 | D-084 | @model-risk | Medium (M3): a model conflict item gets typed-first only when the field is still empty. | 2026-10-14 |
 | B-315 | D-084 | @model-risk | Low (L3/L4): a scan read too weak to store can still flag a typed value; a scan rule can fill a field emptied by an open conflict (the conflict still blocks the send). | 2026-10-14 |
 | B-316 | D-084 | @senior-underwriter | Medium: the approve tick box shows only the typed value, not the scan's; a garbled scan read is shown raw and can look like our typo. | 2026-10-14 |
+| B-317 | D-085 | @ai-engineer-assistant | High for a model switch: qwen/qwen3.8-27b puts sales and payroll (or a label) in one value and drops markdown "**" from quotes, so the gate rejects 11 of 14 sales misses although the number was read right. Needs a P-### (prompt wording or a gate split) before qwen can be chosen. | 2026-10-15 |
+| B-318 | D-085 | @ai-engineer-assistant | Medium: a model conflict with one side failing the gate is dropped and the good side is lost (SUB-094 sales). | 2026-10-15 |
+| B-319 | D-085 | @model-risk | Medium: eval_holdout_087 conflict matching misses stored sides written with $ and commas (SUB-106 sales scored miss, not flagged); for eval_holdout_107 only, before its gold. | 2026-10-15 |

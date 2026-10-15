@@ -946,3 +946,14 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: built in the main session (budget rule 3); @model-risk check. Orchestrator's reading: (a) a scan source is a file whose text came from OCR (an image, or a PDF with an OCR'd page). (b) "needs-review conflict": the typed value is kept and flagged needs review, the reason names the scan's value and file; it is acknowledged at approve like any needs-review value (D-064) rather than stored as an open conflict that would block the send outright. (c) Item 2 is the user's own instruction for the score reports: the metrics are added in `regression_dev.py` (the runner) and written beside each score; no frozen scorer and no hit/miss rule changes; published score files are not rewritten.
 - Status: ACCEPTED
 - Amends: B-311. Not a production approval. No send is authorized.
+
+## D-085 — No model switch yet; fair comparison, qwen stability, qwen sales error analysis (development data)
+- Date / Owner: 2026-10-15 / @user
+- Context: D-084 model comparison; qwen/qwen3.8-27b led on automation but sales 6/20; gpt-oss-120b stopped at its daily limit after 12 files.
+- Options considered: none. The user's words.
+- Decision: In the user's words. "No model switch yet. Three checks, development data only (SUB-087–106): 1. Fair comparison: recompute all three models' per-field hits, silent error rate and automation rate on only the files all three completed (the 12 gpt-oss-120b finished). 2. Stability: run qwen/qwen3.8-27b a second time on all 20 files, uncached, and report run-to-run differences per field. 3. Error analysis of qwen's sales misses: for each, show the gold value, qwen's value, the document text, and the cause (wrong number chosen such as payroll vs revenue, format/normalizer, empty, conflict merge, or scan). No fix yet. Pace calls to stay under Groq's per-minute limit. Then show me a short recommendation: switch to qwen, stay on gpt-oss-120b, or fix sales first then switch. /wrap-up and push."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-15 (D-032).
+- Dissent: none
+- Follow-up tasks: main session (budget rule 3). Orchestrator's reading: "files all three completed" = the 12 gpt-oss-120b scored (SUB-087 to SUB-098) minus any file another model failed on.
+- Status: ACCEPTED
+- Amends: none. No code change. Not a production approval.

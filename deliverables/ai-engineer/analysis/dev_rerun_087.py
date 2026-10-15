@@ -20,7 +20,9 @@ import llm_extract  # noqa: E402
 import regression_dev  # noqa: E402
 import sources  # noqa: E402
 
-CACHED_ONLY = os.environ.get("DEV_CACHED_ONLY") == "1"  # score only files already in LLM_CACHE_DIR; no model call
+CACHED_ONLY = os.environ.get("DEV_CACHED_ONLY") == "1"
+PACE = float(os.environ.get("DEV_PACE_SECONDS") or 0)  # D-085: at least this many seconds between file starts (Groq per-minute limits)
+_last: list[float] = []  # score only files already in LLM_CACHE_DIR; no model call
 
 TAG = os.environ.get("DEV_TAG") or "D-083"
 EVALS = ROOT / "deliverables" / "ai-engineer" / "evals"
@@ -39,7 +41,10 @@ def timed(sid: str) -> dict:
     if CACHED_ONLY and not (llm_extract.CACHE / "extractions" / f"{llm_extract.key_for(sources.read_folder(scorer.INBOX / sid))}.json").exists():
         stopped.append(sid)  # re-scoring a stopped run from its cache: the first file it never reached ends it
         return not_run
+    if PACE and _last and time.monotonic() - _last[-1] < PACE:
+        time.sleep(PACE - (time.monotonic() - _last[-1]))
     start = time.monotonic()
+    _last.append(start)
     row = regression_dev.score_retry(scorer, sid, plain)
     seconds[sid] = round(time.monotonic() - start, 1)
     if any("per day" in str(item.get("detail")) for item in llm_extract.CALL_LOG):
