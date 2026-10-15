@@ -1,0 +1,519 @@
+{
+  "label": "9 of 9 extracted fields scored; claims not read; loss runs = date only",
+  "commit": "9e725e3d067d4b1d30725a46b8d284c4678f38bf",
+  "uncommitted": [],
+  "model": "openai/gpt-oss-120b",
+  "host": "api.groq.com",
+  "submissions": [
+    {
+      "submission": "SUB-087",
+      "format": "typed PDF app, typed loss run, csv schedule, email",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "miss"
+      },
+      "extracted_named_insured": "Blue Heron Kitchen LLC",
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-088",
+      "format": "rotated handwritten-style scan plus email",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "miss",
+        "sales": "hit",
+        "construction": "miss",
+        "year_built": "miss",
+        "premises": "miss",
+        "tiv": "miss",
+        "loss_runs": "not_credited",
+        "conflict": "hit",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Harvest Crumb Bakery LLC",
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-089",
+      "format": "typed md app, xlsx schedule with 3 locations, typed loss run",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "miss",
+        "year_built": "miss",
+        "premises": "miss",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "miss"
+      },
+      "extracted_named_insured": "Ironwood Residential Partners LLC",
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-090",
+      "format": "Spanish typed app and Spanish email",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "not_credited",
+        "conflict": "hit",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Taquer\u00eda Luna Verde LLC",
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-091",
+      "format": "typed PDF app and loss run, email",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Kettle & Spur Lounge LLC",
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-092",
+      "format": "typed PDF app and loss run, xlsx schedule, email",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "miss",
+        "year_built": "hit",
+        "premises": "miss",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "miss",
+        "status": "miss"
+      },
+      "extracted_named_insured": "Border Cold Storage Distributors LLC",
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-093",
+      "format": "email only",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "miss",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "miss",
+        "tiv": "miss",
+        "loss_runs": "not_credited",
+        "conflict": "hit",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Pine Hollow Accounting PLLC",
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-094",
+      "format": "typed md app, xlsx schedule, typed loss run, email",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "hit",
+        "sales": "miss",
+        "construction": "hit",
+        "year_built": "miss",
+        "premises": "miss",
+        "tiv": "miss",
+        "loss_runs": "hit",
+        "conflict": "miss",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Lone Oak Signworks LLC",
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-095",
+      "format": "typed PDF app, csv schedule, email, duplicate resubmission",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "hit",
+        "sales": "miss",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "miss",
+        "tiv": "hit",
+        "loss_runs": "not_credited",
+        "conflict": "miss",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Lone Oak Signworks LLC",
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-096",
+      "format": "typed md app, xlsx schedule with 3 locations, typed loss run, email",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "miss",
+        "operations": "miss",
+        "sales": "miss",
+        "construction": "miss",
+        "year_built": "miss",
+        "premises": "miss",
+        "tiv": "miss",
+        "loss_runs": "hit",
+        "conflict": "miss",
+        "status": "miss"
+      },
+      "extracted_named_insured": "Mesquite Home and Gift Co LLC",
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-097",
+      "format": "dark tilted handwritten-style scan plus email",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "miss",
+        "effective_date": "miss",
+        "operations": "hit",
+        "sales": "miss",
+        "construction": "miss",
+        "year_built": "miss",
+        "premises": "miss",
+        "tiv": "hit",
+        "loss_runs": "not_credited",
+        "conflict": "hit",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Bayou Smokehouse and Grill LLC",
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-098",
+      "format": "typed md app, typed loss run, email",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "miss",
+        "effective_date": "miss",
+        "operations": "miss",
+        "sales": "miss",
+        "construction": "miss",
+        "year_built": "miss",
+        "premises": "miss",
+        "tiv": "miss",
+        "loss_runs": "hit",
+        "conflict": "miss",
+        "status": "miss"
+      },
+      "extracted_named_insured": null,
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-099",
+      "format": "typed PDF app, typed loss run, csv schedule, email",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "miss",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "miss",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "miss",
+        "status": "miss"
+      },
+      "extracted_named_insured": "Brazos Paper & Janitorial Supply LLC",
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-100",
+      "format": "typed PDF app, typed loss run, email contradicting the app",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "miss",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "flagged",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "flagged",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Cottonwood Court Apartments LLC",
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-101",
+      "format": "typed md app, csv schedule, scanned loss run, email",
+      "error": "'str' object has no attribute 'get'",
+      "call": "call failed: 'str' object has no attribute 'get'",
+      "checks": {
+        "named_insured": "call_failed",
+        "effective_date": "call_failed",
+        "operations": "call_failed",
+        "sales": "call_failed",
+        "construction": "call_failed",
+        "year_built": "call_failed",
+        "premises": "call_failed",
+        "tiv": "call_failed",
+        "loss_runs": "call_failed",
+        "conflict": "call_failed",
+        "status": "call_failed"
+      },
+      "extracted_named_insured": null,
+      "attempts": 3
+    },
+    {
+      "submission": "SUB-102",
+      "format": "email, typed loss run, csv schedule, duplicate of SUB-087 with changed facts",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "miss",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "miss",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "miss"
+      },
+      "extracted_named_insured": "Blue Heron Kitchen LLC",
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-103",
+      "format": "typed md app, xlsx schedule, typed loss run, email",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "miss",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "miss",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "miss",
+        "status": "miss"
+      },
+      "extracted_named_insured": "Piney Woods Cabinet Works LLC",
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-104",
+      "format": "Spanish typed app, Spanish loss letter, Spanish email",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "miss",
+        "sales": "miss",
+        "construction": "hit",
+        "year_built": "miss",
+        "premises": "hit",
+        "tiv": "miss",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "miss"
+      },
+      "extracted_named_insured": "Lavander\u00eda Estrella del Norte LLC",
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-105",
+      "format": "typed PDF app and loss run, email",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Sakura Ridge Grill & Sushi LLC",
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-106",
+      "format": "typed PDF app plus email contradicting the app",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "hit",
+        "sales": "flagged",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "not_credited",
+        "conflict": "flagged",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Redbud Engineering Consulting LLC",
+      "attempts": 1
+    }
+  ],
+  "counted": {
+    "named_insured": {
+      "hit": 17,
+      "hit (needs review)": 0,
+      "miss": 2,
+      "not_credited": 0,
+      "call_failed": 1,
+      "flagged": 0
+    },
+    "premises": {
+      "hit": 7,
+      "hit (needs review)": 0,
+      "miss": 12,
+      "not_credited": 0,
+      "call_failed": 1,
+      "flagged": 0
+    },
+    "effective_date": {
+      "hit": 14,
+      "hit (needs review)": 0,
+      "miss": 5,
+      "not_credited": 0,
+      "call_failed": 1,
+      "flagged": 0
+    },
+    "operations": {
+      "hit": 12,
+      "hit (needs review)": 0,
+      "miss": 7,
+      "not_credited": 0,
+      "call_failed": 1,
+      "flagged": 0
+    },
+    "sales": {
+      "hit": 12,
+      "hit (needs review)": 0,
+      "miss": 6,
+      "not_credited": 0,
+      "call_failed": 1,
+      "flagged": 1
+    },
+    "tiv": {
+      "hit": 13,
+      "hit (needs review)": 0,
+      "miss": 6,
+      "not_credited": 0,
+      "call_failed": 1,
+      "flagged": 0
+    },
+    "construction": {
+      "hit": 13,
+      "hit (needs review)": 0,
+      "miss": 6,
+      "not_credited": 0,
+      "call_failed": 1,
+      "flagged": 0
+    },
+    "year_built": {
+      "hit": 11,
+      "hit (needs review)": 0,
+      "miss": 7,
+      "not_credited": 0,
+      "call_failed": 1,
+      "flagged": 1
+    },
+    "loss_runs": {
+      "hit": 13,
+      "hit (needs review)": 0,
+      "miss": 0,
+      "not_credited": 6,
+      "call_failed": 1,
+      "flagged": 0
+    },
+    "conflict": {
+      "hit": 10,
+      "hit (needs review)": 0,
+      "miss": 7,
+      "not_credited": 0,
+      "call_failed": 1,
+      "flagged": 2
+    },
+    "status": {
+      "hit": 10,
+      "hit (needs review)": 0,
+      "miss": 9,
+      "not_credited": 0,
+      "call_failed": 1,
+      "flagged": 0
+    }
+  }
+}

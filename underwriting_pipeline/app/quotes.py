@@ -93,12 +93,12 @@ def track(from_dir: Path = None, to_dir: Path = None, closures: Path = None) -> 
             c = closed.get((sub, car, s["text"]))
             if c:
                 s["state"] = "closed"
-                s["closed_by"], s["closed_reason"] = c["underwriter_id"], c["reason"]
+                s["closed_by"], s["closed_reason"], s["closed_date"] = c["underwriter_id"], c["reason"], c.get("date", "date not recorded")
         open_n = sum(s["state"] == "open" for s in row["subjectivities"])
         if row["status"] == "quoted" and open_n:
             row["status"] = "quoted, subjectivities open"
         pkg = to_dir / f"{sub}.md"
-        row["sent_date"] = date.fromtimestamp(pkg.stat().st_mtime).isoformat() if pkg.exists() else "not recorded"
+        row["sent_date"] = package.sent_on(pkg) if pkg.exists() else "not recorded"  # B-248: the package header, same as the workbench card
         row["bound"] = False
     return sorted(rows.values(), key=lambda r: (r["submission"], r["carrier"]))
 
@@ -114,6 +114,9 @@ def html_for(submission: str) -> str:
         subs = "; ".join(f"{s['text']} [{s['state']}]" for s in r["subjectivities"]) or "none"
         out.append(f"<p>{html.escape(r['carrier'])}: {html.escape(r['status'])} · sent {html.escape(r['sent_date'])} · premium {r['premium']} · deductible {r['deductible']} · subjectivities: {html.escape(subs)} · not bound</p>")
         out += [f"<p>Note: {html.escape(n)}</p>" for n in r["notes"]]
+        if r["subjectivities"]:  # D-058, D-069: the carrier's word is never the closure
+            out.append("<p><i>Carrier's word is evidence only; an underwriter closes it.</i></p>")
+        out += [f"<p class=\"closure\">Closed: {html.escape(s['text'])} — by {html.escape(s['closed_by'])} on {html.escape(s['closed_date'])}: {html.escape(s['closed_reason'])}</p>" for s in r["subjectivities"] if s["state"] == "closed"]
         for s in r["subjectivities"]:  # D-058: a listed underwriter closes it, one logged action
             if s["state"] == "open":
                 f = "".join(f'<input type="hidden" name="{k}" value="{html.escape(v, quote=True)}">' for k, v in (("submission", submission), ("carrier", r["carrier"]), ("subjectivity", s["text"])))
@@ -133,7 +136,8 @@ if __name__ == "__main__":
     assert sub2["premium"] == 9800 and sub2["deductible"] == 2500 and sub2["notes"]
     assert rows[("SUB-001", "carrier_a")]["status"] == "quoted" and rows[("SUB-001", "carrier_a")]["subjectivities"] == []
     assert rows[("SUB-005", "carrier_c")]["premium"] == 10400
-    assert "[open]" in html_for("SUB-002") and "No carrier reply" in html_for("SUB-999")
+    assert rows[("SUB-009", "carrier_a")]["sent_date"] == package.sent_on(TO_CARRIER / "SUB-009.md")  # B-248: one source for the sent date
+    assert "[open]" in html_for("SUB-002") and "evidence only; an underwriter closes it" in html_for("SUB-002") and "No carrier reply" in html_for("SUB-999")
     with tempfile.TemporaryDirectory() as tmp:
         log = Path(tmp) / "c.jsonl"
         for bad in (("nobody", "x"), ("user", "")):
@@ -146,6 +150,14 @@ if __name__ == "__main__":
         close_subjectivity("SUB-002", "carrier_b", sub2["subjectivities"][0]["text"], "user", "inspection report seen", path=log)
         again = {(r["submission"], r["carrier"]): r for r in track(closures=log)}[("SUB-002", "carrier_b")]
         assert again["status"] == "quoted" and again["subjectivities"][0]["state"] == "closed"
+        assert again["subjectivities"][0]["closed_date"] == date.today().isoformat()
+        saved_closures = CLOSURES
+        CLOSURES = log
+        try:
+            page = html_for("SUB-002")
+        finally:
+            CLOSURES = saved_closures
+        assert "Closed: confirm hood" in page and "by user on" in page and "inspection report seen" in page and "evidence only; an underwriter closes it" in page
     with tempfile.TemporaryDirectory() as tmp:  # T-020 item (e): status from the reply, "none" only when exact
         t = Path(tmp); (t / "f").mkdir()
         def reply(name, first, sub, extra=""):

@@ -244,3 +244,98 @@ Also open from T-097, already in the register's Section D so not repeated as row
 | B-224 | P-016 | @software-engineer | Low: workbench ai_version logs "local-default" when LLM_MODEL is unset. | 2026-10-14 |
 | B-225 | P-016 | @ai-engineer-assistant | Low: the "no known loss" drop returns no reason. | 2026-10-14 |
 | B-226 | P-016 | @ai-engineer-assistant | Low: as-built memo says quick-15 not run; the P-016 score file exists. | 2026-10-14 |
+| B-227 | D-065 | @pm | Required for pilot: integrate the pipeline workbench features into the React app in `frontend/`. Separate task, after the demo. | 2026-10-14 |
+| B-228 | P-024 | @ai-engineer-assistant | Medium: merged row keeps one side's quote; the other side's quote is not saved. | 2026-10-14 |
+| B-229 | P-024 | @ai-engineer-assistant | Medium: an agreeing conflict is dropped without comparison when the field already has a value (pre-existing). | 2026-10-14 |
+| B-230 | P-024 | @ai-engineer-assistant | Low: no self-check covers the fields-loop flag carry. | 2026-10-14 |
+| B-231 | D-066 | @software-engineer | High (senior-underwriter, open): 83 of 86 cards are red "No usable saved run"; list saved-run cards first, fold the rest into one collapsed "No saved run (83)" block with the reason and how to create a run. | 2026-10-14 |
+| B-232 | D-066 | @software-engineer | Medium: Send form on hold/incomplete/no-carrier cards and never names the carrier. | 2026-10-14 |
+| B-233 | D-066 | @software-engineer | Medium: no "already sent" line; a second send overwrites to-carrier/SUB-###.md, a second approve overwrites to-producer. | 2026-10-14 |
+| B-234 | D-066 | @software-engineer | Medium: SUB-029 "Not read by extraction: schedule.xlsx" while five fields cite it (ignored list by extension, not saved run). | 2026-10-14 |
+| B-235 | D-066 | @software-engineer | Medium: SUB-010 quote tracking shows carrier_b quoted while match is hold and send refused. | 2026-10-14 |
+| B-236 | D-066 | @software-engineer | Medium: draft not tied to the saved run; a stale draft can be approved after the file changed. | 2026-10-14 |
+| B-237 | D-066 | @software-engineer | Medium: draft approve is user-override only, button says "send"; no account-manager path or agency-rule result shown (D-050). | 2026-10-14 |
+| B-238 | D-066 | @software-engineer | Medium: refusal messages in a process-wide unlocked dict; shown once to whichever GET comes first. | 2026-10-14 |
+| B-239 | D-066 | @software-engineer | Medium: no saved-run time/age on the card; a stale run looks current. | 2026-10-14 |
+| B-240 | D-066 | @software-engineer | Low: refusal texts are raw ValueError wording ("G2", status names). | 2026-10-14 |
+| B-241 | D-066 | @software-engineer | Low: decision form has no id hint or order hint (approve, then send). | 2026-10-14 |
+| B-242 | D-066 | @software-engineer | Low: "Approve and send to producer" has no confirm or typed line, unlike the carrier send. | 2026-10-14 |
+| B-243 | P-025 | @ai-engineer-assistant | High (model-risk, open): SUB-067 conflict is a plain hit only because of a low-confidence scan value; treat conflict like status in the split; CHECK_FIELD misses premises→premises_address; rerun quick set into a new file. | 2026-10-14 |
+| B-244 | P-025 | @software-engineer | High (model-risk, open): a 0.50–0.74 scan value counts toward complete and `agency_problem` never reads needs_review; refuse the send while any low-confidence scan row is unacknowledged; self-check. | 2026-10-14 |
+| B-245 | P-025 | @ai-engineer-assistant | Medium: report accuracy of the 0.50–0.74 band and a "miss (needs review)" count (SUB-067 stores a wrong name and garbled operations). | 2026-10-14 |
+| B-246 | P-025 | @ai-engineer-assistant | Low: as-built note contradicts itself on plain hits; the split also runs in --holdout scoring. | 2026-10-14 |
+| B-247 | D-067 | @software-engineer | Medium: a resend overwrites the first package file. | 2026-10-14 |
+| B-248 | D-067 | @software-engineer | Medium: SUB-009 quote tracking "sent 2026-10-10" vs "Already sent on 2026-10-14". | 2026-10-14 |
+| B-249 | D-067 | @software-engineer | Medium: the send form shows before an approve is logged. | 2026-10-14 |
+| B-250 | D-067 | @software-engineer | Medium: "already sent" date is the file mtime, so a resend moves it. | 2026-10-14 |
+| B-251 | D-067 | @software-engineer | Low: no warning when the carrier route changed since the first send. | 2026-10-14 |
+| B-252 | D-068 | @software-engineer | Low: sandbox `serve()` rewrites the real `workbench.html` (restored by git checkout); serve should write to the sandbox. | 2026-10-14 |
+| B-253 | D-068 | @software-engineer | Low: "Approve first" wording is jargon for an underwriter. | 2026-10-14 |
+| B-254 | D-068 | @software-engineer | Low: the "Already sent" line is dropped when an acknowledgment is open. | 2026-10-14 |
+| B-255 | D-068 | @software-engineer | Low: "Approve again" refusal does not say why the earlier approve did not cover the value. | 2026-10-14 |
+| B-256 | D-068 | @software-engineer | Low: after a send, a later edit/note decision shows the ack message instead of "latest decision is X". | 2026-10-14 |
+| B-257 | D-069 | @software-engineer | After demo: account manager checks shown on the card (agency rules pass/fail, D-017 item 3 / D-050) — D-065 gap item 3. | 2026-10-14 |
+| B-258 | D-069 | @software-engineer | After demo: carrier override form (D-057: no_match only, carrier + reason, logged) — D-065 gap item 5. | 2026-10-14 |
+| B-259 | D-069 | @software-engineer | After demo: document upload / intake in the UI — D-065 gap item 15. | 2026-10-14 |
+| B-260 | P-026 | @user | Medium (decision): a byte-identical re-save keeps the same hash, so the old approve still counts; D-069 says "any re-save". Accept, or add a save id to the hash. | 2026-10-14 |
+| B-261 | P-026 | @software-engineer | Low: a /decision POST without run_hash skips the stale-card check; make the field required. | 2026-10-14 |
+| B-262 | P-026 | @software-engineer | Low: an old approve with no hash shows "file changed since your approval" though nothing changed. | 2026-10-14 |
+| B-263 | P-026 | @software-engineer | Low: confirm build_package uses the same saved-run read as the send gate. | 2026-10-14 |
+| B-264 | D-069 | @software-engineer | Medium: "Suggested market: none" beside "Carrier match: carrier_a" reads as a contradiction. | 2026-10-14 |
+| B-265 | D-069 | @software-engineer | Medium: footer model is the environment's, not the model that made the saved run. | 2026-10-14 |
+| B-266 | D-069 | @software-engineer | Medium: a stale card does not show what changed since the approval. | 2026-10-14 |
+| B-267 | D-069 | @software-engineer | Low: History shows only "user" as who; sent "not recorded" has no reason; closure "date not recorded" untested visually. | 2026-10-14 |
+| B-268 | P-015 | @ai-engineer-assistant | High (model-risk, open; T-017 veto stands): `cooking_facts` tests "no" only at line start; "Cooking equipment: no fryer; gas grill and charbroiler" reads "stated none", scores 0, no quote. Fix: negate per clause, show the quote on "stated none", add the case to the self-check. @user: P-015 fix or new P-###. | 2026-10-14 |
+| B-269 | P-015 | @user | Medium (decision): E2 cache key is null because prepare.py does not save it; saving it is an `ai/` change needing a P-###. | 2026-10-14 |
+| B-270 | D-070 | @pm | Owed: @responsible-ai fairness check of P-015 (dispatch stopped on the weekly usage limit, nothing written) and the @senior-underwriter UI check of the D-070 workbench (D-065). | 2026-10-14 |
+| B-271 | D-070 | @ai-engineer-assistant | Medium: only 15 of 60 development files are in the extraction cache, so B-222 (115 values) and T-067 (7 files, 1 scored) are thin; the P-016 drop analysis said 60 of 60 hits — reconcile. | 2026-10-14 |
+| B-272 | P-027 | @user | High (model-risk, open; T-017 veto stands): other separators ("but", ".", "&", " - ", "pero") let "no" cover the rest of the line, so a later hazard reads "stated none" (+25 missed). Resolve: a negation word denies only the first hazard term after it; self-checks for those lines. `ai/` change: needs "approve change P-###". | 2026-10-14 |
+| B-273 | P-027 | @ai-engineer-assistant | Medium: "/" splits "N/A", so equipment N/A shows "other" and hood N/A shows "stated" (score unchanged, display wrong). | 2026-10-14 |
+| B-274 | P-027 | @ai-engineer-assistant | Low: "no fryer or grill" scores +25 for grill; "fryer (none)", "fryer - none", "fryer not used" score +25. | 2026-10-14 |
+| B-275 | P-027 | @software-engineer | Low: the D-071 screenshot was taken before the P-027 "What's new" line was added. | 2026-10-14 |
+| B-276 | P-029 | @user | High (model-risk, open; T-017 veto stands; the reviewer called it B-275, renumbered because B-275 is taken): a negation carries across and/with/y/con to a later hazard — "no hood and gas grill", "no hood with grill", "sin campana con parrilla", "no hood y parrilla" read "stated none" (+25 missed; P-027 scored them). Resolve: a negation denies a hazard only when directly after it or with only modifiers between ("no gas grill"); else needs review; self-checks for "no hood and gas grill", "sin campana con parrilla". Needs "approve change P-###". | 2026-10-14 |
+| B-277 | P-029 | @ai-engineer-assistant | Low: "fryer, none" scores +25 (safe direction); "grill, no fryer" goes to needs review (as the rule says). | 2026-10-14 |
+| B-278 | P-029 | @software-engineer | Low: no control records the underwriter's cooking call after "needs review", so cooking points stay 0. | 2026-10-14 |
+| B-279 | P-030 | @user | High (model-risk, open; T-017 veto stands): the build does not match D-073 rule 2 — `MODIFIER` accepts any 0–2 words, so one negation reaches a later hazard across another hazard term or an unlisted connector ("no fryer plus grill", "no fryer only grill", "no fryer except grill", "sin freidora más parrilla", "no microwave plus grill" read none; +25 missed). Reviewer's fix (rule 2 as written, not a new variant): each hazard term needs its own negation word, only words from a short modifier list between; all else rule 3; self-checks for those lines. `ai/` change: needs "approve change P-###". Stopped per D-073. | 2026-10-14 |
+| B-280 | P-030 | @ai-engineer-assistant | Low: "dont use fryer", "never a fryer" score +25 (over-score); a newline does not break the negation scope. | 2026-10-14 |
+| B-281 | P-031 | @ai-engineer-assistant | Low: a negation right after "/" is skipped ("grill/no fryer", "fryer/none" score present; safe direction). | 2026-10-14 |
+| B-282 | P-031 | @ai-engineer-assistant | Low: absence words not on the user's list ("w/o", "removed", "zero", "isn't") score present. | 2026-10-14 |
+| B-283 | P-031 | @ai-engineer-assistant | Low: items written on the line after "Cooking equipment:" read as not stated; cooking_facts docstring still lists the old "none" state. | 2026-10-14 |
+| B-284 | P-028 | @ai-engineer-assistant | Medium: the P-028 self-check stubs llm_extract and compares key_for to itself; add a check that the stored key equals the real cache file name of a cached run. | 2026-10-14 |
+| B-285 | P-028 | @software-engineer | Low: the footer cuts the fallback text to "not recorded" even for runs that never called the model; a key is saved for extraction_failed runs without saying so. | 2026-10-14 |
+| B-286 | D-077 | @responsible-ai | Medium (fairness finding, open): `workbench.match` class words route "Taqueria/Panadería/Diner/Pizzeria/Kosher Deli" to carrier_b but "Pho House/Soul Food Kitchen/Curry House" to no_match (SUB-002 cuisine swap). Score and cooking unchanged. Needs @responsible-ai and @senior-underwriter review of the class list (relates to T-082). | 2026-10-14 |
+| B-287 | D-077 | @data-scientist | Low: swap-test coverage is thin for persons (2 files) and cuisines (3 files); SUB-020/SUB-030 needs-review change is a method artifact (a model-added word collapsed into the swap word). | 2026-10-14 |
+| B-288 | D-078 | @data-engineer | Add owner-name fields (and owner names in typed text) to future synthetic files so the person-name swap covers more than the 2 files with a "From:" sender. | 2026-10-14 |
+| B-289 | D-078 | @senior-underwriter | Medium (fairness finding): PROHIBITED "bar" matches "sushi bar" (also "salad bar", "juice bar", "oyster bar"), giving a non-overridable no_match for a food business. Not changed under D-078 (class lists only); needs a decision. | 2026-10-14 |
+| B-290 | D-078 | @user | High (responsible-ai, open; raises B-289): PROHIBITED "bar" lets a cuisine word decide the carrier — "bar-b-q restaurant", "sushi/taco/oyster/salad bar restaurant" give non-overridable no_match while "bbq restaurant", "pho/sushi restaurant" give carrier_b. Resolve: "bar" stops counting inside bar-b-q or after a food word, or a "bar" hit with plain restaurant wording goes to senior_referral/hold; add those words to the cuisine swap. Decision: @user or @head-of-underwriting. | 2026-10-14 |
+| B-291 | D-078 | @user | Medium: negation words missing from the D-074 list ("ningún", "ni", "nada", "tampoco", "w/o", "zero", "nor") score +25 on a line that says none; needs a P-###. | 2026-10-14 |
+| B-292 | D-078 | @software-engineer | Medium: the card has no carrier-override control for an overridable no_match (the What's new line says it can be overridden; the D-057 form is after-demo B-258). | 2026-10-14 |
+| B-293 | D-078 | @senior-underwriter | Medium: bakery and coffee shop are now no_match (accuracy cost, same for every cuisine); confirm or add generic words. | 2026-10-14 |
+| B-294 | D-078 | @software-engineer | High (senior-underwriter UI, open): the B-286 What's new line says a no_match "can be overridden with a reason" but the card has no override control (same as B-292/B-258). Add the control (reason required, logged) or remove the claim. | 2026-10-14 |
+| B-295 | D-078 | @data-scientist | High (senior-underwriter UI, open): on an extraction_failed card the lines read "Cooking: not scored — no cooking equipment stated in the file" and "Hood and suppression: not stated"; nothing was read. Should read "not scored — extraction failed" (points.py). | 2026-10-14 |
+| B-296 | D-078 | @software-engineer | Medium: What's new is open with 24 entries, several superseded; mark-wrong shows a bare code with no plain-language meaning; bakery/deli/diner/pizzeria now no_match (see B-293). | 2026-10-14 |
+| B-297 | D-079 | @software-engineer | Medium (senior-underwriter): a failed card still prints "Not read: none" / "Needs human read: none"; should say not read — extraction failed. | 2026-10-14 |
+| B-298 | D-079 | @senior-underwriter | Medium: "bar-b-q restaurant" and "sushi bar restaurant" go to the liquor referral (false positive, safe direction); consider a cuisine-phrase exception. D-080: kept as cautious — the referral stays; no exception before the demo. | 2026-10-14 |
+| B-299 | D-079 | @software-engineer | Medium: a bar+restaurant file over the pilot TIV shows only the liquor reason; show both reasons. | 2026-10-14 |
+| B-300 | D-079 | @pm | Low: B-290, B-293, P-033, B-294, B-295 closed by D-079; keep the real "user override" (draft approve) wording on What's new item 13. | 2026-10-14 |
+| B-301 | D-082 | @model-risk | Medium (M1, P-035 check): scan OCR text is still noisy ("Gl Creele Rd ... ¥FSO2Q"), so premises can still miss on scans. | 2026-10-14 |
+| B-302 | D-082 | @model-risk | Low (L1): an unexpected OCR code error is still shown only as "could not be opened". | 2026-10-14 |
+| B-303 | D-082 | @model-risk | Low (L2): I;16 scans score lower (mean 59). | 2026-10-14 |
+| B-304 | D-082 | @ai-engineer-assistant | High for T-027 (premises trace): the model reports full vs short forms of the same value (full address vs street only; "&" vs "and"; application line vs email paraphrase) as conflicts, and `prepare.agrees()` keeps them open, so premises, name and operations come back empty (SUB-089/092/098/099/103). Needs a P-### (prompt or merge). | 2026-10-14 |
+| B-305 | D-082 | @model-risk | Medium: SUB-098 premises was extracted correctly with a trailing "(shop and yard)"; the frozen exact-match scorer counts it a miss. Scorer rule for future hold-outs is a P-### choice. | 2026-10-14 |
+| B-306 | D-083 | @model-risk | Medium (M3): "100 Main St" agrees with "100 Main Street Rd"; letter units partly covered. | 2026-10-14 |
+| B-307 | D-083 | @model-risk | Medium (M4): the operations subset rule merges a fuller hazard ("auto shop" = "auto salvage yard"); the fuller value is kept, so the hazard word stays visible. | 2026-10-14 |
+| B-308 | D-083 | @model-risk | Medium (M5/M7): a false conflict when sides agree with a schedule row; a third field row refills a value after a conflict (older code, the conflict record stays). | 2026-10-14 |
+| B-309 | D-083 | @model-risk | Low (L1): names treat "1.500 LLC" and "1,500 LLC" as equal. | 2026-10-14 |
+| B-310 | D-083 | @senior-underwriter | Low (M1): the "also:" separator is easy to miss on the card. | 2026-10-14 |
+| B-311 | D-083 | @ai-engineer-assistant | High for T-027: scans now read (P-035) but noisy OCR text competes with typed facts and empties fields (SUB-088, 097, 101 in the D-083 dev check); with B-301. | 2026-10-14 |
+| B-312 | D-084 | @model-risk | Medium (M1): a PDF with any OCR'd page counts as a scan as a whole for P-037. | 2026-10-14 |
+| B-313 | D-084 | @user | Medium (M2): confirm the reading that a P-037 "needs-review conflict" is a needs-review flag acknowledged at approve, not an open conflict that blocks the send (D-084 reading b). | 2026-10-14 |
+| B-314 | D-084 | @model-risk | Medium (M3): a model conflict item gets typed-first only when the field is still empty. | 2026-10-14 |
+| B-315 | D-084 | @model-risk | Low (L3/L4): a scan read too weak to store can still flag a typed value; a scan rule can fill a field emptied by an open conflict (the conflict still blocks the send). | 2026-10-14 |
+| B-316 | D-084 | @senior-underwriter | Medium: the approve tick box shows only the typed value, not the scan's; a garbled scan read is shown raw and can look like our typo. | 2026-10-14 |
+| B-317 | D-085 | @ai-engineer-assistant | High for a model switch: qwen/qwen3.8-27b puts sales and payroll (or a label) in one value and drops markdown "**" from quotes, so the gate rejects 11 of 14 sales misses although the number was read right. Needs a P-### (prompt wording or a gate split) before qwen can be chosen. | 2026-10-15 |
+| B-318 | D-085 | @ai-engineer-assistant | Medium: a model conflict with one side failing the gate is dropped and the good side is lost (SUB-094 sales). | 2026-10-15 |
+| B-319 | D-085 | @model-risk | Medium: eval_holdout_087 conflict matching misses stored sides written with $ and commas (SUB-106 sales scored miss, not flagged); for eval_holdout_107 only, before its gold. | 2026-10-15 |
+| B-320 | D-086 | @model-risk | Low (L2): markdown marks are also stripped when matching quotes in scan (OCR) text; no self-check covers a scan. | 2026-10-15 |
+| B-321 | D-086 | @senior-underwriter | Medium: the "conflict with rejected value" note does not say what to do (add "check <file> and <file>" to the tick label); the Conflicts panel says "No stored conflict" while the card carries one; the rejected value keeps "$1,250,000" while the kept shows 900000. | 2026-10-15 |

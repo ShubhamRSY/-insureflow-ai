@@ -1454,3 +1454,226 @@ Blocked: No.
 - Done: independent review of the P-016 build and P-023. APPROVE WITH CHANGES; one High (conflict "all sides agree" path in prepare.py drops needs_review, so a scan value skips S2 and the D-039 acknowledgment). Self-checks, T-080 cases, SUB-078, SUB-067 recomputed with no model call.
 - Doing next: re-check High-1 when fixed. T-027 production veto stands.
 - Blocked by / need from: @user on whether the High-1 fix is inside P-016 or a new P-###.
+
+### 2026-10-14 — @ai-engineer-assistant
+- Done: P-024 built (B-215) and self-checked; P-016 drop analysis written; P-025 proposed, not built.
+- Doing next: nothing until @user answers P-025; @model-risk re-check of P-024.
+- Blocked by / need from: @user "approve change P-025" plus a letter.
+
+### 2026-10-14 — @model-risk
+- Done: re-check of P-024 (B-215). APPROVE, no High; B-215 closed. Self-checks pass; "280,000" + "$280k" from a scan recomputed through the real gate -> needs_review True, quote kept, in needs_review_ids(). Three Medium, one Low for the backlog.
+- Doing next: review the confidence-versus-hit table and the T-091 to T-093 hold-out when ready. T-027 production veto stands.
+- Blocked by / need from: nothing.
+
+### 2026-10-14 — @software-engineer
+- Done: D-066 block 2 workbench items 10, 2/4/8, 1, 13; What's new panel; self-checks pass; 3 sandbox screenshots.
+- Doing next: fix High findings from @senior-underwriter UI review.
+- Blocked by / need from: @senior-underwriter review.
+
+### 2026-10-14 — @senior-underwriter
+- Done: UI review of D-066 block 2 workbench. APPROVE WITH CHANGES. Criteria 1-4 met; one High: 83 of 86 cards are "No usable saved run" errors, burying the 3 usable cards. Ten Medium/Low to the backlog.
+- Doing next: re-check High-1 after the fix.
+- Blocked by / need from: @software-engineer fix for High-1.
+
+### 2026-10-14 — @ai-engineer-assistant
+- Done: P-025 option D built; quick-15 P-025 report, model_calls 0; 4 checks moved to "hit (needs review)", none lost.
+- Doing next: none.
+- Blocked by / need from: @model-risk check of P-025; screenshot after @software-engineer's workbench edits.
+
+### 2026-10-14 — @software-engineer
+- Done: B-231 (folded "No saved run (N)"), B-232 (carrier named / reason for no send), B-233 (second send refused without resend reason, in package.py, logged); What's new lines; 4 sandbox screenshots D-067-*.
+- Doing next: none.
+- Blocked by / need from: @senior-underwriter UI re-check (High only).
+
+### 2026-10-14 — @model-risk
+- Done: P-025 option D build check. REJECT pending H1 (conflict hit gained through a low-scan read is counted plain; premises not mapped) and H2 (a low-scan read makes the file complete and the send gate ignores needs_review). Self-checks 5/5 pass.
+- Backlog M: report the precision of the 0.50-0.74 band and a "miss (needs review)" count. SUB-067 now stores a wrong name ("Nogalitos watch LLC", 0.64) and a garbled operations value that the scorer marks hit.
+- Backlog L: the as-built says "plain hits equal P-024", which contradicts its own conflict row. The SUB-067 card shows both "Not read by extraction: scan.jpg" and "Not read: none". split_review_hits now also runs inside --holdout scoring.
+- Blocked by / need from: @ai-engineer-assistant (H1), @software-engineer (H2). T-027 veto stands.
+
+### 2026-10-14 — @senior-underwriter
+- Done: UI check of D-067 items 2 and 3. APPROVE, no High.
+- M: a resend overwrites to-carrier/SUB-###.md, so the first package text is lost; only the log keeps the reason. Keep the earlier file.
+- M: SUB-009 shows "sent 2026-10-10" in quote tracking and "Already sent on 2026-10-14" in the same card; an underwriter cannot tell which is true (sandbox date vs fixture).
+- M: the send form shows on a complete file with no approve logged; the refusal only comes after typing the line. Say "no approve logged yet" on the card.
+- M: "Already sent" date is the file's modified time, so a resend moves it; show the first and last send from the log.
+- L: SUB-067 still shows "Not read by extraction: scan.jpg" next to "Not read: none"; backlog from the earlier review.
+- L: a form with the resend box does not say who must confirm the carrier changed since the first send; show both if the route differs.
+- Blocked by / need from: none.
+
+## 2026-10-14 @software-engineer (D-068)
+- Done: B-244 (send gate refuses unacknowledged needs-review values, card shows it), B-247 (resend-N files kept), B-249 (Approve first); 3 screenshots, 3 What's new lines.
+- Doing next: none. Waiting on UI check and @model-risk re-check.
+- Blocked by / need from: none.
+
+## 2026-10-14 @ai-engineer-assistant (D-068)
+- Done: H1/B-243 in regression_dev.py (conflict like status, premises added, self-check); quick set rerun to P-025-fix.json (0 model calls); as-built doc fixed (B-246).
+- Doing next: none. Waiting on @model-risk re-check.
+- Blocked by / need from: none.
+
+## 2026-10-14 @model-risk (P-025 re-check, D-068)
+- Done: P-025 option D re-check: APPROVE; H1 (B-243) and H2 (B-244) closed; five self-checks pass with LLM_* unset; quick-15 fix file recomputed (0 model calls). T-027 production veto stands.
+- M: an acknowledgement is matched by field_id only, not bound to the value or run hash; a re-saved run with a new value in an acknowledged field passes the send gate without a fresh approve.
+- L: the D-068 self-check uses a synthetic SUB-321 "SUB-038 shape"; real SUB-038 is shown only in the screenshot (no saved run in the live extractions folder).
+- L: SUB-074 conflict is labelled needs-review from a low-scan row on a field outside the ten checks; conservative, but the as-built doc should name that field.
+- L: resend numbering is len(sent_files)+1, so a missing middle resend file would make the next resend overwrite the last one.
+- L: sent_info reads the carrier from the first package only; after a carrier-override resend the card shows the original carrier.
+- Blocked by / need from: none.
+
+## 2026-10-14 @senior-underwriter (D-068 UI check)
+- Did: UI check of B-244/B-247/B-249, workbench + package self-checks, 3 screenshots. APPROVE, no High.
+- Backlog (Low/Medium):
+- L: "Approve first" cites "no logged decision by a listed underwriter"; plain words would be "nobody has approved this file yet".
+- L: when a resend-ready file also has an unacknowledged value, the card drops the "Already sent" line; keep it visible.
+- L: the refusal reads "Approve again"; say that the previous approve did not cover the value (the run changed after approve).
+- L: after a send, rows[-1] being any later non-approve (edit/note) refuses with the ack message, not the "latest decision is X" message; wording may confuse.
+- Blocked by / need from: none.
+
+### 2026-10-14 — @software-engineer
+- Did: P-026 (run_hash on approves, send gate counts only the current run, re-review message), B-248/B-250 (Sent-on header as the one date source), B-252 (sandbox mode, real files untouched), Session B UI (History panel, closures + evidence-only label, suggested market, model/prompt footer), 4 screenshots, What's new lines.
+- Next: fix findings from @model-risk (P-026) and @senior-underwriter (UI, High only).
+- Backlog (Low): quote-tracking "stays open until an underwriter logs the closure" note still shows after a closure; legacy packages show "sent not recorded" and carrier "unknown" (no header); History shows the full ISO time.
+- Blocked by / need from: none.
+
+### 2026-10-14 — @model-risk
+- Done: checked P-026 (B-220) build. APPROVE; B-220 closed, no High. Self-checks package/workbench/prepare pass; no real log, outbox or workbench.html written.
+- Next: Medium (identical re-save keeps approval) and 3 Lows to backlog for @user/@pm.
+- Blockers: none. Not a production approval; T-027 veto stands.
+
+### 2026-10-14 — @senior-underwriter
+- Done: UI check of D-069 (stale banner, history panel, subjectivity closures, footer, B-248). APPROVE WITH CHANGES; no High.
+- Next: M1-M3 and 3 Lows to backlog for @pm.
+- Blockers: none.
+
+### 2026-10-14 — @ai-engineer-assistant
+- Done: B-222 confidence-vs-hit table (15 files hit cache; scans separate signal, typed none) and P-015 prepare.py S3 + T2. Self-checks pass (prepare, llm_extract, sources, workbench, package).
+- Next: @data-scientist builds points.py on `run["cooking"]`; I run the quick 15 only if asked.
+- Blockers: none.
+
+### 2026-10-14 — @data-scientist
+- Done: P-015 points.py (LOSS_HISTORY out, cooking from the stated fact, not-scored result, POINTS_VERSION V3), reason-codes.md, problem-framing.md, as-built memo for workbench, T-067 name swap on cached results (7 files, 0 changes in score or match; thin, see file).
+- Next: @software-engineer builds the workbench part from `deliverables/data-scientist/p-015-as-built.md`.
+- Blockers: none. E2 cache key not in the saved run; needs a P-### for prepare.py.
+
+### 2026-10-14 — @software-engineer
+- Done: D-070 workbench part: P-015 (Not scored, mark-wrong W1, E2 fields on decision rows), B-264, B-265, B-266, What's new line, 5 screenshots, self-checks.
+- Next: @senior-underwriter UI review (High only); cache_key needs a P-### for prepare.py.
+- Blockers: none.
+
+### 2026-10-14 — @model-risk
+- Done: D-070 check of B-222 (APPROVE) and P-015 (APPROVE WITH CHANGES, High-1 cooking negation by line, not clause). Recomputed B-222 table and the T-067 name swap on a scratch cache, no model call; self-checks pass; git and real logs/outboxes unchanged.
+- Vetoes: T-017 stands until High-1 closes; T-027 stands until (d) hold-out T-091 to T-093.
+- Backlog (one line each):
+  - B-222 M: scan cells rest on 4 files (038, 053, 067, 074; 30 values); the report gives no per-cell file counts and no reading.
+  - B-222 M: no --self-check flag; main writes the deliverable whenever LLM_CACHE_DIR is set.
+  - B-222 L: dead line `packed_ok`; values judged raw, not as stored.
+  - P-015 M: E2 cache_key saved as null though E2 is approved and prepare.py was in this build.
+  - P-015 M: decision rows recompute points at the click (proposal: held from render); edit/decline rows carry no run_hash.
+  - P-015 M: name-swap evidence thin: 7 files, 1 scored, none with a stated cooking fact; test does not compare `extra`/Not-scored reason (recomputed: unchanged).
+  - P-015 M: labels English only ("Equipo de cocina:", "Cooking Equipment -" not read); "char-broiler" not matched.
+  - P-015 M: T2 strips only the exact extracted name; a variant (DBA, "Blanco St Kitchen") still trips the "kitchen"/"restaurant" substring cue.
+  - P-015 L: an extraction_failed card says "no cooking equipment stated in the file".
+  - P-015 L: V3 git slot reads not-recorded until P-017 (disclosed).
+- Next: re-check High-1 when fixed.
+
+### 2026-10-14 — @model-risk
+- Done: P-027 (B-268) re-check. Self-checks pass; the D-071 lines behave as specified.
+- Verdict: REJECT. Residual High: negation still swallows a later hazard when items are joined by but/./&/-/(/plus/pero ("no fryer but charbroiler" → stated none). T-017 veto stands.
+- Next: re-check once a fix (negation denies only the next hazard term) is approved by @user and built. Medium: "N/A" split by "/".
+- Blockers: needs an approve-change line from @user for the fix.
+
+### 2026-10-14 — @model-risk
+- Done: P-029 (B-272, B-274) and B-273 re-check (D-072). Self-checks pass; all ten D-072 lines behave as specified; B-272 and B-273 closed.
+- Verdict: REJECT. New High B-275 (regression): "no hood and gas grill", "sin campana con parrilla" → stated none (+25 missed); P-027 scored them. T-017 veto stands.
+- Next: re-check once @user approves and the team builds the fix (a negation denies only an adjacent or modifier-only hazard; otherwise needs_review).
+- Blockers: needs an approve-change line from @user.
+
+### 2026-10-14 — @model-risk
+- Done: P-030/B-278 re-check (D-073). REJECT. B-278 closed (provisional score, logged cooking call per run hash). B-276 not closed: one negation still reaches across a hazard term or an unlisted connector ("no fryer plus grill", "sin freidora más parrilla" → none). T-017 veto stands.
+- Next: re-check only after @user approves a fix that makes the code match D-073 rule 2.
+- Blockers: needs @user (prepare.py change; D-073 says stop on a second reject).
+
+### 2026-10-14 — @model-risk
+- Done: P-031 (B-279, B-280) re-check, D-074. APPROVE. B-279 and B-280 closed; no equipment line can read "none" any more. T-017 veto lifted on my side. Not a production approval; no send authorized.
+- Next: 4 Lows to backlog (slash before "no", unlisted absence words, items on next line, stale docstring).
+- Blockers: none on my side.
+
+### 2026-10-14 — @model-risk
+- Done: P-028 (B-269) review — APPROVE, no High findings. Four self-checks pass; independent re-run confirms the stored key equals the real llm_extract cache key.
+- Next: Medium (self-check tied to the real cache file) and two Lows to backlog.
+- Blocked: nothing.
+
+### 2026-10-14 — @responsible-ai
+- Done: B-270 fairness review of P-015, P-031, B-286 fix (D-078 item 3). Verdict APPROVE WITH CHANGES; T-017 fairness veto lifted on my side (all four resolve conditions met; self-checks re-run, no model calls, no files written).
+- Open: High-1 — PROHIBITED "bar" lets cuisine decide a non-overridable no_match ("bar-b-q restaurant", "sushi/taco/oyster bar restaurant" vs "bbq/pho restaurant" → carrier_b); B-289 should be High. Mediums: Spanish negation gaps (ningún, ni, nada, tampoco), no override control on the card.
+- T-082 veto basis unchanged. Blocked: none.
+
+### 2026-10-14 — @senior-underwriter
+- Done: D-065 item 3 UI check of workbench D-070 to D-078. APPROVE WITH CHANGES. D-065 item 2 (plain reasons) holds.
+- Open: High-1 no override control for no_match though What's-new says there is one; High-2 failed-file card says "no cooking equipment stated" when nothing was read. Mediums in DISCUSSION.
+- Blockers: none.
+
+### 2026-10-14 — @senior-underwriter
+- Done: D-079 UI and rule review (B-290, B-293, P-033, B-294, B-295). APPROVE. No High findings.
+- Open: Mediums in DISCUSSION. No send authorized.
+- Blockers: none.
+
+### 2026-10-14 — @model-risk
+- Done: T-093 rerun review (D-081). Run 1 marked invalid in memo. Rerun 1 of 9 fields at D-013 floor; status 10/19; route 9/19. Not published.
+- Open: RH1 scans fail in OCR code (Pillow fill bug); RH2 premises nulls on read files; RH3 no carrier route reached. T-027 veto stands.
+- Blocked: nothing.
+
+### 2026-10-14 — @model-risk
+- Done: P-035 check (D-082). APPROVE, no High. Self-check passes; SUB-088/097/101 greyscale scans failed with TypeError at HEAD and now read; P/I/I;16/F/CMYK/RGBA/1/LA also read. OCR_SETTINGS changed (cache key).
+- Open: M1 noisy scan OCR text (premises risk); L1 OCR code errors still shown as "could not be opened". T-027 veto stands (not a production approval).
+- Blocked: nothing.
+
+### 2026-10-14 — @model-risk
+- Done: P-036 check (D-083). REJECT: H1 shared-word operations merge ("auto body shop" = "coffee shop"); H2 street prefix merges another street ("12 Oak" = "12 Oak Ridge Dr"); H3 three-side conflict closes against the first side only. Trace and "4 vs 40" cases pass; self-checks pass.
+- Open: M1 unit number on one side merges; M2 schedule hides an application address not on it. T-027 veto stands (not a production approval).
+- Blocked: nothing.
+
+### 2026-10-14 — @model-risk
+- Done: P-036 re-check (D-083). REJECT: H1, H2, H3 closed; new H4 schedule match on number + first street word merges a different street ("2215 Bayou Crest Dr" vs schedule "2215 Bayou Lane, Dallas"); H5 schedule-path conflict drops other non-schedule sides (email address lost). Self-checks pass.
+- Open: M3 letter units / street-type names merge; M4 ops subset merges a fuller hazard; M5 false conflict when sides agree with the schedule. T-027 veto stands (not a production approval).
+- Blocked: nothing.
+
+### 2026-10-14 — @model-risk
+- Done: P-036 third check (D-083). REJECT: H4, H5 closed (H1-H3 still closed); new H6 schedule path matches only kept[0] to the schedule row, so a short email side lets Houston vs schedule Dallas merge with no conflict. Self-checks pass.
+- Open: M6 one-sided N/W/Ext suffix merges; M3, M4, M5, L1. T-027 veto stands (not a production approval).
+- Blocked: nothing.
+
+### 2026-10-14 — @model-risk
+- Done: P-036 fourth check (D-083). APPROVE: H6 closed (every kept side must agree with one schedule row), H1-H5 still closed, no new High. Self-checks pass; no real file changed by my checks.
+- Open: M3 "Main St" = "Main Street Rd"; M4 ops subset merges a fuller hazard; M5; M7 third field row refills after a conflict; L1. T-027 veto stands (not a production approval).
+- Blocked: nothing.
+
+### 2026-10-14 — @senior-underwriter
+- Done: P-036 (D-083) UI check, APPROVE WITH CHANGES. Screenshot and workbench.py diff read; no code edited.
+- Open: H1 "also:" quote lacks the source document name; H2 merged field has no Review note marker. Refusals still plain-language.
+- Blocked: nothing.
+
+### 2026-10-14 — @model-risk
+- Done: P-037 + D-084 metrics check. Metrics APPROVE (no High). P-037 REJECT: H1 document rules (cook/joisted masonry/run date/locations) still overwrite a typed value with an unflagged scan value after the merge. Self-checks pass; real SUB-088/097/101 replies probed from a scratch cache copy, no real file changed.
+- Open: H1 (owner @ai-engineer-assistant); M1 mixed PDF counted as scan; M2 user to confirm needs-review vs open conflict; M3; L1; L2. Not a production approval.
+- Blocked: nothing.
+
+### 2026-10-14 — @model-risk
+- Done: P-037 re-check, APPROVE. H1 closed (document rules and locations obey typed-first, one scans map); original H1 example recomputed; self-check ok; real SUB-088/097/101 re-run from a scratch cache copy, same as before, no real file changed.
+- Open: M1-M3, L1-L4 backlog. Not a production approval; no send authorized.
+- Blocked: nothing.
+
+### 2026-10-14 — @senior-underwriter
+- Done: P-037 / D-084 UI check, APPROVE, no High. Screenshot shows the scan value, the file, and the action; the send refusal is still in plain words.
+- Open: M1-M2 and L1 in DISCUSSION (tick box lacks scan value; raw garbled scan read; long What's new line).
+- Blocked: nothing.
+
+### 2026-10-15 — @model-risk
+- Done: independent check of P-038 (D-086). APPROVE, no High findings. Self-check exits 0. My own probes: exact words are still required, and digit joins across "*" are refused by the value gate. One-sided conflicts are kept, needs_review, and shown and acknowledged in the workbench. M1 (the kept side's reason is overwritten) goes to the backlog.
+- Next: review the item 3 qwen re-check results and any P-039 before production.
+- Blockers: none. Not a production approval.
+
+### 2026-10-15 — @senior-underwriter
+- Done: P-038 (D-086) UI check. APPROVE, no High findings. Other value and file are visible in the review note; the tick at approve works. 3 Medium, 1 Low logged in DISCUSSION.
+- Next: none on P-038.
+- Blockers: none.

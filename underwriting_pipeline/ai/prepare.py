@@ -9,6 +9,7 @@ Inbox: python underwriting_pipeline/ai/prepare.py simulation/inbox simulation/pe
 
 import hashlib
 import json
+import os
 import re
 import sys
 import tempfile
@@ -117,8 +118,13 @@ def _ops_contradict(left: str, right: str) -> bool:
 
 def same_operations(left: str, right: str) -> bool:
     kind_left, kind_right = _ops_class(left), _ops_class(right)
-    if not kind_left or kind_left != kind_right:
+    if kind_left != kind_right:
         return False
+    if not kind_left:  # P-036: no listed class on either side: the same business when they share a main word ("tile")
+        # H1: every business word of the shorter wording is in the fuller one ("tile, stone" in "tile, stone and marble")
+        biz = sorted(({w for w in words(v) if len(w) >= 3 and w not in _GENERIC and not w.isdigit()} for v in (left, right)), key=len)
+        if not biz[0] or not biz[0] <= biz[1]:
+            return False
     units_left = re.search(r"(\d+)\s*-?\s*units?", left.lower())
     units_right = re.search(r"(\d+)\s*-?\s*units?", right.lower())
     if units_left and units_right and units_left.group(1) != units_right.group(1):
@@ -126,13 +132,36 @@ def same_operations(left: str, right: str) -> bool:
     return not _ops_contradict(left, right)
 
 
+# Words that say how or where, not what business: they never make two operations the same business (P-036 H1)
+_GENERIC = {"and", "the", "with", "for", "some", "also", "used", "we", "do", "our", "install", "installs", "installation", "installer",
+            "repair", "repairs", "service", "services", "shop", "shops", "store", "stores", "company", "residential", "commercial",
+            "light", "heavy", "work", "works", "subcontract", "labor", "small", "general", "business", "only", "both", "plus"}
+words, address_list, same_address = llm_extract.words, llm_extract.address_list, llm_extract.same_address  # P-036: one rule for the gate and the merge
+
+
 def agrees(field: str, left: str, right: str) -> bool:
     if field in {"sales_or_payroll", "tiv_building", "square_feet"}:
         amount_left, amount_right = amount_value(left), amount_value(right)
         return amount_left is not None and amount_left == amount_right
     if field == "operations":
-        return same_operations(left, right)
-    return False
+        return words(left) == words(right) or same_operations(left, right)
+    if field == "premises_address":
+        return same_address(left, right)
+    return words(left) == words(right)  # P-036: names and other text fields agree only when identical once normalized
+
+
+def _same_row(a: dict, b: dict) -> bool:
+    return a.get("value") == b.get("value") and a.get("quote") == b.get("quote") and a.get("source") == b.get("source")
+
+
+def fuller(rows: list[dict]) -> dict:
+    """P-036: of agreeing values keep the fuller one; the other quotes stay on it as also_quoted."""
+    base = dict(max(rows, key=lambda row: len(words(row.get("value") or ""))))
+    also = [{"quote": row["quote"], "source": row.get("source")} for row in rows if row.get("quote") and row.get("quote") != base.get("quote")]
+    for item in also:  # each other quote with its file, so the card says which document said what
+        if item not in (base.get("also_quoted") or []):
+            base["also_quoted"] = (base.get("also_quoted") or []) + [item]
+    return base
 
 
 def _canonical(field: str, value: str) -> str:
@@ -312,6 +341,82 @@ def sprinklers_yes(texts: dict) -> bool:
     return False
 
 
+# P-015 S3 (D-040/D-070): cooking facts from the labelled lines of the source text, with a citation, as sprinklers_yes does.
+# Equipment and hood/suppression only. Class words, cuisine words and the insured's name are never read. No model call.
+COOKING_LABELS = {"equipment": ("cooking equipment:",), "hood_suppression": ("hood and fire suppression:", "hood and suppression:", "hood:", "suppression:")}
+HAZARD_TERMS = ("fryer", "fryers", "freidora", "freidoras", "open flame", "llama abierta", "charbroiler", "grill", "parrilla")
+NO_WORDS = re.compile(r"^(none|no|not|without|sin|ninguno|ninguna|n/a)\b")
+ITEM_SPLIT = re.compile(r"[;,/]|\b(?:and|or|y|o|with|con)\b")  # P-027: a negation covers only the item it directly precedes
+NONE_AFTER = re.compile(r":\s*(none|no|not|n/a|ninguno|ninguna)\s*$")  # "fryer: none"
+
+
+NEG_WORD = re.compile(r"(?<![\w/'’])(no|none|not|without|never|don't|don’t|dont|n/a|sin|nunca|ninguno|ninguna|ningún|nada|w/o|isn't|isn’t|removed|zero)(?![\w/'’])")  # P-031 (D-074), P-033 (D-079)
+REASON_COOKING = "the cooking line contains a negation word (P-031): the underwriter records present or none"
+
+
+def equipment_fact(value: str) -> tuple[str, list[str], list[str]]:
+    """P-031 (D-074), replacing P-029/P-030. (state, present terms, negated terms). Two rules, one line at a time:
+    (1) a line with no negation word: every hazard term is present ("yes"), or "other" if there is none;
+    (2) a line with any negation word: "needs_review", no points until the underwriter records present or none (B-278).
+    A newline ends a line: only the first line of the value is read."""
+    v = (value.splitlines() or [""])[0].lower().strip()
+    if NEG_WORD.search(v):
+        return "needs_review", [], []
+    hits = sorted((m.start(), m.end(), t) for t in HAZARD_TERMS for m in re.finditer(rf"\b{re.escape(t)}\b", v))
+    hits = [h for h in hits if not any(o[0] <= h[0] and h[1] <= o[1] and o != h for o in hits)]
+    return ("yes" if hits else "other"), [h[2] for h in hits], []
+
+
+def _items(value: str) -> list[tuple[str, bool]]:
+    """P-027 (D-071): split a cooking line into items; each item is (text, negated). Whole words only."""
+    out = []
+    for item in ITEM_SPLIT.split(value):
+        item = item.strip(" .")
+        if item:
+            out.append((item, bool(NO_WORDS.match(item) or NONE_AFTER.search(item))))
+    return out
+
+
+def _without_name(blob: str, name: str | None, texts: dict) -> str:
+    """P-015 T2: remove the named insured (the extracted value and any 'Named insured:' line) before cue words are looked for."""
+    names = {name} if name else set()
+    for text in texts.values():
+        for row in extract_labeled(text, LABELS["named_insured"]):
+            if row.get("value"):
+                names.add(row["value"])
+    for n in sorted(names, key=len, reverse=True):
+        blob = re.sub(re.escape(n), " ", blob, flags=re.I)
+    return blob
+
+
+def cooking_facts(texts: dict) -> dict:
+    """{"equipment": fact, "hood_suppression": fact}. fact = {"state", "terms", "source", "start", "end", "quote"}.
+
+    equipment state: "yes" (a hazard term is stated, not negated), "none" (stated none), "other" (a line with no hazard term), "not_stated".
+    hood_suppression state: "stated" (a system is named), "none" (stated none), "not_stated". Nothing here adds points (H1).
+    """
+    out = {}
+    for key, labels in COOKING_LABELS.items():
+        fact = {"state": "not_stated", "terms": [], "source": None, "start": None, "end": None, "quote": None}
+        for name, text in texts.items():
+            row = extract_labeled(text, labels)[0]
+            if not row["value"]:
+                continue
+            found, denied = [], []
+            if key == "equipment":
+                state, found, denied = equipment_fact(row["value"])
+            elif row["value"].lower().strip() in ("n/a", "na", "n.a."):
+                state = "not_stated"  # B-273 (hood line; the equipment line follows P-030)
+            else:
+                state = "none" if all(neg for _, neg in _items(row["value"].lower())) else "stated"
+            fact = {"state": state, "terms": found, "negated": denied, "source": name, "start": row["start"], "end": row["end"], "quote": row["value"]}
+            if state == "needs_review":
+                fact["reason"] = REASON_COOKING
+            break
+        out[key] = fact
+    return out
+
+
 def carrier_run_date(texts: dict) -> tuple[str, str, int, int] | None:
     """Use the carrier loss-run date when a no-known-loss letter is also in the folder."""
     if not any("no known loss" in text.lower() for text in texts.values()):
@@ -329,15 +434,23 @@ def carrier_run_date(texts: dict) -> tuple[str, str, int, int] | None:
 
 
 def _set_cited(merged: dict, field: str, value: str, source: str, start: int, end: int, texts: dict | None = None, scans: dict | None = None) -> None:
-    """Store a document-rule value, cited to its own match. P-016 G2: on a scan source it takes the cited-word score like any other value."""
+    """Store a document-rule value, cited to its own match. P-016 G2: on a scan source it takes the cited-word score like any other value.
+    P-037 (@model-risk H1): a value from a scan never replaces a typed value; it agrees silently or flags the typed value."""
+    cur = merged.get(field) or {}
+    if scans and source in scans and cur.get("value") and cur.get("source") not in scans:
+        if not agrees(field, cur["value"], value):
+            _flag_scan_differs(cur, [{"value": value, "source": source}])
+        return
     confidence, flag, reason = 0.95, False, None
     quote = texts[source][start:end] if texts and source in texts else None
     if scans and source in scans:
         confidence = min(confidence, llm_extract.cited_ocr_score(quote or value, value, scans[source]))
-        if confidence < llm_extract.MIN_CONFIDENCE:
+        if confidence < llm_extract.SCAN_FLOOR:
             return
         if field == "loss_run_valued_through":  # S2
             flag, reason = True, llm_extract.REASON_SCAN
+        if confidence < llm_extract.MIN_CONFIDENCE:  # P-025
+            flag, reason = True, llm_extract.REASON_LOW_SCAN
     merged[field] = {
         "field_id": field,
         "value": value,
@@ -410,7 +523,7 @@ def labeled_locations(texts: dict) -> list[dict]:
     return []
 
 
-def apply_locations(merged: dict, conflicts: list, texts: dict) -> list[dict]:
+def apply_locations(merged: dict, conflicts: list, texts: dict, scans: dict | None = None) -> list[dict]:
     """P-005. A labeled second location is stored, and it is not a premises conflict.
 
     The primary address stays in premises_address. Unlabeled disagreements stay conflicts.
@@ -432,6 +545,7 @@ def apply_locations(merged: dict, conflicts: list, texts: dict) -> list[dict]:
             primary["source"],
             at,
             at + len(primary["address"]),
+            scans=scans,  # P-037: a scan's primary address never replaces a typed one
         )
     return locations
 
@@ -519,6 +633,47 @@ def unread_rows(docs: list[dict], not_sent: list[str]) -> list[dict]:
     return rows + [{"file": name, "page": None, "reason": f"not sent: text past {llm_extract.MAX_CHARS:,} characters"} for name in not_sent]
 
 
+def _carry_flag(cur: dict, other: dict) -> None:
+    """P-024: two agreeing values merge into one; the saved row is needs_review if either side was, and keeps the reason and quote."""
+    if other.get("needs_review") and not cur.get("needs_review"):
+        cur["needs_review"] = True
+        for k in ("reason", "quote", "source", "start", "end"):
+            if other.get(k) is not None:
+                cur[k] = other[k]
+    else:
+        for k in ("reason", "quote"):
+            if cur.get(k) is None and other.get(k) is not None:
+                cur[k] = other[k]
+
+
+def _typed_first(field_id: str, rows: list[dict], scans: set) -> dict | None:
+    """P-037 (D-084): a typed or structured value outranks a scan (OCR) value. When the typed rows agree, their fuller value is kept;
+    a scan value that agrees adds its quote, one that differs makes the kept value needs review, never replaces it.
+    None when there is no typed-vs-scan split or the typed rows disagree among themselves (a real conflict)."""
+    typed = [row for row in rows if row.get("source") not in scans]
+    scanned = [row for row in rows if row.get("source") in scans]
+    if not typed or not scanned or not all(agrees(field_id, a["value"], b["value"]) for i, a in enumerate(typed) for b in typed[i + 1 :]):
+        return None
+    keep = fuller(typed)
+    for row in typed:
+        if not _same_row(row, keep):
+            _carry_flag(keep, row)
+    keep["field_id"], keep["value"] = field_id, _canonical(field_id, keep["value"])
+    differ = [row for row in scanned if not agrees(field_id, keep["value"], row["value"])]
+    for row in scanned:
+        if row not in differ and row.get("quote"):
+            keep["also_quoted"] = (keep.get("also_quoted") or []) + [{"quote": row["quote"], "source": row.get("source")}]
+    if differ:
+        _flag_scan_differs(keep, differ)
+    return keep
+
+
+def _flag_scan_differs(row: dict, differ: list[dict]) -> None:
+    said = "; ".join(f"\"{item['value']}\" ({item.get('source')})" for item in differ)
+    row["needs_review"] = True
+    row["reason"] = (row["reason"] + "; " if row.get("reason") else "") + f"scan read differs: {said}; the typed value is kept — check against the page"
+
+
 def process_submission(folder: Path) -> dict:
     docs = sources.read_folder(folder)
     texts = {doc["name"]: doc["text"] for doc in docs}
@@ -538,6 +693,7 @@ def process_submission(folder: Path) -> dict:
     error = None
     rejected = False
     readable = [doc for doc in docs if doc.get("text") and not doc.get("needs_human")]
+    key = llm_extract.key_for(docs) if readable else None  # P-028 (D-075): the extraction cache key; None when no model call is made
     if not readable:
         extracted = {"fields": [], "conflicts": []}
     else:
@@ -551,6 +707,7 @@ def process_submission(folder: Path) -> dict:
                 # D-024: llm_extract returns only after it has its own usable values, so an all-empty reply is
                 # an answer the gate rejected, not a failed call. A raised call stays extraction_failed above.
                 rejected = True
+    scans = {doc["name"]: doc["ocr_words"] for doc in docs if doc.get("ocr_words")}  # P-037: files whose text came from OCR; one list for every rule
     for row in extracted["fields"]:
         field_id = row.get("field_id")
         if field_id not in merged or not row.get("value"):
@@ -559,8 +716,13 @@ def process_submission(folder: Path) -> dict:
         if cur["value"] is None:
             row["value"] = _canonical(field_id, row["value"])
             merged[field_id] = row
+        elif first := _typed_first(field_id, [cur, row], scans):  # P-037: typed beats scan, agreeing or not; a differing scan read flags it
+            merged[field_id] = first
         elif agrees(field_id, cur["value"], row["value"]):
-            cur["value"] = _canonical(field_id, cur["value"])
+            keep = fuller([cur, row])  # P-036: the fuller value, both quotes
+            keep["value"] = _canonical(field_id, keep["value"])
+            _carry_flag(keep, row if _same_row(keep, cur) else cur)
+            merged[field_id] = keep
         elif cur["value"] != row["value"]:
             conflicts.append(
                 _conflict(
@@ -573,31 +735,51 @@ def process_submission(folder: Path) -> dict:
             )
             merged[field_id] = {**cur, "value": None, "needs_review": True}
     for item in extracted["conflicts"]:
+        field_id = item.get("field")
+        kept = [{**side, "field_id": field_id} for side in item.get("values") or [] if side.get("value")]
+        first = _typed_first(field_id, kept, scans) if field_id in merged and merged[field_id]["value"] is None else None
+        if first:  # P-037: the typed sides agree; a scan side never makes this an open conflict
+            merged[field_id] = {**merged[field_id], **first, "confidence": first.get("confidence") or 0.0}
+            continue
         sides = [side.get("value") or "" for side in item.get("values") or [] if side.get("value")]
-        if len(sides) >= 2 and all(agrees(item.get("field"), sides[0], side) for side in sides[1:]):
+        if len(sides) >= 2 and all(agrees(item.get("field"), a, b) for i, a in enumerate(sides) for b in sides[i + 1 :]):  # H3: every pair
             field_id = item.get("field")
             if field_id in merged and merged[field_id]["value"] is None:
-                merged[field_id]["value"] = _canonical(field_id, sides[0])
-                merged[field_id]["needs_review"] = False
+                kept = [side for side in item["values"] if side.get("value")]
+                base = fuller(kept)  # P-036: keep the fuller value with both quotes
+                merged[field_id].update({k: base.get(k) for k in ("source", "start", "end", "quote", "reason", "confidence", "also_quoted")})
+                merged[field_id]["confidence"] = merged[field_id]["confidence"] or 0.0
+                merged[field_id]["value"] = _canonical(field_id, base["value"])
+                merged[field_id]["needs_review"] = bool(base.get("needs_review"))
+                for side in kept:
+                    if not _same_row(side, base):
+                        _carry_flag(merged[field_id], side)
             continue
         if item["field"] in merged:
             merged[item["field"]]["value"] = None
             merged[item["field"]]["needs_review"] = True
         conflicts.append(item)
     _apply_reply(conflicts, texts.get("reply.md", ""))
-    apply_document_rules(merged, conflicts, texts, {doc["name"]: doc["ocr_words"] for doc in docs if doc.get("ocr_words")})
-    locations = apply_locations(merged, conflicts, texts)
-    blob = "\n".join(texts.values()).lower()
+    apply_document_rules(merged, conflicts, texts, scans)
+    locations = apply_locations(merged, conflicts, texts, scans)
+    listed = extracted.get("schedule") or []  # P-036: several schedule addresses are locations, not a conflict
+    if not locations and listed and merged["premises_address"].get("value"):
+        primary = merged["premises_address"]
+        locations = [{"address": primary["value"], "primary": True, "source": primary.get("source")}] + [
+            {"address": row["address"], "primary": False, "source": row["source"]} for row in listed if not same_address(row["address"], primary["value"])
+        ]
+    blob = _without_name("\n".join(texts.values()), merged["named_insured"].get("value"), texts).lower()  # P-015 T2: the insured's name never starts an ask
+    cooking = cooking_facts(texts)
     extra = []
-    if any(word in blob for word in ("restaurant", "fryer", "taco", "kitchen")):
+    if any(word in blob for word in ("restaurant", "fryer", "kitchen")):  # P-015 T2: cuisine words ("taco") are not cues
         for label, cues in (
             ("cooking equipment", ("cooking equipment", "fryer")),
-            ("hood and fire suppression", ("hood", "suppression")),
+            ("hood and fire suppression", ("hood", "suppression")),  # matched as whole words below
             ("sprinklers", ("sprinkler",)),
             ("liquor sales", ("liquor",)),
             ("hours", ("hours", " open ")),
         ):
-            if not any(cue in blob for cue in cues):
+            if not any(re.search(rf"\b{re.escape(cue.strip())}", blob) for cue in cues):
                 extra.append(label)
     needs_human = [doc["name"] for doc in docs if doc.get("needs_human")]
     unread = unread_rows(docs, extracted.get("not_sent") or [])
@@ -615,11 +797,13 @@ def process_submission(folder: Path) -> dict:
     report["fields"] = rows
     report["folder"] = folder.name
     report["sprinklers"] = "yes" if sprinklers_yes(texts) else "no"
+    report["cooking"] = cooking
     report["needs_human"] = needs_human
     report["unread"] = unread
     report["locations"] = locations
     report["error"] = error
     report.update(_run_metadata())
+    report["cache_key"] = key  # P-028 (D-075)
     # D-024: an answered reply the gate rejected is not a failed call, and it gets no request and no draft.
     if error:
         report["status"] = "extraction_failed"
@@ -741,6 +925,7 @@ def _saved_payload(report: dict) -> dict:
                 "start": row.get("start"),
                 "end": row.get("end"),
                 "quote": row.get("quote"),  # P-016 Q1: the exact cited text. The app shows it
+                **({"also_quoted": row["also_quoted"]} if row.get("also_quoted") else {}),  # P-036: the agreeing values' other quotes
                 "reason": row.get("reason"),  # P-016 R1: why the row is flagged or has no value
             }
         )
@@ -753,11 +938,13 @@ def _saved_payload(report: dict) -> dict:
         "needs_human": report.get("needs_human") or [],
         "unread": report.get("unread") or [],  # P-016 (c): file and page not read, with the reason
         "sprinklers": report.get("sprinklers"),
+        "cooking": report.get("cooking"),  # P-015 S3: equipment and hood/suppression facts with their citation; an older run has none = not stated
         "model_version": report.get("model_version"),
         "prompt_version": report.get("prompt_version"),
         "ocr_settings": report.get("ocr_settings"),
         "host": report.get("host"),
         "temperature": report.get("temperature"),
+        "cache_key": report.get("cache_key"),  # P-028 (D-075): the extraction cache key, under saved_hash
         "fields": fields,
     }
 
@@ -1067,11 +1254,124 @@ if __name__ == "__main__":
         assert amount_value("2200 sf") == 2200
         assert amount_value("8 units") is None
         assert agrees("sales_or_payroll", "220000", "about 220k")
+        # P-024: agreeing scan values "280,000" and "$280k" keep the flag, reason and quote (B-215)
+        _side = lambda v, q, f: {"value": v, "source": "scan.png", "start": 0, "end": 5, "quote": q, "needs_review": f,
+                                 "reason": "number or date read from a scan" if f else None, "confidence": 0.9}
+        for flags, want in (((True, True), True), ((True, False), True), ((False, True), True), ((False, False), False)):
+            with tempfile.TemporaryDirectory() as tmp:
+                folder = Path(tmp) / "SUB-201"
+                folder.mkdir()
+                (folder / "scan.png").write_text("x")
+                real_read, real_extract = sources.read_folder, llm_extract.llm_extract
+                sources.read_folder = lambda f: [{"name": "scan.png", "text": "Building 280,000 or $280k", "ocr_words": None}]
+                llm_extract.llm_extract = lambda docs: {"fields": [], "not_sent": [], "conflicts": [
+                    {"field": "tiv_building", "resolution": "unresolved", "values": [_side("280,000", "280,000", flags[0]), _side("$280k", "$280k", flags[1])]}]}
+                try:
+                    out = process_submission(folder)
+                finally:
+                    sources.read_folder, llm_extract.llm_extract = real_read, real_extract
+            row = next(r for r in out["fields"] if r["field_id"] == "tiv_building")
+            assert row["value"] == "280000" and row["needs_review"] is want, (flags, row)
+            assert (row["reason"], row["quote"]) == (("number or date read from a scan", "280,000" if flags[0] else "$280k") if want else (None, "280,000")), row
+            assert out["conflicts"] == []
         assert same_operations(
             "habitational, 8 units, no commercial cooking",
             "Small apartments, 8 units, sprinklers throughout.",
         )
         assert not same_operations("accounting office", "restaurant, tacos, fryer")
+        # P-036 (D-083): every case of the premises trace (SUB-089/092/098/099/103) and the earlier conflict cases.
+        full = "9901 Industrial Park Rd, Laredo, TX 78045"
+        for left, right in ((full, "9901 Industrial Park Rd"), ("2950 Rose Hill Rd, Tyler, TX 75703", "2950 Rose Hill Road"),
+                            ("1800 Hewitt Dr, Waco, TX 76705", "1800 hewitt drive"), ("4102 Mesquite Bend Rd, Lubbock, TX 79424 (shop and yard)", "4102 Mesquite Bend Rd, Lubbock, TX 79424"),
+                            ("100 Main St.", "100  MAIN STREET"), ("12 Oak Ave, Austin, TX 78701", "12 Oak Avenue")):
+            assert agrees("premises_address", left, right) and agrees("premises_address", right, left), (left, right)
+        for left, right in (("4 Mistletoe Ave, San Antonio, TX 78212", "40 Mistletoe Ave, San Antonio, TX 78212"), ("9 Main St", "90 Main St"),
+                            (full, "9901 Industrial Park Rd, Laredo, TX 78046"), ("9901 Industrial Park Rd", "9910 Industrial Park Rd"),
+                            ("2215 Bayou Crest Dr, Houston, TX 77063", "2215 Bayou Crest Dr, Houston, TX 77063; 880 Kirby Meadow Ln, Houston, TX 77098"),
+                            ("Main St", "Main Street, Austin")):
+            assert not agrees("premises_address", left, right), (left, right)
+        assert agrees("named_insured", "Caprock Tile & Stone Inc", "Caprock Tile and Stone Inc")
+        assert agrees("named_insured", "Pappa Sal's Pizza Co.", "pappa sal's pizza co")
+        assert not agrees("named_insured", "Pappa Sal's Pizza Co LLC", "Pappa Sal's Pizza Co"), "a shorter name is not the same name"
+        assert agrees("operations", "Tile, stone and marble installation, residential and light commercial, subcontract labor used",
+                      "Tile and stone install, we do residential and some light commercial.")
+        assert not agrees("operations", "accounting office", "restaurant, tacos, fryer") and not agrees("operations", "dental office", "dry cleaning")
+        assert not agrees("operations", "apartments, 8 units", "apartments, 9 units") and not agrees("operations", "restaurant, no cooking", "restaurant with fryer")
+        assert not agrees("operations", "tile installation", "auto repair"), "no listed class and no shared word stays a conflict"
+        for left, right in (("auto body shop", "coffee shop"), ("roof repair", "auto repair"), ("tile installation", "roofing installation"),
+                            ("auto body shop", "auto glass shop")):  # @model-risk H1
+            assert not agrees("operations", left, right), (left, right)
+        for left, right in (("12 Oak", "12 Oak Ridge Dr, Austin, TX 78701"), ("100 Main St Suite 5", "100 Main St"), ("100 Main St, Unit 2, Austin, TX 78701", "100 Main St"),
+                            ("12 Court", "12 Court Plaza Dr"), ("100 Main St Apt B", "100 Main St"), ("100 Main St, Bldg B, Austin", "100 Main St")):
+            assert not agrees("premises_address", left, right), (left, right)  # @model-risk H2, M1, M3
+        keep = fuller([{"value": "9901 Industrial Park Rd", "quote": "9901 Industrial Park Rd"}, {"value": full, "quote": "Premises address " + full}])
+        assert keep["value"] == full and keep["also_quoted"] == [{"quote": "9901 Industrial Park Rd", "source": None}]
+        # through process_submission: a street-only side merges into the fuller value; a schedule list goes to locations
+        def _through(conflicts, schedule=()):
+            with tempfile.TemporaryDirectory() as tmp:
+                folder = Path(tmp) / "SUB-202"
+                folder.mkdir()
+                (folder / "application.md").write_text("x")
+                real_read, real_extract = sources.read_folder, llm_extract.llm_extract
+                sources.read_folder = lambda f: [{"name": "application.md", "text": "Premises address " + full}]
+                llm_extract.llm_extract = lambda docs: {"fields": [], "not_sent": [], "conflicts": conflicts, "schedule": list(schedule)}
+                try:
+                    return process_submission(folder)
+                finally:
+                    sources.read_folder, llm_extract.llm_extract = real_read, real_extract
+        _p = lambda v, q, src="application.md": {"value": v, "quote": q, "source": src, "start": 0, "end": 1, "confidence": 0.9, "needs_review": False, "reason": None}
+        out = _through([{"field": "premises_address", "values": [_p("9901 Industrial Park Rd", "9901 Industrial Park Rd", "schedule.xlsx"), _p(full, full)]}])
+        row = next(r for r in out["fields"] if r["field_id"] == "premises_address")
+        assert row["value"] == full and row["also_quoted"] == [{"quote": "9901 Industrial Park Rd", "source": "schedule.xlsx"}] and out["conflicts"] == [], row
+        out = _through([{"field": "premises_address", "values": [_p("4 Mistletoe Ave, San Antonio, TX 78212", "4 Mistletoe"), _p("40 Mistletoe Ave, San Antonio, TX 78212", "40 Mistletoe")]}])
+        assert [c["field"] for c in out["conflicts"]] == ["premises_address"], "4 vs 40 stays a conflict"
+        out = _through([{"field": "premises_address", "values": [_p("100 Main St", "a"), _p("100 Main St, Austin, TX 78701", "b"), _p("100 Main St, Dallas, TX 75201", "c")]}])
+        assert [c["field"] for c in out["conflicts"]] == ["premises_address"], "@model-risk H3: Austin vs Dallas is never merged away"
+        # P-037 (D-084): the SUB-088, 097 and 101 shapes. Typed beats scan; a differing scan read flags, never replaces.
+        def _scan_case(fields, conflicts, email_text="typed", scan_text="ocr", scan_words=(("ocr", 0.9),)):
+            scan_words = [list(w) for w in scan_words]
+            with tempfile.TemporaryDirectory() as tmp:
+                folder = Path(tmp) / "SUB-203"
+                folder.mkdir()
+                (folder / "email.md").write_text("x")
+                real_read, real_extract = sources.read_folder, llm_extract.llm_extract
+                sources.read_folder = lambda f: [{"name": "email.md", "text": email_text}, {"name": "scan.jpg", "text": scan_text, "ocr_confidence": 0.75, "ocr_words": scan_words},
+                                                 {"name": "loss-runs-scan.jpg", "text": "ocr", "ocr_confidence": 0.8, "ocr_words": [["ocr", 0.9]]}]
+                llm_extract.llm_extract = lambda docs: {"fields": fields, "not_sent": [], "conflicts": conflicts}
+                try:
+                    out = process_submission(folder)
+                finally:
+                    sources.read_folder, llm_extract.llm_extract = real_read, real_extract
+            return {r["field_id"]: r for r in out["fields"]}, out["conflicts"]
+        _s = lambda f, v, src: {"field_id": f, "value": v, "source": src, "quote": v, "start": 0, "end": 1, "confidence": 0.9, "needs_review": False, "reason": None}
+        rows, open_ = _scan_case([], [  # SUB-088: the email and the scan disagree on name, date and sales
+            {"field": "named_insured", "values": [_s("named_insured", "Harvest Crumb Bakery LLC", "email.md"), _s("named_insured", "Harvest Crumb Bakery tic", "scan.jpg")]},
+            {"field": "effective_date", "values": [_s("effective_date", "2027-03-15", "email.md"), _s("effective_date", "03/15/202%", "scan.jpg")]},
+            {"field": "sales_or_payroll", "values": [_s("sales_or_payroll", "640k", "email.md"), _s("sales_or_payroll", "40K", "scan.jpg")]}])
+        assert open_ == [] and rows["named_insured"]["value"] == "Harvest Crumb Bakery LLC" and rows["sales_or_payroll"]["value"] == "640000", rows
+        assert all(rows[f]["needs_review"] and "scan read differs" in rows[f]["reason"] for f in ("named_insured", "effective_date", "sales_or_payroll"))
+        rows, open_ = _scan_case([_s("tiv_building", "520k", "email.md"), _s("tiv_building", "s20000", "scan.jpg"),   # SUB-097: a typed field row beats a scan field row
+                                  _s("construction", "Brick", "scan.jpg")], [])
+        assert rows["tiv_building"]["value"] == "520000" and rows["tiv_building"]["needs_review"] and open_ == [], rows["tiv_building"]
+        assert rows["construction"]["value"] == "Brick" and not rows["construction"]["needs_review"], "a scan value fills an empty field"
+        rows, open_ = _scan_case([_s("tiv_building", "s20000", "scan.jpg"), _s("tiv_building", "520k", "email.md")], [])
+        assert rows["tiv_building"]["value"] == "520000" and rows["tiv_building"]["needs_review"], "the typed value replaces a scan value that came first"
+        rows, open_ = _scan_case([_s("loss_run_valued_through", "09/30/2026", "loss-runs-scan.jpg")], [   # SUB-101
+            {"field": "named_insured", "values": [_s("named_insured", "Pappa Sal's Pizza Co LLC", "email.md"), _s("named_insured", "Pappa Sal's Pizza Co", "email.md")]}])
+        assert rows["loss_run_valued_through"]["value"] and [c["field"] for c in open_] == ["named_insured"], "typed vs typed stays a real conflict"
+        rows, open_ = _scan_case([], [{"field": "year_built", "values": [_s("year_built", "1984", "email.md"), _s("year_built", "1984", "scan.jpg")]}])
+        assert rows["year_built"]["value"] == "1984" and not rows["year_built"]["needs_review"] and rows["year_built"]["also_quoted"] == [{"quote": "1984", "source": "scan.jpg"}]
+        rows, _ = _scan_case([_s("named_insured", "HARVEST CRUMB BAKERY LLC.", "scan.jpg"), _s("named_insured", "Harvest Crumb Bakery LLC", "email.md")], [])
+        assert rows["named_insured"]["value"] == "Harvest Crumb Bakery LLC" and rows["named_insured"]["source"] == "email.md", "an agreeing scan value never replaces the typed one"
+        scan_text = "Operations: we cook burgers. Construction: Joisted masonry"  # @model-risk H1: the document rules obey P-037 too
+        rows, _ = _scan_case([_s("operations", "wholesale bakery", "email.md"), _s("construction", "Masonry", "email.md")], [],
+                             email_text="Operations: wholesale bakery. Construction: Masonry", scan_text=scan_text, scan_words=[(w, 0.95) for w in scan_text.split()])
+        for f, typed in (("operations", "wholesale bakery"), ("construction", "Masonry")):
+            assert rows[f]["value"] == typed and rows[f]["source"] == "email.md" and rows[f]["needs_review"] and "scan read differs" in rows[f]["reason"], rows[f]
+        rows, _ = _scan_case([], [], scan_text=scan_text, scan_words=[(w, 0.95) for w in scan_text.split()])
+        assert rows["construction"]["value"] == "Joisted masonry" and rows["construction"]["source"] == "scan.jpg", "a scan rule still fills an empty field"
+        out = _through([], [{"address": full, "source": "schedule.xlsx"}, {"address": "880 Kirby Meadow Ln, Houston, TX 77098", "source": "schedule.xlsx"}])
+        assert out["locations"] == [] and out["conflicts"] == [], "no premises value: the schedule alone is not stored as locations"
         same_area = _square_feet({"a.md": "Shop is 2,200 sq ft.", "b.md": "2200 sf"})
         assert {row[0] for row in same_area} == {"2200"}
         # D-024: a raised call stays extraction_failed; an answered reply the gate rejected is all_values_rejected.
@@ -1286,8 +1586,104 @@ if __name__ == "__main__":
         assert {(r["file"], r["reason"]) for r in report["unread"]} == {("b.docx", "file type .docx is not read"), ("a.md", "not sent: text past 120,000 characters")}
         assert set(report["needs_human"]) >= {"a.md", "b.docx"}, "every unread file is also in needs_human, as a list of names"
     merged_g2 = {f: {"field_id": f, "value": None, "needs_review": True} for f in FIELDS}
-    apply_document_rules(merged_g2, [], {"s.jpg": "Valued through: 2026-01-01", "n.md": "No known loss letter"}, {"s.jpg": [["Valued", 0.9], ["through:", 0.9], ["2026-01-01", 0.5]]})
-    assert merged_g2["loss_run_valued_through"]["value"] is None, "G2: a document rule on a scan takes the cited-word score"
+    apply_document_rules(merged_g2, [], {"s.jpg": "Valued through: 2026-01-01", "n.md": "No known loss letter"}, {"s.jpg": [["Valued", 0.9], ["through:", 0.9], ["2026-01-01", 0.4]]})
+    assert merged_g2["loss_run_valued_through"]["value"] is None, "G2: a document rule on a scan takes the cited-word score; under 0.50 it is dropped"
+    apply_document_rules(merged_g2, [], {"s.jpg": "Valued through: 2026-01-01", "n.md": "No known loss letter"}, {"s.jpg": [["Valued", 0.9], ["through:", 0.9], ["2026-01-01", 0.6]]})
+    assert merged_g2["loss_run_valued_through"]["reason"] == llm_extract.REASON_LOW_SCAN, "P-025: 0.6 is stored for review"
+    merged_g2["loss_run_valued_through"]["value"] = None
     apply_document_rules(merged_g2, [], {"s.jpg": "Valued through: 2026-01-01", "n.md": "No known loss letter"}, {"s.jpg": [["Valued", 0.9], ["through:", 0.9], ["2026-01-01", 0.9]]})
     assert merged_g2["loss_run_valued_through"]["value"] == "2026-01-01" and merged_g2["loss_run_valued_through"]["needs_review"], "G2/S2: passes at 0.9, kept and flagged"
+    # P-015 S3/T2. No model call.
+    kitchen = "Cooking equipment: two floor fryers\nHood and fire suppression: wet chemical system, inspected 2026-05-12\n"
+    cf = cooking_facts({"kitchen.md": "Notes\n" + kitchen})
+    assert cf["equipment"]["state"] == "yes" and cf["equipment"]["terms"] == ["fryers"] and cf["hood_suppression"]["state"] == "stated"
+    for key in cf:
+        f = cf[key]
+        assert ("Notes\n" + kitchen)[f["start"] : f["end"]] == f["quote"], "the citation points at the stated text"
+    assert cooking_facts({"a.md": "Cooking equipment: none\n"})["equipment"]["state"] == "needs_review"  # P-030 rule 3
+    assert cooking_facts({"a.md": "Cooking equipment: sin freidora\n"})["equipment"]["state"] == "needs_review", "negated hazard gives no yes (P-031)"
+    assert cooking_facts({"a.md": "Cooking equipment: freidora y parrilla\n"})["equipment"]["terms"] == ["freidora", "parrilla"]
+    assert cooking_facts({"a.md": "Cooking equipment: microwave\n"})["equipment"]["state"] == "other"
+    # P-031 (D-074): (1) no negation word -> hazards present; (2) any negation word -> needs review, no points. Every line used so far.
+    eq = lambda line: cooking_facts({"a.md": f"Cooking equipment: {line}\n"})["equipment"]
+    for line in ("no hood and gas grill", "sin campana con parrilla", "fryer, none", "no hood with grill", "no hood y parrilla",
+                 "no fryer but charbroiler", "no fryer. gas grill", "no fryer & grill", "no fryer - grill", "sin freidora pero parrilla",
+                 "no fryer or grill", "no fryer; gas grill and charbroiler", "fryer: none", "fryer (none)", "fryer - none",
+                 "fryer not used", "grill, no fryer", "none", "N/A", "no microwave, fryer", "no open flame", "no gas grill",
+                 "not a fryer", "sin freidora", "no fryer, no grill", "dont use fryer", "don't use fryer", "never a fryer",
+                 "no fryer plus grill", "no fryer only grill", "no fryer except grill", "sin freidora más parrilla",
+                 "no microwave plus grill", "nunca freidora", "ninguna parrilla", "without fryer"):
+        f = eq(line)
+        assert f["state"] == "needs_review" and f["terms"] == [] and f["quote"] and f["reason"] == REASON_COOKING, (line, f)
+    for line, terms in (("freidora y parrilla", ["freidora", "parrilla"]), ("gas grill and charbroiler", ["grill", "charbroiler"]),
+                        ("notable grill", ["grill"]), ("two floor fryers", ["fryers"]), ("knot-free grill", ["grill"])):
+        assert eq(line)["state"] == "yes" and eq(line)["terms"] == terms, (line, eq(line))
+    assert eq("microwave")["state"] == "other" and eq("nonstick griddle")["state"] == "other"
+    two = lambda text: cooking_facts({"a.md": text})["equipment"]
+    assert two("Cooking equipment: fryer\nno grill on site\n")["state"] == "yes", "a newline ends the line: the next line is not read"
+    assert two("Cooking equipment: no fryer\ngas grill\n")["state"] == "needs_review"
+    assert equipment_fact("fryer\nno grill") == ("yes", ["fryer"], [])
+    # P-033 (D-079): more negation words; whole words only.
+    for line in ("ningún freidora", "nada de parrilla", "fryer w/o hood", "grill isn't used", "fryer removed", "zero fryers", "fryer isn’t used"):
+        assert eq(line)["state"] == "needs_review", (line, eq(line))
+    for line in ("nadal grill", "zeroed fryer", "removedly grill"):
+        assert eq(line)["state"] == "yes", ("whole words only", line, eq(line))
+    assert cooking_facts({"a.md": "Hood: N/A\n"})["hood_suppression"]["state"] == "not_stated"
+    assert cooking_facts({"a.md": "Hood: without hood\n"})["hood_suppression"]["state"] == "none"
+    assert cooking_facts({"a.md": "Hood: without hood; Ansul suppression\n"})["hood_suppression"]["state"] == "stated"
+    for text in ("Taqueria Fryer and Sons\nDescription of operations: restaurant, tacos\n", "Hood Street Books\nOpen Flame Yoga LLC\n", ""):
+        assert cooking_facts({"a.md": text})["equipment"]["state"] == "not_stated" and cooking_facts({"a.md": text})["hood_suppression"]["state"] == "not_stated", "names, class and cuisine words are not facts"
+    with tempfile.TemporaryDirectory() as tmp:
+        def ask(name: str, ops: str) -> list:
+            sub = Path(tmp) / "x"
+            sub.mkdir(exist_ok=True)
+            (sub / "application.md").write_text(f"Named insured: {name}\nDescription of operations: {ops}\n")
+            real = llm_extract.llm_extract
+            llm_extract.llm_extract = lambda docs: {"fields": [], "conflicts": [], "not_sent": []}
+            try:
+                return process_submission(sub)["extra"]
+            finally:
+                llm_extract.llm_extract = real
+        base = ask("Plain Holdings LLC", "bookkeeping office")
+        assert base == [], base
+        for nm in ("Guenther Tacos y Mas", "Blanco Street Kitchen", "Fryer and Sons Bookkeeping", "Open Flame Yoga", "Hood Street Books"):
+            assert ask(nm, "bookkeeping office") == base, f"T2: the name {nm!r} must not start the cooking ask"
+        assert ask("Plain Holdings LLC", "taqueria, tacos") == base, "T2: a cuisine word does not start the ask"
+        assert "cooking equipment" in ask("Plain Holdings LLC", "restaurant"), "a class word still asks the producer"
+    # P-028 (D-075): a saved run's stored cache key equals the key recomputed from its inputs; a changed file changes it.
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp = Path(tmp)
+        sub = tmp / "inbox" / "SUB-403"
+        sub.mkdir(parents=True)
+        (sub / "application.md").write_text("Named insured: Example LLC\n")
+        saved_env = {k: os.environ.get(k) for k in ("LLM_MODEL", "LLM_BASE_URL")}
+        os.environ.update(LLM_MODEL="key-check-model", LLM_BASE_URL="http://localhost:11434/v1")
+        real_extract = llm_extract.llm_extract
+        llm_extract.llm_extract = lambda *_a, **_k: {"fields": [], "conflicts": []}  # no model call
+        try:
+            write_drafts(tmp / "inbox", tmp / "pending", tmp / "data" / "conflicts")
+            run = read_saved_run("SUB-403", tmp / "data" / "extractions")
+            again = llm_extract.key_for(sources.read_folder(sub))
+            assert run["cache_key"] and run["cache_key"] == again, (run.get("cache_key"), again)
+            assert again == llm_extract.cache_key(sources.read_folder(sub), "key-check-model")
+            (sub / "application.md").write_text("Named insured: Other LLC\n")
+            assert llm_extract.key_for(sources.read_folder(sub)) != run["cache_key"], "a changed file is another key"
+            # B-284 (D-076): through the real llm_extract and a stubbed host, the stored key is the name of the cache file written.
+            llm_extract.llm_extract = real_extract
+            real_post, real_cache, real_key = llm_extract._post, llm_extract.CACHE, os.environ.get("LLM_API_KEY")
+            reply = {"fields": [{"field_id": "named_insured", "value": "Other LLC", "source": "application.md", "quote": "Other LLC", "confidence": 0.95}]}
+            llm_extract._post = lambda *_a, **_k: {"choices": [{"message": {"content": json.dumps(reply)}}], "usage": {"total_tokens": 10}}
+            llm_extract.CACHE, os.environ["LLM_API_KEY"] = tmp / "cache", "stub-not-sent"
+            try:
+                write_drafts(tmp / "inbox", tmp / "pending", tmp / "data" / "conflicts")
+                run = read_saved_run("SUB-403", tmp / "data" / "extractions")
+                written = sorted(p.stem for p in (tmp / "cache" / "extractions").glob("*.json"))
+                assert written == [run["cache_key"]], (written, run["cache_key"])
+            finally:
+                llm_extract._post, llm_extract.CACHE = real_post, real_cache
+                os.environ.pop("LLM_API_KEY", None) if real_key is None else os.environ.__setitem__("LLM_API_KEY", real_key)
+        finally:
+            llm_extract.llm_extract = real_extract
+            for k, v in saved_env.items():
+                os.environ.pop(k, None) if v is None else os.environ.__setitem__(k, v)
     print("prepare ok")

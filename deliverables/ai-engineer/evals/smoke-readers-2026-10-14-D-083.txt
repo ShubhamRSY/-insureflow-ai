@@ -1,0 +1,15 @@
+provider https://api.groq.com/openai/v1 model openai/gpt-oss-120b
+python /Users/disastershubz/INSURANCE FLOW AI/-insureflow-ai-1/.venv/bin/python 3.14.6
+pdfplumber 0.11.10, openpyxl 3.1.5, pytesseract 0.3.13, pdf2image 1.17.0, pillow 12.3.0
+tesseract 5.5.2
+poppler pdftoppm version 26.10.0
+commit 0bf3cf2
+typed PDF       application.pdf  read · 8 of 9 fields
+image-only PDF  application.pdf  read · 8 of 9 fields
+colour scan     scan.jpg         read · 7 of 9 fields
+greyscale scan  scan.jpg         read · 7 of 9 fields
+rotated scan    scan.jpg         read · 7 of 9 fields
+Excel           schedule.xlsx    read · 8 of 9 fields
+email-only      email.md         read · 8 of 9 fields
+Spanish         solicitud.md     read · 8 of 9 fields
+smoke ok

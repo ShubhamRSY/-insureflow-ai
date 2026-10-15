@@ -726,3 +726,256 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: P-023 and the P-016 `ai/` part (@ai-engineer-assistant); the P-016 acknowledgment at approve and the R1 flag display in `underwriting_pipeline/app/` (@software-engineer, D-039); quick set of 15 rerun compared with `regression-quick-15-2026-10-14-P-022.json`; demo-guide label; @model-risk review of P-016, High only.
 - Status: ACCEPTED
 - Amends: nothing. An approved proposal is not a production approval; lifting the T-027 veto is @model-risk's call. No send is authorized.
+
+## D-065 — Standing rule: definition of done is backend + UI
+- Date / Owner: 2026-10-14 / @user
+- Context: Several backend features (send refusals, manifest refusal, override reasons, decision history, subjectivity evidence, needs-review acknowledgment) were built with no or partial workbench UI.
+- Options considered: none. The user's words.
+- Decision: In the user's words. "New standing rule, added to CLAUDE.md and every builder role (@software-engineer, @ai-engineer-assistant, @data-engineer, @ml-engineer): 1. Definition of done = backend + UI. Any backend change that affects what an underwriter or account manager sees or does must update the workbench in the same task: new fields, statuses, refusals, reasons, decisions and history. 2. Every refusal or block is shown in the UI with a plain-language reason (e.g. "Send refused: documents changed since extraction"). 3. @senior-underwriter reviews the UI part from the user's point of view (High findings only). 4. After a UI change, take a Playwright screenshot of the affected workbench page and save it under deliverables/software-engineer/screenshots/ with the task id. 5. Add a "What's new" panel to the workbench listing each user-visible feature with date, task id and decision number; every UI change adds a line. 6. Scope now: the pipeline workbench only. Integrating into the React app in frontend/ is a separate task after the demo; @pm adds it to the backlog as "required for pilot". Also, once and in the main session (no subagent): list backend features built so far that have no UI or only partial UI [...]. Show me the list in one line each; do not build yet."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-14 (D-032).
+- Dissent: none
+- Follow-up tasks: rule added to CLAUDE.md and `.claude/agents/` for the four builder roles (main session); backlog item for the frontend/ integration, "required for pilot" (@pm's item, added in the main session, budget rule 3); the "What's new" panel is a build task, not started; UI-gap list shown to the user, nothing built.
+- Status: ACCEPTED
+- Amends: the definition of done for every builder task from now on. `.cursor/rules/` stay unchanged (CLAUDE.md: the Cursor files are the originals). Does not authorize a send.
+
+## D-066 — P-024 approved (B-215); P-016 error analysis; demo re-save; workbench UI items 10, 2/4/8, 1, 13
+- Date / Owner: 2026-10-14 / @user
+- Context: @model-risk P-016 High-1 (B-215). P-016 dropped 5 quick-set hits on scans (SUB-038, SUB-067). D-065 UI-gap list. Demo runs saved before P-016.
+- Options considered: none. The user's words.
+- Decision: In the user's words, two pasted blocks. Block 1: "1. approve change P-024 (B-215): when two agreeing values are merged, keep each side's flag and quote; the saved value is flagged needs-review if either side was flagged. Self-check with "280,000" and "$280k" from a scan. 2. Error analysis before any change: for every value P-016 dropped on the quick set (SUB-067, SUB-038 and others), show the gold value, the dropped value, and whether the dropped value was correct. Then propose (do not build) whether low-confidence scan values should be dropped or stored as needs-review. 3. Confirm the "definition of done = backend + UI" rule is in CLAUDE.md and the roles; if not, apply it now. Then show me the one-line list of backend features with missing UI. 4. Re-save the 3 demo runs from cache (no model calls) so they include quotes, reasons and unread pages. Open the workbench for SUB-009 and SUB-029 with Playwright and save screenshots. One @model-risk re-check of P-024, High only." Block 2: "UI work under the backend+UI rule, @software-engineer, in this order: 1. Item 10: the workbench loads and shows only the saved run (status, hash check, manifest check). It never runs extraction or makes model calls on page load; if no saved run exists it says so. 2. Items 2, 4, 8: every send or decision refusal is shown on the card in plain words with its reason; no bare HTTP 400 pages. 3. Item 1: a Send to carrier action on the card that requires typing the exact line "send to carrier SUB-###" to confirm, then goes through the same send gate. 4. Item 13: the missing-info draft is shown on the card with an approve action that follows D-017 item 3 as corrected. Playwright screenshots of SUB-009 (send works), SUB-029 (draft shown), SUB-010 (send refused with reason). One @senior-underwriter UI review, High only."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-14 (D-032).
+- Dissent: none
+- Follow-up tasks: P-024 build and the P-016 drop analysis plus a proposal (P-025, not built) (@ai-engineer-assistant); demo re-save from cache (main session); workbench items 10, 2/4/8, 1, 13 with screenshots (@software-engineer); @model-risk re-check of P-024; @senior-underwriter UI review. "D-017 item 3 as corrected" is D-050 (producer request: only truly missing items, not a refused status, no decline language).
+- Status: ACCEPTED
+- Amends: nothing. A send made through the new workbench action in a demo still needs every gate; no AI role sends. Not a production approval.
+
+## D-067 — P-025 approved with D; B-231; B-232/B-233
+- Date / Owner: 2026-10-14 / @user
+- Context: P-025 (`deliverables/ai-engineer/proposal-P-025.md`) after the P-016 drop analysis. @senior-underwriter UI High-1 (B-231) and Mediums B-232, B-233 on the D-066 workbench.
+- Options considered: P-025 A, B, C, D.
+- Decision: In the user's words. "1. approve change P-025 with D: on scanned pages only, low-confidence values at or above 0.50 are stored as needs-review instead of dropped; typed documents unchanged. Scores report "hit (needs review)" in a separate column, never as plain hits. The workbench labels them "Low-confidence scan read — check against the page". Rerun the quick set and report both columns. 2. B-231: saved-run cards first; all "No usable saved run" cards folded into one collapsed section with a count. 3. B-232/B-233 (send form): the form shows the carrier name before confirmation; a second send for the same submission is refused unless it is an explicit resend with a written reason, logged. Screenshots, one @model-risk check of P-025 and one @senior-underwriter UI check, High only."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-14 (D-032).
+- Dissent: none
+- Follow-up tasks: P-025 in `ai/`, the separate score column in the regression report, and the workbench label (@ai-engineer-assistant, D-065: backend + UI in the same task); B-231, B-232/B-233 (@software-engineer); quick set of 15; screenshots; @model-risk check of P-025; @senior-underwriter UI check.
+- Status: ACCEPTED
+- Amends: P-016 option C3/S2 behaviour on scans for values from 0.50 to below 0.75 (stored as needs-review, not dropped). Frozen scorers and published scores are not edited; the separate column is computed in the regression report. Not a production approval; the T-027 veto stands. No send is authorized.
+
+## D-068 — P-025 kept and fixed: H2 (B-244), H1 (B-243), B-247, send form after approve
+- Date / Owner: 2026-10-14 / @user
+- Context: @model-risk REJECT on P-025 (D-067): H1 score split, H2 send gate. @senior-underwriter Mediums on the send form.
+- Options considered: fix or roll back P-025. The user chose fix.
+- Decision: In the user's words. "P-025 is kept and fixed, not rolled back: 1. H2 (B-244): a low-confidence scan value is a needs-review value — one flag type, not two. It is covered by the existing acknowledgment at approve, and the send gate itself refuses while any needs-review value is unacknowledged, for every actor. Self-check: SUB-038 cannot be sent until its flagged values are acknowledged. 2. H1 (B-243): score accounting counts conflict like status and adds premises to the "hit (needs review)" split. Rerun the quick set into a new file and report both columns. 3. B-247: a resend writes a new package file; earlier package files are kept, never overwritten. 4. B-248: the send form is hidden until an approve is logged; show "Approve first" instead. UI updated for each, screenshots, one @model-risk re-check of P-025, High only."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-14 (D-032).
+- Dissent: none
+- Follow-up tasks: H2, B-247 and item 4 in `package.py`/`workbench.py` with screenshots (@software-engineer); H1 in `ai/regression_dev.py` and the quick set into a new file (@ai-engineer-assistant); @model-risk re-check of P-025.
+- Status: ACCEPTED
+- Amends: D-067 (P-025 stays). Note: item 4's behaviour is backlog line B-249 ("the send form shows before an approve is logged"); B-248 in the backlog is the SUB-009 sent-date mismatch and stays open. Not a production approval; the T-027 veto stands. No send is authorized.
+
+## D-069 — P-026 approved (B-220); sandbox rule (B-252); B-248; Session B UI
+- Date / Owner: 2026-10-14 / @user
+- Context: B-220: an acknowledgment is matched by field id only, so a re-saved run with a new value passes the send gate (@model-risk, twice). B-252: a sandbox serve rewrote the real `workbench.html`. B-248: SUB-009 sent-date mismatch. Remaining D-065 UI gaps.
+- Options considered: none. The user's words.
+- Decision: In the user's words. "1. B-220 (approve change P-026): every acknowledgment and every approve records the saved run's hash. The send gate counts only approves and acknowledgments whose hash matches the current saved run; after any re-save, the underwriter must approve and acknowledge again. The UI shows "Re-review needed: file changed since your approval". Self-check: re-save with a changed value → send refused. 2. B-252 rule: sandbox and test runs operate only on a temporary copy; they never write real workbench, log or outbox files. Add this to CLAUDE.md. 3. B-248: fix the SUB-009 sent-date mismatch. 4. Session B UI: one per-file history panel (decisions, acknowledgments, sends and resends: who, why, when, and which run hash); subjectivity closures plus the "carrier's word = evidence only" label; suggested market as its own field; model and prompt version in the footer. Items 3, 5 and 15 (account manager checks, override form, upload) go to the backlog as after-demo. Screenshots, one @model-risk check of P-026 and one @senior-underwriter UI check, High only."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-14 (D-032).
+- Dissent: none
+- Follow-up tasks: P-026, B-248, B-252 code fix and the Session B UI (@software-engineer, D-065); CLAUDE.md rule and backlog lines (main session, budget rule 3); @model-risk check of P-026; @senior-underwriter UI check.
+- Status: ACCEPTED
+- Amends: D-039 acknowledgment and D-053 decision gate: approves and acknowledgments count only for the saved run whose hash they record. Not a production approval; the T-027 veto stands. No send is authorized.
+
+## D-070 — B-260 accepted; B-264/B-265/B-266; B-222 table; build P-015 with name-swap test
+- Date / Owner: 2026-10-14 / @user
+- Context: B-260 (identical re-save keeps the hash). @senior-underwriter Mediums B-264 to B-266. B-222 is on the T-027 path. P-015 approved in D-040 (S3 H1 M1 T2 V3 W1 A1 E2), not built; T-067 name-swap test not run.
+- Options considered: none. The user's words.
+- Decision: In the user's words. "1. B-260: accept — an identical re-save keeps the same hash and the approval stands ("same data, same approval"). 2. B-265: the footer shows the model and prompt version that produced the saved run, not the environment's. B-264: show suggested market only for senior referrals. B-266: a stale card lists changed fields (old → new). 3. B-222: confidence-versus-hit table from cached results (no model calls): confidence bins vs correct/incorrect per field, scans and typed separately. 4. Build P-015 as approved (D-040: S3 H1 M1 T2 V3 W1 A1 E2). The name-swap fairness test runs on cached results (no model calls) and must show no change in score or carrier match. UI and screenshots for each; one @model-risk check (B-222 and P-015) and one @responsible-ai check of P-015 fairness, High only."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-14 (D-032).
+- Dissent: none
+- Follow-up tasks: B-222 table and P-015 `prepare.py` part (S3, T2) (@ai-engineer-assistant); P-015 `points.py`, reason-codes and problem-framing docs, T-067 name-swap test (@data-scientist); P-015 workbench part and B-264/B-265/B-266 with screenshots (@software-engineer); @model-risk check of B-222 and P-015; @responsible-ai check of P-015 fairness.
+- Status: ACCEPTED
+- Amends: D-069 item 1 as to B-260 (an identical re-save is not a change). Not a production approval; vetoes on T-017 and T-027 are lifted only by their holders. No send is authorized.
+
+## D-071 — P-027 approved (B-268): negation per item in cooking facts
+- Date / Owner: 2026-10-14 / @user
+- Context: @model-risk P-015 High (B-268): `cooking_facts` tests "no" only at the line start, so "no fryer; gas grill and charbroiler" reads "stated none". T-017 veto stands until fixed.
+- Options considered: none. The user's words.
+- Decision: In the user's words. "approve change P-027 (B-268). Negation applies only to the item it directly precedes: "no fryer; gas grill and charbroiler" → fryer none, gas grill present, charbroiler present. Whole-word matching, handles "no", "none", "without", "not". Self-checks for that line plus "no open flame", "fryer: none", and "without hood". Update the workbench if the cooking display changes, with one sandbox screenshot. Run self-checks, then one @model-risk re-check of P-027, High only. Commit, no wrap-up yet."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-14 (D-032).
+- Dissent: none
+- Follow-up tasks: built in the main session (budget rule 3, small edit; the weekly usage limit was hit); @model-risk re-check.
+- Status: ACCEPTED
+- Amends: P-015 S3 negation rule. Not a production approval. No send is authorized.
+
+## D-072 — P-029 approved (B-272, B-274): ambiguous cooking lines go to needs review; B-273 N/A
+- Date / Owner: 2026-10-14 / @user
+- Context: @model-risk REJECT on P-027: other separators let "no" cover the rest of the line (B-272); "no fryer or grill" and "fryer (none)" variants (B-274); N/A shows "other" (B-273). T-017 veto stands.
+- Options considered: none. The user's words.
+- Decision: In the user's words. "approve change P-029 (B-272 and B-274): a negation word (no, none, not, without, sin) denies only the first hazard term directly after it. If a single line contains a negation word and more than one hazard term, or a hazard term after "or", "but", "pero", "&", "-" or a period following a negation, the cooking result is "Cooking: needs review" with the quote, handled by the existing needs-review acknowledgment, and no cooking points are added until the underwriter decides. Self-checks: "no fryer but charbroiler", "no fryer. gas grill", "no fryer & grill", "no fryer - grill", "sin freidora pero parrilla", "no fryer or grill", plus the earlier four. Also B-273: "N/A" displays as "not stated", not "other". Workbench update with one sandbox screenshot. One @model-risk re-check, High only. Commit, no wrap-up."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-14 (D-032).
+- Dissent: none
+- Follow-up tasks: built in the main session (budget rule 3; weekly usage limit); @model-risk re-check. Note: under this rule the D-071 line "no fryer; gas grill and charbroiler" (a negation and three hazard terms) is now "Cooking: needs review", not fryer none / grill present. P-028 was not used and is not reused.
+- Status: ACCEPTED
+- Amends: D-071 (P-027) for lines with a negation and more than one hazard term. Not a production approval. No send is authorized.
+
+## D-073 — P-030 approved (B-276, replaces the P-029 rule); B-278 provisional score and underwriter cooking call
+- Date / Owner: 2026-10-14 / @user
+- Context: @model-risk REJECT on P-029: a negation carries across and/with/y/con (B-276). B-278: no control records the underwriter's cooking call. T-017 veto stands.
+- Options considered: none. The user's words.
+- Decision: In the user's words. "approve change P-030 (B-276, replacing the P-029 rule): (1) a line with no negation word: hazards present; (2) a negation word directly before a hazard term, with only modifiers between ("no gas grill"): that hazard none; (3) any other line containing a negation word (no, none, not, without, sin, n/a), in any position or language, including "fryer, none": "Cooking: needs review" with the quote, no points added. Self-checks: "no hood and gas grill", "sin campana con parrilla", "fryer, none", plus all earlier lines. B-278 now: while cooking is needs review, the score shows "Provisional — cooking not scored", never a normal number. Add a workbench control for the underwriter to record cooking present or none with a reason, logged with the run hash; points apply only after that. Sandbox screenshot. One @model-risk re-check, High only. If it is rejected again, stop and tell me; do not start another rule variant. Commit, no wrap-up."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-14 (D-032).
+- Dissent: none
+- Follow-up tasks: built in the main session (budget rule 3; weekly usage limit); @model-risk re-check. Orchestrator's reading, stated to @user: (2) applies only when every hazard term on the line is directly negated; a bare "none" or "N/A" equipment line falls under (3) (needs review), which replaces B-273 for the equipment line.
+- Status: ACCEPTED
+- Amends: D-072 (P-029 rule replaced). Not a production approval. No send is authorized.
+
+## D-074 — P-031 approved (B-279, B-280): cooking rule simplified to two rules
+- Date / Owner: 2026-10-14 / @user
+- Context: @model-risk REJECT on P-030: the rule-2 build let one negation reach later hazards (B-279); "dont use fryer", "never a fryer", newline scope (B-280). T-017 veto stands.
+- Options considered: none. The user's words.
+- Decision: In the user's words. "approve change P-031 (B-279 and B-280), a simplification, not a new variant: remove rule (2). The cooking rule is now only: (1) a line with no negation word: hazards present; (2) a line with any negation word: "Cooking: needs review" with the quote, no points until the underwriter records present or none with the existing B-278 control. Negation words: no, none, not, without, never, don't, dont, n/a, sin, nunca, ninguno, ninguna. A newline ends a line. Self-checks: every line used so far plus "dont use fryer", "never a fryer", "no fryer plus grill", "sin freidora más parrilla", and a two-line case. Sandbox screenshot. One @model-risk re-check, High only. If rejected, stop and tell me. Commit, no wrap-up."
+- Rationale: The user typed this in this Claude Code session on 2026-10-14.
+- Dissent: none
+- Follow-up tasks: built in the main session (budget rule 3; weekly usage limit); @model-risk re-check.
+- Status: ACCEPTED
+- Amends: D-073 (rule 2 removed; P-030 rule 3 becomes rule 2). Not a production approval. No send is authorized.
+
+## D-075 — P-028 approved (B-269): each saved run stores its extraction cache key
+- Date / Owner: 2026-10-14 / @user
+- Context: P-015 E2 saves the cache key in decision rows, but the saved run did not hold it, so it was null (B-269). The frontend files api.js, SignupPage.jsx and SignupPage.test.jsx are the user's and stay unstaged.
+- Options considered: none. The user's words.
+- Decision: In the user's words. "approve change P-028 (B-269): each saved run stores its extraction cache key (hash of file contents, prompt version, OCR settings, model, host, temperature). The workbench footer shows it in short form. Self-check: a saved run's stored key matches the key recomputed from its inputs. One sandbox screenshot. One @model-risk check, High only. Commit, no wrap-up."
+- Rationale: The user typed this in this Claude Code session on 2026-10-14.
+- Dissent: none
+- Follow-up tasks: built in the main session (budget rule 3; weekly usage limit); @model-risk check. Note: P-028 was skipped in D-072 and never used, so this is its first use, not a reuse. The existing `llm_extract.cache_key` already hashes file name, sha256, OCR settings, needs-human flag, text, prompt version, model, host and temperature; it is stored as is, so the extraction cache is not invalidated.
+- Status: ACCEPTED
+- Amends: P-015 E2 (the cache key is now recorded). Not a production approval. No send is authorized.
+
+## D-076 — B-271 reconcile; fill the development cache; demo re-save with keys; B-284
+- Date / Owner: 2026-10-14 / @user
+- Context: The P-016 drop analysis said 60 of 60 development files were cached; the B-222 table and T-067 said 15 of 60 (B-271). Saved demo runs lack the P-028 cache key. B-284: the key self-check does not compare with a real cache file name.
+- Options considered: none. The user's words.
+- Decision: In the user's words. "1. B-271: reconcile the earlier "60 of 60 cached" claim with the recent "15 of 60". Find which report is wrong and why, and correct that report with a dated correction line (do not edit history). 2. Fill the cache for the remaining development files (SUB-017 to SUB-076) using Groq gpt-oss-120b, one model only, within the daily token limit; report tokens used and any failed calls by type. Do not touch hold-out files beyond SUB-076. 3. Re-save the 3 demo runs (SUB-009, SUB-010, SUB-029) from the cache, no model calls, so they carry cache keys. 4. B-284: the self-check also confirms a stored key matches an actual cache file name. Rerun the quick set of 15 from cache and confirm no field changed. No reviewer needed unless something fails. Commit, no wrap-up."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-14 (D-032).
+- Dissent: none
+- Follow-up tasks: main session (budget rule 3; weekly usage limit).
+- Status: ACCEPTED
+- Amends: nothing. Model calls are on the free Groq host only (D-011). No send is authorized.
+
+## D-077 — Fairness swap tests and the B-222 table on all cached files (no model calls)
+- Date / Owner: 2026-10-14 / @user
+- Context: T-067 name-swap tested 7 files (1 scored) and B-222 used 15 files, because only 15 development files were cached. D-076 filled the cache.
+- Options considered: none. The user's words.
+- Decision: In the user's words. "Only this task, all from cache, no model calls: 1. Name-swap test on all cached files: swap owner names and business names across a varied set (different genders and cultural origins), keeping everything else identical. Score, carrier match, status and needs-review flags must not change. Report how many files were tested and how many carry a score. 2. Cuisine-word swap: for every restaurant file, swap cuisine or business-type words (e.g. Taqueria, Panadería, Pho, Diner, Pizzeria) while keeping equipment lines identical. Score and cooking result must not change. 3. Rebuild the B-222 confidence-versus-hit table on all 76 cached files (scans and typed separately), so it is no longer based on only 15. Report any change as a finding with the exact file and field. Commit, no wrap-up."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-14 (D-032).
+- Dissent: none
+- Follow-up tasks: main session (budget rule 3; weekly usage limit). The @responsible-ai fairness check of P-015 (B-270) is still owed and is not replaced by this test.
+- Status: ACCEPTED
+- Amends: nothing. No send is authorized.
+
+## D-078 — B-286: carrier class from generic restaurant evidence only, never cuisine or ethnic words (amends D-060)
+- Date / Owner: 2026-10-14 / @user
+- Context: D-077 cuisine swap: SUB-002 routed carrier_b for "Taqueria/Panadería/Diner/Pizzeria/Kosher Deli" but no_match for "Pho House/Soul Food Kitchen/Curry House" (B-286). Also the name-swap coverage gap (B-287) and the owed @responsible-ai (B-270) and @senior-underwriter checks.
+- Options considered: none. The user's words.
+- Decision: In the user's words. "1. B-286 decision: carrier class is decided from generic restaurant evidence only (restaurant, food service, kitchen, eatery, café, catering, cooking equipment present, or a class code), never from cuisine or ethnic words. Remove all cuisine words from the class lists. Record as a decision amending D-060, build it, and rerun the cuisine swap: every cuisine must give the same carrier result. Update the workbench if the display changes, one sandbox screenshot. 2. Record the name-swap coverage limit in the fairness report as a known gap, with a backlog item to add owner-name fields to future synthetic files. 3. @responsible-ai fairness review of P-015, P-031 and the B-286 fix, using fairness-swaps-D-077.md, High only. State whether the T-017 fairness veto is lifted. 4. @senior-underwriter UI check of today's workbench changes, High only. Then /wrap-up and push ai-team."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-14 (D-032).
+- Dissent: none
+- Follow-up tasks: build in `workbench.py` (main session, budget rule 3); cuisine swap rerun; fairness report gap + backlog; @responsible-ai review; @senior-underwriter UI check; wrap-up and push. Note: the saved runs carry no class-code field, so "a class code" has nothing to read yet; Spanish translations of the generic words stay (D-060).
+- Status: ACCEPTED
+- Amends: D-060 (Carrier B class list: cuisine and food-type words removed; a file named only by a cuisine word is no_match, overridable with a reason under D-057). Not a production approval. No send is authorized.
+
+## D-079 — B-290 bar words; B-293 bakery/coffee shop/deli; P-033 (B-291) negation words; B-294; B-295
+- Date / Owner: 2026-10-14 / @user
+- Context: @responsible-ai High B-290 ("bar" lets a cuisine word decide); B-291 missing negation words; B-293 bakery/coffee shop no_match; @senior-underwriter Highs B-294 (override claim) and B-295 (failed-extraction cooking line).
+- Options considered: none. The user's words.
+- Decision: In the user's words. "1. B-290: "bar", "tavern", "nightclub", "pub", "lounge" with no generic restaurant evidence → no_match as now; with restaurant evidence → senior referral, reason "possible bar/liquor exposure — confirm liquor sales". Self-checks: "sushi bar restaurant", "bar-b-q restaurant", "bbq restaurant", "sports bar", "tavern". 2. B-293: add bakery, coffee shop and deli to the generic food-service list (Carrier B, "restaurants and food service"). Rerun the cuisine swap. 3. approve change P-033 (B-291): add ningún, nada, w/o, isn't, removed, zero to the negation words. 4. B-294: remove the override claim from the "What's new" panel; the override form stays in the after-demo backlog. 5. B-295: a failed-extraction card shows "Not read — extraction failed" for cooking and every field, never "none stated". Sandbox screenshots. One @senior-underwriter check, High only. /wrap-up and push."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-14 (D-032).
+- Dissent: none
+- Follow-up tasks: built in the main session (budget rule 3); cuisine swap rerun; @senior-underwriter check; wrap-up and push. Orchestrator's reading: "as now" keeps each word's current result without restaurant evidence (bar, tavern, nightclub: prohibited no_match; pub, lounge: not on any list, overridable no_match); the senior referral comes after the missing-information and TIV holds; other prohibited words (cannabis, fireworks, ...) are unchanged. P-032 was never used; P-033 is its own number.
+- Status: ACCEPTED
+- Amends: D-078 (bakery, coffee shop, deli are generic evidence), D-074 (negation word list). Not a production approval. No send is authorized.
+
+## D-080 — B-297; B-298 to backlog (cautious); freeze; new hold-out SUB-087 to SUB-106, gold first, scored once
+- Date / Owner: 2026-10-14 / @user
+- Context: NEXT-SESSION.md pending decisions 1 (start the new hold-out) and 2 (B-298); B-297 open.
+- Options considered: none. The user's words.
+- Decision: In the user's words. "1. B-297 first: a failed card never shows "Not read: none" or "Needs human read: none"; it shows "Not read — extraction failed" for those lines too. Self-check and sandbox screenshot. B-298 goes to the backlog as cautious. 2. Freeze: commit all pipeline code. From here no change to underwriting_pipeline/ until the hold-out is scored. 3. @producer creates 20 new submissions SUB-087 to SUB-106 with the hard mix: typed PDFs, scans (rotated, handwritten-style, low quality), Excel schedules, email-only facts, Spanish, conflicts, missing loss runs, real claims, multiple locations, restaurants with cooking lines, a bar, an over-cap TIV, and duplicates. All fictional. 4. @senior-underwriter writes gold answers for all 20 BEFORE any extraction, including effective date, expected status and expected carrier route. Commit the gold set (V2). 5. Run extraction once on Groq gpt-oss-120b, recording the commit hash and model. Retry only failed calls. 6. @model-risk scores it: per field hit / hit (needs review) / miss / not credited / flagged / call failed, plus status and carrier-route accuracy, labelled "9 of 9 extracted fields scored; claims not read; loss runs = date only". Compare to the D-013 pilot floor (9/10 on every field). State whether the T-027 veto is lifted. Do not publish; show me the results and wait for my word. /wrap-up and push."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-14 (D-032).
+- Dissent: none
+- Follow-up tasks: T-091, T-092, T-093. Orchestrator's reading: (a) the user's order to freeze now replaces T-091's wait on T-062 (P-006) and T-072 (P-011); both stay approved, not built. (b) The scorer is P-017 Part 4 as approved in D-039 (X1, exact effective date): `underwriting_pipeline/ai/eval_holdout_087.py`, built and committed in the freeze commit, before any submission or gold exists. The commit hash, the uncommitted list (V2 paths), the call sentence and the label are written by that file only; P-017 Parts 1 and 2 for the older scorers and `prepare.py` are not built. (c) Carrier-route accuracy is not in P-017, so @model-risk computes it as its own analysis from the scored run's reports, outside the frozen scorer, and says so. (d) "Do not publish": the score is written to the scorer's output paths in `deliverables/ai-engineer/evals/` as a run record; nothing goes through `--publish` until the user says so. (e) "Commit the gold set (V2)": the gold files are committed before extraction so the scorer's V2 check shows them unchanged.
+- Status: ACCEPTED
+- Amends: T-091 Depends on (T-062, T-068, T-072 no longer block it). Not a production approval. No send is authorized.
+
+## D-081 — Rerun SUB-087–106 once in .venv on 9e725e3; first run invalid; approve change P-034 after the score
+- Date / Owner: 2026-10-14 / @user
+- Context: T-093 first run used system python3 without reader libraries (@model-risk H1, holdout-SUB-087-106.md).
+- Options considered: none. The user's words.
+- Decision: In the user's words. "1. Rerun the same hold-out SUB-087–106 once, on the frozen commit 9e725e3, with the project .venv. No code changes before the rerun. Gold unchanged. 2. Before running, outside pipeline code: confirm .venv/bin/python imports pdfplumber, openpyxl, pytesseract and pdf2image, and that the tesseract binary works. Record the Python path, library versions and commit hash in the memo. If any check fails, stop and tell me. 3. SUB-101's reply-shape problem is not fixed before scoring; it counts as call failed in the official score. 4. Mark the first run in the memo as "invalid — wrong Python environment, reader libraries missing", with a dated line, kept for the record, never quoted as a score. 5. @model-risk scores the rerun with the frozen scorer, plus status and carrier-route accuracy, labelled "9 of 9 extracted fields scored; claims not read; loss runs = date only", compared with the D-013 floor. State whether T-027 is lifted. 6. approve change P-034: a missing reader library stops the run with a clear error, never skips files. Build it, and the SUB-101 fix, only after the rerun is scored. Do not publish; show me the results. Then /wrap-up and push."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-14 (D-032).
+- Dissent: none
+- Follow-up tasks: environment check 2026-10-14 (orchestrator): .venv/bin/python 3.14.6; pdfplumber 0.11.10, openpyxl 3.1.5, pytesseract 0.3.13, pdf2image 1.17.0, pillow 12.3.0 all import; tesseract 5.5.2 reads a test image. pdf2image imports but cannot run: poppler (pdftoppm) is not installed (PDFInfoNotInstalledError). Stopped per item 2 and asked the user. None of the 11 PDFs in SUB-087–106 has a page under 40 typed characters, so on this set the scanned-PDF OCR path is not reached.
+- Status: ACCEPTED
+- Amends: none. P-034 is approved and not built until T-093's rerun is scored. Not a production approval. No send is authorized.
+
+## D-082 — P-034 and SUB-101 build; approve change P-035 (single-channel scans); premises error analysis; reader smoke test
+- Date / Owner: 2026-10-14 / @user
+- Context: T-093 rerun (D-081): @model-risk RH1 (greyscale scans unread), RH2 (premises empty on typed files); P-034 and the SUB-101 fix approved in D-081 item 6, to be built after the score.
+- Options considered: none. The user's words.
+- Decision: In the user's words. "Read team/NEXT-SESSION.md. SUB-087–106 is now development data. 1. Build P-034 (missing reader library stops the run) and the approved SUB-101 reply-shape fix. 2. approve change P-035: greyscale and other single-channel scans are read correctly (no colour fill on rotation). Self-checks with a greyscale scan, a colour scan, a rotated scan and an image-only PDF. 3. Error analysis only, no fix yet: for every premises miss on typed files (SUB-089, 092, 098, 099, 103), show the address in the document, what extraction returned, and which rule cleared it (P-001 ZIP rule, P-002 validation, P-005 locations, or the model). Same for SUB-098's missing name and operations. 4. Add a smoke test: one uncached run per file type (typed PDF, image-only PDF, colour scan, greyscale scan, rotated scan, Excel, email-only, Spanish), reporting "read / not read" per file before any future hold-out. Self-checks, one @model-risk check of P-035, High only. /wrap-up."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-14 (D-032).
+- Dissent: none
+- Follow-up tasks: built in the main session (budget rule 3); @model-risk check of P-035. Orchestrator's reading: the SUB-101 fix is a reply-shape check before the cache write — a reply whose fields, conflicts or conflict sides are not objects is "reply not usable", never cached, and called again; a saved reply of that shape is not a saved result (P-013). P-034 covers missing Python reader libraries and the tesseract and poppler programs. P-035 changes the OCR steps, so OCR_SETTINGS changes and scan cache keys change.
+- Status: ACCEPTED
+- Amends: none. SUB-087–106 is development data from here (no longer a hold-out). Not a production approval. No send is authorized.
+
+## D-083 — approve change P-036 (B-304 agreeing values); B-305 scorer for future hold-outs; development rerun of SUB-087–106; smoke test
+- Date / Owner: 2026-10-14 / @user
+- Context: premises trace (D-082 item 3): the model reports full vs short forms of one value as conflicts; `prepare.agrees()` keeps them open (B-304). SUB-098 premises with a trailing note scored a miss (B-305).
+- Options considered: none. The user's words.
+- Decision: In the user's words. "1. approve change P-036 (B-304): two values agree when, after normalizing case, punctuation, "&"/"and", common address abbreviations (St/Street, Rd/Road, Ave/Avenue, Dr/Drive) and whitespace, they are identical, or one is the shorter form of the other with the same house number and street. Any differing number keeps it a conflict ("4 vs 40 Mistletoe", "9 vs 90" stay conflicts). Keep the fuller value with both quotes. Operations: wording differences are not a conflict; only a different business class is. Several schedule addresses go to the locations list (P-005), not a conflict. Self-checks for every case in the premises trace plus the earlier conflict cases. 2. B-305: for future hold-outs only, the scorer compares addresses ignoring parenthetical notes. Commit this scorer change now, before any new gold is written. The SUB-087–106 published scores stay as they are. 3. Development check: re-extract SUB-087–106 (now development data) uncached with the current code, and report per-field hit / needs-review / miss compared with the hold-out rerun, so we see the effect of P-035 and P-036. 4. Run the smoke test again. One @model-risk check of P-036, High only. /wrap-up and push."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-14 (D-032).
+- Dissent: none
+- Follow-up tasks: built in the main session (budget rule 3); @model-risk check of P-036. Orchestrator's reading: B-305 goes in a new scorer for the next hold-out (the frozen scorers, including eval_holdout_087.py, are not edited, D-022); the development check scores SUB-087–106 with the frozen eval_holdout_087.py into a dev output file, never its published paths.
+- Status: ACCEPTED
+- Amends: B-304, B-305. Not a production approval. No send is authorized.
+
+## D-084 — approve change P-037 (B-311 source priority); silent error and automation rates; model comparison on SUB-087–106
+- Date / Owner: 2026-10-14 / @user
+- Context: D-083 development check: scans now read (P-035) but noisy OCR competes with typed facts (B-311).
+- Options considered: none. The user's words.
+- Decision: In the user's words. "1. approve change P-037 (B-311): source priority. Values from typed or structured sources (typed PDF text, Excel, application forms) outrank values from scan OCR. A scan value only fills an empty field, or, if it disagrees with a typed value, creates a needs-review conflict; it never silently replaces a typed value. Self-checks with SUB-088, 097 and 101 cases. 2. Add two metrics to every score report from now on: silent error rate (value wrong AND not flagged needs-review, per field and overall) and automation rate (value correct AND not needing review). Compute them for the SUB-087–106 dev check and the quick set. 3. Model comparison on development data SUB-087–106, uncached, one run each, same code: openai/gpt-oss-120b, openai/gpt-oss-20b, qwen/qwen3.8-27b. Report per model: per-field hits, silent error rate, automation rate, tokens per file, seconds per file, failed calls. Each model has its own Groq daily budget; stop a model if its limit is hit and say so. One @model-risk check of P-037 and of the metric definitions, High only. /wrap-up and push."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-14 (D-032).
+- Dissent: none
+- Follow-up tasks: built in the main session (budget rule 3); @model-risk check. Orchestrator's reading: (a) a scan source is a file whose text came from OCR (an image, or a PDF with an OCR'd page). (b) "needs-review conflict": the typed value is kept and flagged needs review, the reason names the scan's value and file; it is acknowledged at approve like any needs-review value (D-064) rather than stored as an open conflict that would block the send outright. (c) Item 2 is the user's own instruction for the score reports: the metrics are added in `regression_dev.py` (the runner) and written beside each score; no frozen scorer and no hit/miss rule changes; published score files are not rewritten.
+- Status: ACCEPTED
+- Amends: B-311. Not a production approval. No send is authorized.
+
+## D-085 — No model switch yet; fair comparison, qwen stability, qwen sales error analysis (development data)
+- Date / Owner: 2026-10-15 / @user
+- Context: D-084 model comparison; qwen/qwen3.8-27b led on automation but sales 6/20; gpt-oss-120b stopped at its daily limit after 12 files.
+- Options considered: none. The user's words.
+- Decision: In the user's words. "No model switch yet. Three checks, development data only (SUB-087–106): 1. Fair comparison: recompute all three models' per-field hits, silent error rate and automation rate on only the files all three completed (the 12 gpt-oss-120b finished). 2. Stability: run qwen/qwen3.8-27b a second time on all 20 files, uncached, and report run-to-run differences per field. 3. Error analysis of qwen's sales misses: for each, show the gold value, qwen's value, the document text, and the cause (wrong number chosen such as payroll vs revenue, format/normalizer, empty, conflict merge, or scan). No fix yet. Pace calls to stay under Groq's per-minute limit. Then show me a short recommendation: switch to qwen, stay on gpt-oss-120b, or fix sales first then switch. /wrap-up and push."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-15 (D-032).
+- Dissent: none
+- Follow-up tasks: main session (budget rule 3). Orchestrator's reading: "files all three completed" = the 12 gpt-oss-120b scored (SUB-087 to SUB-098) minus any file another model failed on.
+- Status: ACCEPTED
+- Amends: none. No code change. Not a production approval.
+
+## D-086 — approve change P-038 (B-317 sales format, markdown-blind quotes, one-sided conflicts); scorer money format for future hold-outs; qwen re-check with pass criteria
+- Date / Owner: 2026-10-15 / @user
+- Context: D-085: qwen/qwen3.8-27b reads the right sales number but returns it mixed with payroll or labels; quotes drop "**"; a one-sided conflict loses the good value (SUB-094); the scorer misses "$1,520,000" vs "1520000".
+- Options considered: none. The user's words.
+- Decision: In the user's words. "1. approve change P-038 (B-317): (a) prompt: sales is returned as a single number, gross annual revenue, with no labels or other figures; payroll is never part of sales. (b) quote matching ignores markdown formatting marks (**, __, *) but still requires the exact words and digits. (c) SUB-094: when one side of a conflict is rejected by the gate, keep the valid side, flagged needs-review "conflict with rejected value". The gate stays strict: it never picks one number out of a mixed value. Self-checks for each. 2. For future hold-outs only: the scorer treats "$1,520,000" and "1520000" as equal. Commit before any new gold exists. 3. Development re-check on SUB-087–106, uncached, qwen/qwen3.8-27b, calls paced. Pass criteria set now: sales at least 8 of 9 on the 9 shared files; silent error rate at or below 2.5%; automation rate at or above 71%. Report pass or fail for each. 4. If all pass, draft P-039 (switch the default extraction model to qwen/qwen3.8-27b) and stop for my approval. Do not switch on your own. One @model-risk check of P-038, High only. /wrap-up and push."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-15 (D-032).
+- Dissent: none
+- Follow-up tasks: built in the main session (budget rule 3); @model-risk check of P-038. Orchestrator's reading: the silent error and automation criteria are on all 20 files (the D-085 qwen figures were 1.7% and 71.7%/71.1% on 20); sales is on the 9 shared files (SUB-087, 089, 090, 091, 092, 093, 095, 097, 098). P-038 (a) changes the prompt, so PROMPT_VERSION changes and every cache key changes.
+- Status: ACCEPTED
+- Amends: B-317, B-318 (part c), B-319 (item 2). Not a production approval. No send is authorized.
+
+## D-087 — approve change P-039: default extraction model qwen/qwen3.8-27b
+- Date / Owner: 2026-10-15 / @user
+- Context: D-086 pass criteria all passed; P-039 drafted in deliverables/ai-engineer/proposal-P-039.md.
+- Options considered: none. The user's words.
+- Decision: In the user's words. "approve change P-039"
+- Rationale: The user typed this in this Claude Code session on 2026-10-15.
+- Dissent: none
+- Follow-up tasks: as P-039 says: the user changes `LLM_MODEL` in `~/.zshrc` to `qwen/qwen3.8-27b` (the orchestrator does not edit the shell file); the docstring example in confidence_vs_hit.py names the new model; batch scoring runs are paced (`LLM_PACE_SECONDS` in regression_dev.py, 55 s for qwen). No prompt, gate, OCR or scorer change.
+- Status: ACCEPTED
+- Amends: the model in use since D-010/D-012 (openai/gpt-oss-120b). Not a production approval; @model-risk's T-027 veto stands until the next hold-out on this model passes. No send is authorized.

@@ -19,12 +19,12 @@ Interpretable points, agreed direction with @actuary:
 
 | Driver | Higher points when |
 |---|---|
-| Loss history | Any liability claim, or a property claim above a stated amount, on a real loss run |
+| Loss history | Not a v1 driver (2026-10-14, P-015): no claim fact is extracted until B-149; the page shows "Loss history: not scored" |
 | Construction | Frame vs masonry (direction only; weights not set) |
-| Occupancy | Cooking, habitational, or contracting vs office |
+| Occupancy | Cooking (stated fryer or open flame), habitational, or contracting vs office |
 | TIV | Higher band |
 
-Each fired driver is a reason code. No names, no ZIP score, no protection-class vendor. A missing loss run adds no points and does not mean zero claims; the file is incomplete (step 3) and is not scored.
+Each fired driver is a reason code. No names, no ZIP score, no protection-class vendor. A missing loss run adds no points and does not mean zero claims; the file is incomplete (step 3) and is not scored. Cooking points need a stated fryer or open flame (2026-10-14, P-015), never a class or cuisine word.
 
 No gradient boosting. A GLM only if we later have labels and @model-risk agrees the points are not enough.
 

@@ -1,0 +1,1185 @@
+{
+  "bands": [
+    {
+      "band": "quick-15",
+      "counted": {
+        "named_insured": {
+          "hit": 13,
+          "miss": 2
+        },
+        "operations": {
+          "hit": 12,
+          "hit (needs review)": 1,
+          "miss": 2
+        },
+        "sales": {
+          "hit": 13,
+          "miss": 1,
+          "flagged": 1
+        },
+        "construction": {
+          "hit": 13,
+          "hit (needs review)": 2
+        },
+        "year_built": {
+          "hit": 15
+        },
+        "premises": {
+          "hit": 12,
+          "miss": 3
+        },
+        "tiv": {
+          "hit": 14,
+          "miss": 1
+        },
+        "loss_runs": {
+          "hit": 8,
+          "not_credited": 5,
+          "hit (needs review)": 1,
+          "flagged": 1
+        },
+        "conflict": {
+          "hit": 10,
+          "hit (needs review)": 3,
+          "flagged": 2
+        },
+        "status": {
+          "hit": 12,
+          "hit (needs review)": 1,
+          "miss": 2
+        }
+      },
+      "metrics": {
+        "fields": {
+          "named_insured": {
+            "scored": 15,
+            "silent": 1,
+            "automated": 13,
+            "silent_error_rate": 0.067,
+            "automation_rate": 0.867
+          },
+          "premises": {
+            "scored": 15,
+            "silent": 1,
+            "automated": 11,
+            "silent_error_rate": 0.067,
+            "automation_rate": 0.733
+          },
+          "operations": {
+            "scored": 15,
+            "silent": 0,
+            "automated": 10,
+            "silent_error_rate": 0.0,
+            "automation_rate": 0.667
+          },
+          "sales": {
+            "scored": 15,
+            "silent": 0,
+            "automated": 10,
+            "silent_error_rate": 0.0,
+            "automation_rate": 0.667
+          },
+          "tiv": {
+            "scored": 15,
+            "silent": 0,
+            "automated": 11,
+            "silent_error_rate": 0.0,
+            "automation_rate": 0.733
+          },
+          "construction": {
+            "scored": 15,
+            "silent": 0,
+            "automated": 12,
+            "silent_error_rate": 0.0,
+            "automation_rate": 0.8
+          },
+          "year_built": {
+            "scored": 15,
+            "silent": 0,
+            "automated": 11,
+            "silent_error_rate": 0.0,
+            "automation_rate": 0.733
+          },
+          "loss_runs": {
+            "scored": 15,
+            "silent": 0,
+            "automated": 6,
+            "silent_error_rate": 0.0,
+            "automation_rate": 0.4
+          }
+        },
+        "overall": {
+          "scored": 120,
+          "silent": 2,
+          "automated": 84,
+          "silent_error_rate": 0.017,
+          "automation_rate": 0.7
+        },
+        "failed_call_files": 0,
+        "definitions": "silent error: a value is shown, it is wrong, and it is not flagged needs review or in an open conflict; automation: the value is correct and not flagged. An empty field counts as flagged (it shows as missing). Rates are over scored field values; files whose call failed are left out and counted apart (D-084)."
+      },
+      "rows": [
+        {
+          "submission": "SUB-027",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "hit",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "Alamo Ledger Office LLC",
+          "error": null,
+          "attempts": 1,
+          "metrics": {
+            "named_insured": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "premises": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "operations": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "sales": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "tiv": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "construction": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "year_built": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "loss_runs": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            }
+          }
+        },
+        {
+          "submission": "SUB-029",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "not_credited",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "Fredericksburg Paper LLC",
+          "error": null,
+          "attempts": 1,
+          "metrics": {
+            "named_insured": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "premises": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "operations": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "sales": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "tiv": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "construction": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "year_built": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "loss_runs": {
+              "correct": false,
+              "flagged": true,
+              "silent": false,
+              "automated": false
+            }
+          }
+        },
+        {
+          "submission": "SUB-038",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "miss",
+            "tiv": "hit",
+            "loss_runs": "hit (needs review)",
+            "conflict": "hit (needs review)",
+            "status": "hit (needs review)"
+          },
+          "name": "Probandt Shoe Repair LLC",
+          "error": null,
+          "attempts": 1,
+          "metrics": {
+            "named_insured": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "premises": {
+              "correct": false,
+              "flagged": false,
+              "silent": true,
+              "automated": false
+            },
+            "operations": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "sales": {
+              "correct": true,
+              "flagged": true,
+              "silent": false,
+              "automated": false
+            },
+            "tiv": {
+              "correct": true,
+              "flagged": true,
+              "silent": false,
+              "automated": false
+            },
+            "construction": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "year_built": {
+              "correct": true,
+              "flagged": true,
+              "silent": false,
+              "automated": false
+            },
+            "loss_runs": {
+              "correct": true,
+              "flagged": true,
+              "silent": false,
+              "automated": false
+            }
+          }
+        },
+        {
+          "submission": "SUB-042",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "hit",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "Cesar Chavez Tax LLC",
+          "error": null,
+          "attempts": 1,
+          "metrics": {
+            "named_insured": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "premises": {
+              "correct": true,
+              "flagged": true,
+              "silent": false,
+              "automated": false
+            },
+            "operations": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "sales": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "tiv": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "construction": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "year_built": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "loss_runs": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            }
+          }
+        },
+        {
+          "submission": "SUB-044",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "not_credited",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "McCullough Gifts LLC",
+          "error": null,
+          "attempts": 1,
+          "metrics": {
+            "named_insured": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "premises": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "operations": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "sales": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "tiv": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "construction": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "year_built": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "loss_runs": {
+              "correct": false,
+              "flagged": true,
+              "silent": false,
+              "automated": false
+            }
+          }
+        },
+        {
+          "submission": "SUB-050",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "not_credited",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "Theo Avenue Gorditas LLC",
+          "error": null,
+          "attempts": 1,
+          "metrics": {
+            "named_insured": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "premises": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "operations": {
+              "correct": true,
+              "flagged": true,
+              "silent": false,
+              "automated": false
+            },
+            "sales": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "tiv": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "construction": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "year_built": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "loss_runs": {
+              "correct": false,
+              "flagged": true,
+              "silent": false,
+              "automated": false
+            }
+          }
+        },
+        {
+          "submission": "SUB-051",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "hit",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "Despacho Augusta LLC",
+          "error": null,
+          "attempts": 1,
+          "metrics": {
+            "named_insured": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "premises": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "operations": {
+              "correct": true,
+              "flagged": true,
+              "silent": false,
+              "automated": false
+            },
+            "sales": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "tiv": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "construction": {
+              "correct": true,
+              "flagged": true,
+              "silent": false,
+              "automated": false
+            },
+            "year_built": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "loss_runs": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            }
+          }
+        },
+        {
+          "submission": "SUB-053",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "not_credited",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "Colima Court LLC",
+          "error": null,
+          "attempts": 1,
+          "metrics": {
+            "named_insured": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "premises": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "operations": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "sales": {
+              "correct": true,
+              "flagged": true,
+              "silent": false,
+              "automated": false
+            },
+            "tiv": {
+              "correct": true,
+              "flagged": true,
+              "silent": false,
+              "automated": false
+            },
+            "construction": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "year_built": {
+              "correct": true,
+              "flagged": true,
+              "silent": false,
+              "automated": false
+            },
+            "loss_runs": {
+              "correct": false,
+              "flagged": true,
+              "silent": false,
+              "automated": false
+            }
+          }
+        },
+        {
+          "submission": "SUB-056",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "hit",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "Elmira Electric LLC",
+          "error": null,
+          "attempts": 1,
+          "metrics": {
+            "named_insured": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "premises": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "operations": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "sales": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "tiv": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "construction": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "year_built": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "loss_runs": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            }
+          }
+        },
+        {
+          "submission": "SUB-067",
+          "checks": {
+            "named_insured": "miss",
+            "operations": "hit (needs review)",
+            "sales": "miss",
+            "construction": "hit (needs review)",
+            "year_built": "hit",
+            "premises": "miss",
+            "tiv": "hit",
+            "loss_runs": "hit",
+            "conflict": "hit (needs review)",
+            "status": "miss"
+          },
+          "name": "Nogalitos watch LLC",
+          "error": null,
+          "attempts": 1,
+          "metrics": {
+            "named_insured": {
+              "correct": false,
+              "flagged": true,
+              "silent": false,
+              "automated": false
+            },
+            "premises": {
+              "correct": false,
+              "flagged": true,
+              "silent": false,
+              "automated": false
+            },
+            "operations": {
+              "correct": true,
+              "flagged": true,
+              "silent": false,
+              "automated": false
+            },
+            "sales": {
+              "correct": false,
+              "flagged": true,
+              "silent": false,
+              "automated": false
+            },
+            "tiv": {
+              "correct": true,
+              "flagged": true,
+              "silent": false,
+              "automated": false
+            },
+            "construction": {
+              "correct": true,
+              "flagged": true,
+              "silent": false,
+              "automated": false
+            },
+            "year_built": {
+              "correct": true,
+              "flagged": true,
+              "silent": false,
+              "automated": false
+            },
+            "loss_runs": {
+              "correct": true,
+              "flagged": true,
+              "silent": false,
+              "automated": false
+            }
+          }
+        },
+        {
+          "submission": "SUB-070",
+          "checks": {
+            "named_insured": "miss",
+            "operations": "miss",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "not_credited",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "De Zavala Wholesale LLC.",
+          "error": null,
+          "attempts": 1,
+          "metrics": {
+            "named_insured": {
+              "correct": false,
+              "flagged": false,
+              "silent": true,
+              "automated": false
+            },
+            "premises": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "operations": {
+              "correct": false,
+              "flagged": true,
+              "silent": false,
+              "automated": false
+            },
+            "sales": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "tiv": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "construction": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "year_built": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "loss_runs": {
+              "correct": false,
+              "flagged": true,
+              "silent": false,
+              "automated": false
+            }
+          }
+        },
+        {
+          "submission": "SUB-071",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "hit",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "Eleanor Avenue Accounting LLC",
+          "error": null,
+          "attempts": 1,
+          "metrics": {
+            "named_insured": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "premises": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "operations": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "sales": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "tiv": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "construction": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "year_built": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "loss_runs": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            }
+          }
+        },
+        {
+          "submission": "SUB-073",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "flagged",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "hit",
+            "conflict": "flagged",
+            "status": "hit"
+          },
+          "name": "St Cloud Gifts LLC",
+          "error": null,
+          "attempts": 1,
+          "metrics": {
+            "named_insured": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "premises": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "operations": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "sales": {
+              "correct": false,
+              "flagged": true,
+              "silent": false,
+              "automated": false
+            },
+            "tiv": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "construction": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "year_built": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "loss_runs": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            }
+          }
+        },
+        {
+          "submission": "SUB-074",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "miss",
+            "sales": "hit",
+            "construction": "hit (needs review)",
+            "year_built": "hit",
+            "premises": "miss",
+            "tiv": "miss",
+            "loss_runs": "hit",
+            "conflict": "hit (needs review)",
+            "status": "miss"
+          },
+          "name": "Tortilleria Sol LLC",
+          "error": null,
+          "attempts": 1,
+          "metrics": {
+            "named_insured": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "premises": {
+              "correct": false,
+              "flagged": true,
+              "silent": false,
+              "automated": false
+            },
+            "operations": {
+              "correct": false,
+              "flagged": true,
+              "silent": false,
+              "automated": false
+            },
+            "sales": {
+              "correct": true,
+              "flagged": true,
+              "silent": false,
+              "automated": false
+            },
+            "tiv": {
+              "correct": false,
+              "flagged": true,
+              "silent": false,
+              "automated": false
+            },
+            "construction": {
+              "correct": true,
+              "flagged": true,
+              "silent": false,
+              "automated": false
+            },
+            "year_built": {
+              "correct": true,
+              "flagged": true,
+              "silent": false,
+              "automated": false
+            },
+            "loss_runs": {
+              "correct": true,
+              "flagged": true,
+              "silent": false,
+              "automated": false
+            }
+          }
+        },
+        {
+          "submission": "SUB-076",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "flagged",
+            "conflict": "flagged",
+            "status": "hit"
+          },
+          "name": "Main Avenue Law Office LLC",
+          "error": null,
+          "attempts": 1,
+          "metrics": {
+            "named_insured": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "premises": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "operations": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "sales": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "tiv": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "construction": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "year_built": {
+              "correct": true,
+              "flagged": false,
+              "silent": false,
+              "automated": true
+            },
+            "loss_runs": {
+              "correct": false,
+              "flagged": true,
+              "silent": false,
+              "automated": false
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "failed_attempts": {
+    "run": "20261014T230918-57309",
+    "run_totals": {
+      "hosts": [
+        "api.groq.com"
+      ],
+      "model_calls": 0,
+      "from_cache": 15,
+      "tokens": 0,
+      "failed_attempts": {
+        "rate_limit_429": 0,
+        "timeout": 0,
+        "other": 0,
+        "reply_not_usable": 0
+      }
+    },
+    "counts": {
+      "rate_limit_429": 0,
+      "timeout": 0,
+      "other": 0,
+      "reply_not_usable": 0
+    },
+    "samples": {},
+    "tokens": {
+      "run": "20261014T230918-57309",
+      "skipped_lines": 0,
+      "this_run": {
+        "model_calls": 0,
+        "from_cache": 15,
+        "tokens": 0,
+        "tokens_per_call": 0
+      },
+      "last_24_hours": {
+        "openai/gpt-oss-120b": {
+          "calls": 77,
+          "tokens": 130142
+        }
+      }
+    }
+  }
+}

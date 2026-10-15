@@ -1,0 +1,364 @@
+{
+  "bands": [
+    {
+      "band": "quick-15",
+      "counted": {
+        "named_insured": {
+          "hit": 13,
+          "miss": 2
+        },
+        "operations": {
+          "hit": 12,
+          "miss": 3
+        },
+        "sales": {
+          "hit": 13,
+          "miss": 1,
+          "flagged": 1
+        },
+        "construction": {
+          "hit": 13,
+          "miss": 2
+        },
+        "year_built": {
+          "hit": 15
+        },
+        "premises": {
+          "hit": 12,
+          "miss": 3
+        },
+        "tiv": {
+          "hit": 14,
+          "miss": 1
+        },
+        "loss_runs": {
+          "hit": 8,
+          "not_credited": 5,
+          "miss": 1,
+          "flagged": 1
+        },
+        "conflict": {
+          "hit": 12,
+          "not_credited": 1,
+          "flagged": 2
+        },
+        "status": {
+          "hit": 12,
+          "miss": 3
+        }
+      },
+      "rows": [
+        {
+          "submission": "SUB-027",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "hit",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "Alamo Ledger Office LLC",
+          "error": null,
+          "attempts": 1
+        },
+        {
+          "submission": "SUB-029",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "not_credited",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "Fredericksburg Paper LLC",
+          "error": null,
+          "attempts": 1
+        },
+        {
+          "submission": "SUB-038",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "miss",
+            "tiv": "hit",
+            "loss_runs": "miss",
+            "conflict": "hit",
+            "status": "miss"
+          },
+          "name": "Probandt Shoe Repair LLC",
+          "error": null,
+          "attempts": 1
+        },
+        {
+          "submission": "SUB-042",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "hit",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "Cesar Chavez Tax LLC",
+          "error": null,
+          "attempts": 1
+        },
+        {
+          "submission": "SUB-044",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "not_credited",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "McCullough Gifts LLC",
+          "error": null,
+          "attempts": 1
+        },
+        {
+          "submission": "SUB-050",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "not_credited",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "Theo Avenue Gorditas LLC",
+          "error": null,
+          "attempts": 1
+        },
+        {
+          "submission": "SUB-051",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "hit",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "Despacho Augusta LLC",
+          "error": null,
+          "attempts": 1
+        },
+        {
+          "submission": "SUB-053",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "not_credited",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "Colima Court LLC",
+          "error": null,
+          "attempts": 1
+        },
+        {
+          "submission": "SUB-056",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "hit",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "Elmira Electric LLC",
+          "error": null,
+          "attempts": 1
+        },
+        {
+          "submission": "SUB-067",
+          "checks": {
+            "named_insured": "miss",
+            "operations": "miss",
+            "sales": "miss",
+            "construction": "miss",
+            "year_built": "hit",
+            "premises": "miss",
+            "tiv": "hit",
+            "loss_runs": "hit",
+            "conflict": "not_credited",
+            "status": "miss"
+          },
+          "name": null,
+          "error": null,
+          "attempts": 1
+        },
+        {
+          "submission": "SUB-070",
+          "checks": {
+            "named_insured": "miss",
+            "operations": "miss",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "not_credited",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "De Zavala Wholesale LLC.",
+          "error": null,
+          "attempts": 1
+        },
+        {
+          "submission": "SUB-071",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "hit",
+            "conflict": "hit",
+            "status": "hit"
+          },
+          "name": "Eleanor Avenue Accounting LLC",
+          "error": null,
+          "attempts": 1
+        },
+        {
+          "submission": "SUB-073",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "flagged",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "hit",
+            "conflict": "flagged",
+            "status": "hit"
+          },
+          "name": "St Cloud Gifts LLC",
+          "error": null,
+          "attempts": 1
+        },
+        {
+          "submission": "SUB-074",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "miss",
+            "sales": "hit",
+            "construction": "miss",
+            "year_built": "hit",
+            "premises": "miss",
+            "tiv": "miss",
+            "loss_runs": "hit",
+            "conflict": "hit",
+            "status": "miss"
+          },
+          "name": "Tortilleria Sol LLC",
+          "error": null,
+          "attempts": 1
+        },
+        {
+          "submission": "SUB-076",
+          "checks": {
+            "named_insured": "hit",
+            "operations": "hit",
+            "sales": "hit",
+            "construction": "hit",
+            "year_built": "hit",
+            "premises": "hit",
+            "tiv": "hit",
+            "loss_runs": "flagged",
+            "conflict": "flagged",
+            "status": "hit"
+          },
+          "name": "Main Avenue Law Office LLC",
+          "error": null,
+          "attempts": 1
+        }
+      ]
+    }
+  ],
+  "failed_attempts": {
+    "run": "20261014T153740-92483",
+    "run_totals": {
+      "hosts": [
+        "api.groq.com"
+      ],
+      "model_calls": 0,
+      "from_cache": 15,
+      "tokens": 0,
+      "failed_attempts": {
+        "rate_limit_429": 0,
+        "timeout": 0,
+        "other": 0,
+        "reply_not_usable": 0
+      }
+    },
+    "counts": {
+      "rate_limit_429": 0,
+      "timeout": 0,
+      "other": 0,
+      "reply_not_usable": 0
+    },
+    "samples": {},
+    "tokens": {
+      "run": "20261014T153740-92483",
+      "skipped_lines": 0,
+      "this_run": {
+        "model_calls": 0,
+        "from_cache": 15,
+        "tokens": 0,
+        "tokens_per_call": 0
+      },
+      "last_24_hours": {
+        "openai/gpt-oss-120b": {
+          "calls": 3,
+          "tokens": 5630
+        }
+      }
+    }
+  }
+}

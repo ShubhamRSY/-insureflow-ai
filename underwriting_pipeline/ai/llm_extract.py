@@ -38,6 +38,7 @@ Use only facts copied from the documents. If a fact is not there, value is null 
 Never guess. A no-known-loss letter is not a loss-run date; leave loss_run_valued_through null.
 Spanish and unlabeled email prose are allowed. Put the English value in value. quote must be copied character for character from one file, with no added words and no added accents.
 For operations, keep the specific English words from the source and do not shorten them to one class word. If they cook a named food, the value must contain that food word and the word restaurant. If the source is Spanish, translate it and still quote the Spanish line exactly. A bar or night club is a bar and nightclub. mamposteria means masonry, and the construction value is the English word.
+sales_or_payroll is gross annual revenue (sales), returned as a single number copied from the document, with no labels or other figures. Payroll is never part of sales.
 loss_run_valued_through is only the valued-through date copied from the file. Never invent a date. If the file does not show that date, use null even if you think runs exist.
 If square feet or the premises address differ across files, do not pick a side. Leave that field null and add a conflict whose values include both numbers or both addresses, each with an exact quote.
 quote must be an exact substring of one document. source is that document's file name.
@@ -71,6 +72,12 @@ def _host() -> str:
 def cache_key(docs: list[dict], model: str) -> str:
     files = [[doc["name"], doc.get("sha256"), doc.get("ocr"), doc.get("needs_human", False), doc["text"]] for doc in docs]
     return hashlib.sha256(json.dumps([PROMPT_VERSION, model, _host(), TEMPERATURE, files]).encode()).hexdigest()
+
+
+def key_for(docs: list[dict]) -> str | None:
+    """P-028 (D-075): the cache key llm_extract() uses for these documents, without a call. None if LLM_MODEL is unset."""
+    model = os.environ.get("LLM_MODEL")
+    return cache_key([doc for doc in docs if not doc.get("unread")], model) if model else None
 
 
 def _log_row(row: dict) -> dict:
@@ -248,6 +255,9 @@ def _parse_json(content: str) -> dict:
         raise
 
 
+_MARKS = re.compile(r"\*+|__")  # P-038 (b): markdown bold/italic marks; a single "_" is a real character
+
+
 def find_quote(text: str, quote: str) -> tuple[int, int] | None:
     if not quote:
         return None
@@ -258,9 +268,19 @@ def find_quote(text: str, quote: str) -> tuple[int, int] | None:
     if not parts:
         return None
     match = re.search(r"\s+".join(re.escape(part) for part in parts), text)
+    if match:
+        return match.start(), match.end()
+    # P-038 (b): the same words and digits with markdown marks ("**Annual sales:** $1,450,000") on either side set aside
+    keep = [i for i, _ in enumerate(text)]
+    for mark in _MARKS.finditer(text):
+        keep[mark.start() : mark.end()] = [None] * (mark.end() - mark.start())
+    index = [i for i in keep if i is not None]
+    bare = "".join(text[i] for i in index)
+    parts = _MARKS.sub("", quote).split()
+    match = re.search(r"\s+".join(re.escape(part) for part in parts), bare) if parts else None
     if not match:
         return None
-    return match.start(), match.end()
+    return index[match.start()], index[match.end() - 1] + 1
 
 
 # P-016 (D-039). Exact citations: no quote match, no value. The value must be inside the quote.
@@ -295,6 +315,8 @@ REASON_QUOTE = "quote not found in {}"
 REASON_VALUE = "value not inside the cited text"
 REASON_REWORDED = "value is not in the cited text (translated or reworded)"
 REASON_SCAN = "number or date read from a scan"
+SCAN_FLOOR = 0.50  # P-025 (D-067): on a scan, 0.50 to below MIN_CONFIDENCE is stored for review, not dropped
+REASON_LOW_SCAN = "Low-confidence scan read — check against the page"
 
 
 def _squash(text: str) -> str:
@@ -430,7 +452,8 @@ def accept_field(item: dict, docs: dict[str, str], ocr_confidence: dict | None =
     }
     if value is None or str(value).strip() == "" or str(value).lower() == "null":
         return base
-    if confidence < MIN_CONFIDENCE:
+    low_scan = on_scan and SCAN_FLOOR <= confidence < MIN_CONFIDENCE
+    if confidence < MIN_CONFIDENCE and not low_scan:
         base["reason"] = f"confidence {confidence:.2f} is under {MIN_CONFIDENCE}"
         return base
     text = docs.get(source, "")
@@ -451,6 +474,8 @@ def accept_field(item: dict, docs: dict[str, str], ocr_confidence: dict | None =
         return base
     if on_scan and field_id in NUMBER_FIELDS + DATE_FIELDS:  # S2
         flag, reason = True, REASON_SCAN
+    if low_scan:
+        flag, reason = True, REASON_LOW_SCAN
     return {
         "field_id": field_id,
         "value": str(value).strip(),
@@ -581,6 +606,87 @@ def _post(settings: dict, payload: dict) -> dict:
     raise RuntimeError("model call failed: HTTP 429 rate limit")
 
 
+def _shape_problem(parsed) -> str | None:
+    """D-082 (SUB-101): every field, conflict and conflict side must be an object. Anything else is a reply not usable, never cached."""
+    if not isinstance(parsed, dict):
+        return "reply is not a JSON object"
+    fields, conflicts = parsed.get("fields") or [], parsed.get("conflicts") or []
+    if not isinstance(fields, list) or not isinstance(conflicts, list):
+        return "fields or conflicts is not a list"
+    if any(not isinstance(item, dict) for item in fields):
+        return "a field is not an object"
+    for item in conflicts:
+        sides = item.get("values") if isinstance(item, dict) else None
+        if not isinstance(item, dict) or not isinstance(sides or [], list) or any(not isinstance(side, dict) for side in sides or []):
+            return "a conflict is not an object with object sides"
+    return None
+
+
+_ABBR = {"st": "street", "rd": "road", "ave": "avenue", "av": "avenue", "dr": "drive"}
+_UNIT = {"apt", "apartment", "unit", "suite", "ste", "bldg", "building", "floor", "fl", "room", "rm", "lot", "space", "spc", "no"}
+_DIRECTION = {"n", "s", "e", "w", "ne", "nw", "se", "sw", "north", "south", "east", "west", "ext", "extension"}
+_STREET = {"street", "road", "avenue", "drive", "lane", "ln", "boulevard", "blvd", "court", "ct", "way", "parkway", "pkwy",
+           "highway", "hwy", "place", "pl", "circle", "cir", "trail", "trl", "loop", "freeway", "fwy"}
+
+
+def words(value: str) -> list[str]:
+    """P-036 (D-083): case, punctuation, "&"/"and", St/Rd/Ave/Dr and spacing do not make two values differ."""
+    return [_ABBR.get(w, w) for w in re.findall(r"[a-z0-9]+", str(value).lower().replace("&", " and "))]
+
+
+def address_list(value: str) -> list[str]:
+    """Several addresses in one value ("2215 Bayou Crest Dr, ...; 880 Kirby Meadow Ln, ...") are a schedule, not one premises."""
+    parts = [part.strip() for part in str(value).split(";") if part.strip()]
+    return parts if len(parts) > 1 and all(re.match(r"\d+\s+\S", part) for part in parts) else []
+
+
+def same_address(left: str, right: str) -> bool:
+    """P-036: identical once normalized, or the shorter is the start of the fuller with the same house number and street.
+    Any differing number stays a conflict (4 vs 40 Mistletoe)."""
+    if address_list(left) or address_list(right):
+        return False
+    a, b = words(left), words(right)
+    if a == b:
+        return True
+    short, full = sorted((a, b), key=len)
+    if not (len(short) >= 3 and short[0].isdigit() and full[: len(short)] == short and any(w in _STREET for w in short[2:])):
+        return False  # H2/M3: the short form has a street name and its type ("12 Oak", "12 Court" are not short forms)
+    extra = full[len(short) :]
+    if extra[:1] and extra[0] in _DIRECTION:
+        return False  # M6: "100 Main St N" is not "100 Main St"
+    return not _UNIT & set(extra) and all(len(w) == 5 for w in extra if w.isdigit())  # M1/M3: only city, state, ZIP may be added
+
+
+def _schedule_file(name) -> bool:
+    return str(name or "").lower().endswith((".xlsx", ".csv")) or "schedule" in str(name or "").lower()
+
+
+def _street_key(value) -> tuple:
+    """House number and first street word: "2215 Bayou Crest Dr, Houston" -> ("2215", "bayou")."""
+    return tuple(re.findall(r"[a-z0-9]+", str(value or "").lower())[:2])
+
+
+def split_schedule(values: list[dict], texts: dict[str, str]) -> tuple[list[dict], list[dict]]:
+    """P-036 (D-083): several addresses from one schedule file are its locations, not sides of a premises conflict.
+    Returns the other sides, and the schedule addresses whose house number and first street word are in that file."""
+    sides = []
+    for side in values:
+        parts = [part.strip() for part in str(side.get("value") or "").split(";") if part.strip()]
+        many = len(parts) > 1 and all(re.match(r"\d+\s+\S", part) for part in parts)
+        sides += [{**side, "value": part} for part in parts] if many else [side]
+    keys: dict = {}
+    for side in sides:
+        if _schedule_file(side.get("source")):
+            keys.setdefault(side.get("source"), set()).add(_street_key(side.get("value")))
+    lists = {source for source, found in keys.items() if len(found) > 1}
+    listed = []
+    for side in sides:
+        start = re.match(r"(\d+)\s+([A-Za-z]+)", str(side.get("value") or ""))
+        if side.get("source") in lists and start and re.search(rf"\b{start.group(1)}\s+{re.escape(start.group(2))}", texts.get(side["source"], ""), re.I):
+            listed.append({"address": side["value"], "source": side["source"]})
+    return [side for side in sides if side.get("source") not in lists], listed
+
+
 def llm_extract(docs: list[dict]) -> dict:
     settings = provider_guard(calling=False)  # refused only below, when the cache has no result and a model call is next
     docs = [doc for doc in docs if not doc.get("unread")]  # P-016 (c): a file type that is not read, or a file that cannot be opened, never reaches the model or the key
@@ -618,7 +724,7 @@ def llm_extract(docs: list[dict]) -> dict:
             parsed = json.loads(saved.read_text())["parsed"]
         except (OSError, ValueError, KeyError, TypeError):
             pass
-        if not isinstance(parsed, dict):  # P-013: a half-written or unreadable saved file is not a saved result; call again
+        if _shape_problem(parsed):  # P-013: a half-written or unreadable saved file is not a saved result; call again (D-082: nor a bad shape)
             parsed = None
             _failed(settings, "cache_unreadable", saved.name)
     if parsed is not None:
@@ -641,6 +747,8 @@ def llm_extract(docs: list[dict]) -> dict:
         _log_tokens(settings["model"], names, body.get("usage") or {}, len(CALL_LOG) - before + 1, key)
         try:
             parsed = _parse_json(body["choices"][0]["message"]["content"])
+            if _shape_problem(parsed):  # D-082 (SUB-101): checked before the cache write, so a bad shape is called again
+                raise ValueError(f"reply shape: {_shape_problem(parsed)}")
             if not parsed.get("conflicts") and not any(item.get("value") for item in parsed.get("fields") or []):
                 raise RuntimeError("model call returned no fields")
         except Exception as exc:  # P-012: the host answered but the reply is not usable; log it, then fail exactly as before
@@ -662,23 +770,48 @@ def llm_extract(docs: list[dict]) -> dict:
     }
     ocr_words = {doc["name"]: doc["ocr_words"] for doc in docs if doc.get("ocr_words")}
     fields = [accept_field(item, by_name, ocr_confidence, ocr_words) for item in parsed.get("fields") or []]
-    conflicts = []
+    conflicts, schedule = [], []
     for item in parsed.get("conflicts") or []:
+        values, listed = item.get("values") or [], []
+        if item.get("field") == "premises_address":
+            values, listed = split_schedule(values, by_name)
+            schedule += listed
         sides = [
-            accept_field({**side, "field_id": item.get("field")}, by_name, ocr_confidence, ocr_words) for side in item.get("values") or []
+            accept_field({**side, "field_id": item.get("field")}, by_name, ocr_confidence, ocr_words) for side in values
         ]
         kept = [side for side in sides if side["value"]]
-        if len(kept) >= 2 and len({side["value"] for side in kept}) > 1:
+        rejected = [side for side in sides if not side["value"]]
+        if not listed and len(kept) == 1 and rejected:  # P-038 (c): keep the valid side, flagged; never pick a number out of the rejected one
+            said = "; ".join(f"\"{item['value']}\" ({item.get('source')})" for item in values if item.get("value") and item.get("value") != kept[0]["value"])
+            if said:  # @model-risk L1: an empty side is no disagreement; M1: the kept side's own reason stays
+                note = f"conflict with rejected value: {said}"
+                fields.append({**kept[0], "needs_review": True, "reason": f"{kept[0]['reason']}; {note}" if kept[0].get("reason") else note})
+            else:
+                fields.append(kept[0])
+            continue
+        if listed and kept:
+            agree = all(same_address(a["value"], b["value"]) for i, a in enumerate(kept) for b in kept[i + 1 :])
+            if agree and any(all(same_address(side["value"], row["address"]) for side in kept) for row in listed):  # H4, H6: every side agrees with one row
+                fields.extend(kept)  # P-036: the premises once the schedule is set aside; the merge keeps the fuller value and both quotes
+            else:  # M2/H5: every other side stays, with the schedule rows, as a conflict
+                conflicts.append({"field": item.get("field"), "resolution": "unresolved", "resolved_value": None, "resolved_by": None, "values":
+                                  [{k: side.get(k) for k in ("value", "source", "start", "end", "quote", "needs_review", "reason", "confidence")} for side in kept]
+                                  + [{"value": row["address"], "source": row["source"], "needs_review": True, "reason": "schedule address"} for row in listed]})
+            continue
+        elif len(kept) >= 2 and len({side["value"] for side in kept}) > 1:
             conflicts.append(
                 {
                     "field": item.get("field"),
-                    "values": [{"value": side["value"], "source": side["source"]} for side in kept],
+                    "values": [  # P-024: each side keeps its flag, reason and quote so an agreeing merge cannot lose them
+                        {k: side.get(k) for k in ("value", "source", "start", "end", "quote", "needs_review", "reason", "confidence")}
+                        for side in kept
+                    ],
                     "resolution": "unresolved",
                     "resolved_value": None,
                     "resolved_by": None,
                 }
             )
-    return {"fields": fields, "conflicts": conflicts, "not_sent": not_sent}
+    return {"fields": fields, "conflicts": conflicts, "not_sent": not_sent, "schedule": schedule}
 
 
 if __name__ == "__main__":
@@ -717,11 +850,78 @@ if __name__ == "__main__":
             except RuntimeError:
                 pass
         assert len(posts) == 4, "a failed call is never cached and is called again"
+        reply = {"fields": [{"field_id": "named_insured", "value": "X LLC"}], "conflicts": [{"field": "named_insured", "values": []}, "{", "field"]}  # SUB-101's shape
+        for _ in range(2):
+            try:
+                llm_extract(empty)
+                raise SystemExit("a reply with a string in conflicts should fail")
+            except ValueError as exc:
+                assert "reply shape" in str(exc)
+        assert len(posts) == 6, "a bad-shape reply is never cached and is called again (D-082)"
+        # P-036 (D-083), SUB-089's shape: one file lists several addresses; that is its schedule, not a premises conflict
+        sched = [{"name": "application.md", "text": "Premises address: 2215 Bayou Crest Dr, Houston, TX 77063 (main)", "sha256": "s1"},
+                 {"name": "schedule.xlsx", "text": "1\t2215 Bayou Crest Dr\tHouston\t77063\n2\t880 Kirby Meadow Ln\tHouston\t77098", "sha256": "s2"}]
+        reply = {"fields": [{"field_id": "named_insured", "value": "Bayou LLC", "source": "application.md", "quote": "Bayou LLC", "confidence": 0.95}], "conflicts": [{"field": "premises_address", "values": [
+            {"value": "2215 Bayou Crest Dr, Houston, TX 77063", "source": "application.md", "quote": "2215 Bayou Crest Dr, Houston, TX 77063", "confidence": 0.95},
+            {"value": "2215 Bayou Crest Dr, Houston, TX 77063; 880 Kirby Meadow Ln, Houston, TX 77098; 9 Nowhere Rd, Houston, TX 77001", "source": "schedule.xlsx", "quote": "x", "confidence": 0.95}]}]}
+        sched[0]["text"] = "Bayou LLC. " + sched[0]["text"]
+        got = llm_extract(sched)
+        assert got["conflicts"] == [] and [r["value"] for r in got["fields"] if r["field_id"] == "premises_address"] == ["2215 Bayou Crest Dr, Houston, TX 77063"], got
+        assert [r["address"] for r in got["schedule"]] == ["2215 Bayou Crest Dr, Houston, TX 77063", "880 Kirby Meadow Ln, Houston, TX 77098"], "an address not in the file is dropped"
+        two_emails = [{"value": "4 Mistletoe Ave", "source": "email-1.md"}, {"value": "40 Mistletoe Ave", "source": "email-2.md"}]
+        assert split_schedule(two_emails, {}) == (two_emails, []), "two addresses from two emails stay a conflict"
+        reply["conflicts"][0]["values"][0] = {"value": "77 Elsewhere Rd, Houston, TX 77002", "source": "application.md", "quote": "77 Elsewhere Rd, Houston, TX 77002", "confidence": 0.95}
+        sched = [{**sched[0], "text": "Bayou LLC. Premises address: 77 Elsewhere Rd, Houston, TX 77002", "sha256": "s3"}, sched[1]]
+        got = llm_extract(sched)
+        assert [c["field"] for c in got["conflicts"]] == ["premises_address"] and len(got["conflicts"][0]["values"]) == 3, "M2: not on the schedule stays a conflict"
+        sched = [{**sched[0], "text": "Bayou LLC. Premises address: 2215 Bayou Crest Dr, Houston, TX 77063", "sha256": "s4"},
+                 {**sched[1], "text": "2215 Bayou Lane\tDallas\t75201\n880 Kirby Meadow Ln\tHouston\t77098", "sha256": "s5"}]
+        reply["conflicts"][0]["values"] = [{"value": "2215 Bayou Crest Dr, Houston, TX 77063", "source": "application.md", "quote": "2215 Bayou Crest Dr, Houston, TX 77063", "confidence": 0.95},
+                                           {"value": "2215 Bayou Lane, Dallas, TX 75201; 880 Kirby Meadow Ln, Houston, TX 77098", "source": "schedule.xlsx", "quote": "x", "confidence": 0.95}]
+        got = llm_extract(sched)
+        assert [c["field"] for c in got["conflicts"]] == ["premises_address"], "H4: Bayou Crest Dr, Houston is not Bayou Lane, Dallas"
+        sched = [{**sched[0], "text": "Bayou LLC. Premises address: 2215 Bayou Crest Dr, Houston, TX 77063", "sha256": "s6"},
+                 {"name": "email.md", "text": "We moved to 9 Other Rd, Houston, TX 77002", "sha256": "s7"},
+                 {**sched[1], "text": "2215 Bayou Crest Dr\tHouston\t77063\n880 Kirby Meadow Ln\tHouston\t77098", "sha256": "s8"}]
+        reply["conflicts"][0]["values"] = [{"value": "2215 Bayou Crest Dr, Houston, TX 77063", "source": "application.md", "quote": "2215 Bayou Crest Dr, Houston, TX 77063", "confidence": 0.95},
+                                           {"value": "9 Other Rd, Houston, TX 77002", "source": "email.md", "quote": "9 Other Rd, Houston, TX 77002", "confidence": 0.95},
+                                           {"value": "2215 Bayou Crest Dr, Houston, TX 77063; 880 Kirby Meadow Ln, Houston, TX 77098", "source": "schedule.xlsx", "quote": "x", "confidence": 0.95}]
+        got = llm_extract(sched)
+        assert "9 Other Rd, Houston, TX 77002" in [v["value"] for c in got["conflicts"] for v in c["values"]], "H5: the email's side is kept"
+        sched = [{**sched[0], "sha256": "s9"}, {"name": "email.md", "text": "Shop at 2215 Bayou Crest Dr", "sha256": "s10"},
+                 {**sched[2], "text": "2215 Bayou Crest Dr\tDallas\t75201\n880 Kirby Meadow Ln\tHouston\t77098", "sha256": "s11"}]
+        reply["conflicts"][0]["values"] = [{"value": "2215 Bayou Crest Dr", "source": "email.md", "quote": "2215 Bayou Crest Dr", "confidence": 0.95},
+                                           {"value": "2215 Bayou Crest Dr, Houston, TX 77063", "source": "application.md", "quote": "2215 Bayou Crest Dr, Houston, TX 77063", "confidence": 0.95},
+                                           {"value": "2215 Bayou Crest Dr, Dallas, TX 75201; 880 Kirby Meadow Ln, Houston, TX 77098", "source": "schedule.xlsx", "quote": "x", "confidence": 0.95}]
+        got = llm_extract(sched)
+        assert [c["field"] for c in got["conflicts"]] == ["premises_address"], "H6: Houston on the application, Dallas on the schedule stays a conflict"
+        assert not same_address("100 Main St", "100 Main St N") and not same_address("100 Main St, Austin", "100 Main St W, Austin"), "M6"
+        # P-038 (D-086). (a) the prompt says sales is one revenue number, never payroll
+        assert "single number" in SYSTEM and "Payroll is never part of sales" in SYSTEM
+        # (b) quotes match across markdown marks, still needing the exact words and digits
+        md = "x\n- **Annual sales:** $1,450,000\n- __Payroll:__ $680,000\n"
+        span = find_quote(md, "Annual sales: $1,450,000")
+        assert span and md[span[0] : span[1]] == "Annual sales:** $1,450,000", span
+        assert find_quote(md, "Payroll: $680,000") and find_quote(md, "Annual sales: $1,450,001") is None and find_quote(md, "Annual revenue: $1,450,000") is None
+        assert find_quote("snake_case_name here", "snake_case_name") == (0, 15), "a single _ is a real character"
+        app = [{"name": "application.md", "text": "Bayou LLC\n**Annual sales:** $1,050,000\n**Annual payroll:** $340,000", "sha256": "m1"},
+               {"name": "email.md", "text": "Revenue is around 1.25 million I think", "sha256": "m2"}]
+        reply = {"fields": [{"field_id": "named_insured", "value": "Bayou LLC", "source": "application.md", "quote": "Bayou LLC", "confidence": 0.95},
+                            {"field_id": "tiv_building", "value": "Annual sales $1,050,000; Annual payroll $340,000", "source": "application.md",
+                             "quote": "Annual sales: $1,050,000 Annual payroll: $340,000", "confidence": 0.95}],
+                 "conflicts": [{"field": "sales_or_payroll", "values": [
+                     {"value": "$1,050,000", "source": "application.md", "quote": "Annual sales: $1,050,000", "confidence": 0.95},
+                     {"value": "$1,250,000", "source": "email.md", "quote": "Revenue is around 1.25 million", "confidence": 0.95}]}]}
+        got = llm_extract(app)
+        sales = [r for r in got["fields"] if r["field_id"] == "sales_or_payroll"]
+        assert got["conflicts"] == [] and [r["value"] for r in sales] == ["$1,050,000"] and sales[0]["needs_review"], got  # (c) SUB-094
+        assert sales[0]["reason"].startswith("conflict with rejected value") and "$1,250,000" in sales[0]["reason"] and sales[0]["quote"] == "Annual sales:** $1,050,000"
+        assert [r["value"] for r in got["fields"] if r["field_id"] == "tiv_building"] == [None], "the gate never picks one number out of a mixed value"
         # P-013. A half-written saved file, and one with no result in it, are not trusted: the model is called again.
         reply = {"fields": [{"field_id": "named_insured", "value": "Example LLC", "source": "a.md", "quote": "Example LLC", "confidence": 0.9}]}
         whole = CACHE / "extractions" / f"{cache_key(page, provider_guard(calling=False)['model'])}.json"
         good_bytes = whole.read_bytes()
-        for planted in (good_bytes[: len(good_bytes) // 2], b"", b'{"model": "m"}', b'{"parsed": null}', b"\xff\xfe"):
+        for planted in (good_bytes[: len(good_bytes) // 2], b"", b'{"model": "m"}', b'{"parsed": null}', b"\xff\xfe", b'{"parsed": {"conflicts": ["{", "field"]}}'):
             whole.write_bytes(planted)
             before = len(posts)
             assert llm_extract(page) == first, "a half-written saved file was trusted"
@@ -730,7 +930,7 @@ if __name__ == "__main__":
         before = len(posts)
         assert llm_extract(page) == first and len(posts) == before, "the repaired result is reused with no call"
         assert [path.name for path in whole.parent.iterdir() if path.suffix != ".json"] == [], "no temp file is left behind"
-        assert sum(1 for line in (CACHE / "token_log.jsonl").read_text().splitlines() if json.loads(line).get("event") == "cache_unreadable") == 5
+        assert sum(1 for line in (CACHE / "token_log.jsonl").read_text().splitlines() if json.loads(line).get("event") == "cache_unreadable") == 6
         real_replace, os.replace = os.replace, lambda *_: (_ for _ in ()).throw(KeyboardInterrupt())  # the run is killed before the rename
         try:
             llm_extract([{**page[0], "sha256": "killed"}])
@@ -739,7 +939,7 @@ if __name__ == "__main__":
             pass
         finally:
             os.replace = real_replace
-        assert len(list(whole.parent.glob("*.json"))) == 2, "a write that was killed must not leave a result under the key"
+        assert len(list(whole.parent.glob("*.json"))) == 8, "a write that was killed must not leave a result under the key"
         # D-028. The next run removes the temp file the killed write left, and nothing else.
         left = [path for path in whole.parent.iterdir() if path.suffix == ".tmp"]
         assert len(left) == 1 and _TMP.fullmatch(left[0].name), "the killed write leaves exactly one temp file, with the name the cleanup knows"
@@ -1174,12 +1374,20 @@ if __name__ == "__main__":
     # C3 and S2: on a scan the gate is the lower of the model score and the lowest cited word that holds the value; a scan number or date stays flagged.
     words = [["Year", 0.95], ["built:", 0.9], ["1942", 0.6], ["Name:", 0.99], ["Acme", 0.99], ["LLC", 0.97]]
     low = one("year_built", "1942", "Year built: 1942", "Year built: 1942", conf=0.99, scan=0.9, words=words)
-    assert low["value"] is None and low["ocr_cited_confidence"] == 0.6, "the cited word '1942' scored 0.6"
+    assert low["value"] == "1942" and low["ocr_cited_confidence"] == 0.6 and low["reason"] == REASON_LOW_SCAN, "P-025: the cited word '1942' scored 0.6, stored for review"
+    assert one("year_built", "1942", "Year built: 1942", "Year built: 1942", conf=0.99, scan=0.9, words=[["Year", 0.9], ["built:", 0.9], ["1942", 0.4]])["value"] is None, "0.4 is under the scan floor"
     assert one("named_insured", "Acme LLC", "Name: Acme LLC", "Name: Acme LLC", conf=0.99, scan=0.5, words=words)["confidence"] == 0.97, "the page score is not used when the words are known; the lowest word that holds the value is"
-    assert one("named_insured", "Acme LLC", "Name: Acme LLC", "Name: Acme LLC", conf=0.6, scan=0.9, words=words)["value"] is None, "the model's 0.6 is the lower score"
+    assert one("named_insured", "Acme LLC", "Name: Acme LLC", "Name: Acme LLC", conf=0.4, scan=0.9, words=words)["value"] is None, "the model's 0.4 is the lower score, under the scan floor"
     assert one("named_insured", "Zed LLC", "Name: Zed LLC", "Name: Zed LLC", conf=0.99, scan=0.9, words=words)["value"] is None, "a cited word not in the word list counts as 0"
     ok = one("year_built", "1942", "Year built: 1942", "Year built: 1942", conf=0.99, scan=0.9, words=[["Year", 0.9], ["built:", 0.9], ["1942", 0.85]])
     assert ok["value"] == "1942" and ok["needs_review"] and ok["reason"] == REASON_SCAN, "S2: a number from a scan that passes the gate is kept flagged"
+    # P-025: scan 0.49 dropped; 0.50 and 0.74 stored, flagged, reasoned; 0.75 as before; typed 0.60 dropped
+    for c, kept in ((0.49, False), (0.50, True), (0.74, True)):
+        r = one("named_insured", "Acme LLC", "Name: Acme LLC", "Name: Acme LLC", conf=c, scan=0.99, words=words)
+        assert (r["value"] == "Acme LLC") == kept and (not kept or (r["needs_review"] and r["reason"] == REASON_LOW_SCAN)), c
+    assert not one("named_insured", "Acme LLC", "Name: Acme LLC", "Name: Acme LLC", conf=0.75, scan=0.99, words=words)["needs_review"], "0.75 is as before"
+    assert one("named_insured", "Acme LLC", "Name: Acme LLC", "Name: Acme LLC", conf=0.60)["value"] is None, "typed 0.60 is dropped"
+    assert one("named_insured", "Acme LLC", "Nope", "Name: Acme LLC", conf=0.6, scan=0.99, words=words)["value"] is None, "a low scan value still needs its quote"
     assert not one("named_insured", "Acme LLC", "Name: Acme LLC", "Name: Acme LLC", conf=0.99, scan=0.9, words=words)["needs_review"], "S2 marks numbers and dates only"
     assert one("year_built", "1942", "Year built: 1942", "Year built: 1942", conf=0.99)["needs_review"] is False, "a typed file keeps the model score and no flag"
     assert one("named_insured", "Acme LLC", "Acme LLC", "Acme LLC", scan=0.2)["value"] is None, "a scan with no word list takes the page score, as before"

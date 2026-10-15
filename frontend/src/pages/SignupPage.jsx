@@ -4,11 +4,13 @@ import { endpoints, auth } from '../lib/api';
 import PasswordInput from '../components/PasswordInput';
 
 const PLANS = [
-  { id: 'free', name: 'Free', price: '$0', period: '/mo', description: 'Try InsureFlow with 50 submissions/mo', features: ['50 submissions/mo', '1 user', 'Basic extraction & risk scoring', 'State rules'] },
-  { id: 'starter', name: 'Starter', price: '$299', period: '/mo', description: 'For small MGAs getting started', features: ['200 submissions/mo', '3 users', 'Compliance checks', 'Regulatory intelligence', '+ $2.99/submission'] },
-  { id: 'pro', name: 'Pro', price: '$999', period: '/mo', description: 'For growing underwriting teams', features: ['1,000 submissions/mo', '5 users', 'Fraud detection & reinsurance', 'API access & webhooks', '+ $1.99/submission'] },
-  { id: 'enterprise', name: 'Enterprise', price: 'Custom', period: '', description: 'For carriers and large MGAs', features: ['Unlimited submissions', 'Unlimited users', 'Everything in Pro', 'Priority support'] },
+  { id: 'free', name: 'Free', price: '$0', period: '/mo', paid: false, description: 'Try InsureFlow with 50 submissions/mo', features: ['50 submissions/mo', '1 user', 'Basic extraction & risk scoring', 'State rules'] },
+  { id: 'starter', name: 'Starter', price: '$299', period: '/mo', paid: true, description: 'For small MGAs getting started', features: ['200 submissions/mo', '3 users', 'Compliance checks', 'Regulatory intelligence', '+ $2.99/submission'] },
+  { id: 'pro', name: 'Pro', price: '$999', period: '/mo', paid: true, description: 'For growing underwriting teams', features: ['1,000 submissions/mo', '5 users', 'Fraud detection & reinsurance', 'API access & webhooks', '+ $1.99/submission'] },
+  { id: 'enterprise', name: 'Enterprise', price: 'Custom', period: '', paid: true, description: 'For carriers and large MGAs', features: ['Unlimited submissions', 'Unlimited users', 'Everything in Pro', 'Priority support'] },
 ];
+
+const EMPTY_BILLING = { card_name: '', card_number: '', card_exp: '', card_cvc: '', billing_zip: '' };
 
 export default function SignupPage() {
   const navigate = useNavigate();
@@ -17,6 +19,9 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState('free');
   const [result, setResult] = useState(null);
+  const [accountCreated, setAccountCreated] = useState(false);
+  const [checkout, setCheckout] = useState(null);
+  const [billing, setBilling] = useState(EMPTY_BILLING);
   const [formData, setFormData] = useState({ company_name: '', full_name: '', username: '', email: '', password: '' });
 
   useEffect(() => {
@@ -25,8 +30,17 @@ export default function SignupPage() {
     }
   }, [navigate]);
 
+  const planMeta = PLANS.find((p) => p.id === selectedPlan) || PLANS[0];
+  const isPaid = !!planMeta.paid;
+  const totalSteps = isPaid ? 4 : 3;
+  const successStep = isPaid ? 4 : 3;
+
   const updateField = (field) => (e) => {
     setFormData((prev) => ({ ...prev, [field]: e.target.value }));
+  };
+
+  const updateBilling = (field) => (e) => {
+    setBilling((prev) => ({ ...prev, [field]: e.target.value }));
   };
 
   const handleAccountSubmit = async (e) => {
@@ -40,7 +54,6 @@ export default function SignupPage() {
         password: formData.password,
         company_name: formData.company_name.trim(),
         full_name: formData.full_name.trim(),
-        plan: selectedPlan,
       };
       if (!body.username || !body.email || !body.password || !body.company_name) {
         throw new Error('All fields are required');
@@ -54,22 +67,38 @@ export default function SignupPage() {
     }
   };
 
-  const handleConfirm = async () => {
+  // Create the account on the Free plan first, so a plan choice alone never
+  // grants paid entitlements. The paid subscription activates only after checkout.
+  const createAccount = async () => {
+    const data = await endpoints.signup({
+      username: result.username,
+      email: result.email,
+      password: result.password,
+      company_name: result.company_name,
+      full_name: result.full_name,
+      plan: 'free',
+    });
+    auth.token = data.token;
+    const me = await endpoints.me();
+    auth.user = me;
+    setAccountCreated(true);
+    setResult((prev) => ({ ...prev, api_key: data.api_key, token: data.token, org_id: data.org_id }));
+    return data;
+  };
+
+  const handlePlanSubmit = async () => {
     setError('');
     setLoading(true);
     try {
-      const data = await endpoints.signup({
-        username: result.username,
-        email: result.email,
-        password: result.password,
-        company_name: result.company_name,
-        full_name: result.full_name,
-        plan: selectedPlan,
-      });
-      auth.token = data.token;
-      const me = await endpoints.me();
-      auth.user = me;
-      setResult({ ...result, api_key: data.api_key, token: data.token });
+      if (!accountCreated) {
+        await createAccount();
+      }
+      if (!isPaid) {
+        setStep(successStep);
+        return;
+      }
+      const session = await endpoints.startCheckout({ tier: selectedPlan });
+      setCheckout(session);
       setStep(3);
     } catch (err) {
       setError(err.message);
@@ -77,6 +106,39 @@ export default function SignupPage() {
       setLoading(false);
     }
   };
+
+  const handleCheckoutSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      if (!checkout?.checkout_id) {
+        throw new Error('No open checkout — go back and choose a plan');
+      }
+      await endpoints.confirmCheckout(checkout.checkout_id, {
+        card_name: billing.card_name.trim(),
+        card_number: billing.card_number.replace(/\s+/g, ''),
+        card_exp: billing.card_exp.trim(),
+        card_cvc: billing.card_cvc.trim(),
+        billing_zip: billing.billing_zip.trim(),
+      });
+      setStep(4);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancelCheckout = async () => {
+    if (checkout?.checkout_id) {
+      try { await endpoints.cancelCheckout(checkout.checkout_id); } catch { /* ignore */ }
+    }
+    setCheckout(null);
+    setStep(2);
+  };
+
+  const isSuccess = result && step === successStep;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-4">
@@ -90,12 +152,12 @@ export default function SignupPage() {
 
         {/* Step indicators */}
         <div className="flex items-center justify-center gap-2 mb-8">
-          {[1, 2, 3].map((s) => (
+          {Array.from({ length: totalSteps }, (_, i) => i + 1).map((s) => (
             <div key={s} className="flex items-center gap-2">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
                 step >= s ? 'bg-brand-light text-slate-950' : 'bg-slate-600 text-white'
               }`}>{s}</div>
-              {s < 3 && <div className={`w-12 h-0.5 ${step > s ? 'bg-brand-light' : 'bg-slate-600'}`} />}
+              {s < totalSteps && <div className={`w-12 h-0.5 ${step > s ? 'bg-brand-light' : 'bg-slate-600'}`} />}
             </div>
           ))}
         </div>
@@ -123,7 +185,7 @@ export default function SignupPage() {
           {step === 2 && (
             <>
               <h2 className="text-xl font-bold text-white mb-1">Choose Your Plan</h2>
-              <p className="text-sm text-slate-300 mb-6">You can change plans anytime from settings</p>
+              <p className="text-sm text-slate-300 mb-6">You can change plans anytime from settings. Paid plans continue to checkout.</p>
               <div className="space-y-3 mb-6">
                 {PLANS.map((plan) => (
                   <button
@@ -139,6 +201,7 @@ export default function SignupPage() {
                     <div className="flex items-center justify-between">
                       <div>
                         <span className="font-medium text-white">{plan.name}</span>
+                        {plan.paid && <span className="ml-2 text-[10px] uppercase tracking-wide bg-brand-light/20 text-brand-light rounded px-1.5 py-0.5">Paid</span>}
                         <span className="ml-3 text-sm text-slate-300">{plan.description}</span>
                       </div>
                       <div className="text-right shrink-0 ml-3">
@@ -158,14 +221,45 @@ export default function SignupPage() {
                 <button type="button" onClick={() => setStep(1)} className="flex-1 rounded-xl border border-white/15 px-4 py-2.5 text-sm text-slate-200 hover:border-white/30 transition-colors">
                   Back
                 </button>
-                <button type="button" onClick={handleConfirm} disabled={loading} className="btn-primary flex-1">
-                  {loading ? 'Creating Account...' : 'Create Account'}
+                <button type="button" onClick={handlePlanSubmit} disabled={loading} className="btn-primary flex-1">
+                  {loading
+                    ? (isPaid ? 'Opening checkout...' : 'Creating Account...')
+                    : (isPaid ? 'Continue to payment' : 'Create Account')}
                 </button>
               </div>
             </>
           )}
 
-          {step === 3 && result && (
+          {step === 3 && isPaid && (
+            <>
+              <h2 className="text-xl font-bold text-white mb-1">Checkout</h2>
+              <p className="text-sm text-slate-300 mb-4">
+                {planMeta.name} plan
+                {planMeta.price !== 'Custom' && <> — <span className="font-medium text-white">{planMeta.price}{planMeta.period}</span></>}
+                {planMeta.price === 'Custom' && <> — our team will confirm your custom pricing after checkout.</>}
+              </p>
+              <form onSubmit={handleCheckoutSubmit} className="space-y-4">
+                <input name="card_name" placeholder="Name on card" required className="input-field" autoComplete="cc-name" value={billing.card_name} onChange={updateBilling('card_name')} />
+                <input name="card_number" placeholder="Card number" required inputMode="numeric" className="input-field" autoComplete="cc-number" value={billing.card_number} onChange={updateBilling('card_number')} />
+                <div className="flex gap-3">
+                  <input name="card_exp" placeholder="MM/YY" required className="input-field" autoComplete="cc-exp" value={billing.card_exp} onChange={updateBilling('card_exp')} />
+                  <input name="card_cvc" placeholder="CVC" required className="input-field" autoComplete="cc-csc" value={billing.card_cvc} onChange={updateBilling('card_cvc')} />
+                </div>
+                <input name="billing_zip" placeholder="Billing ZIP" className="input-field" autoComplete="postal-code" value={billing.billing_zip} onChange={updateBilling('billing_zip')} />
+                <p className="text-xs text-slate-400">Test/demo checkout — no real charge is processed.</p>
+                <div className="flex gap-3">
+                  <button type="button" onClick={handleCancelCheckout} className="flex-1 rounded-xl border border-white/15 px-4 py-2.5 text-sm text-slate-200 hover:border-white/30 transition-colors">
+                    Back
+                  </button>
+                  <button type="submit" disabled={loading} className="btn-primary flex-1">
+                    {loading ? 'Processing payment...' : 'Pay & create account'}
+                  </button>
+                </div>
+              </form>
+            </>
+          )}
+
+          {isSuccess && (
             <div className="text-center">
               <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-4">
                 <svg className="w-8 h-8 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -173,7 +267,9 @@ export default function SignupPage() {
                 </svg>
               </div>
               <h2 className="text-xl font-bold text-white mb-2">Welcome to InsureFlow!</h2>
-              <p className="text-sm text-slate-300 mb-6">Your account is ready. Save your API key — it won't be shown again.</p>
+              <p className="text-sm text-slate-300 mb-6">
+                Your account is ready{isPaid ? ` on the ${planMeta.name} plan` : ''}. Save your API key — it won't be shown again.
+              </p>
 
               {result.api_key && (
                 <div className="mb-6">
