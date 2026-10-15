@@ -1617,3 +1617,8 @@ Blocked: No.
 - Done: D-079 UI and rule review (B-290, B-293, P-033, B-294, B-295). APPROVE. No High findings.
 - Open: Mediums in DISCUSSION. No send authorized.
 - Blockers: none.
+
+### 2026-10-14 — @model-risk
+- Done: T-093 rerun review (D-081). Run 1 marked invalid in memo. Rerun 1 of 9 fields at D-013 floor; status 10/19; route 9/19. Not published.
+- Open: RH1 scans fail in OCR code (Pillow fill bug); RH2 premises nulls on read files; RH3 no carrier route reached. T-027 veto stands.
+- Blocked: nothing.

@@ -2881,3 +2881,13 @@ Re: T-093 hold-out SUB-087 to SUB-106, scored once. Memo: `deliverables/model-ri
 - H1: the run used an interpreter without pdfplumber, openpyxl and pytesseract, so all 11 PDFs, 5 xlsx and 3 scans were "could not be opened" (bare except in sources.read_folder) and the run went on. The score covers email, md and csv only. Resolve: a missing reader library stops the run; the scorer checks imports and records interpreter and library versions; self-check. Needs a P-### and your approve. Re-run this hold-out once on the frozen commit in .venv, or a new 20: your call.
 - H2: no field at the floor, even on the five fully read files. Resolve: a hold-out in a checked environment with all nine fields at 9/10 or better.
 - T-027 veto: stands. Lifts on H1 resolved and one gold-first hold-out, scored once, at 9/10 on every field. Medium/Low (route rules vs gold on 091/103/104, a cached unusable reply on SUB-101, earlier runs' interpreter, scorer exact-match, run log git-ignored) are one line each in the memo.
+
+### 2026-10-14 — @model-risk → @user
+TYPE: OBJECTION (T-027 veto stands) — T-093 rerun (D-081) review. Memo: deliverables/model-risk/holdout-SUB-087-106.md.
+- Run 1 marked "invalid — wrong Python environment, reader libraries missing", dated 2026-10-14, kept for the record, never quoted as a score.
+- Rerun: commit 9e725e3, .venv/bin/python 3.14.6 (pdfplumber 0.11.10, openpyxl 3.1.5, pytesseract 0.3.13, pdf2image 1.17.0, pillow 12.3.0, tesseract 5.5.2, pdftoppm 26.10.0), openai/gpt-oss-120b on Groq. Not published.
+- 9 of 9 extracted fields scored; claims not read; loss runs = date only. 19 scored, SUB-101 call failed. named_insured 17/19, premises 7/19, effective_date 14/19, operations 12/19, sales 12/18, tiv 13/19, construction 13/19, year_built 11/18, loss-run date 13/13 (6 nulls not credited, none guessed). 1 of 9 at the D-013 floor. Status 10/19 (9 false incompletes, 0 false completes). Route 9/19, 0 of 5 carrier routes reached.
+- RH1 @ai-engineer-assistant: all 3 scans (SUB-088, 097, 101) still "could not be opened" in .venv: sources._fill gives an RGB fill to a greyscale image, Pillow 12.3.0 raises TypeError in rotate, the bare except reports a damaged file. P-034 does not catch it. Resolve: P-### fix + self-check on mode-L and RGB JPEGs.
+- RH2 @ai-engineer-assistant: premises null on read files (SUB-089, 092, 099, 103 have the address in plain text); SUB-098 null name/ops from a typed md. Resolve under P-###.
+- RH3: route held 9 complete files for "missing information"; follows RH2.
+- T-027 lifts on: RH1 and RH2 fixed under approved P-###, then a new 20-file hold-out, gold first, scored once in a checked .venv with each reader run on a real file, all nine fields at 9/10 or better. Not a production approval even then.

@@ -1,7 +1,8 @@
 """@model-risk T-093 analysis: carrier route on SUB-087..106 vs gold "Expected carrier route".
 
 Reads extractions from a TEMP COPY of the cache (D-069: the real token log is never written).
-Run with: env -u LLM_API_KEY python3 deliverables/model-risk/route_holdout_087.py
+Run with: env -u LLM_API_KEY [LLM_CACHE_DIR=<run cache>] .venv/bin/python deliverables/model-risk/route_holdout_087.py
+(the venv has the reader libraries; system python3 does not). LLM_CACHE_DIR picks the cache to copy.
 No key, so no model call can be made; a cache miss shows as call failed, not a miss.
 Not a frozen scorer. Synthetic. Not a production approval.
 """
@@ -16,7 +17,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 assert not os.environ.get("LLM_API_KEY"), "run with env -u LLM_API_KEY"
 tmp = Path(tempfile.mkdtemp())
-shutil.copytree(ROOT / "underwriting_pipeline" / "cache", tmp / "cache")
+shutil.copytree(os.environ.get("LLM_CACHE_DIR") or ROOT / "underwriting_pipeline" / "cache", tmp / "cache")
 os.environ["LLM_CACHE_DIR"] = str(tmp / "cache")
 sys.path.insert(0, str(ROOT / "underwriting_pipeline" / "app"))
 import workbench  # noqa: E402
@@ -56,9 +57,11 @@ for sid in IDS:
         mark = "hit" if got == want else "miss"
     vals = {f["field_id"]: f["value"] for f in report.get("fields", [])}
     rows.append({"submission": sid, "expected": want, "got": got, "mark": mark, "note": None if report.get("error") else workbench.match(report)["note"],
-                 "complete": report.get("complete"), "gold_status": gold["status"], "error": report.get("error"),
+                 "complete": report.get("complete"), "unread": report.get("unread") or [], "gold_status": gold["status"], "error": report.get("error"),
                  "fields": {f: [vals.get(f), gold.get(g)] for f, g in FIELDS.items()}})
 shutil.rmtree(tmp)
 print(json.dumps(rows, indent=1, ensure_ascii=False))
 scored = [r for r in rows if r["mark"] != "call failed"]
 print("route hits", sum(r["mark"] == "hit" for r in scored), "of", len(scored), "| call failed", len(rows) - len(scored))
+print("unread rows", {r["submission"]: r["unread"] for r in rows if r["unread"]})
+print("errors", {r["submission"]: r["error"] for r in rows if r["error"]})

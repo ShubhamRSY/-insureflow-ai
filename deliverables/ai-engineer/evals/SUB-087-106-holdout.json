@@ -13,11 +13,11 @@
       "checks": {
         "named_insured": "hit",
         "effective_date": "hit",
-        "operations": "miss",
-        "sales": "miss",
+        "operations": "hit",
+        "sales": "hit",
         "construction": "hit",
         "year_built": "hit",
-        "premises": "miss",
+        "premises": "hit",
         "tiv": "hit",
         "loss_runs": "hit",
         "conflict": "hit",
@@ -56,11 +56,11 @@
         "named_insured": "hit",
         "effective_date": "hit",
         "operations": "hit",
-        "sales": "miss",
-        "construction": "hit",
+        "sales": "hit",
+        "construction": "miss",
         "year_built": "miss",
-        "premises": "hit",
-        "tiv": "miss",
+        "premises": "miss",
+        "tiv": "hit",
         "loss_runs": "hit",
         "conflict": "hit",
         "status": "miss"
@@ -76,7 +76,7 @@
       "checks": {
         "named_insured": "hit",
         "effective_date": "hit",
-        "operations": "miss",
+        "operations": "hit",
         "sales": "hit",
         "construction": "hit",
         "year_built": "hit",
@@ -95,19 +95,19 @@
       "error": null,
       "call": "called: reply used",
       "checks": {
-        "named_insured": "miss",
-        "effective_date": "miss",
+        "named_insured": "hit",
+        "effective_date": "hit",
         "operations": "hit",
-        "sales": "miss",
-        "construction": "miss",
-        "year_built": "miss",
-        "premises": "miss",
-        "tiv": "miss",
-        "loss_runs": "miss",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
         "conflict": "hit",
-        "status": "miss"
+        "status": "hit"
       },
-      "extracted_named_insured": "Kettle and Spur Lounge LLC",
+      "extracted_named_insured": "Kettle & Spur Lounge LLC",
       "attempts": 1
     },
     {
@@ -117,15 +117,15 @@
       "call": "called: reply used",
       "checks": {
         "named_insured": "hit",
-        "effective_date": "miss",
+        "effective_date": "hit",
         "operations": "hit",
-        "sales": "miss",
+        "sales": "hit",
         "construction": "miss",
-        "year_built": "miss",
+        "year_built": "hit",
         "premises": "miss",
-        "tiv": "miss",
-        "loss_runs": "miss",
-        "conflict": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "miss",
         "status": "miss"
       },
       "extracted_named_insured": "Border Cold Storage Distributors LLC",
@@ -163,9 +163,9 @@
         "operations": "hit",
         "sales": "miss",
         "construction": "hit",
-        "year_built": "hit",
-        "premises": "hit",
-        "tiv": "hit",
+        "year_built": "miss",
+        "premises": "miss",
+        "tiv": "miss",
         "loss_runs": "hit",
         "conflict": "miss",
         "status": "hit"
@@ -179,19 +179,19 @@
       "error": null,
       "call": "called: reply used",
       "checks": {
-        "named_insured": "miss",
-        "effective_date": "miss",
-        "operations": "miss",
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "hit",
         "sales": "miss",
         "construction": "hit",
         "year_built": "hit",
         "premises": "miss",
         "tiv": "hit",
         "loss_runs": "not_credited",
-        "conflict": "hit",
+        "conflict": "miss",
         "status": "hit"
       },
-      "extracted_named_insured": "Lone Oak Signworks",
+      "extracted_named_insured": "Lone Oak Signworks LLC",
       "attempts": 1
     },
     {
@@ -201,15 +201,15 @@
       "call": "called: reply used",
       "checks": {
         "named_insured": "hit",
-        "effective_date": "hit",
-        "operations": "hit",
-        "sales": "hit",
+        "effective_date": "miss",
+        "operations": "miss",
+        "sales": "miss",
         "construction": "miss",
         "year_built": "miss",
         "premises": "miss",
         "tiv": "miss",
         "loss_runs": "hit",
-        "conflict": "hit",
+        "conflict": "miss",
         "status": "miss"
       },
       "extracted_named_insured": "Mesquite Home and Gift Co LLC",
@@ -243,7 +243,7 @@
       "call": "called: reply used",
       "checks": {
         "named_insured": "miss",
-        "effective_date": "hit",
+        "effective_date": "miss",
         "operations": "miss",
         "sales": "miss",
         "construction": "miss",
@@ -263,8 +263,8 @@
       "error": null,
       "call": "called: reply used",
       "checks": {
-        "named_insured": "miss",
-        "effective_date": "miss",
+        "named_insured": "hit",
+        "effective_date": "hit",
         "operations": "miss",
         "sales": "hit",
         "construction": "hit",
@@ -272,10 +272,10 @@
         "premises": "miss",
         "tiv": "hit",
         "loss_runs": "hit",
-        "conflict": "not_credited",
+        "conflict": "miss",
         "status": "miss"
       },
-      "extracted_named_insured": null,
+      "extracted_named_insured": "Brazos Paper & Janitorial Supply LLC",
       "attempts": 1
     },
     {
@@ -285,15 +285,15 @@
       "call": "called: reply used",
       "checks": {
         "named_insured": "hit",
-        "effective_date": "miss",
+        "effective_date": "hit",
         "operations": "miss",
-        "sales": "miss",
-        "construction": "miss",
-        "year_built": "miss",
-        "premises": "miss",
-        "tiv": "miss",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "flagged",
+        "premises": "hit",
+        "tiv": "hit",
         "loss_runs": "hit",
-        "conflict": "miss",
+        "conflict": "flagged",
         "status": "hit"
       },
       "extracted_named_insured": "Cottonwood Court Apartments LLC",
@@ -328,7 +328,7 @@
       "checks": {
         "named_insured": "hit",
         "effective_date": "miss",
-        "operations": "miss",
+        "operations": "hit",
         "sales": "hit",
         "construction": "hit",
         "year_built": "hit",
@@ -349,15 +349,15 @@
       "checks": {
         "named_insured": "hit",
         "effective_date": "hit",
-        "operations": "hit",
+        "operations": "miss",
         "sales": "hit",
         "construction": "hit",
         "year_built": "hit",
-        "premises": "hit",
+        "premises": "miss",
         "tiv": "hit",
         "loss_runs": "hit",
-        "conflict": "hit",
-        "status": "hit"
+        "conflict": "miss",
+        "status": "miss"
       },
       "extracted_named_insured": "Piney Woods Cabinet Works LLC",
       "attempts": 1
@@ -371,14 +371,14 @@
         "named_insured": "hit",
         "effective_date": "hit",
         "operations": "miss",
-        "sales": "hit",
+        "sales": "miss",
         "construction": "hit",
-        "year_built": "hit",
+        "year_built": "miss",
         "premises": "hit",
-        "tiv": "hit",
+        "tiv": "miss",
         "loss_runs": "hit",
         "conflict": "hit",
-        "status": "hit"
+        "status": "miss"
       },
       "extracted_named_insured": "Lavander\u00eda Estrella del Norte LLC",
       "attempts": 1
@@ -389,19 +389,19 @@
       "error": null,
       "call": "called: reply used",
       "checks": {
-        "named_insured": "miss",
-        "effective_date": "miss",
-        "operations": "miss",
-        "sales": "miss",
-        "construction": "miss",
-        "year_built": "miss",
-        "premises": "miss",
-        "tiv": "miss",
-        "loss_runs": "miss",
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
         "conflict": "hit",
-        "status": "miss"
+        "status": "hit"
       },
-      "extracted_named_insured": "Sakura Ridge Grill and Sushi LLC",
+      "extracted_named_insured": "Sakura Ridge Grill & Sushi LLC",
       "attempts": 1
     },
     {
@@ -411,15 +411,15 @@
       "call": "called: reply used",
       "checks": {
         "named_insured": "hit",
-        "effective_date": "miss",
+        "effective_date": "hit",
         "operations": "hit",
-        "sales": "miss",
-        "construction": "miss",
-        "year_built": "miss",
-        "premises": "miss",
-        "tiv": "miss",
+        "sales": "flagged",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
         "loss_runs": "not_credited",
-        "conflict": "miss",
+        "conflict": "flagged",
         "status": "hit"
       },
       "extracted_named_insured": "Redbud Engineering Consulting LLC",
@@ -428,6 +428,46 @@
   ],
   "counted": {
     "named_insured": {
+      "hit": 17,
+      "hit (needs review)": 0,
+      "miss": 2,
+      "not_credited": 0,
+      "call_failed": 1,
+      "flagged": 0
+    },
+    "premises": {
+      "hit": 7,
+      "hit (needs review)": 0,
+      "miss": 12,
+      "not_credited": 0,
+      "call_failed": 1,
+      "flagged": 0
+    },
+    "effective_date": {
+      "hit": 14,
+      "hit (needs review)": 0,
+      "miss": 5,
+      "not_credited": 0,
+      "call_failed": 1,
+      "flagged": 0
+    },
+    "operations": {
+      "hit": 12,
+      "hit (needs review)": 0,
+      "miss": 7,
+      "not_credited": 0,
+      "call_failed": 1,
+      "flagged": 0
+    },
+    "sales": {
+      "hit": 12,
+      "hit (needs review)": 0,
+      "miss": 6,
+      "not_credited": 0,
+      "call_failed": 1,
+      "flagged": 1
+    },
+    "tiv": {
       "hit": 13,
       "hit (needs review)": 0,
       "miss": 6,
@@ -435,77 +475,37 @@
       "call_failed": 1,
       "flagged": 0
     },
-    "premises": {
-      "hit": 5,
-      "hit (needs review)": 0,
-      "miss": 14,
-      "not_credited": 0,
-      "call_failed": 1,
-      "flagged": 0
-    },
-    "effective_date": {
-      "hit": 9,
-      "hit (needs review)": 0,
-      "miss": 10,
-      "not_credited": 0,
-      "call_failed": 1,
-      "flagged": 0
-    },
-    "operations": {
-      "hit": 9,
-      "hit (needs review)": 0,
-      "miss": 10,
-      "not_credited": 0,
-      "call_failed": 1,
-      "flagged": 0
-    },
-    "sales": {
-      "hit": 8,
-      "hit (needs review)": 0,
-      "miss": 11,
-      "not_credited": 0,
-      "call_failed": 1,
-      "flagged": 0
-    },
-    "tiv": {
-      "hit": 9,
-      "hit (needs review)": 0,
-      "miss": 10,
-      "not_credited": 0,
-      "call_failed": 1,
-      "flagged": 0
-    },
     "construction": {
-      "hit": 10,
+      "hit": 13,
       "hit (needs review)": 0,
-      "miss": 9,
+      "miss": 6,
       "not_credited": 0,
       "call_failed": 1,
       "flagged": 0
     },
     "year_built": {
-      "hit": 9,
+      "hit": 11,
       "hit (needs review)": 0,
-      "miss": 10,
+      "miss": 7,
       "not_credited": 0,
       "call_failed": 1,
-      "flagged": 0
+      "flagged": 1
     },
     "loss_runs": {
-      "hit": 10,
+      "hit": 13,
       "hit (needs review)": 0,
-      "miss": 3,
+      "miss": 0,
       "not_credited": 6,
       "call_failed": 1,
       "flagged": 0
     },
     "conflict": {
-      "hit": 14,
+      "hit": 10,
       "hit (needs review)": 0,
-      "miss": 4,
-      "not_credited": 1,
+      "miss": 7,
+      "not_credited": 0,
       "call_failed": 1,
-      "flagged": 0
+      "flagged": 2
     },
     "status": {
       "hit": 10,
