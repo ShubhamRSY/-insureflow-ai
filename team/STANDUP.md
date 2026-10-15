@@ -1622,3 +1622,8 @@ Blocked: No.
 - Done: T-093 rerun review (D-081). Run 1 marked invalid in memo. Rerun 1 of 9 fields at D-013 floor; status 10/19; route 9/19. Not published.
 - Open: RH1 scans fail in OCR code (Pillow fill bug); RH2 premises nulls on read files; RH3 no carrier route reached. T-027 veto stands.
 - Blocked: nothing.
+
+### 2026-10-14 — @model-risk
+- Done: P-035 check (D-082). APPROVE, no High. Self-check passes; SUB-088/097/101 greyscale scans failed with TypeError at HEAD and now read; P/I/I;16/F/CMYK/RGBA/1/LA also read. OCR_SETTINGS changed (cache key).
+- Open: M1 noisy scan OCR text (premises risk); L1 OCR code errors still shown as "could not be opened". T-027 veto stands (not a production approval).
+- Blocked: nothing.

@@ -318,3 +318,8 @@ Also open from T-097, already in the register's Section D so not repeated as row
 | B-298 | D-079 | @senior-underwriter | Medium: "bar-b-q restaurant" and "sushi bar restaurant" go to the liquor referral (false positive, safe direction); consider a cuisine-phrase exception. D-080: kept as cautious — the referral stays; no exception before the demo. | 2026-10-14 |
 | B-299 | D-079 | @software-engineer | Medium: a bar+restaurant file over the pilot TIV shows only the liquor reason; show both reasons. | 2026-10-14 |
 | B-300 | D-079 | @pm | Low: B-290, B-293, P-033, B-294, B-295 closed by D-079; keep the real "user override" (draft approve) wording on What's new item 13. | 2026-10-14 |
+| B-301 | D-082 | @model-risk | Medium (M1, P-035 check): scan OCR text is still noisy ("Gl Creele Rd ... ¥FSO2Q"), so premises can still miss on scans. | 2026-10-14 |
+| B-302 | D-082 | @model-risk | Low (L1): an unexpected OCR code error is still shown only as "could not be opened". | 2026-10-14 |
+| B-303 | D-082 | @model-risk | Low (L2): I;16 scans score lower (mean 59). | 2026-10-14 |
+| B-304 | D-082 | @ai-engineer-assistant | High for T-027 (premises trace): the model reports full vs short forms of the same value (full address vs street only; "&" vs "and"; application line vs email paraphrase) as conflicts, and `prepare.agrees()` keeps them open, so premises, name and operations come back empty (SUB-089/092/098/099/103). Needs a P-### (prompt or merge). | 2026-10-14 |
+| B-305 | D-082 | @model-risk | Medium: SUB-098 premises was extracted correctly with a trailing "(shop and yard)"; the frozen exact-match scorer counts it a miss. Scorer rule for future hold-outs is a P-### choice. | 2026-10-14 |

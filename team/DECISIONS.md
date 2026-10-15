@@ -913,3 +913,14 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: environment check 2026-10-14 (orchestrator): .venv/bin/python 3.14.6; pdfplumber 0.11.10, openpyxl 3.1.5, pytesseract 0.3.13, pdf2image 1.17.0, pillow 12.3.0 all import; tesseract 5.5.2 reads a test image. pdf2image imports but cannot run: poppler (pdftoppm) is not installed (PDFInfoNotInstalledError). Stopped per item 2 and asked the user. None of the 11 PDFs in SUB-087–106 has a page under 40 typed characters, so on this set the scanned-PDF OCR path is not reached.
 - Status: ACCEPTED
 - Amends: none. P-034 is approved and not built until T-093's rerun is scored. Not a production approval. No send is authorized.
+
+## D-082 — P-034 and SUB-101 build; approve change P-035 (single-channel scans); premises error analysis; reader smoke test
+- Date / Owner: 2026-10-14 / @user
+- Context: T-093 rerun (D-081): @model-risk RH1 (greyscale scans unread), RH2 (premises empty on typed files); P-034 and the SUB-101 fix approved in D-081 item 6, to be built after the score.
+- Options considered: none. The user's words.
+- Decision: In the user's words. "Read team/NEXT-SESSION.md. SUB-087–106 is now development data. 1. Build P-034 (missing reader library stops the run) and the approved SUB-101 reply-shape fix. 2. approve change P-035: greyscale and other single-channel scans are read correctly (no colour fill on rotation). Self-checks with a greyscale scan, a colour scan, a rotated scan and an image-only PDF. 3. Error analysis only, no fix yet: for every premises miss on typed files (SUB-089, 092, 098, 099, 103), show the address in the document, what extraction returned, and which rule cleared it (P-001 ZIP rule, P-002 validation, P-005 locations, or the model). Same for SUB-098's missing name and operations. 4. Add a smoke test: one uncached run per file type (typed PDF, image-only PDF, colour scan, greyscale scan, rotated scan, Excel, email-only, Spanish), reporting "read / not read" per file before any future hold-out. Self-checks, one @model-risk check of P-035, High only. /wrap-up."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-14 (D-032).
+- Dissent: none
+- Follow-up tasks: built in the main session (budget rule 3); @model-risk check of P-035. Orchestrator's reading: the SUB-101 fix is a reply-shape check before the cache write — a reply whose fields, conflicts or conflict sides are not objects is "reply not usable", never cached, and called again; a saved reply of that shape is not a saved result (P-013). P-034 covers missing Python reader libraries and the tesseract and poppler programs. P-035 changes the OCR steps, so OCR_SETTINGS changes and scan cache keys change.
+- Status: ACCEPTED
+- Amends: none. SUB-087–106 is development data from here (no longer a hold-out). Not a production approval. No send is authorized.

@@ -2891,3 +2891,18 @@ TYPE: OBJECTION (T-027 veto stands) — T-093 rerun (D-081) review. Memo: delive
 - RH2 @ai-engineer-assistant: premises null on read files (SUB-089, 092, 099, 103 have the address in plain text); SUB-098 null name/ops from a typed md. Resolve under P-###.
 - RH3: route held 9 complete files for "missing information"; follows RH2.
 - T-027 lifts on: RH1 and RH2 fixed under approved P-###, then a new 20-file hold-out, gold first, scored once in a checked .venv with each reader run on a real file, all nine fields at 9/10 or better. Not a production approval even then.
+
+### 2026-10-14 — @model-risk → @user
+TYPE: REVIEW
+Re: P-035 (D-082) single-channel scans, `underwriting_pipeline/ai/sources.py` (working tree vs HEAD). Verdict: APPROVE (change only; not a production approval; T-027 veto stands until a scored run shows the floor met).
+Evidence I re-ran myself (.venv, LLM env unset, no model calls, temp copies only):
+- Self-check `sources.py`: "sources ok" (L, RGB, L turned 90, L/1/LA tilted, RGB 180+3 deg; grey.jpg, tilted.png, colour.jpg, image-only.pdf through read_folder).
+- Real scans SUB-088 scan.jpg, SUB-097 scan.jpg, SUB-101 loss-runs-scan.jpg (all mode L): with the HEAD `_fill` each raises `TypeError: color must be int or single-element tuple` (the RH1 root cause, previously swallowed as "could not be opened"); with the new `_fill` all three read, needs_human False, OCR 0.73-0.80.
+- Extra modes I added: P, I, I;16, F, CMYK, RGBA, 1, LA tilted 5 deg, all read with the text found; L turned 90 via OSD reads (95.5).
+- OCR_SETTINGS changed ("; fill in image mode") and feeds the cache key (prepare.py:758), so old scan caches are not reused.
+High findings: none.
+Medium/Low (backlog, one line each):
+- M1 (@ai-engineer-assistant): real-scan OCR text is noisy (SUB-088 "Gl Creele Rd ... TX ¥FSO2Q", SUB-097 "Prencises addvess") so premises/ZIP may still miss; P-035 makes scans readable, not accurate. Measure in the next scored run.
+- L1 (@ai-engineer-assistant): an unexpected exception inside OCR (like this TypeError) is still listed as "could not be opened"; consider giving the reason text the exception type so the next code bug is visible, not hidden as a damaged file.
+- L2: I;16 scans read at mean 59 (convert("L") clips 16-bit values); fine today, note for 16-bit TIFF intake.
+- Note: during my review a quick-15 run wrote cache/extractions, token_log.jsonl and regression-quick-15-2026-10-14-D-082.json; those were not written by my checks.

@@ -592,6 +592,22 @@ def _post(settings: dict, payload: dict) -> dict:
     raise RuntimeError("model call failed: HTTP 429 rate limit")
 
 
+def _shape_problem(parsed) -> str | None:
+    """D-082 (SUB-101): every field, conflict and conflict side must be an object. Anything else is a reply not usable, never cached."""
+    if not isinstance(parsed, dict):
+        return "reply is not a JSON object"
+    fields, conflicts = parsed.get("fields") or [], parsed.get("conflicts") or []
+    if not isinstance(fields, list) or not isinstance(conflicts, list):
+        return "fields or conflicts is not a list"
+    if any(not isinstance(item, dict) for item in fields):
+        return "a field is not an object"
+    for item in conflicts:
+        sides = item.get("values") if isinstance(item, dict) else None
+        if not isinstance(item, dict) or not isinstance(sides or [], list) or any(not isinstance(side, dict) for side in sides or []):
+            return "a conflict is not an object with object sides"
+    return None
+
+
 def llm_extract(docs: list[dict]) -> dict:
     settings = provider_guard(calling=False)  # refused only below, when the cache has no result and a model call is next
     docs = [doc for doc in docs if not doc.get("unread")]  # P-016 (c): a file type that is not read, or a file that cannot be opened, never reaches the model or the key
@@ -629,7 +645,7 @@ def llm_extract(docs: list[dict]) -> dict:
             parsed = json.loads(saved.read_text())["parsed"]
         except (OSError, ValueError, KeyError, TypeError):
             pass
-        if not isinstance(parsed, dict):  # P-013: a half-written or unreadable saved file is not a saved result; call again
+        if _shape_problem(parsed):  # P-013: a half-written or unreadable saved file is not a saved result; call again (D-082: nor a bad shape)
             parsed = None
             _failed(settings, "cache_unreadable", saved.name)
     if parsed is not None:
@@ -652,6 +668,8 @@ def llm_extract(docs: list[dict]) -> dict:
         _log_tokens(settings["model"], names, body.get("usage") or {}, len(CALL_LOG) - before + 1, key)
         try:
             parsed = _parse_json(body["choices"][0]["message"]["content"])
+            if _shape_problem(parsed):  # D-082 (SUB-101): checked before the cache write, so a bad shape is called again
+                raise ValueError(f"reply shape: {_shape_problem(parsed)}")
             if not parsed.get("conflicts") and not any(item.get("value") for item in parsed.get("fields") or []):
                 raise RuntimeError("model call returned no fields")
         except Exception as exc:  # P-012: the host answered but the reply is not usable; log it, then fail exactly as before
@@ -731,11 +749,19 @@ if __name__ == "__main__":
             except RuntimeError:
                 pass
         assert len(posts) == 4, "a failed call is never cached and is called again"
+        reply = {"fields": [{"field_id": "named_insured", "value": "X LLC"}], "conflicts": [{"field": "named_insured", "values": []}, "{", "field"]}  # SUB-101's shape
+        for _ in range(2):
+            try:
+                llm_extract(empty)
+                raise SystemExit("a reply with a string in conflicts should fail")
+            except ValueError as exc:
+                assert "reply shape" in str(exc)
+        assert len(posts) == 6, "a bad-shape reply is never cached and is called again (D-082)"
         # P-013. A half-written saved file, and one with no result in it, are not trusted: the model is called again.
         reply = {"fields": [{"field_id": "named_insured", "value": "Example LLC", "source": "a.md", "quote": "Example LLC", "confidence": 0.9}]}
         whole = CACHE / "extractions" / f"{cache_key(page, provider_guard(calling=False)['model'])}.json"
         good_bytes = whole.read_bytes()
-        for planted in (good_bytes[: len(good_bytes) // 2], b"", b'{"model": "m"}', b'{"parsed": null}', b"\xff\xfe"):
+        for planted in (good_bytes[: len(good_bytes) // 2], b"", b'{"model": "m"}', b'{"parsed": null}', b"\xff\xfe", b'{"parsed": {"conflicts": ["{", "field"]}}'):
             whole.write_bytes(planted)
             before = len(posts)
             assert llm_extract(page) == first, "a half-written saved file was trusted"
@@ -744,7 +770,7 @@ if __name__ == "__main__":
         before = len(posts)
         assert llm_extract(page) == first and len(posts) == before, "the repaired result is reused with no call"
         assert [path.name for path in whole.parent.iterdir() if path.suffix != ".json"] == [], "no temp file is left behind"
-        assert sum(1 for line in (CACHE / "token_log.jsonl").read_text().splitlines() if json.loads(line).get("event") == "cache_unreadable") == 5
+        assert sum(1 for line in (CACHE / "token_log.jsonl").read_text().splitlines() if json.loads(line).get("event") == "cache_unreadable") == 6
         real_replace, os.replace = os.replace, lambda *_: (_ for _ in ()).throw(KeyboardInterrupt())  # the run is killed before the rename
         try:
             llm_extract([{**page[0], "sha256": "killed"}])

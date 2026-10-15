@@ -13,12 +13,28 @@ from pathlib import Path
 
 IMAGE = {".png", ".jpg", ".jpeg", ".tif", ".tiff"}
 # Part of the extraction cache key. Change this line whenever the OCR steps below change.
-OCR_SETTINGS = "tesseract psm6; osd turn; deskew +-12; rule lift; x2 lanczos; pdf 200dpi"
+OCR_SETTINGS = "tesseract psm6; osd turn; deskew +-12; rule lift; x2 lanczos; pdf 200dpi; fill in image mode"
+
+
+class ReaderMissing(RuntimeError):
+    """P-034 (D-082): a reader library or program is missing. The run stops; a file is never skipped for it."""
+
+
+def _missing(exc: BaseException) -> bool:
+    # by name: the modules that define these may be the missing ones
+    return isinstance(exc, (ImportError, ReaderMissing)) or type(exc).__name__ in {"TesseractNotFoundError", "PDFInfoNotInstalledError"}
+
+
+def _stop(path: Path, exc: BaseException) -> ReaderMissing:
+    if isinstance(exc, ReaderMissing):
+        return exc
+    return ReaderMissing(f"stopped: {path.name} cannot be read because a reader is missing ({type(exc).__name__}: {exc}). "
+                         "Install it in .venv (pdfplumber, openpyxl, pytesseract, pdf2image, Pillow; tesseract and poppler programs) and run again.")
 
 
 def _fill(image):
-    rgb = image.convert("RGB")
-    return rgb.getpixel((0, 0))
+    """P-035 (D-082): the corner pixel in the image's own mode (an int for greyscale), so rotate never gets a colour for one channel."""
+    return image.getpixel((0, 0))
 
 
 def _osd_turn(image):
@@ -165,7 +181,9 @@ def _pdf_text(path: Path) -> tuple[str, bool, float | None, list, list]:
             from pdf2image import convert_from_path
 
             image = convert_from_path(str(path), dpi=200, first_page=number, last_page=number)[0]
-        except Exception:
+        except Exception as exc:
+            if _missing(exc):
+                raise _stop(path, exc) from exc
             texts.append(typed)
             unread.append({"page": number, "reason": "OCR for PDF pages is not available"})
             continue
@@ -227,7 +245,9 @@ def read_folder(folder: Path) -> list[dict]:
                     unread = [{"page": None, "reason": f"scan not readable, OCR score {round(ocr_confidence)}"}]
             else:
                 text, needs_human, why = "", True, f"file type {suffix or path.name} is not read"  # P-016 (c1)
-        except Exception:  # P-016 E1: a damaged or locked file is listed; the other files are read
+        except Exception as exc:  # P-016 E1: a damaged or locked file is listed; the other files are read
+            if _missing(exc):  # P-034: a missing reader stops the run instead
+                raise _stop(path, exc) from exc
             text, needs_human, why, ocr_confidence, unread, words = "", True, "could not be opened", None, [], []
         try:
             sha = hashlib.sha256(path.read_bytes()).hexdigest()
@@ -304,4 +324,47 @@ if __name__ == "__main__":
         rows = unread_rows(list(by.values()), ["big.md"])
         assert {(r["file"], r["page"]) for r in rows} == {("two.pdf", 2), ("note.docx", None), ("bad.txt", None), ("bad.pdf", None), ("big.md", None)}
         assert [r["reason"] for r in rows if r["file"] == "big.md"] == ["not sent: text past 120,000 characters"]
+    # P-035 (D-082): greyscale, colour, rotated and single-channel scans, and an image-only PDF page, are read.
+    font_big = ImageFont.truetype("/System/Library/Fonts/Supplemental/Courier New.ttf", 40)
+
+    def card(mode, turn=0, tilt=0):
+        im = Image.new("RGB", (1100, 260), "white")
+        ImageDraw.Draw(im).text((40, 100), "Named insured: Masonry Office LLC", fill="black", font=font_big)
+        im = im.rotate(turn, expand=True, fillcolor="white") if turn else im
+        im = im.convert(mode)
+        return im.rotate(tilt, expand=True, fillcolor=255 if mode in ("L", "1") else (255,) * len(mode)) if tilt else im
+
+    for mode, turn, tilt in (("L", 0, 0), ("RGB", 0, 0), ("L", 90, 0), ("L", 0, 5), ("1", 0, 4), ("RGB", 180, 3), ("LA", 0, 4)):
+        text, human, mean, _ = _read_scan(card(mode, turn, tilt))
+        assert not human and "Masonry" in text, (mode, turn, tilt, mean, text)
+    with tempfile.TemporaryDirectory() as tmp:
+        folder = Path(tmp)
+        card("L").save(folder / "grey.jpg")
+        card("L", 0, 5).save(folder / "tilted.png")
+        card("RGB", 0, 3).save(folder / "colour.jpg")
+        card("L", 0, 4).save(folder / "image-only.pdf", "PDF", resolution=150)
+        by = {d["name"]: d for d in read_folder(folder)}
+        for name in ("grey.jpg", "tilted.png", "colour.jpg", "image-only.pdf"):
+            assert "unread" not in by[name] and not by[name]["needs_human"] and "Masonry" in by[name]["text"], (name, by[name].get("unread"), by[name].get("unread_pages"))
+        # P-034 (D-082): a missing reader stops the run; it is never listed as a damaged file.
+        import sys as _sys
+
+        for module, name in (("pdf2image", "image-only.pdf"), ("pytesseract", "grey.jpg"), ("openpyxl", None)):
+            if name is None:
+                name = "s.xlsx"
+                (folder / name).write_bytes(b"PK")
+            saved = _sys.modules.get(module)
+            _sys.modules[module] = None  # import now raises ImportError
+            try:
+                read_folder(folder)
+                raise SystemExit(f"a missing {module} must stop the run")
+            except ReaderMissing as exc:
+                assert "reader is missing" in str(exc), exc
+            finally:
+                if saved is None:
+                    _sys.modules.pop(module, None)
+                else:
+                    _sys.modules[module] = saved
+            if name == "s.xlsx":
+                (folder / name).unlink()
     print("sources ok")
