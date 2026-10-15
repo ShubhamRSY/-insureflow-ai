@@ -43,6 +43,7 @@ MESSAGES: dict[str, tuple[bool, str]] = {}  # submission -> (ok, plain-words res
 WHATS_NEW = (
     ("2026-10-14", "P-015/B-264/B-265/B-266", "D-070", "The score shows \"Not scored — reason\" when a file is failed, incomplete or empty, and the cooking and hood lines; each code has a mark-wrong control (logged; the number does not change); the footer names the model and prompt version of the saved run; Suggested market shows only on senior referrals; a stale card lists the changed fields, old to new."),
     ("2026-10-14", "P-027 (B-268)", "D-071", "The cooking line names what was stated as not present (\"no fryer; gas grill\" counts the grill, not the fryer) and shows the quote, including on \"stated none\". Superseded by P-029, then P-030."),
+    ("2026-10-14", "B-297", "D-080", "A card whose extraction failed shows \"Not read — extraction failed\" on the Not read, Not read by extraction and Needs human read lines, never \"none\"."),
     ("2026-10-14", "B-290, B-293, P-033, B-295", "D-079", "A bar, tavern, nightclub, pub or lounge word next to restaurant evidence goes to a senior referral: \"possible bar/liquor exposure — confirm liquor sales\". Bakery, coffee shop and deli count as food service. More words mark a cooking line for review (ningún, nada, w/o, isn't, removed, zero). A card whose extraction failed shows \"Not read — extraction failed\" for cooking and every field."),
     ("2026-10-14", "B-286", "D-078", "The carrier class for a restaurant comes only from generic evidence (restaurant, food service, kitchen, eatery, café, catering, or stated cooking equipment), never from a cuisine or ethnic word. A file named only by a cuisine word shows no_match with that reason."),
     ("2026-10-14", "P-028 (B-269)", "D-075", "Each saved run stores its extraction cache key (files, prompt version, OCR settings, model, host, temperature); the footer shows it in short form, and decision rows save it."),
@@ -687,7 +688,9 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
             reason = report.get("status_reason") or "every value was rejected by the gate"
             extraction = f"REJECTED — {reason}. No field was accepted. This is not a missing-data file. Sends are blocked."
         unread = report.get("unread") or []
-        unread_html = "<p>Not read: none</p>" if not unread else "<p>Not read:</p><ul>" + "".join(
+        failed = report.get("status") == "extraction_failed"
+        none_ = NOT_READ if failed else "none"  # D-080 (B-297): a failed card never says "none"
+        unread_html = f"<p>Not read: {none_}</p>" if not unread else "<p>Not read:</p><ul>" + "".join(
             "<li>{}, {}: {}</li>".format(
                 html.escape(u["file"]),
                 "whole file" if u.get("page") is None else f"page {u['page']}",
@@ -704,7 +707,7 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
             + (f'<span class="bad">FAILED — {html.escape(manifest)}. A send will be refused.</span>' if manifest else "ok")
             + "</p>",
             f"<p>Files: {html.escape(', '.join(item['files']) or 'none')}</p>",
-            f"<p>Not read by extraction: {html.escape(', '.join(item['ignored']) or 'none')}</p>",
+            f"<p>Not read by extraction: {html.escape(', '.join(item['ignored']) or none_)}</p>",
         ]
         lines += score_html(item, report)
         if not refused:
@@ -714,7 +717,7 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
         lines += [
             f"<p>Extraction: {html.escape(extraction)}</p>",
             unread_html,
-            f"<p>Needs human read: {html.escape(', '.join(report.get('needs_human') or []) or 'none')}</p>",
+            f"<p>Needs human read: {html.escape(', '.join(report.get('needs_human') or []) or none_)}</p>",
             f"<p>Address check: {html.escape(address_check)}</p>",
             f"<p>Locations: {html.escape('; '.join(('primary ' if row.get('primary') else 'other ') + row['address'] for row in report['locations']) or 'one premises') if report.get('locations') is not None else 'not stored in the saved run'}</p>",
             "<h3>Extracted fields</h3>",
@@ -1042,6 +1045,8 @@ if __name__ == "__main__":
             if "FAILED" in page:  # D-079 (B-295): nothing was read
                 card_html = page.split("<article", 1)[1]  # the card only; What's new may quote old wording
                 assert "Cooking: Not read — extraction failed" in card_html and "none stated" not in card_html and "not stated" not in card_html
+                for label in ("Not read", "Not read by extraction", "Needs human read"):  # D-080 (B-297)
+                    assert f"<p>{label}: {NOT_READ}</p>" in card_html and f"<p>{label}: none</p>" not in card_html, label
                 assert page.count(f"<td>{NOT_READ}</td>") >= 2 * len(item["report"]["fields"]), "value and note say not read on every field"
             else:
                 assert "Loss history: not scored" in page and "Cooking: not scored" in page
