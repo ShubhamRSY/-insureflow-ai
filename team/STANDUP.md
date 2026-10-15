@@ -1652,3 +1652,18 @@ Blocked: No.
 - Done: P-036 (D-083) UI check, APPROVE WITH CHANGES. Screenshot and workbench.py diff read; no code edited.
 - Open: H1 "also:" quote lacks the source document name; H2 merged field has no Review note marker. Refusals still plain-language.
 - Blocked: nothing.
+
+### 2026-10-14 — @model-risk
+- Done: P-037 + D-084 metrics check. Metrics APPROVE (no High). P-037 REJECT: H1 document rules (cook/joisted masonry/run date/locations) still overwrite a typed value with an unflagged scan value after the merge. Self-checks pass; real SUB-088/097/101 replies probed from a scratch cache copy, no real file changed.
+- Open: H1 (owner @ai-engineer-assistant); M1 mixed PDF counted as scan; M2 user to confirm needs-review vs open conflict; M3; L1; L2. Not a production approval.
+- Blocked: nothing.
+
+### 2026-10-14 — @model-risk
+- Done: P-037 re-check, APPROVE. H1 closed (document rules and locations obey typed-first, one scans map); original H1 example recomputed; self-check ok; real SUB-088/097/101 re-run from a scratch cache copy, same as before, no real file changed.
+- Open: M1-M3, L1-L4 backlog. Not a production approval; no send authorized.
+- Blocked: nothing.
+
+### 2026-10-14 — @senior-underwriter
+- Done: P-037 / D-084 UI check, APPROVE, no High. Screenshot shows the scan value, the file, and the action; the send refusal is still in plain words.
+- Open: M1-M2 and L1 in DISCUSSION (tick box lacks scan value; raw garbled scan read; long What's new line).
+- Blocked: nothing.

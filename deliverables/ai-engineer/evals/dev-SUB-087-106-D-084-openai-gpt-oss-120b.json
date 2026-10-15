@@ -1,0 +1,1205 @@
+{
+  "label": "9 of 9 extracted fields scored; claims not read; loss runs = date only",
+  "commit": "3d961ded180059ea28a7829d29ebd4d803b7045b",
+  "uncommitted": [
+    "underwriting_pipeline/ai/prepare.py",
+    "underwriting_pipeline/ai/regression_dev.py",
+    "underwriting_pipeline/app/workbench.py"
+  ],
+  "model": "openai/gpt-oss-120b",
+  "host": "api.groq.com",
+  "submissions": [
+    {
+      "submission": "SUB-087",
+      "format": "typed PDF app, typed loss run, csv schedule, email",
+      "error": null,
+      "call": "from cache: saved reply used, no call in this run",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "miss"
+      },
+      "extracted_named_insured": "Blue Heron Kitchen LLC",
+      "metrics": {
+        "named_insured": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "premises": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "effective_date": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "operations": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "sales": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "tiv": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "construction": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "year_built": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "loss_runs": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        }
+      },
+      "attempts": 1,
+      "seconds": 0.0
+    },
+    {
+      "submission": "SUB-088",
+      "format": "rotated handwritten-style scan plus email",
+      "error": null,
+      "call": "from cache: saved reply used, no call in this run",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "miss",
+        "operations": "miss",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "miss",
+        "premises": "miss",
+        "tiv": "miss",
+        "loss_runs": "not_credited",
+        "conflict": "hit (needs review)",
+        "status": "hit (needs review)"
+      },
+      "extracted_named_insured": "Harvest Crumb Bakery LLC",
+      "metrics": {
+        "named_insured": {
+          "correct": true,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "premises": {
+          "correct": false,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "effective_date": {
+          "correct": false,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "operations": {
+          "correct": false,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "sales": {
+          "correct": true,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "tiv": {
+          "correct": false,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "construction": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "year_built": {
+          "correct": false,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "loss_runs": {
+          "correct": false,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        }
+      },
+      "attempts": 1,
+      "seconds": 0.9
+    },
+    {
+      "submission": "SUB-089",
+      "format": "typed md app, xlsx schedule with 3 locations, typed loss run",
+      "error": null,
+      "call": "from cache: saved reply used, no call in this run",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "miss",
+        "premises": "miss",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "miss",
+        "status": "miss"
+      },
+      "extracted_named_insured": "Ironwood Residential Partners LLC",
+      "metrics": {
+        "named_insured": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "premises": {
+          "correct": false,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "effective_date": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "operations": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "sales": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "tiv": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "construction": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "year_built": {
+          "correct": false,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "loss_runs": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        }
+      },
+      "attempts": 1,
+      "seconds": 0.0
+    },
+    {
+      "submission": "SUB-090",
+      "format": "Spanish typed app and Spanish email",
+      "error": null,
+      "call": "from cache: saved reply used, no call in this run",
+      "checks": {
+        "named_insured": "miss",
+        "effective_date": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "not_credited",
+        "conflict": "miss",
+        "status": "hit"
+      },
+      "extracted_named_insured": null,
+      "metrics": {
+        "named_insured": {
+          "correct": false,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "premises": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "effective_date": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "operations": {
+          "correct": true,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "sales": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "tiv": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "construction": {
+          "correct": true,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "year_built": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "loss_runs": {
+          "correct": false,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        }
+      },
+      "attempts": 1,
+      "seconds": 0.0
+    },
+    {
+      "submission": "SUB-091",
+      "format": "typed PDF app and loss run, email",
+      "error": null,
+      "call": "from cache: saved reply used, no call in this run",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "hit",
+        "sales": "miss",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "miss"
+      },
+      "extracted_named_insured": "Kettle & Spur Lounge LLC",
+      "metrics": {
+        "named_insured": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "premises": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "effective_date": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "operations": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "sales": {
+          "correct": false,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "tiv": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "construction": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "year_built": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "loss_runs": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        }
+      },
+      "attempts": 1,
+      "seconds": 0.0
+    },
+    {
+      "submission": "SUB-092",
+      "format": "typed PDF app and loss run, xlsx schedule, email",
+      "error": null,
+      "call": "from cache: saved reply used, no call in this run",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "miss",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "miss",
+        "status": "miss"
+      },
+      "extracted_named_insured": "Border Cold Storage Distributors LLC",
+      "metrics": {
+        "named_insured": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "premises": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "effective_date": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "operations": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "sales": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "tiv": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "construction": {
+          "correct": false,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "year_built": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "loss_runs": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        }
+      },
+      "attempts": 1,
+      "seconds": 0.0
+    },
+    {
+      "submission": "SUB-093",
+      "format": "email only",
+      "error": null,
+      "call": "from cache: saved reply used, no call in this run",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "miss",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "miss",
+        "tiv": "miss",
+        "loss_runs": "not_credited",
+        "conflict": "hit",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Pine Hollow Accounting PLLC",
+      "metrics": {
+        "named_insured": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "premises": {
+          "correct": false,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "effective_date": {
+          "correct": false,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "operations": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "sales": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "tiv": {
+          "correct": false,
+          "flagged": false,
+          "silent": true,
+          "automated": false
+        },
+        "construction": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "year_built": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "loss_runs": {
+          "correct": false,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        }
+      },
+      "attempts": 1,
+      "seconds": 0.0
+    },
+    {
+      "submission": "SUB-094",
+      "format": "typed md app, xlsx schedule, typed loss run, email",
+      "error": null,
+      "call": "from cache: saved reply used, no call in this run",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "hit",
+        "sales": "miss",
+        "construction": "hit",
+        "year_built": "miss",
+        "premises": "hit",
+        "tiv": "miss",
+        "loss_runs": "hit",
+        "conflict": "miss",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Lone Oak Signworks LLC",
+      "metrics": {
+        "named_insured": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "premises": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "effective_date": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "operations": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "sales": {
+          "correct": false,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "tiv": {
+          "correct": false,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "construction": {
+          "correct": true,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "year_built": {
+          "correct": false,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "loss_runs": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        }
+      },
+      "attempts": 1,
+      "seconds": 0.0
+    },
+    {
+      "submission": "SUB-095",
+      "format": "typed PDF app, csv schedule, email, duplicate resubmission",
+      "error": null,
+      "call": "from cache: saved reply used, no call in this run",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "not_credited",
+        "conflict": "hit",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Lone Oak Signworks LLC",
+      "metrics": {
+        "named_insured": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "premises": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "effective_date": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "operations": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "sales": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "tiv": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "construction": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "year_built": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "loss_runs": {
+          "correct": false,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        }
+      },
+      "attempts": 1,
+      "seconds": 0.0
+    },
+    {
+      "submission": "SUB-096",
+      "format": "typed md app, xlsx schedule with 3 locations, typed loss run, email",
+      "error": null,
+      "call": "from cache: saved reply used, no call in this run",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "miss",
+        "operations": "miss",
+        "sales": "hit",
+        "construction": "miss",
+        "year_built": "miss",
+        "premises": "miss",
+        "tiv": "miss",
+        "loss_runs": "hit",
+        "conflict": "miss",
+        "status": "miss"
+      },
+      "extracted_named_insured": "Mesquite Home and Gift Co LLC",
+      "metrics": {
+        "named_insured": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "premises": {
+          "correct": false,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "effective_date": {
+          "correct": false,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "operations": {
+          "correct": false,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "sales": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "tiv": {
+          "correct": false,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "construction": {
+          "correct": false,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "year_built": {
+          "correct": false,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "loss_runs": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        }
+      },
+      "attempts": 1,
+      "seconds": 0.0
+    },
+    {
+      "submission": "SUB-097",
+      "format": "dark tilted handwritten-style scan plus email",
+      "error": null,
+      "call": "from cache: saved reply used, no call in this run",
+      "checks": {
+        "named_insured": "miss",
+        "effective_date": "miss",
+        "operations": "miss",
+        "sales": "hit (needs review)",
+        "construction": "hit",
+        "year_built": "miss",
+        "premises": "miss",
+        "tiv": "hit",
+        "loss_runs": "not_credited",
+        "conflict": "not_credited",
+        "status": "not_credited"
+      },
+      "extracted_named_insured": null,
+      "metrics": {
+        "named_insured": {
+          "correct": false,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "premises": {
+          "correct": false,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "effective_date": {
+          "correct": false,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "operations": {
+          "correct": false,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "sales": {
+          "correct": true,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "tiv": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "construction": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "year_built": {
+          "correct": false,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "loss_runs": {
+          "correct": false,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        }
+      },
+      "attempts": 1,
+      "seconds": 0.8
+    },
+    {
+      "submission": "SUB-098",
+      "format": "typed md app, typed loss run, email",
+      "error": null,
+      "call": "from cache: saved reply used, no call in this run",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "miss",
+        "operations": "miss",
+        "sales": "hit",
+        "construction": "miss",
+        "year_built": "miss",
+        "premises": "miss",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "miss"
+      },
+      "extracted_named_insured": "Caprock Tile & Stone Inc",
+      "metrics": {
+        "named_insured": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "premises": {
+          "correct": false,
+          "flagged": false,
+          "silent": true,
+          "automated": false
+        },
+        "effective_date": {
+          "correct": false,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "operations": {
+          "correct": false,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "sales": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "tiv": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "construction": {
+          "correct": false,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "year_built": {
+          "correct": false,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "loss_runs": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        }
+      },
+      "attempts": 1,
+      "seconds": 0.0
+    },
+    {
+      "submission": "SUB-099",
+      "format": null,
+      "error": "not run: daily limit hit",
+      "call": "not run",
+      "checks": {},
+      "extracted_named_insured": null
+    },
+    {
+      "submission": "SUB-100",
+      "format": null,
+      "error": "not run: daily limit hit",
+      "call": "not run",
+      "checks": {},
+      "extracted_named_insured": null
+    },
+    {
+      "submission": "SUB-101",
+      "format": null,
+      "error": "not run: daily limit hit",
+      "call": "not run",
+      "checks": {},
+      "extracted_named_insured": null
+    },
+    {
+      "submission": "SUB-102",
+      "format": null,
+      "error": "not run: daily limit hit",
+      "call": "not run",
+      "checks": {},
+      "extracted_named_insured": null
+    },
+    {
+      "submission": "SUB-103",
+      "format": null,
+      "error": "not run: daily limit hit",
+      "call": "not run",
+      "checks": {},
+      "extracted_named_insured": null
+    },
+    {
+      "submission": "SUB-104",
+      "format": null,
+      "error": "not run: daily limit hit",
+      "call": "not run",
+      "checks": {},
+      "extracted_named_insured": null
+    },
+    {
+      "submission": "SUB-105",
+      "format": null,
+      "error": "not run: daily limit hit",
+      "call": "not run",
+      "checks": {},
+      "extracted_named_insured": null
+    },
+    {
+      "submission": "SUB-106",
+      "format": null,
+      "error": "not run: daily limit hit",
+      "call": "not run",
+      "checks": {},
+      "extracted_named_insured": null
+    }
+  ],
+  "counted": {
+    "named_insured": {
+      "hit": 10,
+      "hit (needs review)": 0,
+      "miss": 2,
+      "not_credited": 0,
+      "call_failed": 0,
+      "flagged": 0
+    },
+    "premises": {
+      "hit": 6,
+      "hit (needs review)": 0,
+      "miss": 6,
+      "not_credited": 0,
+      "call_failed": 0,
+      "flagged": 0
+    },
+    "effective_date": {
+      "hit": 7,
+      "hit (needs review)": 0,
+      "miss": 5,
+      "not_credited": 0,
+      "call_failed": 0,
+      "flagged": 0
+    },
+    "operations": {
+      "hit": 8,
+      "hit (needs review)": 0,
+      "miss": 4,
+      "not_credited": 0,
+      "call_failed": 0,
+      "flagged": 0
+    },
+    "sales": {
+      "hit": 9,
+      "hit (needs review)": 1,
+      "miss": 2,
+      "not_credited": 0,
+      "call_failed": 0,
+      "flagged": 0
+    },
+    "tiv": {
+      "hit": 8,
+      "hit (needs review)": 0,
+      "miss": 4,
+      "not_credited": 0,
+      "call_failed": 0,
+      "flagged": 0
+    },
+    "construction": {
+      "hit": 9,
+      "hit (needs review)": 0,
+      "miss": 3,
+      "not_credited": 0,
+      "call_failed": 0,
+      "flagged": 0
+    },
+    "year_built": {
+      "hit": 6,
+      "hit (needs review)": 0,
+      "miss": 6,
+      "not_credited": 0,
+      "call_failed": 0,
+      "flagged": 0
+    },
+    "loss_runs": {
+      "hit": 7,
+      "hit (needs review)": 0,
+      "miss": 0,
+      "not_credited": 5,
+      "call_failed": 0,
+      "flagged": 0
+    },
+    "conflict": {
+      "hit": 5,
+      "hit (needs review)": 1,
+      "miss": 5,
+      "not_credited": 1,
+      "call_failed": 0,
+      "flagged": 0
+    },
+    "status": {
+      "hit": 4,
+      "hit (needs review)": 1,
+      "miss": 6,
+      "not_credited": 1,
+      "call_failed": 0,
+      "flagged": 0
+    }
+  },
+  "metrics": {
+    "fields": {
+      "named_insured": {
+        "scored": 12,
+        "silent": 0,
+        "automated": 9,
+        "silent_error_rate": 0.0,
+        "automation_rate": 0.75
+      },
+      "premises": {
+        "scored": 12,
+        "silent": 1,
+        "automated": 6,
+        "silent_error_rate": 0.083,
+        "automation_rate": 0.5
+      },
+      "effective_date": {
+        "scored": 12,
+        "silent": 0,
+        "automated": 7,
+        "silent_error_rate": 0.0,
+        "automation_rate": 0.583
+      },
+      "operations": {
+        "scored": 12,
+        "silent": 0,
+        "automated": 7,
+        "silent_error_rate": 0.0,
+        "automation_rate": 0.583
+      },
+      "sales": {
+        "scored": 12,
+        "silent": 0,
+        "automated": 8,
+        "silent_error_rate": 0.0,
+        "automation_rate": 0.667
+      },
+      "tiv": {
+        "scored": 12,
+        "silent": 1,
+        "automated": 8,
+        "silent_error_rate": 0.083,
+        "automation_rate": 0.667
+      },
+      "construction": {
+        "scored": 12,
+        "silent": 0,
+        "automated": 7,
+        "silent_error_rate": 0.0,
+        "automation_rate": 0.583
+      },
+      "year_built": {
+        "scored": 12,
+        "silent": 0,
+        "automated": 6,
+        "silent_error_rate": 0.0,
+        "automation_rate": 0.5
+      },
+      "loss_runs": {
+        "scored": 12,
+        "silent": 0,
+        "automated": 7,
+        "silent_error_rate": 0.0,
+        "automation_rate": 0.583
+      }
+    },
+    "overall": {
+      "scored": 108,
+      "silent": 2,
+      "automated": 65,
+      "silent_error_rate": 0.019,
+      "automation_rate": 0.602
+    },
+    "failed_call_files": 0,
+    "definitions": "silent error: a value is shown, it is wrong, and it is not flagged needs review or in an open conflict; automation: the value is correct and not flagged. An empty field counts as flagged (it shows as missing). Rates are over scored field values; files whose call failed are left out and counted apart (D-084)."
+  },
+  "run": {
+    "model": "openai/gpt-oss-120b",
+    "stopped_at": "SUB-099",
+    "files_run": 12,
+    "seconds_per_file": 0.1,
+    "tokens": {
+      "hosts": [
+        "api.groq.com"
+      ],
+      "model_calls": 0,
+      "from_cache": 12,
+      "tokens": 0,
+      "failed_attempts": {
+        "rate_limit_429": 0,
+        "timeout": 0,
+        "other": 0,
+        "reply_not_usable": 0
+      }
+    },
+    "failed_attempts": {
+      "rate_limit_429": 0,
+      "timeout": 0,
+      "other": 0,
+      "reply_not_usable": 0
+    }
+  }
+}

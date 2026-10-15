@@ -329,3 +329,8 @@ Also open from T-097, already in the register's Section D so not repeated as row
 | B-309 | D-083 | @model-risk | Low (L1): names treat "1.500 LLC" and "1,500 LLC" as equal. | 2026-10-14 |
 | B-310 | D-083 | @senior-underwriter | Low (M1): the "also:" separator is easy to miss on the card. | 2026-10-14 |
 | B-311 | D-083 | @ai-engineer-assistant | High for T-027: scans now read (P-035) but noisy OCR text competes with typed facts and empties fields (SUB-088, 097, 101 in the D-083 dev check); with B-301. | 2026-10-14 |
+| B-312 | D-084 | @model-risk | Medium (M1): a PDF with any OCR'd page counts as a scan as a whole for P-037. | 2026-10-14 |
+| B-313 | D-084 | @user | Medium (M2): confirm the reading that a P-037 "needs-review conflict" is a needs-review flag acknowledged at approve, not an open conflict that blocks the send (D-084 reading b). | 2026-10-14 |
+| B-314 | D-084 | @model-risk | Medium (M3): a model conflict item gets typed-first only when the field is still empty. | 2026-10-14 |
+| B-315 | D-084 | @model-risk | Low (L3/L4): a scan read too weak to store can still flag a typed value; a scan rule can fill a field emptied by an open conflict (the conflict still blocks the send). | 2026-10-14 |
+| B-316 | D-084 | @senior-underwriter | Medium: the approve tick box shows only the typed value, not the scan's; a garbled scan read is shown raw and can look like our typo. | 2026-10-14 |

@@ -434,7 +434,13 @@ def carrier_run_date(texts: dict) -> tuple[str, str, int, int] | None:
 
 
 def _set_cited(merged: dict, field: str, value: str, source: str, start: int, end: int, texts: dict | None = None, scans: dict | None = None) -> None:
-    """Store a document-rule value, cited to its own match. P-016 G2: on a scan source it takes the cited-word score like any other value."""
+    """Store a document-rule value, cited to its own match. P-016 G2: on a scan source it takes the cited-word score like any other value.
+    P-037 (@model-risk H1): a value from a scan never replaces a typed value; it agrees silently or flags the typed value."""
+    cur = merged.get(field) or {}
+    if scans and source in scans and cur.get("value") and cur.get("source") not in scans:
+        if not agrees(field, cur["value"], value):
+            _flag_scan_differs(cur, [{"value": value, "source": source}])
+        return
     confidence, flag, reason = 0.95, False, None
     quote = texts[source][start:end] if texts and source in texts else None
     if scans and source in scans:
@@ -517,7 +523,7 @@ def labeled_locations(texts: dict) -> list[dict]:
     return []
 
 
-def apply_locations(merged: dict, conflicts: list, texts: dict) -> list[dict]:
+def apply_locations(merged: dict, conflicts: list, texts: dict, scans: dict | None = None) -> list[dict]:
     """P-005. A labeled second location is stored, and it is not a premises conflict.
 
     The primary address stays in premises_address. Unlabeled disagreements stay conflicts.
@@ -539,6 +545,7 @@ def apply_locations(merged: dict, conflicts: list, texts: dict) -> list[dict]:
             primary["source"],
             at,
             at + len(primary["address"]),
+            scans=scans,  # P-037: a scan's primary address never replaces a typed one
         )
     return locations
 
@@ -639,6 +646,34 @@ def _carry_flag(cur: dict, other: dict) -> None:
                 cur[k] = other[k]
 
 
+def _typed_first(field_id: str, rows: list[dict], scans: set) -> dict | None:
+    """P-037 (D-084): a typed or structured value outranks a scan (OCR) value. When the typed rows agree, their fuller value is kept;
+    a scan value that agrees adds its quote, one that differs makes the kept value needs review, never replaces it.
+    None when there is no typed-vs-scan split or the typed rows disagree among themselves (a real conflict)."""
+    typed = [row for row in rows if row.get("source") not in scans]
+    scanned = [row for row in rows if row.get("source") in scans]
+    if not typed or not scanned or not all(agrees(field_id, a["value"], b["value"]) for i, a in enumerate(typed) for b in typed[i + 1 :]):
+        return None
+    keep = fuller(typed)
+    for row in typed:
+        if not _same_row(row, keep):
+            _carry_flag(keep, row)
+    keep["field_id"], keep["value"] = field_id, _canonical(field_id, keep["value"])
+    differ = [row for row in scanned if not agrees(field_id, keep["value"], row["value"])]
+    for row in scanned:
+        if row not in differ and row.get("quote"):
+            keep["also_quoted"] = (keep.get("also_quoted") or []) + [{"quote": row["quote"], "source": row.get("source")}]
+    if differ:
+        _flag_scan_differs(keep, differ)
+    return keep
+
+
+def _flag_scan_differs(row: dict, differ: list[dict]) -> None:
+    said = "; ".join(f"\"{item['value']}\" ({item.get('source')})" for item in differ)
+    row["needs_review"] = True
+    row["reason"] = (row["reason"] + "; " if row.get("reason") else "") + f"scan read differs: {said}; the typed value is kept — check against the page"
+
+
 def process_submission(folder: Path) -> dict:
     docs = sources.read_folder(folder)
     texts = {doc["name"]: doc["text"] for doc in docs}
@@ -672,6 +707,7 @@ def process_submission(folder: Path) -> dict:
                 # D-024: llm_extract returns only after it has its own usable values, so an all-empty reply is
                 # an answer the gate rejected, not a failed call. A raised call stays extraction_failed above.
                 rejected = True
+    scans = {doc["name"]: doc["ocr_words"] for doc in docs if doc.get("ocr_words")}  # P-037: files whose text came from OCR; one list for every rule
     for row in extracted["fields"]:
         field_id = row.get("field_id")
         if field_id not in merged or not row.get("value"):
@@ -680,6 +716,8 @@ def process_submission(folder: Path) -> dict:
         if cur["value"] is None:
             row["value"] = _canonical(field_id, row["value"])
             merged[field_id] = row
+        elif first := _typed_first(field_id, [cur, row], scans):  # P-037: typed beats scan, agreeing or not; a differing scan read flags it
+            merged[field_id] = first
         elif agrees(field_id, cur["value"], row["value"]):
             keep = fuller([cur, row])  # P-036: the fuller value, both quotes
             keep["value"] = _canonical(field_id, keep["value"])
@@ -697,6 +735,12 @@ def process_submission(folder: Path) -> dict:
             )
             merged[field_id] = {**cur, "value": None, "needs_review": True}
     for item in extracted["conflicts"]:
+        field_id = item.get("field")
+        kept = [{**side, "field_id": field_id} for side in item.get("values") or [] if side.get("value")]
+        first = _typed_first(field_id, kept, scans) if field_id in merged and merged[field_id]["value"] is None else None
+        if first:  # P-037: the typed sides agree; a scan side never makes this an open conflict
+            merged[field_id] = {**merged[field_id], **first, "confidence": first.get("confidence") or 0.0}
+            continue
         sides = [side.get("value") or "" for side in item.get("values") or [] if side.get("value")]
         if len(sides) >= 2 and all(agrees(item.get("field"), a, b) for i, a in enumerate(sides) for b in sides[i + 1 :]):  # H3: every pair
             field_id = item.get("field")
@@ -716,8 +760,8 @@ def process_submission(folder: Path) -> dict:
             merged[item["field"]]["needs_review"] = True
         conflicts.append(item)
     _apply_reply(conflicts, texts.get("reply.md", ""))
-    apply_document_rules(merged, conflicts, texts, {doc["name"]: doc["ocr_words"] for doc in docs if doc.get("ocr_words")})
-    locations = apply_locations(merged, conflicts, texts)
+    apply_document_rules(merged, conflicts, texts, scans)
+    locations = apply_locations(merged, conflicts, texts, scans)
     listed = extracted.get("schedule") or []  # P-036: several schedule addresses are locations, not a conflict
     if not locations and listed and merged["premises_address"].get("value"):
         primary = merged["premises_address"]
@@ -1283,6 +1327,49 @@ if __name__ == "__main__":
         assert [c["field"] for c in out["conflicts"]] == ["premises_address"], "4 vs 40 stays a conflict"
         out = _through([{"field": "premises_address", "values": [_p("100 Main St", "a"), _p("100 Main St, Austin, TX 78701", "b"), _p("100 Main St, Dallas, TX 75201", "c")]}])
         assert [c["field"] for c in out["conflicts"]] == ["premises_address"], "@model-risk H3: Austin vs Dallas is never merged away"
+        # P-037 (D-084): the SUB-088, 097 and 101 shapes. Typed beats scan; a differing scan read flags, never replaces.
+        def _scan_case(fields, conflicts, email_text="typed", scan_text="ocr", scan_words=(("ocr", 0.9),)):
+            scan_words = [list(w) for w in scan_words]
+            with tempfile.TemporaryDirectory() as tmp:
+                folder = Path(tmp) / "SUB-203"
+                folder.mkdir()
+                (folder / "email.md").write_text("x")
+                real_read, real_extract = sources.read_folder, llm_extract.llm_extract
+                sources.read_folder = lambda f: [{"name": "email.md", "text": email_text}, {"name": "scan.jpg", "text": scan_text, "ocr_confidence": 0.75, "ocr_words": scan_words},
+                                                 {"name": "loss-runs-scan.jpg", "text": "ocr", "ocr_confidence": 0.8, "ocr_words": [["ocr", 0.9]]}]
+                llm_extract.llm_extract = lambda docs: {"fields": fields, "not_sent": [], "conflicts": conflicts}
+                try:
+                    out = process_submission(folder)
+                finally:
+                    sources.read_folder, llm_extract.llm_extract = real_read, real_extract
+            return {r["field_id"]: r for r in out["fields"]}, out["conflicts"]
+        _s = lambda f, v, src: {"field_id": f, "value": v, "source": src, "quote": v, "start": 0, "end": 1, "confidence": 0.9, "needs_review": False, "reason": None}
+        rows, open_ = _scan_case([], [  # SUB-088: the email and the scan disagree on name, date and sales
+            {"field": "named_insured", "values": [_s("named_insured", "Harvest Crumb Bakery LLC", "email.md"), _s("named_insured", "Harvest Crumb Bakery tic", "scan.jpg")]},
+            {"field": "effective_date", "values": [_s("effective_date", "2027-03-15", "email.md"), _s("effective_date", "03/15/202%", "scan.jpg")]},
+            {"field": "sales_or_payroll", "values": [_s("sales_or_payroll", "640k", "email.md"), _s("sales_or_payroll", "40K", "scan.jpg")]}])
+        assert open_ == [] and rows["named_insured"]["value"] == "Harvest Crumb Bakery LLC" and rows["sales_or_payroll"]["value"] == "640000", rows
+        assert all(rows[f]["needs_review"] and "scan read differs" in rows[f]["reason"] for f in ("named_insured", "effective_date", "sales_or_payroll"))
+        rows, open_ = _scan_case([_s("tiv_building", "520k", "email.md"), _s("tiv_building", "s20000", "scan.jpg"),   # SUB-097: a typed field row beats a scan field row
+                                  _s("construction", "Brick", "scan.jpg")], [])
+        assert rows["tiv_building"]["value"] == "520000" and rows["tiv_building"]["needs_review"] and open_ == [], rows["tiv_building"]
+        assert rows["construction"]["value"] == "Brick" and not rows["construction"]["needs_review"], "a scan value fills an empty field"
+        rows, open_ = _scan_case([_s("tiv_building", "s20000", "scan.jpg"), _s("tiv_building", "520k", "email.md")], [])
+        assert rows["tiv_building"]["value"] == "520000" and rows["tiv_building"]["needs_review"], "the typed value replaces a scan value that came first"
+        rows, open_ = _scan_case([_s("loss_run_valued_through", "09/30/2026", "loss-runs-scan.jpg")], [   # SUB-101
+            {"field": "named_insured", "values": [_s("named_insured", "Pappa Sal's Pizza Co LLC", "email.md"), _s("named_insured", "Pappa Sal's Pizza Co", "email.md")]}])
+        assert rows["loss_run_valued_through"]["value"] and [c["field"] for c in open_] == ["named_insured"], "typed vs typed stays a real conflict"
+        rows, open_ = _scan_case([], [{"field": "year_built", "values": [_s("year_built", "1984", "email.md"), _s("year_built", "1984", "scan.jpg")]}])
+        assert rows["year_built"]["value"] == "1984" and not rows["year_built"]["needs_review"] and rows["year_built"]["also_quoted"] == [{"quote": "1984", "source": "scan.jpg"}]
+        rows, _ = _scan_case([_s("named_insured", "HARVEST CRUMB BAKERY LLC.", "scan.jpg"), _s("named_insured", "Harvest Crumb Bakery LLC", "email.md")], [])
+        assert rows["named_insured"]["value"] == "Harvest Crumb Bakery LLC" and rows["named_insured"]["source"] == "email.md", "an agreeing scan value never replaces the typed one"
+        scan_text = "Operations: we cook burgers. Construction: Joisted masonry"  # @model-risk H1: the document rules obey P-037 too
+        rows, _ = _scan_case([_s("operations", "wholesale bakery", "email.md"), _s("construction", "Masonry", "email.md")], [],
+                             email_text="Operations: wholesale bakery. Construction: Masonry", scan_text=scan_text, scan_words=[(w, 0.95) for w in scan_text.split()])
+        for f, typed in (("operations", "wholesale bakery"), ("construction", "Masonry")):
+            assert rows[f]["value"] == typed and rows[f]["source"] == "email.md" and rows[f]["needs_review"] and "scan read differs" in rows[f]["reason"], rows[f]
+        rows, _ = _scan_case([], [], scan_text=scan_text, scan_words=[(w, 0.95) for w in scan_text.split()])
+        assert rows["construction"]["value"] == "Joisted masonry" and rows["construction"]["source"] == "scan.jpg", "a scan rule still fills an empty field"
         out = _through([], [{"address": full, "source": "schedule.xlsx"}, {"address": "880 Kirby Meadow Ln, Houston, TX 77098", "source": "schedule.xlsx"}])
         assert out["locations"] == [] and out["conflicts"] == [], "no premises value: the schedule alone is not stored as locations"
         same_area = _square_feet({"a.md": "Shop is 2,200 sq ft.", "b.md": "2200 sf"})

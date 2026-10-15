@@ -935,3 +935,14 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: built in the main session (budget rule 3); @model-risk check of P-036. Orchestrator's reading: B-305 goes in a new scorer for the next hold-out (the frozen scorers, including eval_holdout_087.py, are not edited, D-022); the development check scores SUB-087–106 with the frozen eval_holdout_087.py into a dev output file, never its published paths.
 - Status: ACCEPTED
 - Amends: B-304, B-305. Not a production approval. No send is authorized.
+
+## D-084 — approve change P-037 (B-311 source priority); silent error and automation rates; model comparison on SUB-087–106
+- Date / Owner: 2026-10-14 / @user
+- Context: D-083 development check: scans now read (P-035) but noisy OCR competes with typed facts (B-311).
+- Options considered: none. The user's words.
+- Decision: In the user's words. "1. approve change P-037 (B-311): source priority. Values from typed or structured sources (typed PDF text, Excel, application forms) outrank values from scan OCR. A scan value only fills an empty field, or, if it disagrees with a typed value, creates a needs-review conflict; it never silently replaces a typed value. Self-checks with SUB-088, 097 and 101 cases. 2. Add two metrics to every score report from now on: silent error rate (value wrong AND not flagged needs-review, per field and overall) and automation rate (value correct AND not needing review). Compute them for the SUB-087–106 dev check and the quick set. 3. Model comparison on development data SUB-087–106, uncached, one run each, same code: openai/gpt-oss-120b, openai/gpt-oss-20b, qwen/qwen3.8-27b. Report per model: per-field hits, silent error rate, automation rate, tokens per file, seconds per file, failed calls. Each model has its own Groq daily budget; stop a model if its limit is hit and say so. One @model-risk check of P-037 and of the metric definitions, High only. /wrap-up and push."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-14 (D-032).
+- Dissent: none
+- Follow-up tasks: built in the main session (budget rule 3); @model-risk check. Orchestrator's reading: (a) a scan source is a file whose text came from OCR (an image, or a PDF with an OCR'd page). (b) "needs-review conflict": the typed value is kept and flagged needs review, the reason names the scan's value and file; it is acknowledged at approve like any needs-review value (D-064) rather than stored as an open conflict that would block the send outright. (c) Item 2 is the user's own instruction for the score reports: the metrics are added in `regression_dev.py` (the runner) and written beside each score; no frozen scorer and no hit/miss rule changes; published score files are not rewritten.
+- Status: ACCEPTED
+- Amends: B-311. Not a production approval. No send is authorized.
