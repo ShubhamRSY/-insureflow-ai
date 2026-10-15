@@ -227,7 +227,7 @@ def agency_problem(target) -> str:
     ]
     if open_conflicts:
         return "an open conflict is still on the file"
-    if not report.get("complete"):
+    if not prepare.ready_to_route(report):  # P-041 (D-088): review pending is gated as complete was
         return "the file is not complete"
     if _route(report) not in {"carrier_a", "carrier_b", "carrier_c"}:
         return "the file is not in appetite"

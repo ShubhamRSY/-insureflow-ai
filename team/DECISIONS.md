@@ -979,3 +979,14 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: as P-039 says: the user changes `LLM_MODEL` in `~/.zshrc` to `qwen/qwen3.8-27b` (the orchestrator does not edit the shell file); the docstring example in confidence_vs_hit.py names the new model; batch scoring runs are paced (`LLM_PACE_SECONDS` in regression_dev.py, 55 s for qwen). No prompt, gate, OCR or scorer change.
 - Status: ACCEPTED
 - Amends: the model in use since D-010/D-012 (openai/gpt-oss-120b). Not a production approval; @model-risk's T-027 veto stands until the next hold-out on this model passes. No send is authorized.
+
+## D-088 — approve change P-040 (H1, no-known-loss letters are not loss runs) and P-041 (H2, complete only with nothing to review); comma-blind address scorer for the next hold-out; dev re-check on SUB-107–126
+- Date / Owner: 2026-10-15 / @user
+- Context: @model-risk hold-out SUB-107–126 (deliverables/model-risk/holdout-SUB-107-126.md): T-027 veto stands; H1, H2, M1. SUB-107–126 is now development data (user).
+- Options considered: none. The user's words.
+- Decision: In the user's words. "1. approve change P-040 (H1): a document counts as a loss run only if it shows a carrier, a policy period, a valued-as-of date, and either a claims list or an explicit carrier statement of no claims. Letters saying there are no known losses, in any language (e.g. "no known losses", "sin pérdidas conocidas", "no hay reclamaciones", "carta de no pérdidas"), are never loss runs: the loss-run field stays missing and the file stays incomplete. Anything unclear → needs review. Self-checks with SUB-112 and SUB-123 cases plus English and Spanish letters. 2. approve change P-041 (H2): a file is "complete" only when every required field is present, no value needs review, and no conflict is unresolved. Otherwise status is "complete — review pending" (or incomplete if a field is missing). The workbench shows it; sends stay gated as now. Self-checks with SUB-111, 112, 123, 125. 3. Scorer for the next hold-out only: addresses compare ignoring commas. Commit before any new gold. 4. Development re-check on SUB-107–126 with qwen, paced: report status accuracy, silent error rate and automation rate. @model-risk check of P-040 and P-041, @senior-underwriter UI check, High only."
+- Rationale: The user typed this in this Claude Code session on 2026-10-15.
+- Dissent: none
+- Follow-up tasks: built in the main session (budget rule 3); @model-risk check of P-040 and P-041; @senior-underwriter UI check (D-065). Frozen scorers (eval_holdout_107.py and earlier) are not edited; item 3 is a new scorer file. The published SUB-107–126 hold-out score is not rewritten (D-025); the re-check is a separate development report.
+- Status: ACCEPTED
+- Amends: none. Not a production approval; @model-risk's T-027 veto stands until a new hold-out passes. No send is authorized.

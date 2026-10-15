@@ -13,6 +13,7 @@ import os
 import re
 import sys
 import tempfile
+import unicodedata
 from pathlib import Path
 
 import llm_extract
@@ -27,7 +28,9 @@ INBOX_DIR = ROOT / "simulation" / "inbox"
 REFUSED_STATUSES = ("extraction_failed", "all_values_rejected")
 REJECT_REASON = "the model answered but every value was rejected by the gate"
 # G2 (D-029): the reader accepts only this closed set. A missing, empty, or unknown status is refused, not allowed.
-STATUSES = ("complete", "incomplete", "extraction_failed", "all_values_rejected")
+# P-041 (D-088): every field present, but a value needs review or a conflict is open. Not "complete".
+REVIEW_PENDING = "complete — review pending"
+STATUSES = ("complete", REVIEW_PENDING, "incomplete", "extraction_failed", "all_values_rejected")
 
 FIELDS = (
     "named_insured",
@@ -433,6 +436,60 @@ def carrier_run_date(texts: dict) -> tuple[str, str, int, int] | None:
     return hits[0]
 
 
+# P-040 (D-088): a loss run shows a carrier, a policy period, a valued-as-of date, and a claims list or the carrier's no-claims line.
+# A no-known-loss letter, in any language, is never one. Matched on lower-case text with accents removed.
+NKL_LETTER = re.compile(r"no[\s-]+known[\s-]+loss|no[\s-]+loss[\s-]+letter|sin perdidas conocidas|no hay reclamaciones|carta de (?:no )?perdidas")
+RUN_PARTS = (
+    re.compile(r"\b(?:mutual|insurance|insurer|assurance|casualty|indemnity|specialty|surplus|underwriters|carrier|aseguradora|seguros)\b"),
+    re.compile(r"20\d\d-\d\d-\d\d\s+(?:to|through|thru|-|a|al|hasta)\s+20\d\d-\d\d-\d\d|(?<![\d-])20\d\d[-/](?:20)?\d\d\b(?![-/]\d)"
+               r"|policy (?:period|term|year)|periodo de (?:la )?poliza|vigencia"),
+    re.compile(r"valued\s+(?:through|thru|as\s+of)|valuad[oa]\s+al|valorad[oa]\s+al|fecha de valuacion"),
+    re.compile(r"\bclaims?\b|\blosses\b|\bpaid\b|\breserves?\b|reclam|siniestro"),
+)
+NKL_DROPPED = "not a loss run: {} is a no-known-loss letter; carrier loss runs are still needed"
+RUN_UNCLEAR = "check this is a carrier loss run: {} does not show a carrier, a policy period, a valued-as-of date and a claims list"
+
+
+def _fold(text: str) -> str:
+    return "".join(ch for ch in unicodedata.normalize("NFKD", text.lower()) if not unicodedata.combining(ch))
+
+
+def loss_run_kind(text: str) -> str:
+    """P-040: "loss_run", "letter" (a no-known-loss letter), or "unclear". A letter phrase beside every loss-run part is unclear."""
+    low = _fold(text)
+    full = all(part.search(low) for part in RUN_PARTS)
+    if NKL_LETTER.search(low):
+        return "unclear" if full else "letter"
+    return "loss_run" if full else "unclear"
+
+
+def gate_loss_run(merged: dict, texts: dict) -> None:
+    """P-040: keep the loss-run date only when a real loss run backs it. From a letter it is dropped (the field stays missing);
+    from anything else it is kept and marked needs review."""
+    row = merged["loss_run_valued_through"]
+    if not row.get("value"):
+        return
+    kinds = {name: loss_run_kind(text) for name, text in texts.items()}
+    seen = [x for x in (row["value"], row.get("quote")) if x]
+    if kinds.get(row.get("source")) == "loss_run" or any(kinds[n] == "loss_run" and any(x in t for x in seen) for n, t in texts.items()):
+        return
+    source = row.get("source") or "no file named"
+    if kinds.get(row.get("source")) == "letter":
+        row.update(value=None, needs_review=True, reason=NKL_DROPPED.format(source))
+        return
+    row["needs_review"] = True
+    row["reason"] = "; ".join(x for x in (row.get("reason"), RUN_UNCLEAR.format(source)) if x)
+
+
+def ready_to_route(report: dict) -> bool:
+    """P-041 (D-088): carrier match and sends stay gated as before P-041: every field present, no open conflict, nothing more to ask.
+    "complete — review pending" with no open conflict passes; the approve step still makes the underwriter acknowledge each
+    value that needs review (D-039)."""
+    if report.get("complete"):
+        return True
+    return report.get("status") == REVIEW_PENDING and not any(c.get("resolution") != "resolved" for c in report.get("conflicts") or [])
+
+
 def _set_cited(merged: dict, field: str, value: str, source: str, start: int, end: int, texts: dict | None = None, scans: dict | None = None) -> None:
     """Store a document-rule value, cited to its own match. P-016 G2: on a scan source it takes the cited-word score like any other value.
     P-037 (@model-risk H1): a value from a scan never replaces a typed value; it agrees silently or flags the typed value."""
@@ -761,6 +818,7 @@ def process_submission(folder: Path) -> dict:
         conflicts.append(item)
     _apply_reply(conflicts, texts.get("reply.md", ""))
     apply_document_rules(merged, conflicts, texts, scans)
+    gate_loss_run(merged, texts)  # P-040, after every rule that can set the date
     locations = apply_locations(merged, conflicts, texts, scans)
     listed = extracted.get("schedule") or []  # P-036: several schedule addresses are locations, not a conflict
     if not locations and listed and merged["premises_address"].get("value"):
@@ -790,7 +848,9 @@ def process_submission(folder: Path) -> dict:
     open_conflicts = [c for c in conflicts if c.get("resolution") != "resolved"]
     rows = [merged[field] for field in FIELDS]
     report = completeness(rows)
-    if open_conflicts or extra:
+    review = [r["field_id"] for r in rows if r.get("value") and r.get("needs_review")]
+    pending = report["complete"] and not extra and bool(open_conflicts or review)  # P-041: all present, something still to check
+    if open_conflicts or extra or review:
         report["complete"] = False
     report["conflicts"] = conflicts
     report["extra"] = extra
@@ -811,6 +871,8 @@ def process_submission(folder: Path) -> dict:
         report["status"] = "all_values_rejected"
     elif report["complete"]:
         report["status"] = "complete"
+    elif pending:
+        report["status"] = REVIEW_PENDING
     else:
         report["status"] = "incomplete"
     report["status_reason"] = REJECT_REASON if rejected else None
@@ -818,7 +880,7 @@ def process_submission(folder: Path) -> dict:
     if error or rejected:
         report["complete"] = False
         report["request"] = None
-    elif report["complete"]:
+    elif report["complete"] or (pending and not open_conflicts):  # P-041: a review is the underwriter's, nothing to ask the producer
         report["request"] = None
     else:
         text = _request(folder.name, report["missing"], [c["field"] for c in open_conflicts])
@@ -1686,4 +1748,80 @@ if __name__ == "__main__":
             llm_extract.llm_extract = real_extract
             for k, v in saved_env.items():
                 os.environ.pop(k, None) if v is None else os.environ.__setitem__(k, v)
+    # P-040 / P-041 (D-088): letters are never loss runs; a file is complete only with nothing left to review.
+    run_107 = ("# Loss runs (typed)\nValued through: 2026-09-30\n- Northline Mutual (fictional), policy 2023-03-01 to 2024-03-01: 0 claims, $0 paid\n"
+               "- Policy 2024-03-01 to 2025-03-01: 0 claims, $0 paid\n")
+    run_110 = "# Loss runs (typed)\nValued through: 2026-09-30\n- Lakeshore Specialty (fictional), 2023-24: 0 claims\n- 2024-25: 0 claims\n- Open reserve: $0\n"
+    run_es = "# Historial de siniestros\nAseguradora: Seguros del Valle (ficticia)\nVigencia 2025-01-01 a 2026-01-01\nValuado al 2026-09-30\nSin reclamos en este periodo.\n"
+    letter_112 = ("# Carta de pérdidas\nNamed insured: Hernandez Plumbing & Drain LLC\nValued through: 2026-09-30\n"
+                  "- Sin reclamos reportados en los ultimos 3 anos (2024, 2025 y hasta 2026-09-30).\n- Carta firmada por el agente anterior (ficticio), 2026-09-22.\n")
+    letter_123 = ("# Carta de pérdidas\nNamed insured: Tienda Luna Azul LLC\nValued through: 2026-09-30\n"
+                  "- Sin reclamos reportados en los ultimos 5 anos segun el solicitante.\n- Carta de pérdidas sin reclamos, agente anterior, 2026-09-30.\n")
+    letters = [letter_112, letter_123,
+               "# No known loss letter\nValued through: 2026-08-31\n- No known loss letter from prior agent, dated 2026-08-20.\n- No claims in the last five years to our knowledge.\n",
+               "# No known loss letter\nValued through: 2026-09-30\n- No known loss letter from prior carrier, 2026-09-30.\n- Owner states no claims in five years.\n",
+               "Valued through 2026-09-30. Sin pérdidas conocidas en los últimos cinco años.", "Valued as of 2026-09-30: No hay reclamaciones. Carta de no pérdidas."]
+    for text in letters:
+        assert loss_run_kind(text) == "letter", text
+    for text in (run_107, run_110, run_es):
+        assert loss_run_kind(text) == "loss_run", text
+    assert loss_run_kind("Loss history: no claims to our knowledge. Valued through 2026-09-30.") == "unclear", "no carrier or period: review"
+    assert loss_run_kind(run_107 + "No known losses.") == "unclear", "a letter phrase beside a full loss run: review"
+    lr = lambda src, val="2026-09-30": {"loss_run_valued_through": {"field_id": "loss_run_valued_through", "value": val, "source": src, "quote": val, "needs_review": False, "reason": None}}
+    for text in letters:
+        box = lr("loss-runs.md")
+        gate_loss_run(box, {"loss-runs.md": text})
+        row = box["loss_run_valued_through"]
+        assert row["value"] is None and row["needs_review"] and row["reason"] == NKL_DROPPED.format("loss-runs.md"), row
+    box = lr("loss-runs.md")
+    gate_loss_run(box, {"loss-runs.md": run_107})
+    assert box["loss_run_valued_through"]["value"] == "2026-09-30" and not box["loss_run_valued_through"]["needs_review"]
+    box = lr("email.md")
+    gate_loss_run(box, {"email.md": "Loss runs valued 2026-09-30 attached.", "loss-runs.md": run_110})
+    assert not box["loss_run_valued_through"]["needs_review"], "a date a real loss run shows is kept, whichever file the model cited"
+    box = lr("email.md")
+    gate_loss_run(box, {"email.md": "Loss runs valued through 2026-09-30, will send."})
+    assert box["loss_run_valued_through"]["value"] and box["loss_run_valued_through"]["reason"] == RUN_UNCLEAR.format("email.md"), "unclear: kept, needs review"
+
+    def run_case(rows: dict, files: dict, conflicts: list | None = None) -> dict:
+        """process_submission with a stubbed model reply; no call is made."""
+        good = {"named_insured": "Example LLC", "premises_address": "100 Main St, San Antonio, TX 78205", "effective_date": "2027-03-01",
+                "operations": "accounting office", "sales_or_payroll": "900000", "tiv_building": "500000", "construction": "Masonry",
+                "year_built": "1998", "loss_run_valued_through": "2026-09-30"}
+        reply = []
+        for field, value in good.items():
+            row = {"field_id": field, "value": value, "source": "application.md", "quote": value, "confidence": 0.95, "needs_review": False, "reason": None}
+            row.update(rows.get(field) or {})
+            reply.append(row)
+        with tempfile.TemporaryDirectory() as tmp:
+            sub = Path(tmp) / "SUB-500"
+            sub.mkdir()
+            (sub / "application.md").write_text("\n".join(f"{k}: {v}" for k, v in good.items()) + "\n")
+            for name, text in files.items():
+                (sub / name).write_text(text)
+            real = llm_extract.llm_extract
+            llm_extract.llm_extract = lambda docs: {"fields": [dict(r) for r in reply], "conflicts": list(conflicts or []), "not_sent": []}
+            try:
+                return process_submission(sub)
+            finally:
+                llm_extract.llm_extract = real
+
+    on_run = {"loss_run_valued_through": {"source": "loss-runs.md"}}
+    clean = run_case(on_run, {"loss-runs.md": run_107})
+    assert clean["status"] == "complete" and clean["complete"] and ready_to_route(clean) and clean["request"] is None, clean["status"]
+    for letter in (letter_112, letter_123):  # SUB-112, SUB-123
+        rep_ = run_case(on_run, {"loss-runs.md": letter})
+        row = {r["field_id"]: r for r in rep_["fields"]}["loss_run_valued_through"]
+        assert rep_["status"] == "incomplete" and not rep_["complete"] and not ready_to_route(rep_), rep_["status"]
+        assert row["value"] is None and "loss_run_valued_through" in rep_["missing"] and rep_["request"], row
+    for field in ("sales_or_payroll", "effective_date"):  # SUB-111 (sales), SUB-125 (effective date): flagged, no conflict raised
+        rep_ = run_case({**on_run, field: {"needs_review": True, "reason": "check against the email"}}, {"loss-runs.md": run_107})
+        assert rep_["status"] == REVIEW_PENDING and rep_["complete"] is False and rep_["missing"] == [], rep_["status"]
+        assert rep_["request"] is None, "nothing to ask the producer; the review is the underwriter's"
+        assert ready_to_route(rep_), "sends stay gated as before: approve still lists the value for acknowledgement (D-039)"
+    sq = {"field": "square_feet", "values": [{"value": "16800", "source": "email.md"}, {"value": "14200", "source": "application.md"}], "resolution": "unresolved"}
+    rep_ = run_case(on_run, {"loss-runs.md": run_107}, [sq])
+    assert rep_["status"] == REVIEW_PENDING and not ready_to_route(rep_) and rep_["request"], "an open conflict: review pending, held, producer asked"
+    rep_ = run_case({**on_run, "year_built": {"value": None}}, {"loss-runs.md": run_107})
+    assert rep_["status"] == "incomplete", "a missing field is incomplete, not review pending"
     print("prepare ok")

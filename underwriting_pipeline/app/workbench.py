@@ -41,6 +41,7 @@ BANNER = ""  # set by serve(); the sandbox screenshots label the page with it
 MESSAGES: dict[str, tuple[bool, str]] = {}  # submission -> (ok, plain-words result of the last action); shown once
 # D-065 item 5: one line per user-visible feature: date, task or proposal, decision number, what an underwriter sees.
 WHATS_NEW = (
+    ("2026-10-15", "P-040/P-041 (H1/H2)", "D-088", "A no-known-loss letter (English or Spanish) is never a loss run: the loss-run field stays missing with the reason. A file with every field but a value to review or an open conflict shows \"complete — review pending\" and what is pending; sends are gated as before."),
     ("2026-10-14", "P-015/B-264/B-265/B-266", "D-070", "The score shows \"Not scored — reason\" when a file is failed, incomplete or empty, and the cooking and hood lines; each code has a mark-wrong control (logged; the number does not change); the footer names the model and prompt version of the saved run; Suggested market shows only on senior referrals; a stale card lists the changed fields, old to new."),
     ("2026-10-14", "P-027 (B-268)", "D-071", "The cooking line names what was stated as not present (\"no fryer; gas grill\" counts the grill, not the fryer) and shows the quote, including on \"stated none\". Superseded by P-029, then P-030."),
     ("2026-10-15", "P-038 (B-317)", "D-086", "When two documents disagree and one side cannot be cited, the card keeps the cited value and marks it NEEDS REVIEW: \"conflict with rejected value: <other value> (<file>)\"; tick it at approve. A value that mixes two figures (sales with payroll) is still never stored."),
@@ -135,7 +136,7 @@ def match(report: dict) -> dict:
     other_prohibited = bool(ops) and _has(ops, tuple(w for w in PROHIBITED if w not in BAR_WORDS))
     if other_prohibited or (ops and _has(ops, PROHIBITED) and not food):
         return out("no_match", "prohibited class (AG:45-49)")
-    if not report["complete"] or not ops:
+    if not prepare.ready_to_route(report) or not ops:  # P-041: review pending routes as complete did before
         return out("hold", "missing information")
     tiv = _tiv(report)
     if tiv is None or tiv <= 0:
@@ -489,6 +490,16 @@ def _msg(messages: dict, key: str) -> str:
     return f'<p class="msg {"ok" if ok else "bad"}" role="alert">{html.escape(text)}</p>'
 
 
+def review_pending_html(report: dict) -> str:
+    """P-041 (D-088): say what keeps a file with every field from being complete."""
+    if report.get("status") != prepare.REVIEW_PENDING:
+        return ""
+    review = [r["field_id"] for r in report.get("fields") or [] if r.get("value") and r.get("needs_review")]
+    open_ = [c.get("field") or "?" for c in report.get("conflicts") or [] if c.get("resolution") != "resolved"]
+    what = "; ".join(x for x in (review and "values to review: " + ", ".join(review), open_ and "open conflict: " + ", ".join(open_)) if x)
+    return f'<p class="bad">Complete — review pending: {html.escape(what or "see the review notes")}. Not complete until checked.</p>'
+
+
 def _no_send_reason(item: dict, report: dict, refused: bool) -> str:
     """B-232: plain words for why this card has no send form; empty when a send can be offered."""
     if refused:
@@ -497,7 +508,7 @@ def _no_send_reason(item: dict, report: dict, refused: bool) -> str:
         return f"documents changed since extraction ({item['manifest']})"
     if item["route"] not in package.CARRIERS:
         return f"the carrier match is {item['route']}" + (f" ({item['note']})" if item.get("note") else "") + ", so no carrier is named"
-    if not report.get("complete"):
+    if not prepare.ready_to_route(report):
         return "the file is incomplete (a required field is empty)"
     return ""
 
@@ -712,6 +723,7 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
             f"<p>Saved run: status {html.escape(str(report.get('status')))} · hash check: ok · manifest check: "
             + (f'<span class="bad">FAILED — {html.escape(manifest)}. A send will be refused.</span>' if manifest else "ok")
             + "</p>",
+            review_pending_html(report),
             f"<p>Files: {html.escape(', '.join(item['files']) or 'none')}</p>",
             f"<p>Not read by extraction: {html.escape(', '.join(item['ignored']) or none_)}</p>",
         ]
@@ -1058,6 +1070,15 @@ if __name__ == "__main__":
                 assert "Loss history: not scored" in page and "Cooking: not scored" in page
             assert "<option>edit</option>" in page and "<option>decline</option>" in page
         assert "REJECTED" in render([card("all_values_rejected", status_reason=prepare.REJECT_REASON)], None)
+        # P-041 (D-088): review pending says what is pending, keeps approve with the tick, and routes as complete did.
+        rp = card(prepare.REVIEW_PENDING, fields=[{"field_id": "operations", "value": "accounting office"},
+                                                  {"field_id": "sales_or_payroll", "value": "2100000", "needs_review": True, "reason": "check against the email"}])
+        rp["report"]["missing"] = []
+        rp_page = render([rp], None).split("<article", 1)[1]
+        assert "Complete — review pending: values to review: sales_or_payroll" in rp_page and "<option>approve</option>" in rp_page, rp_page[:600]
+        assert 'name="ack" value="sales_or_payroll"' in rp_page
+        assert prepare.ready_to_route(rp["report"]) and not prepare.ready_to_route({**rp["report"], "conflicts": [{"field": "square_feet", "resolution": "unresolved"}]})
+        assert "review pending" not in render([card("incomplete")], None).split("<article", 1)[1]
         normal = card("complete", fields=[{"field_id": "operations", "value": "accounting office"}])
         normal["report"]["missing"] = []
         page_ok = render([normal], None)
