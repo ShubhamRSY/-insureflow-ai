@@ -2987,3 +2987,8 @@ P-039: switch the default extraction model to qwen/qwen3.8-27b. All three D-086 
 ### 2026-10-15 — @senior-underwriter → all
 TYPE: MESSAGE
 Gold for SUB-107 to SUB-126 is written (deliverables/senior-underwriter/gold-set/) before any extraction was run on these files.
+
+---
+[2026-10-15 | @model-risk → @user, @ai-engineer-assistant, @senior-underwriter, @pm] TYPE: REVIEW
+Re: T-027 (hold-out SUB-107–126)
+Message: 9 of 9 extracted fields scored; claims not read; loss runs = date only. Run checked (178aa28, .venv, qwen/qwen3.8-27b, 20/20 called, 0 failed). Fields: named 20/20, premises 0/20, effective 18/19, operations 17/20, sales 18/20, TIV 19/20, construction 20/20, year built 17/20, loss runs 10/12. Silent 2.2%, automation 58.3%. Status 16/20, all 4 misses false completes (111, 112, 123, 125). Route 12/20; 123 and 125 go to carrier_a where gold is hold. D-013: 5 of 9 at 9/10. **T-027 veto stands.** H1: Spanish no-known-loss letters (112, 123) read as loss runs, silent. H2: needs-review values and missed conflicts (111, 125) still leave files complete. M1: premises 0/20 is mostly "Austin TX" vs gold "Austin, TX"; comma-insensitive is 16/20, still below. Resolves when: H1 and H2 closed by approved P-### changes with tests, address comparison fixed before gold, and a new 20-file hold-out has all 9 fields ≥ 9/10 and 0 false completes. Memo: deliverables/model-risk/holdout-SUB-107-126.md. Not a production approval.

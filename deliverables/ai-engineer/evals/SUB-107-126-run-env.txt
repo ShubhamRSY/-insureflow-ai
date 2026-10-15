@@ -1,0 +1,10 @@
+Hold-out SUB-107..126 run, 2026-10-15 11:14 CDT
+commit 178aa2808937b19f3d34ad2277ce83e17e6f2910 (pipeline frozen at ea921ea; gold committed 178aa28 before extraction)
+uncommitted under checked folders: 0
+model qwen/qwen3.8-27b
+LLM_PACE_SECONDS 55
+python /Users/disastershubz/INSURANCE FLOW AI/-insureflow-ai-1/.venv/bin/python 3.14.6
+pdfplumber 0.11.10, openpyxl 3.1.5, pytesseract 0.3.13, pdf2image 1.17.0, pillow 12.3.0
+tesseract 5.5.2
+pdftoppm version 26.10.0
+command: .venv/bin/python underwriting_pipeline/ai/regression_dev.py --holdout eval_holdout_107
