@@ -1682,3 +1682,8 @@ Blocked: No.
 - Done: D-088 check of P-040/P-041 (201232d). REJECT as built: H1 letter test is a phrase list (a reheaded SUB-112 letter goes review pending and sendable); H2 open-conflict files now scored. Memo deliverables/model-risk/check-P-040-P-041.md.
 - Next: re-check (High only) once H1 and H2 are fixed with self-checks.
 - Blockers: none. T-027 veto stands.
+
+### 2026-10-15 — @senior-underwriter
+- Done: D-088 UI check of P-040/P-041 (D-065 item 3). APPROVE, no High findings. Cards SUB-111 and SUB-112 say why not complete, what to check, why no send. 5 Medium, 2 Low in DISCUSSION.
+- Next: none on D-088 UI.
+- Blockers: none.

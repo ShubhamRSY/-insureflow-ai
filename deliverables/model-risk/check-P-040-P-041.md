@@ -39,3 +39,28 @@
 
 ## What would change the verdict
 H1 and H2 closed as above, with self-checks; then a re-check by @model-risk (High only).
+
+## LOOK-AGAIN (2026-10-15) — commit feb525d
+
+- Evidence: self-checks with LLM_* unset: `prepare ok`, `workbench ok`, `package ok`, `points ok`. Own probes on scratch files, stubbed inputs, no model call. `git status` the same before and after; no repo file newer than the probe start (deliverables/ai-engineer/ not read, as instructed).
+- Not a production approval. The T-027 veto stands until a new hold-out passes.
+
+### Verdict: APPROVE WITH CHANGES (check of P-040/P-041 only). Both earlier Highs are resolved; no new High.
+
+### H1 — resolved.
+- `loss_run_kind` now reads a no-claims statement plus a non-carrier cue (agent, owner, applicant, letter, signed, "to our knowledge", ES/FR/PT forms) as a letter. The SUB-112 and SUB-123 letters without their headings are letters (self-checks and probe).
+- Earlier probe set: "No claims letter", "Loss-free letter", "sin siniestros … solicitante", French and Portuguese letters, and the hearsay line now read "letter".
+- Item (c) done: a date that only a letter shows is dropped whichever file the model cites (self-check; code at `gate_loss_run`).
+- Whole inbox, 136 loss-related files: 13 read "letter", and all 13 are real no-known-loss letters or agent/owner statements (SUB-002, 013, 056, 108, 112, 114, 115, 121, 123, 126). No carrier loss run read as a letter. Typed runs with "no claims reported … claim count 0" stay "unclear" (review), as designed.
+
+### H2 — resolved.
+- `not_scored_reason` returns "file complete — review pending: open conflict on X" when a review-pending file has an open conflict. A conflict with no `resolution` key counts as open. Resolved or no conflict is scored. Self-check added (`points.py`). Probe agrees.
+
+### Earlier Mediums
+- M1 closed: match says "open conflict" and the no-send reason says "an open conflict is still on the file" for review pending with a conflict.
+- M2, M3, M4, L1–L3 unchanged; still open in the backlog.
+
+### New Medium / Low (backlog, one line each)
+- M5 (residual of H1): a letter with no cue word still reads "unclear", is kept with review, and stays routable after the approve tick. Probes: "Carta de no siniestralidad", "No se conocen pérdidas", "no losses known", "Memo from broker: no claims", "the insured confirms no losses", "no hemos tenido reclamos", "aucune perte connue", "nenhuma perda conhecida". None appears in the inbox. Before production, add these forms, or hold an "unclear" loss-run source from routing (earlier remedy (b)).
+- M6 (M4 widened): a statement by the applicant or insured that names a carrier, a period and a valued date reads "loss_run" and is kept without review (2 probes). The test checks words, not who issued the document.
+- L4: `in_letter` matches the value or quote anywhere in a letter. A short quote could drop a date a typed run also shows. This errs toward asking the producer, so Low.
