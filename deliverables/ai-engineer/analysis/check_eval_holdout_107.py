@@ -23,4 +23,7 @@ prepare.process_submission = fake
 assert e.score_one("SUB-107")["checks"]["premises"] == "hit"
 vals["premises_address"]="10 Main St, Austin, TX 78701 (shop)"; assert e.score_one("SUB-107")["checks"]["premises"] == "miss"
 assert e.address("4102 Mesquite Bend Rd, Lubbock, TX 79424 (shop and yard)") == "4102 Mesquite Bend Rd, Lubbock, TX 79424"
-print("eval_holdout_107 B-305 check ok")
+assert e.sides_stored("both 1520000 and 1200000", '[{"value": "$1,520,000"}, {"value": "$1,200,000"}]'), "B-319"
+assert not e.sides_stored("both 1520000 and 1200000", '[{"value": "$1,520,000"}, {"value": "$1,250,000"}]')
+assert e.money("$1,050,000; 12,5") == "1050000; 12,5"
+print("eval_holdout_107 B-305 and B-319 check ok")

@@ -8,6 +8,7 @@ Synthetic only. Not a production approval.
 
 Author: @ai-engineer-assistant. Built 2026-10-14 (D-083) before any SUB-107..126 submission or gold exists. A copy of eval_holdout_087.py
 with the ids, the output names and the premises comparison changed, and nothing else.
+D-086 (B-319), before any gold: conflict sides are matched with "$" and thousands commas set aside.
 
 Run: python underwriting_pipeline/ai/regression_dev.py --holdout eval_holdout_107   (retries failed calls only)
 """
@@ -101,7 +102,13 @@ def judge(gold_missing: bool, got: str | None, matches: bool) -> str:
     return "hit" if matches else "miss"
 
 
+def money(text: str) -> str:
+    """B-319 (D-086): "$1,520,000" and "1520000" are the same amount: drop "$" and thousands commas."""
+    return re.sub(r"(?<=\d),(?=\d{3}\b)", "", text.replace("$", ""))
+
+
 def sides_stored(gold_line: str, blob: str) -> bool:
+    gold_line, blob = money(gold_line), money(blob)
     dates = re.findall(r"20\d\d-\d\d-\d\d", gold_line)
     if len(dates) >= 2:
         return all(date in blob for date in dates)
