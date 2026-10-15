@@ -1,31 +1,26 @@
 # Next session
 
-Written 2026-10-15 by the orchestrator at wrap-up. Wrap-up commit: `864abce` on `ai-team`, pushed to `origin/ai-team` (private). Budget rule 8: demo blockers only (weekly limit resets 2026-10-17). Standing rules: D-065, D-069. The frontend/ files are the user's and are never staged. **Run every pipeline command with `.venv/bin/python`.** SUB-087–106 is development data. Production model is still openai/gpt-oss-120b (no switch, D-085).
+Written 2026-10-15 by the orchestrator at wrap-up. Wrap-up commit: `21f758c` on `ai-team`, pushed to `origin/ai-team` (private). Budget rule 8: demo blockers only (weekly limit resets 2026-10-17). Standing rules: D-065, D-069. The frontend/ files are the user's and are never staged. **Run every pipeline command with `.venv/bin/python`.** SUB-087–106 is development data. The default model is still openai/gpt-oss-120b (`LLM_MODEL` in the user's `~/.zshrc`).
 
 ## Where we stopped
 
-- D-085 development checks, no code change to the pipeline:
-  - **Fair comparison** (`deliverables/ai-engineer/analysis/fair-compare-D-085.md`), on the 9 files all three models completed:
+- D-086 built in the main session:
+  - **P-038** (B-317):
+    - (a) The prompt says sales is one gross-revenue number, never payroll. The prompt version and every cache key changed.
+    - (b) Quotes match across markdown marks (`**`, `__`, `*`), still needing exact words and digits.
+    - (c) A conflict with one side rejected keeps the cited side, flagged "conflict with rejected value: <value> (<file>)", after the side's own reason.
+    - @model-risk: **APPROVE**, no High. @senior-underwriter UI: **APPROVE**. Screenshot `D-086-P-038-rejected-side.png`.
+  - **B-319**: `eval_holdout_107.py` matches conflict sides with "$" and thousands commas set aside. Committed in `6ca8c06`, before any SUB-107+ submission or gold.
+  - **qwen re-check** (uncached, paced 55 s): all three criteria pass (`pass-check-D-086.md`).
 
-    | | qwen/qwen3.8-27b | openai/gpt-oss-120b | openai/gpt-oss-20b |
-    |---|---|---|---|
-    | Hits (of 81) | 60 | 59 | 47 |
-    | Automation rate | 71.6% | 69.1% | 56.8% |
-    | Silent error rate | 2.5% | 2.5% | 2.5% |
-    | Sales | 3 of 9 | 8 of 9 | — |
-  - **qwen stability** (`stability-qwen-D-085.md`): a second uncached run changed 0 of 180 marks. Automation 71.7% → 71.1%.
-  - **Pacing:** `DEV_PACE_SECONDS=55` in `dev_rerun_087.py`. qwen's cap is 1,000 output tokens per minute at about 731 per reply; 429s fell from 35 to 5.
-  - **qwen sales misses** (`sales-trace-qwen-D-085.md`), 14 in all:
-
-    | Cause | Files | Count |
+    | Criterion | Result | Needed |
     |---|---|---|
-    | Sales and payroll (or a label) in one value; the gate rejects it. The right number was read. | 087, 091, 092, 097, 099, 100, 105 | 7 |
-    | As above, and the quote drops the markdown "**" | 096, 098, 101, 103 | 4 |
-    | Empty | 095 | 1 |
-    | One-sided conflict dropped (B-318) | 094 | 1 |
-    | Scorer $/comma match (B-319) | 106 | 1 |
-    | Wrong number chosen | none | 0 |
-- Recommendation given to the user: fix sales first, then switch (see below).
+    | Sales, 9 shared files | 9 of 9 | 8 of 9 |
+    | Silent error rate, 20 files | 1.7% | ≤ 2.5% |
+    | Automation rate, 20 files | 77.2% | ≥ 71% |
+
+    Sales on all 20 went 6 → 18 and status 9 → 15. A 43-minute DNS outage mid-run was retried with no file lost.
+  - **P-039 drafted** (`deliverables/ai-engineer/proposal-P-039.md`): switch the default model to qwen/qwen3.8-27b. **Not approved, not switched.**
 - Self-checks at wrap-up (.venv, no host): all six ok.
 
 ## Approved, not built
@@ -39,9 +34,9 @@ Written 2026-10-15 by the orchestrator at wrap-up. Wrap-up commit: `864abce` on 
 
 ## Pending decisions for the user
 
-1. The recommendation: fix qwen's sales format first (B-317, a P-###: e.g. the prompt asks for one number per field and the exact quote, or the gate takes the sales part of a "sales; payroll" value), re-check on SUB-087–106, then decide the switch (also a P-###).
+1. **P-039**: type `approve change P-039` to switch. The switch is your edit of `LLM_MODEL` in `~/.zshrc`; batch runs then need pacing (about 18 min per 20 files).
 2. B-313: confirm the P-037 "needs-review conflict" reading.
-3. Hold-out SUB-107–126: after the model decision. B-319 goes into eval_holdout_107 before its gold.
+3. Then hold-out SUB-107–126 on the chosen model (gold first, scorer ready, `smoke_readers.py` first).
 
 ## Open vetoes and what resolves each
 
@@ -52,12 +47,12 @@ Written 2026-10-15 by the orchestrator at wrap-up. Wrap-up commit: `864abce` on 
 
 ## First 3 tasks next session
 
-1. @ai-engineer-assistant: proposal for B-317 (qwen sales format), if the user agrees with the recommendation.
-2. B-318 (one-sided conflict drops the good side) and B-319 (scorer $/comma in eval_holdout_107), as proposals.
-3. B-299: show the TIV reason alongside the liquor referral.
+1. The user's word on P-039.
+2. If switched: the hold-out SUB-107–126. @producer builds the submissions, @senior-underwriter writes the gold first, and the run is scored once, paced.
+3. B-321 (card wording for "conflict with rejected value") and B-299 (TIV reason with the liquor referral).
 
 ## For the AI Engineer
 
-- Pending proposals: none open. B-317 needs a P-###.
-- Latest eval scores: see the fair comparison table above. qwen full 20 files: silent error 1.7%, automation 71.7% / 71.1% (two runs).
-- Top failure to fix next: B-317, qwen's sales format (11 of 14 misses).
+- Pending proposals: **P-039** (switch to qwen/qwen3.8-27b), waiting for your approval.
+- Latest eval scores (qwen, D-086, development data, 20 files): named 19, premises 14, effective date 17, operations 17, sales 18, TIV 17, construction 18, year built 15, loss runs 13. Silent error rate 1.7%, automation rate 77.2%.
+- Top failure to fix next: premises (14/20) and loss runs (13/20) on qwen.
