@@ -9,6 +9,9 @@ Synthetic only. Not a production approval.
 Author: orchestrator (main session, budget rule 3). Built 2026-10-15 (D-088 item 3) before any SUB-127..146 submission or gold exists.
 A copy of eval_holdout_107.py with the ids, the output names and the address comparison (commas set aside, @model-risk M1) changed,
 and nothing else. SUB-107..126 is development data (D-088).
+D-089 item 4 (B-325), before any gold: gold says complete or incomplete only. Status safety (a plain "complete" on a gold-incomplete
+file is a false complete: critical, must be 0) and status automation (a gold-complete file shown as plain "complete") are reported
+apart. "complete — review pending" is safe but not automated. The status hit/miss column is unchanged.
 
 Run: python underwriting_pipeline/ai/regression_dev.py --holdout eval_holdout_127   (retries failed calls only)
 """
@@ -206,16 +209,32 @@ def score_one(sid: str) -> dict:
         checks["status"] = "miss" if gold_complete else "not_credited"
     else:
         checks["status"] = "hit" if report["complete"] is gold_complete else "miss"
+    system_status = report.get("status")
+    safety = "false_complete" if system_status == "complete" and not gold_complete else "safe"  # B-325: review pending is safe
+    automation = ("automated" if system_status == "complete" else "not_automated") if gold_complete else None  # gold-complete files only
     if report.get("error"):
         checks = dict.fromkeys(checks, "call_failed")  # a failed or empty model call is not a miss
+        safety, automation = "call_failed", ("call_failed" if gold_complete else None)
     return {
         "submission": sid,
         "format": gold.get("format"),
         "error": report.get("error"),
         "call": call,
         "checks": checks,
+        "system_status": system_status,
+        "status_safety": safety,
+        "status_automation": automation,
         "extracted_named_insured": named,
     }
+
+
+def status_counts(rows: list[dict]) -> dict:
+    """B-325: false completes (critical) and plain-complete automation on gold-complete files, from each row's own marks."""
+    return {"false_complete": sum(r.get("status_safety") == "false_complete" for r in rows),
+            "false_complete_ids": [r["submission"] for r in rows if r.get("status_safety") == "false_complete"],
+            "gold_complete": sum(r.get("status_automation") in ("automated", "not_automated") for r in rows),
+            "automated": sum(r.get("status_automation") == "automated" for r in rows),
+            "call_failed": sum(r.get("status_safety") == "call_failed" for r in rows)}
 
 
 def main() -> None:
@@ -225,7 +244,8 @@ def main() -> None:
     for row in rows:
         for field, mark in row["checks"].items():
             counted[field][mark] += 1
-    OUT_JSON.write_text(json.dumps({"label": LABEL, "commit": head, "uncommitted": dirty, "model": llm_extract.endpoint_settings()["model"], "host": llm_extract._host(), "submissions": rows, "counted": counted}, indent=2) + "\n")
+    status_split = status_counts(rows)
+    OUT_JSON.write_text(json.dumps({"label": LABEL, "commit": head, "uncommitted": dirty, "model": llm_extract.endpoint_settings()["model"], "host": llm_extract._host(), "submissions": rows, "counted": counted, "status_split": status_split}, indent=2) + "\n")
     lines = [
         "# Hold-out extraction score — SUB-127 through SUB-146",
         "",
@@ -247,6 +267,10 @@ def main() -> None:
         lines.append(
             f"| {field} | {item['hit']} | {item['hit (needs review)']} | {item['miss']} | {item['not_credited']} | {item['flagged']} | {item['call_failed']} |"
         )
+    lines += ["", "## Status safety and status automation (B-325)", "",
+              f"- False completes (plain \"complete\" on a gold-incomplete file): **{status_split['false_complete']}** ({', '.join(status_split['false_complete_ids']) or 'none'}). Critical: must be 0.",
+              f"- Status automation: {status_split['automated']} of {status_split['gold_complete']} gold-complete files shown as plain \"complete\". \"complete — review pending\" is safe but not automated.",
+              f"- Failed calls, left out of both: {status_split['call_failed']}."]
     lines.append("")
     lines.append("## Per submission")
     lines.append("")
@@ -268,4 +292,10 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    if sys.argv[1:2] == ["--self-check"]:  # B-325 counting only; no model call, no gold read
+        rows = [{"submission": "A", "status_safety": "false_complete", "status_automation": None}, {"submission": "B", "status_safety": "safe", "status_automation": "not_automated"},
+                {"submission": "C", "status_safety": "safe", "status_automation": "automated"}, {"submission": "D", "status_safety": "call_failed", "status_automation": "call_failed"}]
+        assert status_counts(rows) == {"false_complete": 1, "false_complete_ids": ["A"], "gold_complete": 2, "automated": 1, "call_failed": 1}, status_counts(rows)
+        print("eval_holdout_127 self-check ok")
+        sys.exit(0)
     main()

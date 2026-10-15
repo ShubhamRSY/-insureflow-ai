@@ -87,9 +87,40 @@ def _edits(submission: str) -> dict:
     return out
 
 
+def resolutions(submission: str, run_hash: str) -> dict:
+    """B-324 (D-089): conflict field -> the latest "resolve" row by a listed underwriter on this run (same run_hash). Another run's do not count."""
+    out = {}
+    for row in decisions(submission, DECISIONS_LOG):
+        field, value = (row.get("conflict_field") or "").strip(), (row.get("new_value") or "").strip()
+        if (row.get("action") or "").strip() == "resolve" and field and value and run_hash and row.get("run_hash") == run_hash:
+            out[field] = row
+    return out
+
+
+def with_resolutions(report: dict, submission: str = "") -> dict:
+    """B-324: open conflicts the underwriter resolved on this run read as resolved, with the chosen or entered value; a resolved
+    required field takes that value. Nothing else changes."""
+    done = resolutions(submission or report.get("submission") or "", report.get("saved_hash") or "")
+    if not done:
+        return report
+    conflicts = [{**c, "resolution": "resolved", "resolved_value": done[c["field"]]["new_value"].strip(), "resolved_by": done[c["field"]]["underwriter_id"]}
+                 if c.get("resolution") != "resolved" and c.get("field") in done else c for c in report.get("conflicts") or []]
+    fields = [{**r, "value": done[r["field_id"]]["new_value"].strip(), "resolved_by": done[r["field_id"]]["underwriter_id"]} if r.get("field_id") in done else r
+              for r in report.get("fields") or []]
+    return {**report, "conflicts": conflicts, "fields": fields}
+
+
+def conflict_problem(report: dict) -> str:
+    """B-324 (D-089): empty when no conflict is open (after logged resolutions on this run). Every actor, the user included."""
+    open_ = [c.get("field") or "?" for c in report.get("conflicts") or [] if c.get("resolution") != "resolved"]
+    if not open_:
+        return ""
+    return f"open conflict on {', '.join(open_)}: the underwriter must choose or enter the value on the card (logged with this run) before a send"
+
+
 def reviewed(submission: str) -> dict:
     """The saved run (G2, hash-checked) with the underwriter's edits applied. Fields are all of prepare.FIELDS."""
-    run = prepare.read_saved_run(submission)
+    run = with_resolutions(prepare.read_saved_run(submission), submission)  # B-324: logged resolutions on this run
     edits = _edits(submission)
     fields = []
     by_id = {r.get("field_id"): r for r in run.get("fields") or []}
@@ -212,7 +243,7 @@ def agency_problem(target) -> str:
     if not submission:
         return "the account manager needs the extraction report"
     try:
-        report = prepare.read_saved_run(submission)
+        report = with_resolutions(prepare.read_saved_run(submission), submission)  # B-324
     except ValueError:
         return "the saved extraction run for this file cannot be read"
     status = report.get("status")
@@ -222,11 +253,8 @@ def agency_problem(target) -> str:
         return "every value on this file was rejected"
     if report.get("needs_human"):
         return "an unread page is still on the file"
-    open_conflicts = [
-        item for item in report.get("conflicts") or [] if item.get("resolution") != "resolved"
-    ]
-    if open_conflicts:
-        return "an open conflict is still on the file"
+    if conflict_problem(report):
+        return conflict_problem(report)
     if not prepare.ready_to_route(report):  # P-041 (D-088): review pending is gated as complete was
         return "the file is not complete"
     if _route(report) not in {"carrier_a", "carrier_b", "carrier_c"}:
@@ -321,6 +349,9 @@ def send_to_carrier(
     problem = ack_problem(submission, report)  # D-068 (B-244): every actor, user included
     if problem:
         raise ValueError(problem)
+    problem = conflict_problem(with_resolutions(report, submission))  # B-324 (D-089): every actor, user included
+    if problem:
+        raise ValueError(problem)
     dest = out_dir / f"{submission}.md"
     resend = (resend_reason or "").strip()
     if dest.exists() and not resend:
@@ -346,14 +377,14 @@ if __name__ == "__main__":
     import json
     import tempfile
 
-    def save(ext: Path, submission: str, status: str, complete=False, fields=None, needs_human=None, sprinklers=None):
+    def save(ext: Path, submission: str, status: str, complete=False, fields=None, needs_human=None, sprinklers=None, conflicts=None):
         """A saved run shaped like prepare.write_drafts() writes, no model call. The hash is the reader's."""
         payload = {
             "submission": submission,
             "status": status,
             "error": "model call failed: HTTP 429 rate limit" if status == "extraction_failed" else None,
             "complete": bool(complete),
-            "conflicts": [],
+            "conflicts": conflicts or [],
             "needs_human": needs_human or [],
             "sprinklers": sprinklers,
             "fields": fields or [],
@@ -665,6 +696,32 @@ if __name__ == "__main__":
                 raise SystemExit("a document added after extraction must refuse the send")
             except ValueError as exc:
                 assert "changed since extraction" in str(exc), exc
+
+            # B-324 (D-089): a review-pending file with an open conflict is not sent by anyone until the underwriter resolves it on this run.
+            sq = {"field": "square_feet", "values": [{"value": "16800", "source": "email.md"}, {"value": "14200", "source": "application.md"}], "resolution": "unresolved"}
+            save(ext, "SUB-330", prepare.REVIEW_PENDING, fields=office, sprinklers="no", conflicts=[sq])
+            decide("SUB-330", "approve")
+            assert "open conflict on square_feet" in agency_problem("SUB-330")
+            for actor in ("user", "account-manager"):
+                try:
+                    send_to_carrier("SUB-330", actor, dest_dir, reason="ready", user_line=LINE("SUB-330"))
+                    raise SystemExit(f"B-324: an open conflict must refuse the send for {actor}")
+                except ValueError as exc:
+                    assert "open conflict on square_feet" in str(exc), exc
+            resolve = lambda run_hash: log.open("a").write(json.dumps({"seq": next(seq), "submission": "SUB-330", "action": "resolve", "underwriter_id": "UW-001", "reason": "",
+                                                                       "conflict_field": "square_feet", "new_value": "14200", "run_hash": run_hash}) + "\n")
+            resolve("another-run")
+            decide("SUB-330", "approve")
+            assert conflict_problem(with_resolutions(prepare.read_saved_run("SUB-330"))), "another run's resolution does not count"
+            resolve(_current_hash("SUB-330"))
+            assert with_resolutions(prepare.read_saved_run("SUB-330"))["conflicts"][0]["resolved_value"] == "14200"
+            try:
+                send_to_carrier("SUB-330", "user", dest_dir, user_line=LINE("SUB-330"))
+                raise SystemExit("a resolve after the approve: the latest decision must be an approve again")
+            except ValueError as exc:
+                assert "not approve" in str(exc), exc
+            decide("SUB-330", "approve")
+            assert send_to_carrier("SUB-330", "user", dest_dir, user_line=LINE("SUB-330")).is_file(), "resolved on this run, then approved: sent"
         finally:
             prepare.EXTRACT_DIR, DECISIONS_LOG, SENDS_LOG, prepare.INBOX_DIR = saved_dir, saved_log, saved_sends, saved_inbox
     # P-029 (D-072): an ambiguous cooking line joins the one needs-review list, so the send gate waits for its acknowledgment.

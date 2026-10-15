@@ -214,19 +214,23 @@ _ZIP = re.compile(r"\b\d{5}\b")
 
 
 def flag_invalid_address(row: dict) -> None:
-    """P-002. Flag a bad ZIP or a ZIP that does not match the city. Do not rewrite the city."""
+    """P-002. Flag a bad ZIP or a ZIP that does not match the city. Do not rewrite the city.
+    P-042 (D-089): the city may be written "City TX" or "City, TX"; every flag says why."""
     value = str(row.get("value") or "")
     found = re.search(r"\b(\d{5})\b", value)
     if not found:
         return
-    cities = _zip_cities().get(found.group(1))
-    city = re.search(r"([A-Za-z][A-Za-z .'-]{1,}),\s*(?:TX|Texas)\b", value)
-    name = city.group(1).strip().casefold() if city else ""
-    if not cities or not name or name not in cities:
-        row["address_check"] = "address invalid"
-        row["needs_review"] = True
-    else:
+    zip_code = found.group(1)
+    cities = _zip_cities().get(zip_code)
+    low = value.casefold()
+    if cities and any(re.search(rf"(?<![a-z]){re.escape(city)},?\s+(?:tx|texas)\b", low) for city in cities):
         row["address_check"] = "ok"
+        return
+    why = f"address check: ZIP {zip_code} is not in the Texas ZIP list" if not cities else (
+        f"address check: ZIP {zip_code} is listed for {', '.join(sorted(c.title() for c in cities))}, not the city written before TX")
+    row["address_check"] = "address invalid"
+    row["needs_review"] = True
+    row["reason"] = "; ".join(x for x in (row.get("reason"), why) if x)
 
 
 def _zip_cities() -> dict[str, set[str]]:
@@ -251,6 +255,7 @@ def drop_premises_without_zip(merged: dict, needs_human: list[str]) -> None:
     source = row.get("source")
     row["value"] = None
     row["needs_review"] = True
+    row["reason"] = "address check: no five-digit ZIP; the page needs a person"  # P-042: every flag says why
     if source and source not in needs_human:
         needs_human.append(source)
 
@@ -451,6 +456,14 @@ NO_CLAIMS = re.compile(r"\bno (?:known )?(?:claims|losses)\b|\bzero claims\b|\b0
                        r"|no se reportaron reclamaciones|ningun (?:reclamo|siniestro)|aucun sinistre|sans sinistre|sem sinistros?|nenhum sinistro")
 LETTERISH = re.compile(r"\bletter\b|\blettre\b|\bagente?\b|\bowner\b|applicant (?:states|says|reports)|per (?:the )?applicant|\bsolicitante\b|to our knowledge|\bsegun\b"
                        r"|\bfirmad[oa]\b|\bsigned\b|\bdeclar\w*|\bstates\b|\bproprietaire\b|\bproprietario\b|\bdono\b")
+# P-043 (D-089): a loss run is issued by the carrier. A summary written by the applicant, insured, owner, agent or broker, even one
+# that names a carrier, a period and claims, is not one: needs review.
+AUTHORED = re.compile(
+    r"(?:applicant|insured|owner|agent|broker|producer|solicitante|asegurado|agente|dueno|propietario)\s+(?:states|says|reports|declares|certifies|confirms|"
+    r"lists|declara|indica|afirma|certifica|reporta)\b|prepared by (?:the )?(?:applicant|insured|owner|agent|broker|producer|agency)"
+    r"|preparad[oa] por (?:el |la )?(?:solicitante|asegurado|agente|agencia)|per (?:the )?(?:applicant|insured|owner|agent|broker)"
+    r"|segun el (?:solicitante|asegurado|agente|dueno)|to our knowledge|our records|signed by (?:the )?(?:applicant|insured|owner|agent|broker)"
+    r"|firmad[oa] por (?:el )?(?:solicitante|asegurado|agente)|self[- ]reported|loss summary from (?:the )?(?:applicant|insured|agent|broker)")
 NKL_DROPPED = "not a loss run: {} is a no-known-loss letter; carrier loss runs are still needed"
 RUN_UNCLEAR = "check this is a carrier loss run: {} does not show a carrier, a policy period, a valued-as-of date and a claims list"
 
@@ -465,6 +478,8 @@ def loss_run_kind(text: str) -> str:
     full = all(part.search(low) for part in RUN_PARTS)
     if NKL_LETTER.search(low) or (NO_CLAIMS.search(low) and LETTERISH.search(low)):
         return "unclear" if full else "letter"
+    if full and AUTHORED.search(low):  # P-043: written by someone other than the carrier
+        return "unclear"
     return "loss_run" if full else "unclear"
 
 
@@ -1274,6 +1289,17 @@ if __name__ == "__main__":
         unknown = {"field_id": "premises_address", "value": "1 Main St, San Antonio, TX 00000", "needs_review": False}
         flag_invalid_address(unknown)
         assert unknown["address_check"] == "address invalid"
+        assert mismatch["reason"].startswith("address check: ZIP 78204 is listed for") and unknown["reason"] == "address check: ZIP 00000 is not in the Texas ZIP list"
+        # P-042 (D-089): "City TX" and "City, TX" both pass; a wrong city or unknown ZIP is flagged with its reason.
+        for form in ("7710 Shoal Creek Ct, Suite 210, Austin TX 78757", "7710 Shoal Creek Ct, Suite 210, Austin, TX 78757", "2210 Mesquite Bend Rd, San Antonio TX 78201",
+                     "2210 Mesquite Bend Rd, San Antonio, Texas 78201", "1180 Harbor Vista Dr, Corpus Christi TX 78404"):
+            row = {"field_id": "premises_address", "value": form, "needs_review": False}
+            flag_invalid_address(row)
+            assert row["address_check"] == "ok" and not row["needs_review"], form
+        for form in ("2210 Mesquite Bend Rd, Dallas TX 78201", "2210 Mesquite Bend Rd, Dallas, TX 78201", "1 Main St Austin TX 00000"):
+            row = {"field_id": "premises_address", "value": form, "needs_review": False}
+            flag_invalid_address(row)
+            assert row["needs_review"] and row["reason"].startswith("address check: ZIP"), form
         assert merged["loss_run_valued_through"]["value"] == "2026-08-15"
         schedule = {
             "email.md": (
@@ -1783,6 +1809,15 @@ if __name__ == "__main__":
     assert loss_run_kind("Loss history: no claims to our knowledge. Valued through 2026-09-30.") == "letter", "@model-risk H1: a no-claims statement by hearsay is a letter"
     assert loss_run_kind("Loss runs valued through 2026-09-30. 1 claim, 2025-03-01, paid $4,000.") == "unclear", "no carrier or period: review"
     assert loss_run_kind(run_107 + "No known losses.") == "unclear", "a letter phrase beside a full loss run: review"
+    # P-043 (D-089): an applicant's or agent's summary that names a carrier, a period and claims is not a carrier loss run.
+    for text in ("Loss summary prepared by the agent\nCarrier: Northline Mutual (fictional), policy 2024-01-01 to 2025-01-01\nValued through 2026-09-30\n1 claim, $4,000 paid.",
+                 "Applicant states: prior carrier Lakeshore Specialty (fictional), 2023-24 and 2024-25, valued through 2026-09-30, 1 claim paid $2,100.",
+                 "Resumen preparado por el agente. Aseguradora: Seguros del Valle (ficticia), vigencia 2025-01-01 a 2026-01-01, valuado al 2026-09-30, 1 reclamo pagado $3,000."):
+        assert loss_run_kind(text) == "unclear", text
+    box = {"loss_run_valued_through": {"field_id": "loss_run_valued_through", "value": "2026-09-30", "source": "loss-runs.md", "quote": "2026-09-30", "needs_review": False, "reason": None}}
+    gate_loss_run(box, {"loss-runs.md": "Applicant states: prior carrier Lakeshore Specialty (fictional), 2023-24, valued through 2026-09-30, 1 claim paid $2,100."})
+    row = box["loss_run_valued_through"]
+    assert row["value"] == "2026-09-30" and row["needs_review"] and row["reason"] == RUN_UNCLEAR.format("loss-runs.md"), "P-043: kept, needs review"
     lr = lambda src, val="2026-09-30": {"loss_run_valued_through": {"field_id": "loss_run_valued_through", "value": val, "source": src, "quote": val, "needs_review": False, "reason": None}}
     for text in letters:
         box = lr("loss-runs.md")

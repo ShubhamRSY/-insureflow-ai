@@ -41,6 +41,7 @@ BANNER = ""  # set by serve(); the sandbox screenshots label the page with it
 MESSAGES: dict[str, tuple[bool, str]] = {}  # submission -> (ok, plain-words result of the last action); shown once
 # D-065 item 5: one line per user-visible feature: date, task or proposal, decision number, what an underwriter sees.
 WHATS_NEW = (
+    ("2026-10-15", "P-042/P-043/B-324", "D-089", "The address check accepts \"City TX\" and \"City, TX\" and every flag says why. A loss-run summary written by the applicant or agent goes to review. A review-pending file with an open conflict is not sent until you choose or enter the value under Conflicts (logged with this run), then approve."),
     ("2026-10-15", "P-040/P-041 (H1/H2)", "D-088", "A no-known-loss letter (English or Spanish) is never a loss run: the loss-run field stays missing with the reason. A file with every field but a value to review or an open conflict shows \"complete — review pending\" and what is pending; sends are gated as before."),
     ("2026-10-14", "P-015/B-264/B-265/B-266", "D-070", "The score shows \"Not scored — reason\" when a file is failed, incomplete or empty, and the cooking and hood lines; each code has a mark-wrong control (logged; the number does not change); the footer names the model and prompt version of the saved run; Suggested market shows only on senior referrals; a stale card lists the changed fields, old to new."),
     ("2026-10-14", "P-027 (B-268)", "D-071", "The cooking line names what was stated as not present (\"no fryer; gas grill\" counts the grill, not the fryer) and shows the quote, including on \"stated none\". Superseded by P-029, then P-030."),
@@ -212,6 +213,7 @@ def load_queue(only: str | None = None) -> list[dict]:
     rows = []
     for folder in folders:
         report, problem = saved_report(folder.name)
+        report = package.with_resolutions(report, folder.name) if report is not None else None  # B-324: logged resolutions on this run
         files = sorted(p.name for p in folder.iterdir() if p.is_file())
         ignored = [name for name in files if not name.endswith((".md", ".csv"))]
         row = {"id": folder.name, "report": report, "saved_problem": problem, "files": files, "ignored": ignored}
@@ -359,8 +361,24 @@ def record_decision(payload: dict, log_path: Path) -> dict:
         raise ValueError("underwriter id required")
     if actor not in package.underwriters():
         raise ValueError("only an id on underwriters.json may log a decision (D-055); AI roles never count")
-    if action not in {"approve", "edit", "decline"}:
-        raise ValueError("action must be approve, edit, or decline")
+    if action not in {"approve", "edit", "decline", "resolve"}:
+        raise ValueError("action must be approve, edit, decline or resolve")
+    if action == "resolve":  # B-324 (D-089): the underwriter chooses or enters the value of one open conflict on this run
+        submission = (payload.get("submission") or "").strip()
+        saved = prepare.read_saved_run(submission)
+        shown = (payload.get("run_hash") or "").strip()
+        if shown and shown != saved["saved_hash"]:
+            raise ValueError("the saved run changed since this card was opened; reload the page and review again")
+        field, value = (payload.get("conflict_field") or "").strip(), (payload.get("chosen_value") or payload.get("entered_value") or "").strip()
+        if (payload.get("entered_value") or "").strip():
+            value = payload["entered_value"].strip()  # a typed value wins over the choice
+        open_ = [c.get("field") for c in saved.get("conflicts") or [] if c.get("resolution") != "resolved"]
+        if field not in open_:
+            raise ValueError(f"no open conflict on {field or 'that field'} in this run")
+        if not value:
+            raise ValueError("choose one of the values or enter the value")
+        with _LOG_LOCK:
+            return _append({**payload, "conflict_field": field, "new_value": value, "run_hash": saved["saved_hash"], "run_record": run_record(submission)}, action, actor, reason, log_path)
     if action in {"edit", "decline"} and not reason:
         raise ValueError("edit and decline require a reason")
     field_id, new_value = (payload.get("field_id") or "").strip(), (payload.get("new_value") or "").strip()
@@ -414,7 +432,8 @@ def _append(payload: dict, action: str, actor: str, reason: str, log_path: Path)
         "action": action,
         "underwriter_id": actor,
         "reason": reason,
-        **({"run_hash": payload["run_hash"]} if action == "approve" else {}),
+        **({"run_hash": payload["run_hash"]} if action in ("approve", "resolve") else {}),
+        **({"conflict_field": payload["conflict_field"], "new_value": payload["new_value"]} if action == "resolve" else {}),
         **payload["run_record"],
         **({"approved_values": payload["approved_values"]} if action == "approve" else {}),
         **({"acknowledged": payload["acknowledged"]} if payload.get("acknowledged") else {}),
@@ -490,6 +509,20 @@ def _msg(messages: dict, key: str) -> str:
     return f'<p class="msg {"ok" if ok else "bad"}" role="alert">{html.escape(text)}</p>'
 
 
+def resolve_form(sub: str, report: dict, conflict: dict) -> str:
+    """B-324 (D-089): choose one stored side or enter the value; logged with this run's hash. Then approve."""
+    field = conflict.get("field") or ""
+    sides = "".join(f'<option value="{html.escape(str(v.get("value")))}">{html.escape(str(v.get("value")))} ({html.escape(v.get("source") or "file not named")})</option>'
+                    for v in conflict.get("values") or [] if v.get("value"))
+    return (f'<form method="post" action="/decision"><input type="hidden" name="action" value="resolve">'
+            f'<input type="hidden" name="submission" value="{html.escape(sub)}"><input type="hidden" name="run_hash" value="{html.escape(report.get("saved_hash") or "")}">'
+            f'<input type="hidden" name="conflict_field" value="{html.escape(field)}">'
+            f'<b>Resolve {html.escape(field)}</b> <label>Choose <select name="chosen_value"><option value="">—</option>{sides}</select></label> '
+            f'<label>or enter <input name="entered_value"></label> <label>Underwriter id <input name="underwriter_id" required></label> '
+            f'<label>Reason <input name="reason"></label> <button type="submit">Record resolution</button> '
+            "<small>Logged with this run. Resolve each open conflict, then approve.</small></form>")
+
+
 def review_pending_html(report: dict) -> str:
     """P-041 (D-088): say what keeps a file with every field from being complete."""
     if report.get("status") != prepare.REVIEW_PENDING:
@@ -506,6 +539,8 @@ def _no_send_reason(item: dict, report: dict, refused: bool) -> str:
         return f"this file's status is {report.get('status')}; it cannot be sent"
     if item.get("manifest"):
         return f"documents changed since extraction ({item['manifest']})"
+    if report.get("status") == prepare.REVIEW_PENDING and package.conflict_problem(report):  # B-324 (D-089)
+        return package.conflict_problem(report)
     if item["route"] not in package.CARRIERS:
         return f"the carrier match is {item['route']}" + (f" ({item['note']})" if item.get("note") else "") + ", so no carrier is named"
     if not prepare.ready_to_route(report):
@@ -688,12 +723,14 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
         conflict_html = "<p>No stored conflict.</p>"
         if conflicts:
             conflict_html = "<ul>" + "".join(
-                "<li>{}: {}</li>".format(
+                "<li>{}: {}{}</li>".format(
                     html.escape(item_c["field"]),
                     html.escape(json.dumps(item_c["values"])),
+                    html.escape(f" · RESOLVED by {item_c['resolved_by']}: {item_c['resolved_value']}") if item_c.get("resolution") == "resolved" and item_c.get("resolved_by")
+                    else ("" if item_c.get("resolution") == "resolved" else " · OPEN: no send until the underwriter chooses or enters the value"),
                 )
                 for item_c in conflicts
-            ) + "</ul>"
+            ) + "</ul>" + ("" if refused else "".join(resolve_form(item["id"], report, item_c) for item_c in conflicts if item_c.get("resolution") != "resolved"))
         address_check = "—"
         for row in report["fields"]:
             if row["field_id"] == "premises_address":
@@ -1079,6 +1116,14 @@ if __name__ == "__main__":
         assert 'name="ack" value="sales_or_payroll"' in rp_page
         assert prepare.ready_to_route(rp["report"]) and not prepare.ready_to_route({**rp["report"], "conflicts": [{"field": "square_feet", "resolution": "unresolved"}]})
         assert "review pending" not in render([card("incomplete")], None).split("<article", 1)[1]
+        # B-324 (D-089): an open conflict shows a resolve form with both sides and an entered value, and the no-send line says why.
+        rpc = card(prepare.REVIEW_PENDING, fields=[{"field_id": "operations", "value": "accounting office"}])
+        rpc["report"].update(missing=[], conflicts=[{"field": "square_feet", "values": [{"value": "16800", "source": "email.md"}, {"value": "14200", "source": "application.md"}], "resolution": "unresolved"}])
+        rpc_page = render([rpc], None).split("<article", 1)[1]
+        assert 'name="action" value="resolve"' in rpc_page and 'value="16800"' in rpc_page and 'name="entered_value"' in rpc_page, rpc_page[:400]
+        assert "OPEN: no send until the underwriter chooses or enters the value" in rpc_page and "No send: open conflict on square_feet" in rpc_page
+        rpc["report"]["conflicts"][0].update(resolution="resolved", resolved_value="14200", resolved_by="UW-001")
+        assert "RESOLVED by UW-001: 14200" in render([rpc], None) and 'value="resolve"' not in render([rpc], None).split("<article", 1)[1]
         normal = card("complete", fields=[{"field_id": "operations", "value": "accounting office"}])
         normal["report"]["missing"] = []
         page_ok = render([normal], None)
@@ -1180,11 +1225,11 @@ if __name__ == "__main__":
             ext, inbox, dlog = tmp / "extractions", tmp / "inbox", tmp / "decisions.jsonl"
             old = (prepare.EXTRACT_DIR, prepare.INBOX_DIR, INBOX, LOG, PENDING, TO_PRODUCER, TO_CARRIER, package.DECISIONS_LOG, package.SENDS_LOG, package.INBOX, llm_extract._post, prepare.process_submission)
 
-            def stored(sub: str, status: str, fields=None, complete=True) -> None:
+            def stored(sub: str, status: str, fields=None, complete=True, conflicts=None) -> None:
                 folder = inbox / sub
                 folder.mkdir(parents=True, exist_ok=True)
                 (folder / "application.md").write_text(f"SYNTHETIC application {sub}\n")
-                payload = {"submission": sub, "status": status, "error": None, "complete": complete, "conflicts": [], "needs_human": [], "unread": [], "sprinklers": "no", "fields": fields or [],
+                payload = {"submission": sub, "status": status, "error": None, "complete": complete, "conflicts": conflicts or [], "needs_human": [], "unread": [], "sprinklers": "no", "fields": fields or [],
                            "input_manifest": prepare.folder_manifest(folder), "hash_algorithm": prepare.HASH_ALGORITHM}
                 payload["saved_hash"] = prepare.hash_payload(payload)
                 ext.mkdir(exist_ok=True)
@@ -1302,6 +1347,18 @@ if __name__ == "__main__":
                 stored("SUB-908", "complete", [{**r, "needs_review": True, "quote": "Acme", "reason": "r"} if r["field_id"] == "named_insured" else r for r in good])
                 assert act("/decision", {"submission": "SUB-908", "underwriter_id": "user", "action": "approve", "reason": "checked", "ack": ["named_insured"]})[1]
                 assert "acknowledged 1: named_insured" in art(render(load_queue(), None), "SUB-908")
+                # B-324 (D-089): a resolve names an open conflict of this run, is logged with the run hash, and the card then shows it resolved.
+                sq = {"field": "square_feet", "values": [{"value": "16800", "source": "email.md"}, {"value": "14200", "source": "application.md"}], "resolution": "unresolved"}
+                stored("SUB-909", prepare.REVIEW_PENDING, good, complete=False, conflicts=[sq])
+                assert "No send: open conflict on square_feet" in art(render(load_queue(), None), "SUB-909")
+                base = {"submission": "SUB-909", "underwriter_id": "user", "action": "resolve", "conflict_field": "square_feet"}
+                assert act("/decision", {**base, "conflict_field": "sales_or_payroll", "chosen_value": "1"})[2] == "Decision refused: no open conflict on sales_or_payroll in this run"
+                assert act("/decision", base)[2] == "Decision refused: choose one of the values or enter the value"
+                assert act("/decision", {**base, "chosen_value": "16800", "run_hash": "0ld"})[2].startswith("Decision refused: the saved run changed")
+                assert act("/decision", {**base, "chosen_value": "16800", "entered_value": "14200"})[1]
+                last = json.loads(dlog.read_text().splitlines()[-1])
+                assert (last["action"], last["conflict_field"], last["new_value"], last["run_hash"]) == ("resolve", "square_feet", "14200", prepare.read_saved_run("SUB-909")["saved_hash"]), last
+                assert "RESOLVED by user: 14200" in art(render(load_queue(), None), "SUB-909")
 
                 # Suggested market is its own field; the footer shows model and prompt version, never a key or a host.
                 stored("SUB-907", "complete", [{**r, "value": "roofing contractor"} if r["field_id"] == "operations" else r for r in good])
