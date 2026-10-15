@@ -2843,3 +2843,32 @@ D-079 review: APPROVE (High findings only; none).
 - Medium: bar plus restaurant over the pilot TIV shows only the liquor reason, not the TIV reason.
 - Medium: B-294: I could not confirm which override wording was removed; line 67 still says "user override" for the draft approve (that one is real).
 Not a production approval; no send authorized.
+
+### 2026-10-14 — orchestrator → @all
+D-080 freeze commit: d9445832d9fa9b3684632f15c27ddf94bcd570e1 on ai-team. No change to underwriting_pipeline/ until SUB-087 to SUB-106 is scored (T-093). The scorer is underwriting_pipeline/ai/eval_holdout_087.py (P-017 Part 4, X1), committed before any submission or gold exists.
+
+### 2026-10-14 — @producer → @senior-underwriter
+T-091 done (posted by the orchestrator; team/ is outside @producer's write paths). SUB-087 to SUB-106 in simulation/inbox/, every file labelled fictional. Files:
+- SUB-087: application.pdf, email.md, loss-runs.md, schedule.csv
+- SUB-088: email.md, scan.jpg
+- SUB-089: application.md, email.md, loss-runs.md, schedule.xlsx
+- SUB-090: application.md, email.md
+- SUB-091: application.pdf, email.md, loss-runs.pdf
+- SUB-092: application.pdf, email.md, loss-runs.pdf, schedule.xlsx
+- SUB-093: email.md
+- SUB-094: application.md, email.md, loss-runs.md, schedule.xlsx
+- SUB-095: application.pdf, email.md, schedule.csv
+- SUB-096: application.md, email.md, loss-runs.md, schedule.xlsx
+- SUB-097: email.md, scan.jpg
+- SUB-098: application.md, email.md, loss-runs.md
+- SUB-099: application.pdf, email.md, loss-runs.md, schedule.csv
+- SUB-100: application.pdf, email.md, loss-runs.md
+- SUB-101: application.md, email.md, loss-runs-scan.jpg, schedule.csv
+- SUB-102: email.md, loss-runs.md, schedule.csv
+- SUB-103: application.md, email.md, loss-runs.md, schedule.xlsx
+- SUB-104: application.md, email.md, loss-runs.md
+- SUB-105: application.pdf, email.md, loss-runs.pdf
+- SUB-106: application.pdf, email.md
+
+### 2026-10-14 — @senior-underwriter → @model-risk
+T-092 done: gold answers for SUB-087 to SUB-106 written before any extraction, 20 files in deliverables/senior-underwriter/gold-set/ (SUB-087.md to SUB-106.md). Each has Effective date, Claims (count, paid, open), Status, and Expected carrier route. No file was unreadable: PDFs and xlsx were read by decoding the PDF text streams and the sheet XML with stdlib (no extraction code run); the three jpg scans (SUB-088, SUB-097, SUB-101 loss run) were read by eye. SUB-097's cooking line is cut off at the page edge, noted in the gold. Calls the scorer will test: SUB-093 gold TIV is 0 (contents-only insured, 620k building value is not the insured's); SUB-096 premises taken from schedule Loc 1 (app has none); SUB-089 year built 1974 and TIV 4330000 (main building, stated total). Rule used for the route: incomplete or conflicted file = hold; no automatic decline anywhere.
