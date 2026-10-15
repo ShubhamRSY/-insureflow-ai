@@ -1,52 +1,51 @@
 # Next session
 
-Written 2026-10-14 by the orchestrator at wrap-up. Wrap-up commit: `e5f720a` on `ai-team`, pushed to `origin/ai-team` (private). Budget rule 8: demo blockers only (weekly limit resets 2026-10-17). Standing rules: D-065 (backend + UI), D-069 (sandbox only). The frontend/ files are the user's and are never staged.
+Written 2026-10-14 by the orchestrator at wrap-up. Wrap-up commit: `e7ec2fe` on `ai-team`, pushed to `origin/ai-team` (private). Budget rule 8: demo blockers only (weekly limit resets 2026-10-17). Standing rules: D-065 (backend + UI), D-069 (sandbox only). The frontend/ files are the user's and are never staged. **Run every pipeline command with `.venv/bin/python`, never `python3`.**
 
 ## Where we stopped
 
-- D-080 (user's words) built:
-  - B-297: a failed card shows "Not read — extraction failed" on the Not read, Not read by extraction and Needs human read lines. Self-check + sandbox screenshot D-080-B-297-failed-card-not-read.png. B-298 kept in backlog as cautious.
-  - Freeze commit `d944583`, which includes `eval_holdout_087.py` (P-017 Part 4, X1), written before any submission or gold existed.
-  - T-091: @producer built SUB-087 to SUB-106, all fictional. T-092: @senior-underwriter wrote the gold first. Both committed in `9e725e3` (V2).
-  - T-093: scored once at `9e725e3` on Groq openai/gpt-oss-120b. 19 submissions read; SUB-101 is call_failed (reply_not_usable on all 3 attempts). Not published.
-- **The run is not a valid score of the pipeline.** The orchestrator ran it with the system `python3` (Homebrew 3.14), not `.venv/bin/python`. Without pdfplumber, openpyxl or pytesseract, every PDF (11), xlsx (5) and scan (3) was "could not be opened" and the run carried on. Verified at wrap-up.
-- @model-risk (memo `deliverables/model-risk/holdout-SUB-087-106.md`): T-027 veto **stands**. H1 is the environment; H2 is that no field reaches 9/10, even on the 5 fully read files. Route accuracy is 8/19 (own analysis, `route_holdout_087.py`), and only the holds were right.
-- The run log `deliverables/ai-engineer/evals/SUB-087-106-holdout-run.log` is on disk; it is git-ignored and not committed.
-- Missing standup entries this session: @producer, @senior-underwriter, @model-risk.
-- Self-checks at wrap-up (.venv, no host): llm_extract, prepare, intake, package, workbench, points all ok.
+- D-081: SUB-087–106 rerun once at frozen `9e725e3`.
+  - Environment check passed, saved in `SUB-087-106-rerun-env-check.txt`: .venv 3.14.6, pdfplumber 0.11.10, openpyxl 3.1.5, pytesseract 0.3.13, pdf2image 1.17.0, pillow 12.3.0, tesseract 5.5.2, poppler 26.10.0, and a real pdf2image page converted and read by OCR. Poppler was installed this session with brew.
+  - The run used a worktree at 9e725e3 and a fresh cache, on Groq openai/gpt-oss-120b. SUB-101 is call_failed (reply_not_usable, 3 attempts). Not published.
+- Run 1 is kept as `SUB-087-106-holdout-run1-invalid.*`, marked invalid in the memo, and never quoted as a score.
+- @model-risk (`deliverables/model-risk/holdout-SUB-087-106.md`): T-027 veto **stands**. Only 1 of 9 fields reaches 9/10. Route 9/19, and 0 of 5 files expected at carrier A/B/C got there.
+  - RH1 (verified by the orchestrator): all 3 .jpg scans (SUB-088, 097, 101) are "could not be opened" even in .venv. `sources._fill` returns an RGB fill for a greyscale image, Pillow 12.3 raises a TypeError in rotate, and a bare except reports it as a damaged file. P-034 does not cover this.
+  - RH2: premises is empty on typed files that state it (SUB-089/092/099/103), and SUB-098 has an empty name and operations.
+- Freeze is over (the hold-out is scored). The hold-out set SUB-087–106 is now used; a new hold-out needs a new 20.
+- Self-checks at wrap-up (.venv, no host): all six ok.
+- Missing standups from the earlier wrap-up: @producer, @senior-underwriter (T-091, T-092).
 
 ## Approved, not built
 
 | Proposal | Task |
 |---|---|
+| **P-034** a missing reader library stops the run with a clear error, never skips files (D-081 item 6) | build now; plus the SUB-101 reply-shape fix (D-081 item 6) |
 | P-006 EasyOCR fallback | T-062, T-068 |
 | P-011 read-only published scores | T-072 |
-| P-017 Parts 1–3 (call sentence in prepare.py, hash in older scorers, U1/V2 refusal) | with T-072; Part 4 built as eval_holdout_087.py |
-| D-048 exits from `all_values_rejected` | no build task |
-| D-050 producer-request rule | T-098 |
-| B-258 no_match override control | after demo |
+| P-017 Parts 1–3 | with T-072 |
+| D-048, D-050 (T-098), B-258 | as before |
 
 ## Pending decisions for the user
 
-1. The SUB-087–106 result: re-run this hold-out once in `.venv` (the gold is unchanged and the code is frozen), or build a new 20-file set. @model-risk calls this the user's choice.
-2. H1 fix: make a missing reader library stop the run, with an import check and recorded library versions. This changes pipeline code and needs a P-### plus "approve change P-###". Under the freeze, it waits on decision 1 unless the user lifts the freeze.
-3. Whether to publish anything from this run (the user said "do not publish").
+1. RH1 greyscale-scan fix (`sources._fill` / rotate). It is extraction/OCR code, so it needs a P-### and "approve change P-###".
+2. RH2 premises/name empties on typed files: @ai-engineer-assistant to diagnose, then a P-### if a prompt or gate changes.
+3. Then a new 20-file hold-out (gold first) to try to lift T-027.
 
 ## Open vetoes and what resolves each
 
 | Task | Holder | Resolves when |
 |---|---|---|
-| T-027 | @model-risk (production) | H1 fixed, and one gold-first hold-out scored once in a checked environment has all 9 fields at 9/10 or better |
+| T-027 | @model-risk (production) | RH1 and RH2 fixed under approved P-### changes, then a new 20-file hold-out, gold first, scored once in a checked .venv, with all 9 fields at 9/10 or better |
 | T-082 | @responsible-ai (fairness) | As written in its veto message in `team/DISCUSSION.md` |
 
 ## First 3 tasks next session
 
-1. Read the user's decision on the SUB-087–106 re-run (decision 1). If it is a re-run: confirm `.venv/bin/python` has pdfplumber, openpyxl and pytesseract, then run `regression_dev.py --holdout eval_holdout_087` once with it.
-2. SUB-101 reply_not_usable ("'list'/'str' object has no attribute 'get'"): a model reply shape the parser does not handle. Write it up as a proposal; no change until the hold-out is closed.
+1. Build P-034 (reader-library guard) and the SUB-101 reply-shape fix (D-081 item 6, approved), with self-checks; quick-15 after.
+2. @ai-engineer-assistant: proposal for RH1 (greyscale scans) and a diagnosis of RH2 (premises empty).
 3. B-299: show the TIV reason alongside the liquor referral.
 
 ## For the AI Engineer
 
-- Pending proposals: none numbered. H1 (reader-library guard) needs a P-###.
-- Latest eval scores (SUB-087–106, `9e725e3`, system python, **invalid environment**; hit / miss of 19, 1 call failed): named_insured 13/6, premises 5/14, effective_date 9/10, operations 9/10, sales 8/11, tiv 9/10, construction 10/9, year_built 9/10, loss_runs 10/3 (6 not credited), conflict 14/4, status 10/9. Route 8/19.
-- Top failure to fix next: the run environment (H1), then SUB-101's reply shape.
+- Pending proposals: P-034 approved, not built. RH1 and RH2 need new P-### numbers.
+- Latest eval scores (SUB-087–106 rerun, 9e725e3, .venv; "9 of 9 extracted fields scored; claims not read; loss runs = date only"; hit/scored, SUB-101 call failed): named_insured 17/19, premises 7/19, effective_date 14/19, operations 12/19, sales 12/18 (1 flagged), tiv 13/19, construction 13/19, year_built 11/18 (1 flagged), loss_runs 13/13 (6 not credited), conflict 10/19 (2 flagged), status 10/19, route 9/19.
+- Top failure to fix next: RH1, all scans unread (greyscale fill in `sources._fill`).
