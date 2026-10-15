@@ -43,6 +43,7 @@ MESSAGES: dict[str, tuple[bool, str]] = {}  # submission -> (ok, plain-words res
 WHATS_NEW = (
     ("2026-10-14", "P-015/B-264/B-265/B-266", "D-070", "The score shows \"Not scored — reason\" when a file is failed, incomplete or empty, and the cooking and hood lines; each code has a mark-wrong control (logged; the number does not change); the footer names the model and prompt version of the saved run; Suggested market shows only on senior referrals; a stale card lists the changed fields, old to new."),
     ("2026-10-14", "P-027 (B-268)", "D-071", "The cooking line names what was stated as not present (\"no fryer; gas grill\" counts the grill, not the fryer) and shows the quote, including on \"stated none\". Superseded by P-029, then P-030."),
+    ("2026-10-14", "P-036 (B-304)", "D-083", "Two values that are the same once case, punctuation, \"&\"/\"and\" and St/Rd/Ave/Dr are set aside, or a street-only form of the full address, are one value, not a conflict: the card keeps the fuller value, its Cited text shows each other quote with its file after \"also:\", and the Review note says \"merged: N documents agree\". Any different number stays a conflict. Several schedule addresses are locations, not a premises conflict."),
     ("2026-10-14", "B-297", "D-080", "A card whose extraction failed shows \"Not read — extraction failed\" on the Not read, Not read by extraction and Needs human read lines, never \"none\"."),
     ("2026-10-14", "B-290, B-293, P-033, B-295", "D-079", "A bar, tavern, nightclub, pub or lounge word next to restaurant evidence goes to a senior referral: \"possible bar/liquor exposure — confirm liquor sales\". Bakery, coffee shop and deli count as food service. More words mark a cooking line for review (ningún, nada, w/o, isn't, removed, zero). A card whose extraction failed shows \"Not read — extraction failed\" for cooking and every field."),
     ("2026-10-14", "B-286", "D-078", "The carrier class for a restaurant comes only from generic evidence (restaurant, food service, kitchen, eatery, café, catering, or stated cooking equipment), never from a cuisine or ethnic word. A file named only by a cuisine word shows no_match with that reason."),
@@ -657,13 +658,16 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
                 note = "NEEDS REVIEW: " + (row.get("reason") or "flagged")
             elif row.get("reason") and not row.get("value"):
                 note = row["reason"]
+            if row.get("also_quoted") and not failed:  # P-036 (@senior-underwriter H2): a merged value never looks like a single read
+                note = (note + "; " if note else "") + f"merged: {len(row['also_quoted']) + 1} documents agree"
             field_rows.append(
                 "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
                     html.escape(row["field_id"]),
                     html.escape(NOT_READ if failed else (row["value"] or "—")),
                     html.escape(_confidence(row)),
                     html.escape(row.get("source") or "—"),
-                    html.escape(row.get("quote") or item["snippets"].get(row["field_id"]) or "—"),
+                    html.escape((row.get("quote") or item["snippets"].get(row["field_id"]) or "—")
+                                + "".join(f" | also: {q['quote']} ({q.get('source') or 'file not named'})" for q in row.get("also_quoted") or [])),  # P-036 H1: each quote with its file
                     html.escape(note or "—"),
                 )
             )

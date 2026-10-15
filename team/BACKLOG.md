@@ -323,3 +323,9 @@ Also open from T-097, already in the register's Section D so not repeated as row
 | B-303 | D-082 | @model-risk | Low (L2): I;16 scans score lower (mean 59). | 2026-10-14 |
 | B-304 | D-082 | @ai-engineer-assistant | High for T-027 (premises trace): the model reports full vs short forms of the same value (full address vs street only; "&" vs "and"; application line vs email paraphrase) as conflicts, and `prepare.agrees()` keeps them open, so premises, name and operations come back empty (SUB-089/092/098/099/103). Needs a P-### (prompt or merge). | 2026-10-14 |
 | B-305 | D-082 | @model-risk | Medium: SUB-098 premises was extracted correctly with a trailing "(shop and yard)"; the frozen exact-match scorer counts it a miss. Scorer rule for future hold-outs is a P-### choice. | 2026-10-14 |
+| B-306 | D-083 | @model-risk | Medium (M3): "100 Main St" agrees with "100 Main Street Rd"; letter units partly covered. | 2026-10-14 |
+| B-307 | D-083 | @model-risk | Medium (M4): the operations subset rule merges a fuller hazard ("auto shop" = "auto salvage yard"); the fuller value is kept, so the hazard word stays visible. | 2026-10-14 |
+| B-308 | D-083 | @model-risk | Medium (M5/M7): a false conflict when sides agree with a schedule row; a third field row refills a value after a conflict (older code, the conflict record stays). | 2026-10-14 |
+| B-309 | D-083 | @model-risk | Low (L1): names treat "1.500 LLC" and "1,500 LLC" as equal. | 2026-10-14 |
+| B-310 | D-083 | @senior-underwriter | Low (M1): the "also:" separator is easy to miss on the card. | 2026-10-14 |
+| B-311 | D-083 | @ai-engineer-assistant | High for T-027: scans now read (P-035) but noisy OCR text competes with typed facts and empties fields (SUB-088, 097, 101 in the D-083 dev check); with B-301. | 2026-10-14 |

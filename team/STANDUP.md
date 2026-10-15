@@ -1627,3 +1627,28 @@ Blocked: No.
 - Done: P-035 check (D-082). APPROVE, no High. Self-check passes; SUB-088/097/101 greyscale scans failed with TypeError at HEAD and now read; P/I/I;16/F/CMYK/RGBA/1/LA also read. OCR_SETTINGS changed (cache key).
 - Open: M1 noisy scan OCR text (premises risk); L1 OCR code errors still shown as "could not be opened". T-027 veto stands (not a production approval).
 - Blocked: nothing.
+
+### 2026-10-14 — @model-risk
+- Done: P-036 check (D-083). REJECT: H1 shared-word operations merge ("auto body shop" = "coffee shop"); H2 street prefix merges another street ("12 Oak" = "12 Oak Ridge Dr"); H3 three-side conflict closes against the first side only. Trace and "4 vs 40" cases pass; self-checks pass.
+- Open: M1 unit number on one side merges; M2 schedule hides an application address not on it. T-027 veto stands (not a production approval).
+- Blocked: nothing.
+
+### 2026-10-14 — @model-risk
+- Done: P-036 re-check (D-083). REJECT: H1, H2, H3 closed; new H4 schedule match on number + first street word merges a different street ("2215 Bayou Crest Dr" vs schedule "2215 Bayou Lane, Dallas"); H5 schedule-path conflict drops other non-schedule sides (email address lost). Self-checks pass.
+- Open: M3 letter units / street-type names merge; M4 ops subset merges a fuller hazard; M5 false conflict when sides agree with the schedule. T-027 veto stands (not a production approval).
+- Blocked: nothing.
+
+### 2026-10-14 — @model-risk
+- Done: P-036 third check (D-083). REJECT: H4, H5 closed (H1-H3 still closed); new H6 schedule path matches only kept[0] to the schedule row, so a short email side lets Houston vs schedule Dallas merge with no conflict. Self-checks pass.
+- Open: M6 one-sided N/W/Ext suffix merges; M3, M4, M5, L1. T-027 veto stands (not a production approval).
+- Blocked: nothing.
+
+### 2026-10-14 — @model-risk
+- Done: P-036 fourth check (D-083). APPROVE: H6 closed (every kept side must agree with one schedule row), H1-H5 still closed, no new High. Self-checks pass; no real file changed by my checks.
+- Open: M3 "Main St" = "Main Street Rd"; M4 ops subset merges a fuller hazard; M5; M7 third field row refills after a conflict; L1. T-027 veto stands (not a production approval).
+- Blocked: nothing.
+
+### 2026-10-14 — @senior-underwriter
+- Done: P-036 (D-083) UI check, APPROVE WITH CHANGES. Screenshot and workbench.py diff read; no code edited.
+- Open: H1 "also:" quote lacks the source document name; H2 merged field has no Review note marker. Refusals still plain-language.
+- Blocked: nothing.

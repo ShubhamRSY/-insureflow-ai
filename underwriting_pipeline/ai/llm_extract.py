@@ -608,6 +608,71 @@ def _shape_problem(parsed) -> str | None:
     return None
 
 
+_ABBR = {"st": "street", "rd": "road", "ave": "avenue", "av": "avenue", "dr": "drive"}
+_UNIT = {"apt", "apartment", "unit", "suite", "ste", "bldg", "building", "floor", "fl", "room", "rm", "lot", "space", "spc", "no"}
+_DIRECTION = {"n", "s", "e", "w", "ne", "nw", "se", "sw", "north", "south", "east", "west", "ext", "extension"}
+_STREET = {"street", "road", "avenue", "drive", "lane", "ln", "boulevard", "blvd", "court", "ct", "way", "parkway", "pkwy",
+           "highway", "hwy", "place", "pl", "circle", "cir", "trail", "trl", "loop", "freeway", "fwy"}
+
+
+def words(value: str) -> list[str]:
+    """P-036 (D-083): case, punctuation, "&"/"and", St/Rd/Ave/Dr and spacing do not make two values differ."""
+    return [_ABBR.get(w, w) for w in re.findall(r"[a-z0-9]+", str(value).lower().replace("&", " and "))]
+
+
+def address_list(value: str) -> list[str]:
+    """Several addresses in one value ("2215 Bayou Crest Dr, ...; 880 Kirby Meadow Ln, ...") are a schedule, not one premises."""
+    parts = [part.strip() for part in str(value).split(";") if part.strip()]
+    return parts if len(parts) > 1 and all(re.match(r"\d+\s+\S", part) for part in parts) else []
+
+
+def same_address(left: str, right: str) -> bool:
+    """P-036: identical once normalized, or the shorter is the start of the fuller with the same house number and street.
+    Any differing number stays a conflict (4 vs 40 Mistletoe)."""
+    if address_list(left) or address_list(right):
+        return False
+    a, b = words(left), words(right)
+    if a == b:
+        return True
+    short, full = sorted((a, b), key=len)
+    if not (len(short) >= 3 and short[0].isdigit() and full[: len(short)] == short and any(w in _STREET for w in short[2:])):
+        return False  # H2/M3: the short form has a street name and its type ("12 Oak", "12 Court" are not short forms)
+    extra = full[len(short) :]
+    if extra[:1] and extra[0] in _DIRECTION:
+        return False  # M6: "100 Main St N" is not "100 Main St"
+    return not _UNIT & set(extra) and all(len(w) == 5 for w in extra if w.isdigit())  # M1/M3: only city, state, ZIP may be added
+
+
+def _schedule_file(name) -> bool:
+    return str(name or "").lower().endswith((".xlsx", ".csv")) or "schedule" in str(name or "").lower()
+
+
+def _street_key(value) -> tuple:
+    """House number and first street word: "2215 Bayou Crest Dr, Houston" -> ("2215", "bayou")."""
+    return tuple(re.findall(r"[a-z0-9]+", str(value or "").lower())[:2])
+
+
+def split_schedule(values: list[dict], texts: dict[str, str]) -> tuple[list[dict], list[dict]]:
+    """P-036 (D-083): several addresses from one schedule file are its locations, not sides of a premises conflict.
+    Returns the other sides, and the schedule addresses whose house number and first street word are in that file."""
+    sides = []
+    for side in values:
+        parts = [part.strip() for part in str(side.get("value") or "").split(";") if part.strip()]
+        many = len(parts) > 1 and all(re.match(r"\d+\s+\S", part) for part in parts)
+        sides += [{**side, "value": part} for part in parts] if many else [side]
+    keys: dict = {}
+    for side in sides:
+        if _schedule_file(side.get("source")):
+            keys.setdefault(side.get("source"), set()).add(_street_key(side.get("value")))
+    lists = {source for source, found in keys.items() if len(found) > 1}
+    listed = []
+    for side in sides:
+        start = re.match(r"(\d+)\s+([A-Za-z]+)", str(side.get("value") or ""))
+        if side.get("source") in lists and start and re.search(rf"\b{start.group(1)}\s+{re.escape(start.group(2))}", texts.get(side["source"], ""), re.I):
+            listed.append({"address": side["value"], "source": side["source"]})
+    return [side for side in sides if side.get("source") not in lists], listed
+
+
 def llm_extract(docs: list[dict]) -> dict:
     settings = provider_guard(calling=False)  # refused only below, when the cache has no result and a model call is next
     docs = [doc for doc in docs if not doc.get("unread")]  # P-016 (c): a file type that is not read, or a file that cannot be opened, never reaches the model or the key
@@ -691,13 +756,26 @@ def llm_extract(docs: list[dict]) -> dict:
     }
     ocr_words = {doc["name"]: doc["ocr_words"] for doc in docs if doc.get("ocr_words")}
     fields = [accept_field(item, by_name, ocr_confidence, ocr_words) for item in parsed.get("fields") or []]
-    conflicts = []
+    conflicts, schedule = [], []
     for item in parsed.get("conflicts") or []:
+        values, listed = item.get("values") or [], []
+        if item.get("field") == "premises_address":
+            values, listed = split_schedule(values, by_name)
+            schedule += listed
         sides = [
-            accept_field({**side, "field_id": item.get("field")}, by_name, ocr_confidence, ocr_words) for side in item.get("values") or []
+            accept_field({**side, "field_id": item.get("field")}, by_name, ocr_confidence, ocr_words) for side in values
         ]
         kept = [side for side in sides if side["value"]]
-        if len(kept) >= 2 and len({side["value"] for side in kept}) > 1:
+        if listed and kept:
+            agree = all(same_address(a["value"], b["value"]) for i, a in enumerate(kept) for b in kept[i + 1 :])
+            if agree and any(all(same_address(side["value"], row["address"]) for side in kept) for row in listed):  # H4, H6: every side agrees with one row
+                fields.extend(kept)  # P-036: the premises once the schedule is set aside; the merge keeps the fuller value and both quotes
+            else:  # M2/H5: every other side stays, with the schedule rows, as a conflict
+                conflicts.append({"field": item.get("field"), "resolution": "unresolved", "resolved_value": None, "resolved_by": None, "values":
+                                  [{k: side.get(k) for k in ("value", "source", "start", "end", "quote", "needs_review", "reason", "confidence")} for side in kept]
+                                  + [{"value": row["address"], "source": row["source"], "needs_review": True, "reason": "schedule address"} for row in listed]})
+            continue
+        elif len(kept) >= 2 and len({side["value"] for side in kept}) > 1:
             conflicts.append(
                 {
                     "field": item.get("field"),
@@ -710,7 +788,7 @@ def llm_extract(docs: list[dict]) -> dict:
                     "resolved_by": None,
                 }
             )
-    return {"fields": fields, "conflicts": conflicts, "not_sent": not_sent}
+    return {"fields": fields, "conflicts": conflicts, "not_sent": not_sent, "schedule": schedule}
 
 
 if __name__ == "__main__":
@@ -757,6 +835,44 @@ if __name__ == "__main__":
             except ValueError as exc:
                 assert "reply shape" in str(exc)
         assert len(posts) == 6, "a bad-shape reply is never cached and is called again (D-082)"
+        # P-036 (D-083), SUB-089's shape: one file lists several addresses; that is its schedule, not a premises conflict
+        sched = [{"name": "application.md", "text": "Premises address: 2215 Bayou Crest Dr, Houston, TX 77063 (main)", "sha256": "s1"},
+                 {"name": "schedule.xlsx", "text": "1\t2215 Bayou Crest Dr\tHouston\t77063\n2\t880 Kirby Meadow Ln\tHouston\t77098", "sha256": "s2"}]
+        reply = {"fields": [{"field_id": "named_insured", "value": "Bayou LLC", "source": "application.md", "quote": "Bayou LLC", "confidence": 0.95}], "conflicts": [{"field": "premises_address", "values": [
+            {"value": "2215 Bayou Crest Dr, Houston, TX 77063", "source": "application.md", "quote": "2215 Bayou Crest Dr, Houston, TX 77063", "confidence": 0.95},
+            {"value": "2215 Bayou Crest Dr, Houston, TX 77063; 880 Kirby Meadow Ln, Houston, TX 77098; 9 Nowhere Rd, Houston, TX 77001", "source": "schedule.xlsx", "quote": "x", "confidence": 0.95}]}]}
+        sched[0]["text"] = "Bayou LLC. " + sched[0]["text"]
+        got = llm_extract(sched)
+        assert got["conflicts"] == [] and [r["value"] for r in got["fields"] if r["field_id"] == "premises_address"] == ["2215 Bayou Crest Dr, Houston, TX 77063"], got
+        assert [r["address"] for r in got["schedule"]] == ["2215 Bayou Crest Dr, Houston, TX 77063", "880 Kirby Meadow Ln, Houston, TX 77098"], "an address not in the file is dropped"
+        two_emails = [{"value": "4 Mistletoe Ave", "source": "email-1.md"}, {"value": "40 Mistletoe Ave", "source": "email-2.md"}]
+        assert split_schedule(two_emails, {}) == (two_emails, []), "two addresses from two emails stay a conflict"
+        reply["conflicts"][0]["values"][0] = {"value": "77 Elsewhere Rd, Houston, TX 77002", "source": "application.md", "quote": "77 Elsewhere Rd, Houston, TX 77002", "confidence": 0.95}
+        sched = [{**sched[0], "text": "Bayou LLC. Premises address: 77 Elsewhere Rd, Houston, TX 77002", "sha256": "s3"}, sched[1]]
+        got = llm_extract(sched)
+        assert [c["field"] for c in got["conflicts"]] == ["premises_address"] and len(got["conflicts"][0]["values"]) == 3, "M2: not on the schedule stays a conflict"
+        sched = [{**sched[0], "text": "Bayou LLC. Premises address: 2215 Bayou Crest Dr, Houston, TX 77063", "sha256": "s4"},
+                 {**sched[1], "text": "2215 Bayou Lane\tDallas\t75201\n880 Kirby Meadow Ln\tHouston\t77098", "sha256": "s5"}]
+        reply["conflicts"][0]["values"] = [{"value": "2215 Bayou Crest Dr, Houston, TX 77063", "source": "application.md", "quote": "2215 Bayou Crest Dr, Houston, TX 77063", "confidence": 0.95},
+                                           {"value": "2215 Bayou Lane, Dallas, TX 75201; 880 Kirby Meadow Ln, Houston, TX 77098", "source": "schedule.xlsx", "quote": "x", "confidence": 0.95}]
+        got = llm_extract(sched)
+        assert [c["field"] for c in got["conflicts"]] == ["premises_address"], "H4: Bayou Crest Dr, Houston is not Bayou Lane, Dallas"
+        sched = [{**sched[0], "text": "Bayou LLC. Premises address: 2215 Bayou Crest Dr, Houston, TX 77063", "sha256": "s6"},
+                 {"name": "email.md", "text": "We moved to 9 Other Rd, Houston, TX 77002", "sha256": "s7"},
+                 {**sched[1], "text": "2215 Bayou Crest Dr\tHouston\t77063\n880 Kirby Meadow Ln\tHouston\t77098", "sha256": "s8"}]
+        reply["conflicts"][0]["values"] = [{"value": "2215 Bayou Crest Dr, Houston, TX 77063", "source": "application.md", "quote": "2215 Bayou Crest Dr, Houston, TX 77063", "confidence": 0.95},
+                                           {"value": "9 Other Rd, Houston, TX 77002", "source": "email.md", "quote": "9 Other Rd, Houston, TX 77002", "confidence": 0.95},
+                                           {"value": "2215 Bayou Crest Dr, Houston, TX 77063; 880 Kirby Meadow Ln, Houston, TX 77098", "source": "schedule.xlsx", "quote": "x", "confidence": 0.95}]
+        got = llm_extract(sched)
+        assert "9 Other Rd, Houston, TX 77002" in [v["value"] for c in got["conflicts"] for v in c["values"]], "H5: the email's side is kept"
+        sched = [{**sched[0], "sha256": "s9"}, {"name": "email.md", "text": "Shop at 2215 Bayou Crest Dr", "sha256": "s10"},
+                 {**sched[2], "text": "2215 Bayou Crest Dr\tDallas\t75201\n880 Kirby Meadow Ln\tHouston\t77098", "sha256": "s11"}]
+        reply["conflicts"][0]["values"] = [{"value": "2215 Bayou Crest Dr", "source": "email.md", "quote": "2215 Bayou Crest Dr", "confidence": 0.95},
+                                           {"value": "2215 Bayou Crest Dr, Houston, TX 77063", "source": "application.md", "quote": "2215 Bayou Crest Dr, Houston, TX 77063", "confidence": 0.95},
+                                           {"value": "2215 Bayou Crest Dr, Dallas, TX 75201; 880 Kirby Meadow Ln, Houston, TX 77098", "source": "schedule.xlsx", "quote": "x", "confidence": 0.95}]
+        got = llm_extract(sched)
+        assert [c["field"] for c in got["conflicts"]] == ["premises_address"], "H6: Houston on the application, Dallas on the schedule stays a conflict"
+        assert not same_address("100 Main St", "100 Main St N") and not same_address("100 Main St, Austin", "100 Main St W, Austin"), "M6"
         # P-013. A half-written saved file, and one with no result in it, are not trusted: the model is called again.
         reply = {"fields": [{"field_id": "named_insured", "value": "Example LLC", "source": "a.md", "quote": "Example LLC", "confidence": 0.9}]}
         whole = CACHE / "extractions" / f"{cache_key(page, provider_guard(calling=False)['model'])}.json"
@@ -779,7 +895,7 @@ if __name__ == "__main__":
             pass
         finally:
             os.replace = real_replace
-        assert len(list(whole.parent.glob("*.json"))) == 2, "a write that was killed must not leave a result under the key"
+        assert len(list(whole.parent.glob("*.json"))) == 7, "a write that was killed must not leave a result under the key"
         # D-028. The next run removes the temp file the killed write left, and nothing else.
         left = [path for path in whole.parent.iterdir() if path.suffix == ".tmp"]
         assert len(left) == 1 and _TMP.fullmatch(left[0].name), "the killed write leaves exactly one temp file, with the name the cleanup knows"

@@ -118,8 +118,13 @@ def _ops_contradict(left: str, right: str) -> bool:
 
 def same_operations(left: str, right: str) -> bool:
     kind_left, kind_right = _ops_class(left), _ops_class(right)
-    if not kind_left or kind_left != kind_right:
+    if kind_left != kind_right:
         return False
+    if not kind_left:  # P-036: no listed class on either side: the same business when they share a main word ("tile")
+        # H1: every business word of the shorter wording is in the fuller one ("tile, stone" in "tile, stone and marble")
+        biz = sorted(({w for w in words(v) if len(w) >= 3 and w not in _GENERIC and not w.isdigit()} for v in (left, right)), key=len)
+        if not biz[0] or not biz[0] <= biz[1]:
+            return False
     units_left = re.search(r"(\d+)\s*-?\s*units?", left.lower())
     units_right = re.search(r"(\d+)\s*-?\s*units?", right.lower())
     if units_left and units_right and units_left.group(1) != units_right.group(1):
@@ -127,13 +132,36 @@ def same_operations(left: str, right: str) -> bool:
     return not _ops_contradict(left, right)
 
 
+# Words that say how or where, not what business: they never make two operations the same business (P-036 H1)
+_GENERIC = {"and", "the", "with", "for", "some", "also", "used", "we", "do", "our", "install", "installs", "installation", "installer",
+            "repair", "repairs", "service", "services", "shop", "shops", "store", "stores", "company", "residential", "commercial",
+            "light", "heavy", "work", "works", "subcontract", "labor", "small", "general", "business", "only", "both", "plus"}
+words, address_list, same_address = llm_extract.words, llm_extract.address_list, llm_extract.same_address  # P-036: one rule for the gate and the merge
+
+
 def agrees(field: str, left: str, right: str) -> bool:
     if field in {"sales_or_payroll", "tiv_building", "square_feet"}:
         amount_left, amount_right = amount_value(left), amount_value(right)
         return amount_left is not None and amount_left == amount_right
     if field == "operations":
-        return same_operations(left, right)
-    return False
+        return words(left) == words(right) or same_operations(left, right)
+    if field == "premises_address":
+        return same_address(left, right)
+    return words(left) == words(right)  # P-036: names and other text fields agree only when identical once normalized
+
+
+def _same_row(a: dict, b: dict) -> bool:
+    return a.get("value") == b.get("value") and a.get("quote") == b.get("quote") and a.get("source") == b.get("source")
+
+
+def fuller(rows: list[dict]) -> dict:
+    """P-036: of agreeing values keep the fuller one; the other quotes stay on it as also_quoted."""
+    base = dict(max(rows, key=lambda row: len(words(row.get("value") or ""))))
+    also = [{"quote": row["quote"], "source": row.get("source")} for row in rows if row.get("quote") and row.get("quote") != base.get("quote")]
+    for item in also:  # each other quote with its file, so the card says which document said what
+        if item not in (base.get("also_quoted") or []):
+            base["also_quoted"] = (base.get("also_quoted") or []) + [item]
+    return base
 
 
 def _canonical(field: str, value: str) -> str:
@@ -653,8 +681,10 @@ def process_submission(folder: Path) -> dict:
             row["value"] = _canonical(field_id, row["value"])
             merged[field_id] = row
         elif agrees(field_id, cur["value"], row["value"]):
-            cur["value"] = _canonical(field_id, cur["value"])
-            _carry_flag(cur, row)
+            keep = fuller([cur, row])  # P-036: the fuller value, both quotes
+            keep["value"] = _canonical(field_id, keep["value"])
+            _carry_flag(keep, row if _same_row(keep, cur) else cur)
+            merged[field_id] = keep
         elif cur["value"] != row["value"]:
             conflicts.append(
                 _conflict(
@@ -668,16 +698,18 @@ def process_submission(folder: Path) -> dict:
             merged[field_id] = {**cur, "value": None, "needs_review": True}
     for item in extracted["conflicts"]:
         sides = [side.get("value") or "" for side in item.get("values") or [] if side.get("value")]
-        if len(sides) >= 2 and all(agrees(item.get("field"), sides[0], side) for side in sides[1:]):
+        if len(sides) >= 2 and all(agrees(item.get("field"), a, b) for i, a in enumerate(sides) for b in sides[i + 1 :]):  # H3: every pair
             field_id = item.get("field")
             if field_id in merged and merged[field_id]["value"] is None:
                 kept = [side for side in item["values"] if side.get("value")]
-                merged[field_id].update({k: kept[0].get(k) for k in ("source", "start", "end", "quote", "reason", "confidence")})
+                base = fuller(kept)  # P-036: keep the fuller value with both quotes
+                merged[field_id].update({k: base.get(k) for k in ("source", "start", "end", "quote", "reason", "confidence", "also_quoted")})
                 merged[field_id]["confidence"] = merged[field_id]["confidence"] or 0.0
-                merged[field_id]["value"] = _canonical(field_id, sides[0])
-                merged[field_id]["needs_review"] = bool(kept[0].get("needs_review"))
-                for side in kept[1:]:
-                    _carry_flag(merged[field_id], side)
+                merged[field_id]["value"] = _canonical(field_id, base["value"])
+                merged[field_id]["needs_review"] = bool(base.get("needs_review"))
+                for side in kept:
+                    if not _same_row(side, base):
+                        _carry_flag(merged[field_id], side)
             continue
         if item["field"] in merged:
             merged[item["field"]]["value"] = None
@@ -686,6 +718,12 @@ def process_submission(folder: Path) -> dict:
     _apply_reply(conflicts, texts.get("reply.md", ""))
     apply_document_rules(merged, conflicts, texts, {doc["name"]: doc["ocr_words"] for doc in docs if doc.get("ocr_words")})
     locations = apply_locations(merged, conflicts, texts)
+    listed = extracted.get("schedule") or []  # P-036: several schedule addresses are locations, not a conflict
+    if not locations and listed and merged["premises_address"].get("value"):
+        primary = merged["premises_address"]
+        locations = [{"address": primary["value"], "primary": True, "source": primary.get("source")}] + [
+            {"address": row["address"], "primary": False, "source": row["source"]} for row in listed if not same_address(row["address"], primary["value"])
+        ]
     blob = _without_name("\n".join(texts.values()), merged["named_insured"].get("value"), texts).lower()  # P-015 T2: the insured's name never starts an ask
     cooking = cooking_facts(texts)
     extra = []
@@ -843,6 +881,7 @@ def _saved_payload(report: dict) -> dict:
                 "start": row.get("start"),
                 "end": row.get("end"),
                 "quote": row.get("quote"),  # P-016 Q1: the exact cited text. The app shows it
+                **({"also_quoted": row["also_quoted"]} if row.get("also_quoted") else {}),  # P-036: the agreeing values' other quotes
                 "reason": row.get("reason"),  # P-016 R1: why the row is flagged or has no value
             }
         )
@@ -1196,6 +1235,56 @@ if __name__ == "__main__":
             "Small apartments, 8 units, sprinklers throughout.",
         )
         assert not same_operations("accounting office", "restaurant, tacos, fryer")
+        # P-036 (D-083): every case of the premises trace (SUB-089/092/098/099/103) and the earlier conflict cases.
+        full = "9901 Industrial Park Rd, Laredo, TX 78045"
+        for left, right in ((full, "9901 Industrial Park Rd"), ("2950 Rose Hill Rd, Tyler, TX 75703", "2950 Rose Hill Road"),
+                            ("1800 Hewitt Dr, Waco, TX 76705", "1800 hewitt drive"), ("4102 Mesquite Bend Rd, Lubbock, TX 79424 (shop and yard)", "4102 Mesquite Bend Rd, Lubbock, TX 79424"),
+                            ("100 Main St.", "100  MAIN STREET"), ("12 Oak Ave, Austin, TX 78701", "12 Oak Avenue")):
+            assert agrees("premises_address", left, right) and agrees("premises_address", right, left), (left, right)
+        for left, right in (("4 Mistletoe Ave, San Antonio, TX 78212", "40 Mistletoe Ave, San Antonio, TX 78212"), ("9 Main St", "90 Main St"),
+                            (full, "9901 Industrial Park Rd, Laredo, TX 78046"), ("9901 Industrial Park Rd", "9910 Industrial Park Rd"),
+                            ("2215 Bayou Crest Dr, Houston, TX 77063", "2215 Bayou Crest Dr, Houston, TX 77063; 880 Kirby Meadow Ln, Houston, TX 77098"),
+                            ("Main St", "Main Street, Austin")):
+            assert not agrees("premises_address", left, right), (left, right)
+        assert agrees("named_insured", "Caprock Tile & Stone Inc", "Caprock Tile and Stone Inc")
+        assert agrees("named_insured", "Pappa Sal's Pizza Co.", "pappa sal's pizza co")
+        assert not agrees("named_insured", "Pappa Sal's Pizza Co LLC", "Pappa Sal's Pizza Co"), "a shorter name is not the same name"
+        assert agrees("operations", "Tile, stone and marble installation, residential and light commercial, subcontract labor used",
+                      "Tile and stone install, we do residential and some light commercial.")
+        assert not agrees("operations", "accounting office", "restaurant, tacos, fryer") and not agrees("operations", "dental office", "dry cleaning")
+        assert not agrees("operations", "apartments, 8 units", "apartments, 9 units") and not agrees("operations", "restaurant, no cooking", "restaurant with fryer")
+        assert not agrees("operations", "tile installation", "auto repair"), "no listed class and no shared word stays a conflict"
+        for left, right in (("auto body shop", "coffee shop"), ("roof repair", "auto repair"), ("tile installation", "roofing installation"),
+                            ("auto body shop", "auto glass shop")):  # @model-risk H1
+            assert not agrees("operations", left, right), (left, right)
+        for left, right in (("12 Oak", "12 Oak Ridge Dr, Austin, TX 78701"), ("100 Main St Suite 5", "100 Main St"), ("100 Main St, Unit 2, Austin, TX 78701", "100 Main St"),
+                            ("12 Court", "12 Court Plaza Dr"), ("100 Main St Apt B", "100 Main St"), ("100 Main St, Bldg B, Austin", "100 Main St")):
+            assert not agrees("premises_address", left, right), (left, right)  # @model-risk H2, M1, M3
+        keep = fuller([{"value": "9901 Industrial Park Rd", "quote": "9901 Industrial Park Rd"}, {"value": full, "quote": "Premises address " + full}])
+        assert keep["value"] == full and keep["also_quoted"] == [{"quote": "9901 Industrial Park Rd", "source": None}]
+        # through process_submission: a street-only side merges into the fuller value; a schedule list goes to locations
+        def _through(conflicts, schedule=()):
+            with tempfile.TemporaryDirectory() as tmp:
+                folder = Path(tmp) / "SUB-202"
+                folder.mkdir()
+                (folder / "application.md").write_text("x")
+                real_read, real_extract = sources.read_folder, llm_extract.llm_extract
+                sources.read_folder = lambda f: [{"name": "application.md", "text": "Premises address " + full}]
+                llm_extract.llm_extract = lambda docs: {"fields": [], "not_sent": [], "conflicts": conflicts, "schedule": list(schedule)}
+                try:
+                    return process_submission(folder)
+                finally:
+                    sources.read_folder, llm_extract.llm_extract = real_read, real_extract
+        _p = lambda v, q, src="application.md": {"value": v, "quote": q, "source": src, "start": 0, "end": 1, "confidence": 0.9, "needs_review": False, "reason": None}
+        out = _through([{"field": "premises_address", "values": [_p("9901 Industrial Park Rd", "9901 Industrial Park Rd", "schedule.xlsx"), _p(full, full)]}])
+        row = next(r for r in out["fields"] if r["field_id"] == "premises_address")
+        assert row["value"] == full and row["also_quoted"] == [{"quote": "9901 Industrial Park Rd", "source": "schedule.xlsx"}] and out["conflicts"] == [], row
+        out = _through([{"field": "premises_address", "values": [_p("4 Mistletoe Ave, San Antonio, TX 78212", "4 Mistletoe"), _p("40 Mistletoe Ave, San Antonio, TX 78212", "40 Mistletoe")]}])
+        assert [c["field"] for c in out["conflicts"]] == ["premises_address"], "4 vs 40 stays a conflict"
+        out = _through([{"field": "premises_address", "values": [_p("100 Main St", "a"), _p("100 Main St, Austin, TX 78701", "b"), _p("100 Main St, Dallas, TX 75201", "c")]}])
+        assert [c["field"] for c in out["conflicts"]] == ["premises_address"], "@model-risk H3: Austin vs Dallas is never merged away"
+        out = _through([], [{"address": full, "source": "schedule.xlsx"}, {"address": "880 Kirby Meadow Ln, Houston, TX 77098", "source": "schedule.xlsx"}])
+        assert out["locations"] == [] and out["conflicts"] == [], "no premises value: the schedule alone is not stored as locations"
         same_area = _square_feet({"a.md": "Shop is 2,200 sq ft.", "b.md": "2200 sf"})
         assert {row[0] for row in same_area} == {"2200"}
         # D-024: a raised call stays extraction_failed; an answered reply the gate rejected is all_values_rejected.
