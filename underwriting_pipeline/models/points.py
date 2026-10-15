@@ -112,8 +112,11 @@ def not_scored_reason(report: dict) -> str | None:
         parts += [f"open conflict on {field}" for field in conflicts]
         parts += [f"asked of the producer: {item}" for item in report.get("extra") or []]
         return "file incomplete: " + ("; ".join(parts) or "see status")
+    if status == prepare.REVIEW_PENDING and not prepare.ready_to_route(report):  # @model-risk H2: an open conflict is not scored (D-070)
+        conflicts = [c.get("field") for c in report.get("conflicts") or [] if c.get("resolution") != "resolved"]
+        return "file complete — review pending: " + "; ".join(f"open conflict on {field}" for field in conflicts)
     if status in ("complete", prepare.REVIEW_PENDING) and any(r.get("value") for r in report.get("fields") or []):
-        return None  # P-041 (D-088): review pending is scored as complete was; the card says what is pending
+        return None  # P-041 (D-088): review pending with no open conflict is scored as complete was; the card says what is pending
     return "unknown status" if status not in ("complete", prepare.REVIEW_PENDING) else "file complete but holds no values"
 
 
@@ -211,6 +214,8 @@ if __name__ == "__main__":
     # A resolved conflict does not block. A run saved before P-015 (no cooking key) reads as not stated.
     assert score_run(run(conflicts=[{"field": "x", "resolution": "resolved"}]))["scored"]
     assert score_run({**run(), "status": prepare.REVIEW_PENDING})["scored"], "P-041: review pending is scored as complete was"
+    held = score_run({**run(conflicts=[{"field": "square_feet", "resolution": "unresolved"}]), "status": prepare.REVIEW_PENDING})
+    assert not held["scored"] and "open conflict on square_feet" in held["not_scored_reason"], "@model-risk H2: an open conflict is not scored"
     assert score_run(run())["lines"][1].endswith("no cooking equipment stated in the file")
     # The version does not move with the environment; it moves with the table or a term list.
     import os

@@ -137,7 +137,7 @@ def match(report: dict) -> dict:
     if other_prohibited or (ops and _has(ops, PROHIBITED) and not food):
         return out("no_match", "prohibited class (AG:45-49)")
     if not prepare.ready_to_route(report) or not ops:  # P-041: review pending routes as complete did before
-        return out("hold", "missing information")
+        return out("hold", "open conflict" if ops and report.get("status") == prepare.REVIEW_PENDING else "missing information")
     tiv = _tiv(report)
     if tiv is None or tiv <= 0:
         return out("hold", "TIV missing or unreadable")  # D-061, B-203 (D-062): never read as 0 or negative
@@ -509,7 +509,7 @@ def _no_send_reason(item: dict, report: dict, refused: bool) -> str:
     if item["route"] not in package.CARRIERS:
         return f"the carrier match is {item['route']}" + (f" ({item['note']})" if item.get("note") else "") + ", so no carrier is named"
     if not prepare.ready_to_route(report):
-        return "the file is incomplete (a required field is empty)"
+        return "an open conflict is still on the file" if report.get("status") == prepare.REVIEW_PENDING else "the file is incomplete (a required field is empty)"
     return ""
 
 

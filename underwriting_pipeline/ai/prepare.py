@@ -446,6 +446,11 @@ RUN_PARTS = (
     re.compile(r"valued\s+(?:through|thru|as\s+of)|valuad[oa]\s+al|valorad[oa]\s+al|fecha de valuacion"),
     re.compile(r"\bclaims?\b|\blosses\b|\bpaid\b|\breserves?\b|reclam|siniestro"),
 )
+# @model-risk H1 (check of P-040): a no-claims statement that comes from an agent, the owner or a letter, in any wording, is a letter too.
+NO_CLAIMS = re.compile(r"\bno (?:known )?(?:claims|losses)\b|\bzero claims\b|\b0 claims\b|claim count:? ?0\b|loss[- ]free|\bsin (?:reclam\w*|siniestros?|perdidas)"
+                       r"|no se reportaron reclamaciones|ningun (?:reclamo|siniestro)|aucun sinistre|sans sinistre|sem sinistros?|nenhum sinistro")
+LETTERISH = re.compile(r"\bletter\b|\blettre\b|\bagente?\b|\bowner\b|applicant (?:states|says|reports)|per (?:the )?applicant|\bsolicitante\b|to our knowledge|\bsegun\b"
+                       r"|\bfirmad[oa]\b|\bsigned\b|\bdeclar\w*|\bstates\b|\bproprietaire\b|\bproprietario\b|\bdono\b")
 NKL_DROPPED = "not a loss run: {} is a no-known-loss letter; carrier loss runs are still needed"
 RUN_UNCLEAR = "check this is a carrier loss run: {} does not show a carrier, a policy period, a valued-as-of date and a claims list"
 
@@ -458,7 +463,7 @@ def loss_run_kind(text: str) -> str:
     """P-040: "loss_run", "letter" (a no-known-loss letter), or "unclear". A letter phrase beside every loss-run part is unclear."""
     low = _fold(text)
     full = all(part.search(low) for part in RUN_PARTS)
-    if NKL_LETTER.search(low):
+    if NKL_LETTER.search(low) or (NO_CLAIMS.search(low) and LETTERISH.search(low)):
         return "unclear" if full else "letter"
     return "loss_run" if full else "unclear"
 
@@ -474,7 +479,9 @@ def gate_loss_run(merged: dict, texts: dict) -> None:
     if kinds.get(row.get("source")) == "loss_run" or any(kinds[n] == "loss_run" and any(x in t for x in seen) for n, t in texts.items()):
         return
     source = row.get("source") or "no file named"
-    if kinds.get(row.get("source")) == "letter":
+    in_letter = [n for n, t in texts.items() if kinds[n] == "letter" and any(x in t for x in seen)]
+    if kinds.get(row.get("source")) == "letter" or in_letter:  # @model-risk H1: a date only letters show is dropped, whichever file is cited
+        source = source if kinds.get(row.get("source")) == "letter" else in_letter[0]
         row.update(value=None, needs_review=True, reason=NKL_DROPPED.format(source))
         return
     row["needs_review"] = True
@@ -1765,7 +1772,16 @@ if __name__ == "__main__":
         assert loss_run_kind(text) == "letter", text
     for text in (run_107, run_110, run_es):
         assert loss_run_kind(text) == "loss_run", text
-    assert loss_run_kind("Loss history: no claims to our knowledge. Valued through 2026-09-30.") == "unclear", "no carrier or period: review"
+    # @model-risk H1: the letters without their headings, and other wordings, are still letters.
+    for text in (letter_112.replace("# Carta de pérdidas", "# Historial de pérdidas"), letter_123.replace("# Carta de pérdidas\n", "").replace("Carta de pérdidas sin reclamos", "Sin reclamos"),
+                 "Valued through 2026-09-30. No claims letter: the owner states the account has been loss-free.",
+                 "Valued through 2026-09-30. Sin siniestros en cinco años, declara el solicitante.",
+                 "Valued through 2026-09-30. Aucun sinistre depuis 2021 selon le proprietaire.", "Valued through 2026-09-30. Sem sinistros, declara o dono."):
+        assert loss_run_kind(text) == "letter", text
+    assert loss_run_kind("Carta de historial de reclamaciones\nFecha de valuacion: 2026-10-01\nNo se reportaron reclamaciones en el periodo.") == "unclear", "no carrier: review, not dropped"
+    assert loss_run_kind("Loss runs\nValued through: 2026-09-30\nNo claims reported in the period. Claim count: 0.\n_FICTIONAL. No real applicant, person or business._") == "unclear"
+    assert loss_run_kind("Loss history: no claims to our knowledge. Valued through 2026-09-30.") == "letter", "@model-risk H1: a no-claims statement by hearsay is a letter"
+    assert loss_run_kind("Loss runs valued through 2026-09-30. 1 claim, 2025-03-01, paid $4,000.") == "unclear", "no carrier or period: review"
     assert loss_run_kind(run_107 + "No known losses.") == "unclear", "a letter phrase beside a full loss run: review"
     lr = lambda src, val="2026-09-30": {"loss_run_valued_through": {"field_id": "loss_run_valued_through", "value": val, "source": src, "quote": val, "needs_review": False, "reason": None}}
     for text in letters:
@@ -1779,6 +1795,9 @@ if __name__ == "__main__":
     box = lr("email.md")
     gate_loss_run(box, {"email.md": "Loss runs valued 2026-09-30 attached.", "loss-runs.md": run_110})
     assert not box["loss_run_valued_through"]["needs_review"], "a date a real loss run shows is kept, whichever file the model cited"
+    box = lr("email.md")
+    gate_loss_run(box, {"email.md": "Loss runs valued 2026-09-30 per the letter.", "letter.md": letters[2].replace("2026-08-31", "2026-09-30")})
+    assert box["loss_run_valued_through"]["value"] is None and box["loss_run_valued_through"]["reason"] == NKL_DROPPED.format("letter.md"), "@model-risk H1: a date only a letter shows is dropped, whichever file is cited"
     box = lr("email.md")
     gate_loss_run(box, {"email.md": "Loss runs valued through 2026-09-30, will send."})
     assert box["loss_run_valued_through"]["value"] and box["loss_run_valued_through"]["reason"] == RUN_UNCLEAR.format("email.md"), "unclear: kept, needs review"
@@ -1809,7 +1828,7 @@ if __name__ == "__main__":
     on_run = {"loss_run_valued_through": {"source": "loss-runs.md"}}
     clean = run_case(on_run, {"loss-runs.md": run_107})
     assert clean["status"] == "complete" and clean["complete"] and ready_to_route(clean) and clean["request"] is None, clean["status"]
-    for letter in (letter_112, letter_123):  # SUB-112, SUB-123
+    for letter in (letter_112, letter_123, letter_112.replace("# Carta de pérdidas", "# Historial de pérdidas")):  # SUB-112, SUB-123, 112 renamed
         rep_ = run_case(on_run, {"loss-runs.md": letter})
         row = {r["field_id"]: r for r in rep_["fields"]}["loss_run_valued_through"]
         assert rep_["status"] == "incomplete" and not rep_["complete"] and not ready_to_route(rep_), rep_["status"]

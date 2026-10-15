@@ -1677,3 +1677,8 @@ Blocked: No.
 - Done: P-038 (D-086) UI check. APPROVE, no High findings. Other value and file are visible in the review note; the tick at approve works. 3 Medium, 1 Low logged in DISCUSSION.
 - Next: none on P-038.
 - Blockers: none.
+
+### 2026-10-15 — @model-risk
+- Done: D-088 check of P-040/P-041 (201232d). REJECT as built: H1 letter test is a phrase list (a reheaded SUB-112 letter goes review pending and sendable); H2 open-conflict files now scored. Memo deliverables/model-risk/check-P-040-P-041.md.
+- Next: re-check (High only) once H1 and H2 are fixed with self-checks.
+- Blockers: none. T-027 veto stands.
