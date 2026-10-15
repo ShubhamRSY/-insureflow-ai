@@ -464,6 +464,26 @@ AUTHORED = re.compile(
     r"|preparad[oa] por (?:el |la )?(?:solicitante|asegurado|agente|agencia)|per (?:the )?(?:applicant|insured|owner|agent|broker)"
     r"|segun el (?:solicitante|asegurado|agente|dueno)|to our knowledge|our records|signed by (?:the )?(?:applicant|insured|owner|agent|broker)"
     r"|firmad[oa] por (?:el )?(?:solicitante|asegurado|agente)|self[- ]reported|loss summary from (?:the )?(?:applicant|insured|agent|broker)")
+# @model-risk H1 (check of P-043): naming a carrier is not issuing. The carrier must show as the issuer: in the document's header
+# line, or "issued/prepared by <carrier>". Any sign of another author (applicant, insured, owner, agent, broker, producer, agency,
+# "we/our") sends it to review.
+CARRIER_NAME = r"\b(?:mutual|insurance company|insurance co|assurance|casualty|indemnity|specialty|surplus|underwriters|seguros|aseguradora)\b"
+ISSUED_BY = re.compile(r"\b(?:issued|prepared|produced|generated|emitid[oa]|preparad[oa])\s+(?:by|por)\s+(?:the\s+|la\s+|el\s+)?[^\n.;]*?" + CARRIER_NAME)
+OTHER_AUTHOR = re.compile(
+    r"\b(?:provided|submitted|written|prepared|compiled|completed|signed|sent)\s+by\s+(?:the\s+|an?\s+)?(?:applicant|insured|owner|agent|broker|producer|agency)"
+    r"|\b(?:applicant|agent|producer|broker|owner|insured)(?:'s|s'|-provided|-prepared)|\bagency\b|\bbroker\b|\bproducer\b|\bagent\b|\bagente\b|\bcorredor\b"
+    r"|^\s*from\s*:|\bwe\s+(?:had|have|did|were)\b|\bour\s+(?:prior|previous|old|records|carrier|insurer)\b|per\s+(?:the\s+)?(?:insured|applicant|owner)|\breports\s*:", re.M)
+
+
+def _issued_by_carrier(low: str) -> bool:
+    """@model-risk H1: the header line names a carrier (not an agency), or the text says issued/prepared by a carrier."""
+    lines = [ln.strip(" #*-_\t") for ln in low.splitlines()]
+    head = next((ln for ln in lines if ln and "test data" not in ln and "no real applicant" not in ln), "")  # skip the synthetic-data banner
+    if not head:
+        head = next((ln for ln in lines if ln), "")
+    return bool(re.search(CARRIER_NAME, head) and not re.search(r"\bagency\b|\bagent\b|\bbroker", head)) or bool(ISSUED_BY.search(low))
+
+
 NKL_DROPPED = "not a loss run: {} is a no-known-loss letter; carrier loss runs are still needed"
 RUN_UNCLEAR = "check this is a carrier loss run: {} does not show a carrier, a policy period, a valued-as-of date and a claims list"
 
@@ -478,7 +498,7 @@ def loss_run_kind(text: str) -> str:
     full = all(part.search(low) for part in RUN_PARTS)
     if NKL_LETTER.search(low) or (NO_CLAIMS.search(low) and LETTERISH.search(low)):
         return "unclear" if full else "letter"
-    if full and AUTHORED.search(low):  # P-043: written by someone other than the carrier
+    if full and (AUTHORED.search(low) or OTHER_AUTHOR.search(low) or not _issued_by_carrier(low)):  # P-043: carrier-issued only
         return "unclear"
     return "loss_run" if full else "unclear"
 
@@ -1782,10 +1802,10 @@ if __name__ == "__main__":
             for k, v in saved_env.items():
                 os.environ.pop(k, None) if v is None else os.environ.__setitem__(k, v)
     # P-040 / P-041 (D-088): letters are never loss runs; a file is complete only with nothing left to review.
-    run_107 = ("# Loss runs (typed)\nValued through: 2026-09-30\n- Northline Mutual (fictional), policy 2023-03-01 to 2024-03-01: 0 claims, $0 paid\n"
+    run_107 = ("# Northline Mutual (fictional) - Loss Run Report\nValued through: 2026-09-30\n- Northline Mutual (fictional), policy 2023-03-01 to 2024-03-01: 0 claims, $0 paid\n"
                "- Policy 2024-03-01 to 2025-03-01: 0 claims, $0 paid\n")
-    run_110 = "# Loss runs (typed)\nValued through: 2026-09-30\n- Lakeshore Specialty (fictional), 2023-24: 0 claims\n- 2024-25: 0 claims\n- Open reserve: $0\n"
-    run_es = "# Historial de siniestros\nAseguradora: Seguros del Valle (ficticia)\nVigencia 2025-01-01 a 2026-01-01\nValuado al 2026-09-30\nSin reclamos en este periodo.\n"
+    run_110 = "# Loss runs\nIssued by Lakeshore Specialty (fictional)\nValued through: 2026-09-30\n- Lakeshore Specialty (fictional), 2023-24: 0 claims\n- 2024-25: 0 claims\n- Open reserve: $0\n"
+    run_es = "# Historial de siniestros - Seguros del Valle (ficticia)\nAseguradora: Seguros del Valle (ficticia)\nVigencia 2025-01-01 a 2026-01-01\nValuado al 2026-09-30\nSin reclamos en este periodo.\n"
     letter_112 = ("# Carta de pérdidas\nNamed insured: Hernandez Plumbing & Drain LLC\nValued through: 2026-09-30\n"
                   "- Sin reclamos reportados en los ultimos 3 anos (2024, 2025 y hasta 2026-09-30).\n- Carta firmada por el agente anterior (ficticio), 2026-09-22.\n")
     letter_123 = ("# Carta de pérdidas\nNamed insured: Tienda Luna Azul LLC\nValued through: 2026-09-30\n"
@@ -1814,6 +1834,18 @@ if __name__ == "__main__":
                  "Applicant states: prior carrier Lakeshore Specialty (fictional), 2023-24 and 2024-25, valued through 2026-09-30, 1 claim paid $2,100.",
                  "Resumen preparado por el agente. Aseguradora: Seguros del Valle (ficticia), vigencia 2025-01-01 a 2026-01-01, valuado al 2026-09-30, 1 reclamo pagado $3,000."):
         assert loss_run_kind(text) == "unclear", text
+    # @model-risk H1 (check of P-043): naming a carrier is not issuing; these 14 non-carrier preambles all go to review.
+    body = "Carrier: Northline Mutual (fictional), policy 2024-01-01 to 2025-01-01. Valued through 2026-09-30. 1 claim, $4,000 paid."
+    for pre in ("Loss history provided by the applicant.", "Submitted by the agent.", "Agent's loss summary.", "Producer summary of prior losses.",
+                "Prepared by Smith Insurance Agency.", "From: Jane Doe, owner of Acme LLC.", "We had one claim with our prior carrier.", "Applicant-provided loss history.",
+                "Summary from broker.", "Written by the applicant.", "Insured: Acme LLC. Applicant's own summary.", "self-reported", "Per insured:", "The insured reports:"):
+        assert loss_run_kind(pre + "\n" + body) == "unclear", pre
+    assert loss_run_kind("# Loss runs (typed)\nValued through: 2026-09-30\n- Northline Mutual (fictional), policy 2023-03-01 to 2024-03-01: 0 claims, $0 paid\n") == "unclear", \
+        "a carrier named only in a row, with no issuer header or issued-by line: review"
+    assert loss_run_kind("Northline Mutual Insurance Company - Loss Run Report\n" + body) == "loss_run"
+    box = {"loss_run_valued_through": {"field_id": "loss_run_valued_through", "value": "2026-09-30", "source": "loss-runs.md", "quote": "2026-09-30", "needs_review": False, "reason": None}}
+    gate_loss_run(box, {"loss-runs.md": "Written by the applicant.\n" + body})
+    assert box["loss_run_valued_through"]["needs_review"] and box["loss_run_valued_through"]["value"], "kept for review, never silently satisfied"
     box = {"loss_run_valued_through": {"field_id": "loss_run_valued_through", "value": "2026-09-30", "source": "loss-runs.md", "quote": "2026-09-30", "needs_review": False, "reason": None}}
     gate_loss_run(box, {"loss-runs.md": "Applicant states: prior carrier Lakeshore Specialty (fictional), 2023-24, valued through 2026-09-30, 1 claim paid $2,100."})
     row = box["loss_run_valued_through"]

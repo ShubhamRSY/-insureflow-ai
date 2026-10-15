@@ -1687,3 +1687,8 @@ Blocked: No.
 - Done: D-088 UI check of P-040/P-041 (D-065 item 3). APPROVE, no High findings. Cards SUB-111 and SUB-112 say why not complete, what to check, why no send. 5 Medium, 2 Low in DISCUSSION.
 - Next: none on D-088 UI.
 - Blockers: none.
+
+### 2026-10-15 — @model-risk
+- Done: D-089 check of P-042/P-043/B-324/B-325 (964c159). REJECT P-043 as built. H1: a summary by the applicant or agent still passes as a carrier loss run (12 of 14 probe phrasings) because nothing checks that the carrier issued it. P-042, B-324 and B-325 pass. Memo: deliverables/model-risk/check-P-042-P-043-B-324.md.
+- Next: re-check (High only) once there is a positive carrier-issuer test with self-checks.
+- Blockers: none. T-027 veto stands.
