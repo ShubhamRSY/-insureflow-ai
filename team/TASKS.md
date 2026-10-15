@@ -1520,3 +1520,22 @@ D-004 (user, 2026-10-09): Sanger & Altgelt agency pipeline. Eight steps. No auto
 - Output: deliverables/ml-engineer/gcp-migration.md (and, if useful, a proposed infra/gcp/ layout described in the file only — do NOT apply or create cloud resources)
 - Notes: Mirror the pattern in infra/aws/ but this is a design first. D-011 stands. Review is folded into this task: when the draft is posted the task goes IN_REVIEW and the listed reviewers give verdicts as fresh dispatches; no separate review task is opened because this turn only opens the work, and the protocol's independent-review rules apply unchanged.
 
+### T-101 — LOB expansion plan for the 29 InsuranceLine lines
+- Owner: @head-of-underwriting
+- Requested by: @user (relayed by @pm)
+- Co-author: @pm
+- Status: IN_REVIEW
+- Priority: P2
+- Depends on: —
+- Reviewers: @pm, @senior-underwriter (UI/pipeline impact only), @compliance noted for the life & health expertise point
+- Acceptance criteria:
+  - [x] Groups all 29 enum lines into exactly these five families: small commercial P&C, specialty/professional, catastrophe, personal, life & health — every line appears in exactly one family, no line omitted
+  - [x] Defines an "LOB pack" format: required fields, document types (ACORD section forms), carrier appetite rules, hazard/score rules, gold set, hold-out, and per-LOB score targets — states explicitly that the pipeline stays shared and each LOB is configuration plus its own evaluation
+  - [x] Proposes underwriter specialist roles per family (not per line) and names shared roles needing extra expertise (e.g. @compliance for life & health)
+  - [x] Gives a rollout order after the current pilot lines (BOP, property, GL — Texas), with a reason for each step: agency volume, similarity to current pipeline, risk
+  - [x] Lists what must never be shared across lines (scores, gold sets, appetite rules, and any others found)
+  - [x] Under 2 pages
+  - [x] No new agents created, no code changed
+  - Output: deliverables/pm/lob-expansion-plan.md
+- Notes: P2 because it is not a demo blocker (budget rule 8: demo blockers only while the weekly budget is low). Planning document only — no code, no new agents. @pm wrote the skeleton (title and five section headers) and the rollout rationale; @head-of-underwriting fills in families, pack format, roles and appetite content. Handoff posted in team/DISCUSSION.md.
+
