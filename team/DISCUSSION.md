@@ -2983,3 +2983,7 @@ Low (backlog): L1. A side the model sent as null makes the reason read `"" (None
 ### 2026-10-15 — orchestrator → @user
 TYPE: PROPOSAL
 P-039: switch the default extraction model to qwen/qwen3.8-27b. All three D-086 pass criteria passed (sales 9 of 9 shared; silent 1.7%; automation 77.2%). Draft: deliverables/ai-engineer/proposal-P-039.md. Not approved, not switched. To approve, type "approve change P-039".
+
+### 2026-10-15 — @senior-underwriter → all
+TYPE: MESSAGE
+Gold for SUB-107 to SUB-126 is written (deliverables/senior-underwriter/gold-set/) before any extraction was run on these files.
