@@ -38,6 +38,7 @@ Use only facts copied from the documents. If a fact is not there, value is null 
 Never guess. A no-known-loss letter is not a loss-run date; leave loss_run_valued_through null.
 Spanish and unlabeled email prose are allowed. Put the English value in value. quote must be copied character for character from one file, with no added words and no added accents.
 For operations, keep the specific English words from the source and do not shorten them to one class word. If they cook a named food, the value must contain that food word and the word restaurant. If the source is Spanish, translate it and still quote the Spanish line exactly. A bar or night club is a bar and nightclub. mamposteria means masonry, and the construction value is the English word.
+sales_or_payroll is gross annual revenue (sales), returned as a single number copied from the document, with no labels or other figures. Payroll is never part of sales.
 loss_run_valued_through is only the valued-through date copied from the file. Never invent a date. If the file does not show that date, use null even if you think runs exist.
 If square feet or the premises address differ across files, do not pick a side. Leave that field null and add a conflict whose values include both numbers or both addresses, each with an exact quote.
 quote must be an exact substring of one document. source is that document's file name.
@@ -254,6 +255,9 @@ def _parse_json(content: str) -> dict:
         raise
 
 
+_MARKS = re.compile(r"\*+|__")  # P-038 (b): markdown bold/italic marks; a single "_" is a real character
+
+
 def find_quote(text: str, quote: str) -> tuple[int, int] | None:
     if not quote:
         return None
@@ -264,9 +268,19 @@ def find_quote(text: str, quote: str) -> tuple[int, int] | None:
     if not parts:
         return None
     match = re.search(r"\s+".join(re.escape(part) for part in parts), text)
+    if match:
+        return match.start(), match.end()
+    # P-038 (b): the same words and digits with markdown marks ("**Annual sales:** $1,450,000") on either side set aside
+    keep = [i for i, _ in enumerate(text)]
+    for mark in _MARKS.finditer(text):
+        keep[mark.start() : mark.end()] = [None] * (mark.end() - mark.start())
+    index = [i for i in keep if i is not None]
+    bare = "".join(text[i] for i in index)
+    parts = _MARKS.sub("", quote).split()
+    match = re.search(r"\s+".join(re.escape(part) for part in parts), bare) if parts else None
     if not match:
         return None
-    return match.start(), match.end()
+    return index[match.start()], index[match.end() - 1] + 1
 
 
 # P-016 (D-039). Exact citations: no quote match, no value. The value must be inside the quote.
@@ -766,6 +780,15 @@ def llm_extract(docs: list[dict]) -> dict:
             accept_field({**side, "field_id": item.get("field")}, by_name, ocr_confidence, ocr_words) for side in values
         ]
         kept = [side for side in sides if side["value"]]
+        rejected = [side for side in sides if not side["value"]]
+        if not listed and len(kept) == 1 and rejected:  # P-038 (c): keep the valid side, flagged; never pick a number out of the rejected one
+            said = "; ".join(f"\"{item['value']}\" ({item.get('source')})" for item in values if item.get("value") and item.get("value") != kept[0]["value"])
+            if said:  # @model-risk L1: an empty side is no disagreement; M1: the kept side's own reason stays
+                note = f"conflict with rejected value: {said}"
+                fields.append({**kept[0], "needs_review": True, "reason": f"{kept[0]['reason']}; {note}" if kept[0].get("reason") else note})
+            else:
+                fields.append(kept[0])
+            continue
         if listed and kept:
             agree = all(same_address(a["value"], b["value"]) for i, a in enumerate(kept) for b in kept[i + 1 :])
             if agree and any(all(same_address(side["value"], row["address"]) for side in kept) for row in listed):  # H4, H6: every side agrees with one row
@@ -873,6 +896,27 @@ if __name__ == "__main__":
         got = llm_extract(sched)
         assert [c["field"] for c in got["conflicts"]] == ["premises_address"], "H6: Houston on the application, Dallas on the schedule stays a conflict"
         assert not same_address("100 Main St", "100 Main St N") and not same_address("100 Main St, Austin", "100 Main St W, Austin"), "M6"
+        # P-038 (D-086). (a) the prompt says sales is one revenue number, never payroll
+        assert "single number" in SYSTEM and "Payroll is never part of sales" in SYSTEM
+        # (b) quotes match across markdown marks, still needing the exact words and digits
+        md = "x\n- **Annual sales:** $1,450,000\n- __Payroll:__ $680,000\n"
+        span = find_quote(md, "Annual sales: $1,450,000")
+        assert span and md[span[0] : span[1]] == "Annual sales:** $1,450,000", span
+        assert find_quote(md, "Payroll: $680,000") and find_quote(md, "Annual sales: $1,450,001") is None and find_quote(md, "Annual revenue: $1,450,000") is None
+        assert find_quote("snake_case_name here", "snake_case_name") == (0, 15), "a single _ is a real character"
+        app = [{"name": "application.md", "text": "Bayou LLC\n**Annual sales:** $1,050,000\n**Annual payroll:** $340,000", "sha256": "m1"},
+               {"name": "email.md", "text": "Revenue is around 1.25 million I think", "sha256": "m2"}]
+        reply = {"fields": [{"field_id": "named_insured", "value": "Bayou LLC", "source": "application.md", "quote": "Bayou LLC", "confidence": 0.95},
+                            {"field_id": "tiv_building", "value": "Annual sales $1,050,000; Annual payroll $340,000", "source": "application.md",
+                             "quote": "Annual sales: $1,050,000 Annual payroll: $340,000", "confidence": 0.95}],
+                 "conflicts": [{"field": "sales_or_payroll", "values": [
+                     {"value": "$1,050,000", "source": "application.md", "quote": "Annual sales: $1,050,000", "confidence": 0.95},
+                     {"value": "$1,250,000", "source": "email.md", "quote": "Revenue is around 1.25 million", "confidence": 0.95}]}]}
+        got = llm_extract(app)
+        sales = [r for r in got["fields"] if r["field_id"] == "sales_or_payroll"]
+        assert got["conflicts"] == [] and [r["value"] for r in sales] == ["$1,050,000"] and sales[0]["needs_review"], got  # (c) SUB-094
+        assert sales[0]["reason"].startswith("conflict with rejected value") and "$1,250,000" in sales[0]["reason"] and sales[0]["quote"] == "Annual sales:** $1,050,000"
+        assert [r["value"] for r in got["fields"] if r["field_id"] == "tiv_building"] == [None], "the gate never picks one number out of a mixed value"
         # P-013. A half-written saved file, and one with no result in it, are not trusted: the model is called again.
         reply = {"fields": [{"field_id": "named_insured", "value": "Example LLC", "source": "a.md", "quote": "Example LLC", "confidence": 0.9}]}
         whole = CACHE / "extractions" / f"{cache_key(page, provider_guard(calling=False)['model'])}.json"
@@ -895,7 +939,7 @@ if __name__ == "__main__":
             pass
         finally:
             os.replace = real_replace
-        assert len(list(whole.parent.glob("*.json"))) == 7, "a write that was killed must not leave a result under the key"
+        assert len(list(whole.parent.glob("*.json"))) == 8, "a write that was killed must not leave a result under the key"
         # D-028. The next run removes the temp file the killed write left, and nothing else.
         left = [path for path in whole.parent.iterdir() if path.suffix == ".tmp"]
         assert len(left) == 1 and _TMP.fullmatch(left[0].name), "the killed write leaves exactly one temp file, with the name the cleanup knows"

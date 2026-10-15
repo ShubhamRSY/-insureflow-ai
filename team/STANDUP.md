@@ -1667,3 +1667,13 @@ Blocked: No.
 - Done: P-037 / D-084 UI check, APPROVE, no High. Screenshot shows the scan value, the file, and the action; the send refusal is still in plain words.
 - Open: M1-M2 and L1 in DISCUSSION (tick box lacks scan value; raw garbled scan read; long What's new line).
 - Blocked: nothing.
+
+### 2026-10-15 — @model-risk
+- Done: independent check of P-038 (D-086). APPROVE, no High findings. Self-check exits 0. My own probes: exact words are still required, and digit joins across "*" are refused by the value gate. One-sided conflicts are kept, needs_review, and shown and acknowledged in the workbench. M1 (the kept side's reason is overwritten) goes to the backlog.
+- Next: review the item 3 qwen re-check results and any P-039 before production.
+- Blockers: none. Not a production approval.
+
+### 2026-10-15 — @senior-underwriter
+- Done: P-038 (D-086) UI check. APPROVE, no High findings. Other value and file are visible in the review note; the tick at approve works. 3 Medium, 1 Low logged in DISCUSSION.
+- Next: none on P-038.
+- Blockers: none.

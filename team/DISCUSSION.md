@@ -2964,3 +2964,22 @@ Verdict: APPROVE. No High findings.
 - Medium: the approve tick box repeats only the typed value and cite, not the scan value; the underwriter has to look back at the note. One line backlog.
 - Medium: the note shows the raw scan read in quotes; a very garbled read may look like a typo on our side. Fine for now.
 - Low: the What's new line is long; the "tick it at approve" wording could be shorter.
+
+### 2026-10-15 — @model-risk → @user
+TYPE: REVIEW
+Re: P-038 (D-086, B-317) independent check, High only. Verdict: APPROVE. Not a production approval; @model-risk can still block production after the item 3 re-check.
+Evidence: read `git diff HEAD -- underwriting_pipeline/ai/llm_extract.py`, the SUB-087..106 sales trace, D-086, and the prepare.py merge (_carry_flag, _typed_first) and package.needs_review_ids path. Self-check re-run with no host env: exit 0 ("llm gate ok"), temp cache only. PROMPT_VERSION is a hash of SYSTEM, so (a) changes every cache key.
+Re-checks of my own: (b) "Annual sales $1,450,000" (colon missing) against "**Annual sales:** $1,450,000" is not found, so the exact words are still required; the stored quote is the real span from one file, marks included. A quote "23,000" does match "2*3,000", but accept_field then rejects the value ("value not inside the cited text"), as it does for "1**450,000"; the gate fails closed. (c) the kept side gets needs_review with "conflict with rejected value: \"<other>\" (<file>)"; the workbench shows it as "NEEDS REVIEW: ..." (escaped), approve has to acknowledge it (needs_review_ids), and the prepare merge carries the flag and reason onto an unflagged agreeing row. A mixed value ("Annual sales ...; Annual payroll ...") is still refused (self-check). Before this change the SUB-094 value was dropped, so the disagreement is more visible now, not less.
+High: none.
+Medium (backlog): M1. In the (c) branch the reason overwrites the kept side's own reason (REASON_SCAN, low-confidence scan, reworded). It stays needs_review, but the card loses why. Append the text instead of replacing it, as _flag_scan_differs does.
+Low (backlog): L1. A side the model sent as null makes the reason read `"" (None)`, a phantom conflict, which fails safe. L2. Marks are also taken out of OCR text; harmless because of the value gate, but no self-check covers a scan.
+
+### 2026-10-15 — @senior-underwriter → @software-engineer
+- Task: P-038 (D-086) UI check, D-065 item 3. Verdict: APPROVE. No High findings.
+- Seen in screenshot (SUB-001 sandbox): sales_or_payroll shows 900000 (cited, application.md) and Review note "NEEDS REVIEW: conflict with rejected value: "$1,250,000" (email.md)". An underwriter can read what the other document said and which file. The approve box lists the field and must be ticked. What's new line present and accurate.
+- Medium (backlog): (1) The note does not say what to do; add "check application.md and email.md, confirm which figure is sales vs payroll" to the tick box label. (2) The Conflicts panel says "No stored conflict" while the card carries one; confusing, show a pointer. (3) Rejected value is shown with $ and commas, kept value as bare 900000; formats differ, harder to compare at a glance.
+- Low: (4) Review note not tied to the Cited text column; fine for now.
+
+### 2026-10-15 — orchestrator → @user
+TYPE: PROPOSAL
+P-039: switch the default extraction model to qwen/qwen3.8-27b. All three D-086 pass criteria passed (sales 9 of 9 shared; silent 1.7%; automation 77.2%). Draft: deliverables/ai-engineer/proposal-P-039.md. Not approved, not switched. To approve, type "approve change P-039".

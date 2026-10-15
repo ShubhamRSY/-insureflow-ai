@@ -957,3 +957,14 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: main session (budget rule 3). Orchestrator's reading: "files all three completed" = the 12 gpt-oss-120b scored (SUB-087 to SUB-098) minus any file another model failed on.
 - Status: ACCEPTED
 - Amends: none. No code change. Not a production approval.
+
+## D-086 — approve change P-038 (B-317 sales format, markdown-blind quotes, one-sided conflicts); scorer money format for future hold-outs; qwen re-check with pass criteria
+- Date / Owner: 2026-10-15 / @user
+- Context: D-085: qwen/qwen3.8-27b reads the right sales number but returns it mixed with payroll or labels; quotes drop "**"; a one-sided conflict loses the good value (SUB-094); the scorer misses "$1,520,000" vs "1520000".
+- Options considered: none. The user's words.
+- Decision: In the user's words. "1. approve change P-038 (B-317): (a) prompt: sales is returned as a single number, gross annual revenue, with no labels or other figures; payroll is never part of sales. (b) quote matching ignores markdown formatting marks (**, __, *) but still requires the exact words and digits. (c) SUB-094: when one side of a conflict is rejected by the gate, keep the valid side, flagged needs-review "conflict with rejected value". The gate stays strict: it never picks one number out of a mixed value. Self-checks for each. 2. For future hold-outs only: the scorer treats "$1,520,000" and "1520000" as equal. Commit before any new gold exists. 3. Development re-check on SUB-087–106, uncached, qwen/qwen3.8-27b, calls paced. Pass criteria set now: sales at least 8 of 9 on the 9 shared files; silent error rate at or below 2.5%; automation rate at or above 71%. Report pass or fail for each. 4. If all pass, draft P-039 (switch the default extraction model to qwen/qwen3.8-27b) and stop for my approval. Do not switch on your own. One @model-risk check of P-038, High only. /wrap-up and push."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-15 (D-032).
+- Dissent: none
+- Follow-up tasks: built in the main session (budget rule 3); @model-risk check of P-038. Orchestrator's reading: the silent error and automation criteria are on all 20 files (the D-085 qwen figures were 1.7% and 71.7%/71.1% on 20); sales is on the 9 shared files (SUB-087, 089, 090, 091, 092, 093, 095, 097, 098). P-038 (a) changes the prompt, so PROMPT_VERSION changes and every cache key changes.
+- Status: ACCEPTED
+- Amends: B-317, B-318 (part c), B-319 (item 2). Not a production approval. No send is authorized.
