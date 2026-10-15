@@ -4,7 +4,7 @@
 - Date: 2026-10-15
 - For: @user (the AI Engineer)
 - Decision: D-086 item 4: "If all pass, draft P-039 (switch the default extraction model to qwen/qwen3.8-27b) and stop for my approval. Do not switch on your own."
-- Status: PROPOSAL. Not approved. Not implemented. Nothing has been switched.
+- Status: APPROVED by @user, 2026-10-15 (D-087). Code part built (docstring, LLM_PACE_SECONDS in regression_dev.py). The switch itself is the user's LLM_MODEL line in ~/.zshrc.
 - Synthetic data only. Not a production approval; @model-risk's T-027 veto stands until a hold-out on the chosen model passes.
 
 ## Why

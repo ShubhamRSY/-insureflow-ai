@@ -2,7 +2,7 @@
 
 Run (cache copied first, so nothing real is written):
   cp -R underwriting_pipeline/cache $SCRATCH/cache
-  LLM_CACHE_DIR=$SCRATCH/cache LLM_BASE_URL=https://api.groq.com/openai/v1 LLM_MODEL=openai/gpt-oss-120b \
+  LLM_CACHE_DIR=$SCRATCH/cache LLM_BASE_URL=https://api.groq.com/openai/v1 LLM_MODEL=qwen/qwen3.8-27b \
     .venv/bin/python underwriting_pipeline/ai/confidence_vs_hit.py
 
 Reads the cached model reply for each of SUB-017..076 that has one, runs the unchanged gate (llm_extract.accept_field)

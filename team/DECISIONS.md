@@ -968,3 +968,14 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: built in the main session (budget rule 3); @model-risk check of P-038. Orchestrator's reading: the silent error and automation criteria are on all 20 files (the D-085 qwen figures were 1.7% and 71.7%/71.1% on 20); sales is on the 9 shared files (SUB-087, 089, 090, 091, 092, 093, 095, 097, 098). P-038 (a) changes the prompt, so PROMPT_VERSION changes and every cache key changes.
 - Status: ACCEPTED
 - Amends: B-317, B-318 (part c), B-319 (item 2). Not a production approval. No send is authorized.
+
+## D-087 — approve change P-039: default extraction model qwen/qwen3.8-27b
+- Date / Owner: 2026-10-15 / @user
+- Context: D-086 pass criteria all passed; P-039 drafted in deliverables/ai-engineer/proposal-P-039.md.
+- Options considered: none. The user's words.
+- Decision: In the user's words. "approve change P-039"
+- Rationale: The user typed this in this Claude Code session on 2026-10-15.
+- Dissent: none
+- Follow-up tasks: as P-039 says: the user changes `LLM_MODEL` in `~/.zshrc` to `qwen/qwen3.8-27b` (the orchestrator does not edit the shell file); the docstring example in confidence_vs_hit.py names the new model; batch scoring runs are paced (`LLM_PACE_SECONDS` in regression_dev.py, 55 s for qwen). No prompt, gate, OCR or scorer change.
+- Status: ACCEPTED
+- Amends: the model in use since D-010/D-012 (openai/gpt-oss-120b). Not a production approval; @model-risk's T-027 veto stands until the next hold-out on this model passes. No send is authorized.

@@ -1,6 +1,6 @@
 # Next session
 
-Written 2026-10-15 by the orchestrator at wrap-up. Wrap-up commit: `21f758c` on `ai-team`, pushed to `origin/ai-team` (private). Budget rule 8: demo blockers only (weekly limit resets 2026-10-17). Standing rules: D-065, D-069. The frontend/ files are the user's and are never staged. **Run every pipeline command with `.venv/bin/python`.** SUB-087–106 is development data. The default model is still openai/gpt-oss-120b (`LLM_MODEL` in the user's `~/.zshrc`).
+Written 2026-10-15 by the orchestrator at wrap-up. Wrap-up commit: `21f758c` on `ai-team`, pushed to `origin/ai-team` (private). Budget rule 8: demo blockers only (weekly limit resets 2026-10-17). Standing rules: D-065, D-069. The frontend/ files are the user's and are never staged. **Run every pipeline command with `.venv/bin/python`.** SUB-087–106 is development data. **P-039 approved (D-087): the default model is qwen/qwen3.8-27b once the user sets `export LLM_MODEL=qwen/qwen3.8-27b` in `~/.zshrc`; check with `echo $LLM_MODEL` at session start. Pace batch runs: `LLM_PACE_SECONDS=55`.**
 
 ## Where we stopped
 
@@ -34,7 +34,7 @@ Written 2026-10-15 by the orchestrator at wrap-up. Wrap-up commit: `21f758c` on 
 
 ## Pending decisions for the user
 
-1. **P-039**: type `approve change P-039` to switch. The switch is your edit of `LLM_MODEL` in `~/.zshrc`; batch runs then need pacing (about 18 min per 20 files).
+1. P-039 approved (D-087). Confirm the `~/.zshrc` edit is done.
 2. B-313: confirm the P-037 "needs-review conflict" reading.
 3. Then hold-out SUB-107–126 on the chosen model (gold first, scorer ready, `smoke_readers.py` first).
 
@@ -47,12 +47,12 @@ Written 2026-10-15 by the orchestrator at wrap-up. Wrap-up commit: `21f758c` on 
 
 ## First 3 tasks next session
 
-1. The user's word on P-039.
+1. Confirm `LLM_MODEL` is qwen/qwen3.8-27b in the shell; run `smoke_readers.py` on it.
 2. If switched: the hold-out SUB-107–126. @producer builds the submissions, @senior-underwriter writes the gold first, and the run is scored once, paced.
 3. B-321 (card wording for "conflict with rejected value") and B-299 (TIV reason with the liquor referral).
 
 ## For the AI Engineer
 
-- Pending proposals: **P-039** (switch to qwen/qwen3.8-27b), waiting for your approval.
+- Pending proposals: none. P-039 approved (D-087).
 - Latest eval scores (qwen, D-086, development data, 20 files): named 19, premises 14, effective date 17, operations 17, sales 18, TIV 17, construction 18, year built 15, loss runs 13. Silent error rate 1.7%, automation rate 77.2%.
 - Top failure to fix next: premises (14/20) and loss runs (13/20) on qwen.

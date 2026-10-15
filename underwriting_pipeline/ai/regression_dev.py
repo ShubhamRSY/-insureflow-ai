@@ -182,11 +182,30 @@ def _self_check() -> None:
     s_ = summarize([{"metrics": m}])
     assert s_["overall"] == {"scored": 5, "silent": 1, "automated": 1, "silent_error_rate": 0.2, "automation_rate": 0.2}, s_["overall"]
     assert summarize([{"metrics": m}, {"checks": {"sales": "call_failed"}, "metrics": {}}])["failed_call_files"] == 1
+    global PACE  # P-039: pacing waits between file starts, and only then
+    PACE, slept, real_sleep = 55, [], time.sleep
+    time.sleep = slept.append
+    try:
+        _started[:] = [time.monotonic() - 10]
+        try:
+            score_retry(type("M", (), {"score_one": staticmethod(lambda sid: {"checks": {}, "error": None})}), "SUB-1")
+        finally:
+            time.sleep = real_sleep
+        assert len(slept) == 1 and 44 < slept[0] <= 45, slept
+    finally:
+        PACE, _started[:] = 0, []
     print("regression_dev self-check ok")
+
+
+PACE = float(os.environ.get("LLM_PACE_SECONDS") or 0)  # P-039 (D-087): seconds between file starts; 55 for qwen's 1,000 output tokens a minute
+_started: list[float] = []
 
 
 def score_retry(module, sid: str, score=None) -> dict:
     """A failed model call is not a score of the code: try it again, and keep the error if it never succeeds."""
+    if PACE and _started and time.monotonic() - _started[-1] < PACE:
+        time.sleep(PACE - (time.monotonic() - _started[-1]))
+    _started.append(time.monotonic())
     score = score or module.score_one
     seen = []
     real = prepare.process_submission
