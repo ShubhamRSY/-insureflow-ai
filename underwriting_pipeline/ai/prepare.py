@@ -464,24 +464,39 @@ AUTHORED = re.compile(
     r"|preparad[oa] por (?:el |la )?(?:solicitante|asegurado|agente|agencia)|per (?:the )?(?:applicant|insured|owner|agent|broker)"
     r"|segun el (?:solicitante|asegurado|agente|dueno)|to our knowledge|our records|signed by (?:the )?(?:applicant|insured|owner|agent|broker)"
     r"|firmad[oa] por (?:el )?(?:solicitante|asegurado|agente)|self[- ]reported|loss summary from (?:the )?(?:applicant|insured|agent|broker)")
-# @model-risk H1 (check of P-043): naming a carrier is not issuing. The carrier must show as the issuer: in the document's header
-# line, or "issued/prepared by <carrier>". Any sign of another author (applicant, insured, owner, agent, broker, producer, agency,
-# "we/our") sends it to review.
-CARRIER_NAME = r"\b(?:mutual|insurance company|insurance co|assurance|casualty|indemnity|specialty|surplus|underwriters|seguros|aseguradora)\b"
-ISSUED_BY = re.compile(r"\b(?:issued|prepared|produced|generated|emitid[oa]|preparad[oa])\s+(?:by|por)\s+(?:the\s+|la\s+|el\s+)?[^\n.;]*?" + CARRIER_NAME)
+# @model-risk H1 (check of P-043, LOOK-AGAIN): naming a carrier is not issuing. The document's first line must start with a carrier's
+# own name (words ending in a carrier word, no business suffix) followed by a loss-run title, or the text says "issued/prepared by
+# <carrier name>" with only an article between. When the document states its carrier ("Carrier:"/"Aseguradora:"), that name must
+# match. Subject lines, prior/my/our/client wording and people or roles as preparer never pass. Anything else goes to review.
+_CARRIER_END = r"(?:mutual|insurance|assurance|casualty|indemnity|specialty|surplus|underwriters)"
+_NAME = (r"(?P<name>(?:[a-z0-9&'.]+ ){0,3}?" + _CARRIER_END + r"(?: (?:insurance )?(?:company|co\.?|group|corp\.?))?"
+         r"|(?:seguros|aseguradora)(?: [a-z]+){0,3}?)(?: \((?:fictional|ficticia)\))?")
+_TITLE = r"\s*[-—–:|]?\s*(?:loss runs?(?: report)?|loss history(?: report)?|claims history|historial de (?:siniestros|perdidas|reclamaciones))\b"
+HEADER_ISSUER = re.compile("^" + _NAME + _TITLE)
+HEADER_TITLE_FIRST = re.compile("^" + _TITLE.replace(r"\s*[-—–:|]?\s*", "", 1) + r"\s*[-—–:|]\s*" + _NAME + r"\s*$")  # "Loss Run Report - <carrier>"
+ISSUED_BY = re.compile(r"\b(?:issued|prepared|produced|generated|emitid[oa]|preparad[oa])\s+(?:by|por)\s+(?:the\s+|la\s+|el\s+)?" + _NAME + r"\s*(?:$|[.;\n])", re.M)
+NOT_ISSUER = re.compile(r"\b(?:prior|previous|my|our|your|i|we|client|clients|company's|subject|re|from|llc|inc|ltd|loss|history|claims|with|for|to|by|was|had|agency|agent|broker|owner|insured|applicant)\b")
+STATED_CARRIER = re.compile(r"(?:^|\n)\s*[-*]?\s*(?:carrier|insurer|aseguradora)\s*:\s*([^\n,(]+)")
 OTHER_AUTHOR = re.compile(
     r"\b(?:provided|submitted|written|prepared|compiled|completed|signed|sent)\s+by\s+(?:the\s+|an?\s+)?(?:applicant|insured|owner|agent|broker|producer|agency)"
-    r"|\b(?:applicant|agent|producer|broker|owner|insured)(?:'s|s'|-provided|-prepared)|\bagency\b|\bbroker\b|\bproducer\b|\bagent\b|\bagente\b|\bcorredor\b"
-    r"|^\s*from\s*:|\bwe\s+(?:had|have|did|were)\b|\bour\s+(?:prior|previous|old|records|carrier|insurer)\b|per\s+(?:the\s+)?(?:insured|applicant|owner)|\breports\s*:", re.M)
+    r"|\b(?:applicant|agent|producer|broker|owner|insured)(?:'s|s'|-provided|-prepared)|^\s*from\s*:|\bwe\s+(?:had|have|did|were)\b"
+    r"|\bour\s+(?:prior|previous|old|records|carrier|insurer)\b|per\s+(?:the\s+)?(?:insured|applicant|owner)|\breports\s*:", re.M)
 
 
 def _issued_by_carrier(low: str) -> bool:
-    """@model-risk H1: the header line names a carrier (not an agency), or the text says issued/prepared by a carrier."""
-    lines = [ln.strip(" #*-_\t") for ln in low.splitlines()]
+    """P-043: the carrier shows as the issuer (header or issued-by line), and it is the carrier the document names."""
+    lines = [ln.strip(" #*_\t") for ln in low.splitlines()]
     head = next((ln for ln in lines if ln and "test data" not in ln and "no real applicant" not in ln), "")  # skip the synthetic-data banner
-    if not head:
-        head = next((ln for ln in lines if ln), "")
-    return bool(re.search(CARRIER_NAME, head) and not re.search(r"\bagency\b|\bagent\b|\bbroker", head)) or bool(ISSUED_BY.search(low))
+    found = [m.group("name") for m in (HEADER_ISSUER.match(head), HEADER_TITLE_FIRST.match(head), *ISSUED_BY.finditer(low)) if m]
+    names = [n for n in found if not NOT_ISSUER.search(n)]
+    if not names:
+        return False
+    stated = STATED_CARRIER.search(low)
+    if not stated:
+        return True
+    core = lambda t: re.sub(r"\((?:fictional|ficticia)\)|\b(?:insurance|company|co|group|corp)\b|[.,]", " ", t).split()
+    want = core(stated.group(1))
+    return any(core(n)[:2] == want[:2] for n in names)
 
 
 NKL_DROPPED = "not a loss run: {} is a no-known-loss letter; carrier loss runs are still needed"
@@ -1843,6 +1858,19 @@ if __name__ == "__main__":
     assert loss_run_kind("# Loss runs (typed)\nValued through: 2026-09-30\n- Northline Mutual (fictional), policy 2023-03-01 to 2024-03-01: 0 claims, $0 paid\n") == "unclear", \
         "a carrier named only in a row, with no issuer header or issued-by line: review"
     assert loss_run_kind("Northline Mutual Insurance Company - Loss Run Report\n" + body) == "loss_run"
+    # @model-risk H1 (LOOK-AGAIN): business names with a carrier word, the author naming the carrier, and people as preparer all go to review.
+    for head in ("# Specialty Plumbing LLC - Loss History", "Casualty Restoration Inc. loss history", "Surplus Supply Co - claims summary",
+                 "Loss history - prior carrier Northline Mutual (fictional)", "My prior carrier was Northline Mutual (fictional).", "Re: loss history with Northline Mutual (fictional)",
+                 "Subject: Northline Mutual loss history", "My company's claims with Northline Mutual (fictional)", "Client's loss history: Northline Mutual (fictional)",
+                 "Northline Mutual - I had one claim", "Prepared by John Smith, owner, for Northline Mutual Insurance Company",
+                 "Loss summary prepared by Jane Doe for submission to Northline Mutual", "Compiled by account manager. Northline Mutual (fictional)", "Prepared by Acme CPA firm",
+                 "Lakeshore Specialty - Loss Run Report"):  # the last names another carrier than the one stated
+        assert loss_run_kind(head + "\n" + body) == "unclear", head
+    es_body = "Aseguradora: Seguros del Valle (ficticia), vigencia 2025-01-01 a 2026-01-01, valuado al 2026-09-30, 1 reclamo pagado $3,000."
+    assert loss_run_kind("Specialty Tacos LLC - historial\n" + es_body) == "unclear"
+    for good in ("Northline Mutual (fictional) - Loss Run Report\nAgent: Smith Insurance Agency\n" + body, "# Northline Mutual Insurance Company Loss Runs\n" + body,
+                 "Loss runs\nIssued by Northline Mutual (fictional).\n" + body, "Seguros del Valle (ficticia) - Historial de siniestros\n" + es_body):
+        assert loss_run_kind(good) == "loss_run", good
     box = {"loss_run_valued_through": {"field_id": "loss_run_valued_through", "value": "2026-09-30", "source": "loss-runs.md", "quote": "2026-09-30", "needs_review": False, "reason": None}}
     gate_loss_run(box, {"loss-runs.md": "Written by the applicant.\n" + body})
     assert box["loss_run_valued_through"]["needs_review"] and box["loss_run_valued_through"]["value"], "kept for review, never silently satisfied"
