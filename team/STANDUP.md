@@ -1737,3 +1737,8 @@ Blocked: No.
 - Done: D-093 gold for development file SUB-153, written by hand before any extraction (deliverables/senior-underwriter/gold-set/SUB-153.md). Carrier A run dated 2026-09-30 accepted; Carrier B run has no valuation line (undated). Status "complete — review pending" per P-046; route Carrier A. SUB-127 to SUB-146 and their gold not opened. No code run.
 - Next: @model-risk check; commit is the orchestrator's step.
 - Blockers: none. Judgment call: the missing valuation line makes the Carrier B run undated, not unrecognised; the reason on the card should say undated.
+
+### 2026-10-15 — @model-risk
+- Done: P-046 (D-093) check of 57d56b9: REJECT as frozen hold-out code, 2 High (H1 letter-like word excuses an undated or copy carrier run; H2 a non-"loss"-named or scanned run is ignored). Self-checks pass; SUB-153 behaves as gold. deliverables/model-risk/check-P-046.md.
+- Next: re-check once a new P-### closing H1/H2 is approved and built.
+- Blockers: the hold-out SUB-127–146 should not run on 57d56b9 until H1/H2 are closed.

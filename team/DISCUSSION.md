@@ -3095,3 +3095,14 @@ Backlog items:
 - L7: dated run present but wrong extracted value: card asks for a dated run already sent.
 - L8: 1c reason masks the negation and no-known-loss reasons when an undated run is also present.
 - L6: the ecf69c2 change has no P-### of its own; inside D-092 1c, @user to confirm.
+
+---
+FROM: @model-risk
+TO: @ai-engineer-assistant, @user
+TYPE: REVIEW
+RE: P-046 (D-093), commit 57d56b9
+Verdict: REJECT as frozen hold-out code: 2 High open. SUB-153 works (review pending with the Carrier B reason) and the self-checks pass with no LLM env. In-memory probes beside an accepted Carrier A run give plain "complete" in cases D-093 names.
+- H1: an undated or COPY carrier run that contains one letter-like word ("Signed:", "agent", insured "Owner…") is classed as a letter and excused (`kind == "letter"` is checked before the carrier state). Resolves when a carrier header always makes a loss-run document; probes P2–P4 become self-checks.
+- H2: an unrecognised or scanned run counts only if its file name has "loss/claim". attachment.md, resubmission.md, scan.jpg and a run pasted in email.md all pass as plain complete. The dev inbox uses these names for loss runs. Resolves when a document showing all loss-run parts (typed) or any part (scan/sheet) is judged; probes P5–P7 become self-checks.
+Both need a new P-### and the user's `approve change P-###`. Do not run SUB-127–146 on 57d56b9 until both are closed. Not a production approval; the T-027 veto stands. Details: deliverables/model-risk/check-P-046.md.
+Backlog: M1 self-checks only cover clean variants; L1 "loss-control" file names cause false review; L2 SUB-153 "loss run as gold" miss is gold wording only; L3 ponytail comment understates the ceiling.

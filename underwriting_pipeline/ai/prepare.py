@@ -449,7 +449,7 @@ RUN_PARTS = (
     re.compile(r"\b(?:mutual|insurance|insurer|assurance|casualty|indemnity|specialty|surplus|underwriters|carrier|aseguradora|seguros)\b"),
     re.compile(r"20\d\d-\d\d-\d\d\s+(?:to|through|thru|-|a|al|hasta)\s+20\d\d-\d\d-\d\d|(?<![\d-])20\d\d[-/](?:20)?\d\d\b(?![-/]\d)"
                r"|policy (?:period|term|year)|periodo de (?:la )?poliza|vigencia"),
-    re.compile(r"valued\s+(?:through|thru|as\s+of)|valuad[oa]\s+al|valorad[oa]\s+al|fecha de valuacion"),
+    re.compile(r"valued\s+(?:through|thru|as\s+of)|valued\s*:|valuation\s+date|valuad[oa]\s+al|valorad[oa]\s+al|fecha de valuacion"),
     re.compile(r"\bclaims?\b|\blosses\b|\bpaid\b|\breserves?\b|reclam|siniestro"),
 )
 # @model-risk H1 (check of P-040): a no-claims statement that comes from an agent, the owner or a letter, in any wording, is a letter too.
@@ -589,15 +589,18 @@ def gate_loss_run(merged: dict, texts: dict, scans: dict | None = None) -> None:
     row["reason"] = "; ".join(x for x in (row.get("reason"), why) if x)
 
 
-LOSS_RUN_NAME = re.compile(r"loss|claim|siniestr|perdid|reclam", re.I)  # ponytail: file-name cue; a loss run named "doc1.pdf" is caught only by its carrier header
+LOSS_RUN_NAME = re.compile(r"loss|claim|siniestr|perdid|reclam", re.I)  # a file-name cue, one of three (header, name, content)
 
 
 def _run_doc_reason(name: str, text: str, check: tuple, kind: str, from_sheet: bool) -> str | None:
     """P-046: None when this document is not a loss-run document or is an accepted typed carrier run; else its review reason.
     A no-known-loss letter is not a loss-run document (P-040), so it never blocks."""
     state, date, line = check
-    if kind == "letter" or (state is None and not LOSS_RUN_NAME.search(name)):
-        return None
+    if state is None:  # @model-risk H1 (check of P-046): a carrier header always makes a loss-run document, letter words or not
+        parts = sum(bool(part.search(_fold(text))) for part in RUN_PARTS)
+        looks = LOSS_RUN_NAME.search(name) or parts == len(RUN_PARTS) or (from_sheet and parts > 0)  # @model-risk H2: content, not only the name
+        if kind == "letter" or not looks:
+            return None
     if from_sheet:
         return SCAN_SHEET.format(name)
     if state == "accepted":
@@ -2056,6 +2059,19 @@ if __name__ == "__main__":
         both = run_case(a_run, {"loss-runs-a.md": run_107, **extra})
         row = {r["field_id"]: r for r in both["fields"]}["loss_run_valued_through"]
         assert both["status"] == REVIEW_PENDING and row["value"] == "2026-09-30" and why in (row["reason"] or ""), (extra.keys(), both["status"], row.get("reason"))
+    # @model-risk H1/H2 (check of P-046): letter words inside a carrier run, and runs in files not named as loss runs, still count.
+    for extra, why in (({"carrier-b.md": b_undated + "Signed: J. Ortiz, underwriting\n"}, RUN_NO_DATE.format("carrier-b.md")),
+                       ({"carrier-b.md": b_undated + "Copy provided by agent\n"}, "carrier-b.md"),
+                       ({"carrier-b.md": b_undated.replace("Insured: Casa Mesquite Cantina LLC", "Insured: Owner Holdings LLC")}, RUN_NO_DATE.format("carrier-b.md")),
+                       ({"attachment.md": "Harbor Point Mutual - Claims History\nPolicy period 2024-06-01 to 2025-06-01\nValued through 2026-09-30\n1 claim, $2,000 paid."}, RUN_UNCLEAR.format("attachment.md")),
+                       ({"resubmission.md": "Harbor Point Mutual - Claims History\nPolicy period 2024-06-01 to 2025-06-01\nValued through 2026-09-30\n1 claim, $2,000 paid."}, RUN_UNCLEAR.format("resubmission.md")),
+                       ({"email.md": "From: producer\nPasted below:\n" + b_run}, RUN_UNCLEAR.format("email.md"))):
+        both = run_case(a_run, {"loss-runs-a.md": run_107, **extra})
+        row = {r["field_id"]: r for r in both["fields"]}["loss_run_valued_through"]
+        assert both["status"] == REVIEW_PENDING and why in (row["reason"] or ""), (list(extra), both["status"], row.get("reason"))
+    box = {"loss_run_valued_through": {"field_id": "loss_run_valued_through", "value": "2026-09-30", "source": "loss-runs-a.md", "quote": "2026-09-30", "needs_review": False, "reason": None}}
+    gate_loss_run(box, {"loss-runs-a.md": run_107, "scan.jpg": "Carrier RB Loss History Report (fictional)\nPolicy term; 2024-01~91\nValuation date; 2026-09-39\n"}, {"scan.jpg": []})
+    assert box["loss_run_valued_through"]["needs_review"] and SCAN_SHEET.format("scan.jpg") in box["loss_run_valued_through"]["reason"], "@model-risk H2 P7: a garbled scanned run counts"
     with_letter = run_case(a_run, {"loss-runs-a.md": run_107, "loss-runs-letter.md": letters[2]})
     assert with_letter["status"] == "complete", "P-040: a no-known-loss letter beside an accepted run is not a loss-run document"
     undated = run_case({"loss_run_valued_through": {"source": "loss-runs.md", "value": "2026-01-01", "quote": "2026-01-01"}},
