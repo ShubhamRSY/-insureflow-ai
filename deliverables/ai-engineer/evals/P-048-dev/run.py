@@ -2,7 +2,7 @@
 
 Runs the pipeline's own retries (RUN-RULES.md) through regression_dev --holdout eval_holdout_v2, saves each file's report,
 then reads out operations, silent errors and routes (workbench.match) against gold. Synthetic. Not a production approval.
-Run: HOLDOUT_IDS=127-146 HOLDOUT_OUT=deliverables/ai-engineer/evals/P-048-dev/SUB-127-146-dev-v2 LLM_CACHE_DIR=<temp copy> LLM_PACE_SECONDS=0 HOLDOUT_RESCORE=1 .venv/bin/python deliverables/ai-engineer/evals/P-048-dev/run.py
+Run: HOLDOUT_IDS=127-146 HOLDOUT_OUT=deliverables/ai-engineer/evals/P-048-dev/SUB-127-146-dev-v2 LLM_CACHE_DIR=<temp copy> LLM_PACE_SECONDS=0 HOLDOUT_RESCORE=1 .venv/bin/python deliverables/ai-engineer/evals/P-048-dev/run.py --write
      add --readout to read saved reports only (no model call).
 """
 import json
@@ -17,6 +17,8 @@ import regression_dev  # noqa: E402
 import workbench  # noqa: E402
 import eval_holdout_v2  # noqa: E402
 
+OUT = regression_dev.kept(OUT / "x").parent  # D-096 item 4: this folder only with --write
+
 IDS = [f"SUB-{n:03d}" for n in range(127, 147)]
 GOLD = ROOT / "deliverables/senior-underwriter/gold-set"
 
@@ -26,12 +28,12 @@ def gold_of(sid: str) -> dict:
 
 
 def run() -> None:
-    (HERE / "reports-cache").mkdir(exist_ok=True)
+    (OUT / "reports-cache").mkdir(exist_ok=True)
     real = prepare.process_submission
 
     def saving(folder, *a, **k):
         report = real(folder, *a, **k)
-        (HERE / "reports-cache" / f"{Path(folder).name}.json").write_text(json.dumps(report, indent=2, default=str))
+        (OUT / "reports-cache" / f"{Path(folder).name}.json").write_text(json.dumps(report, indent=2, default=str))
         return report
 
     prepare.process_submission = saving
@@ -39,10 +41,10 @@ def run() -> None:
 
 
 def readout() -> None:
-    scores = {r["submission"]: r for r in json.loads((HERE / "SUB-127-146-dev-v2-cache-rescore.json").read_text())["submissions"]}
+    scores = {r["submission"]: r for r in json.loads((OUT / "SUB-127-146-dev-v2-cache-rescore.json").read_text())["submissions"]}
     rows, right = [], 0
     for sid in IDS:
-        rep, g = json.loads((HERE / "reports-cache" / f"{sid}.json").read_text()), gold_of(sid)
+        rep, g = json.loads((OUT / "reports-cache" / f"{sid}.json").read_text()), gold_of(sid)
         m = workbench.match(rep) if not rep.get("error") else {"route": "call_failed", "note": rep["error"]}
         m = {**m, "route": eval_holdout_v2.route_used(rep), "held": m["route"] == "hold"}  # P-048 (c): the provisional route of a held file
         lr = next(f for f in rep["fields"] if f["field_id"] == "loss_run_valued_through")
@@ -54,7 +56,7 @@ def readout() -> None:
         rows.append({"sid": sid, "status": rep.get("status"), "ops_mark": checks.get("operations"), "ops": ops["value"], "ops_review": ops.get("needs_review"),
                      "ops_reason": ops.get("reason"), "gold_ops": g.get("operations"), "silent": silent, "route": m["route"], "note": m.get("note"),
                      "gold_route": want, "held": m.get("held"), "loss_mark": checks.get("loss_runs"), "loss_value": lr["value"], "loss_reason": lr.get("reason"), "gold_loss": g.get("loss runs"), "retries": [r["kind"] for r in rep.get("retries") or []]})
-    (HERE / "readout.json").write_text(json.dumps(rows, indent=2))
+    (OUT / "readout.json").write_text(json.dumps(rows, indent=2))
     for r in rows:
         print(r["sid"], "| loss", r["loss_mark"], r["loss_value"], "|", r["loss_reason"] or "", "| held" if r["held"] else "")
         print(r["sid"], r["status"], "| ops", r["ops_mark"], "review" if r["ops_review"] else "plain", "|", r["ops_reason"] or "", "| silent", r["silent"] or "-",

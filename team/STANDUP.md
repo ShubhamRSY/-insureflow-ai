@@ -1749,3 +1749,8 @@ Blocked: No.
 - 2026-10-15 @model-risk: D-094/P-047 H1 look-again at 086a0e0: H1 still open (rule lines read only under exact labels; SUB-122 "Bar / liquor:" missed at 1.0). Probes pass, re-score recomputes. No new High. Not a production approval.
 - 2026-10-15 @model-risk: D-094/P-047 H1 look-again 2 at b73bd40: H1 CLOSED (any rule-item label read; SUB-122 both lines flag at 0.74; dev cache re-score 0 mismatches, 0 silent). No new High; backlog M8, M9, L6, L7. Not a production approval.
 - 2026-10-15 @senior-underwriter: D-094/P-047 UI check: APPROVE, no High; backlog M1-M4 (context line not on card, 'no cooking' wording, vague labels, no next-step text), L1-L2.
+
+- 2026-10-16 @head-of-underwriting: D-096 item 1 / P-049 reworked into a 15-rule final list (14 keep-write, 1 remove). Restaurants -> senior_referral justified (AG:39/62/66). Code bugs named: workbench.py 184, 186, 194. Rules file: carrier-match.md. T-103 rows 3, 5, 6, 10, 17, 19 change. Waiting on the user's approval; nothing built.
+- 2026-10-15 @senior-underwriter (written by the orchestrator, D-096 item 5): D-095 B-364 gold check: SUB-134 → no_match, SUB-139 → senior_referral, provisional routes on held dev gold (deliverables/senior-underwriter/B-364-gold-check.md); P-048 UI check APPROVE WITH CHANGES, no High (B-373).
+- 2026-10-15 @head-of-underwriting (written by the orchestrator, D-096 item 5): D-095 B-364: agreed with every dev gold change; raised P-049 for routing rules not written down.
+- 2026-10-16 @model-risk (written by the orchestrator, D-096 item 5): D-095 P-048 check APPROVE WITH CHANGES; H1 (B-363) closed at 4b313be after look-again; T-103 mix approved with conditions 1–3 (deliverables/model-risk/check-P-048.md).

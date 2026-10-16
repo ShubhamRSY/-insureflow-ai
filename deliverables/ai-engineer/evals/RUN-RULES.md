@@ -27,3 +27,5 @@ The retry count per file and in total, and every `call_failed` file. A retry is 
 
 - A re-score from saved replies runs with `HOLDOUT_RESCORE=1` (and a temp copy of the cache in `LLM_CACHE_DIR`, `LLM_PACE_SECONDS=0`). It makes no model call: a file with no saved reply stops the run and nothing is written. It writes `<name>-cache-rescore.json/.md`.
 - A live run refuses to start when its score file exists, so it never overwrites a live score or its retry rows. Use a new `HOLDOUT_OUT`.
+- D-096 item 4: `regression_dev.py` (every hold-out, quick and full run) and the dev scripts write score files only with `--write`. Without it the run is read-only: the files go to a temp folder and nothing in the repo changes. Frozen scorers are not edited; the driver redirects their output. A frozen scorer must not be run directly (D-025).
+- D-096 item 2: hold-outs from T-103 on are scored with `eval_holdout_v3` (route gate: 0 unsafe routes, route accuracy at least 18/20). v2 stays frozen.

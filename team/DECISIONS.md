@@ -1067,3 +1067,14 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: P-048 built in the main session (budget rule 3, as P-047); B-364 by @senior-underwriter then @head-of-underwriting; hold-out plan written in TASKS.md (board update); @model-risk check of P-048 and the mix; @senior-underwriter UI check; screenshot.
 - Status: ACCEPTED
 - Amends: D-092 (B-343: scanned/image-only carrier runs now review-pending, not hold); D-093. Closes B-350, B-363, B-365 once built. Not a production approval; T-027 veto stands.
+
+## D-096 — P-049 principle; B-372 route is part of the T-027 gate (scorer v3); approve change P-050 (class-based provisional route when TIV is missing); --write flag for score scripts; orchestrator standups
+- Date / Owner: 2026-10-16 / @user
+- Context: team/NEXT-SESSION.md after D-095; deliverables/head-of-underwriting/proposal-P-049.md; B-370, B-372.
+- Options considered: none. The user's words.
+- Decision: In the user's words. "1. P-049: approve the principle: every routing rule the code applies is written in one rules file with its reason, or removed. Before approval, @head-of-underwriting must: (a) justify or narrow "all restaurants → senior_referral" (D-079 referred only bar/liquor); (b) check "sprinklered apartments → senior_referral": is it meant to be unsprinklered? If it is a code bug, fix the code, do not write it down as a rule. Present the final rules list to me for "approve change P-049". Do not build until I approve. 2. B-372 decision: route is part of the T-027 gate. Gate measures: unsafe routes (sent to a carrier when gold says senior_referral or hold) must be 0; route accuracy at least 18/20. Add both to scorer v2 as a new version; the old one stays frozen. 3. approve change P-050: when TIV is missing, show a class-based provisional route labelled "provisional — TIV needed to confirm"; sending stays blocked. Self-checks on SUB-142/144. 4. Scripts that write score files require an explicit --write flag; without it they run read-only. 5. Standups: the orchestrator writes an entry for any role that took a turn but cannot write to team/. @model-risk check P-050 and the scorer change, High only. @senior-underwriter UI check of the new label. /wrap-up and push."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-16.
+- Dissent: none
+- Follow-up tasks: P-049 rework by @head-of-underwriting (no build); scorer v3, P-050 and the --write flag built in the main session (budget rule 3); @model-risk check; @senior-underwriter UI check; standups.
+- Status: ACCEPTED
+- Amends: T-027 gate (adds route measures); B-370 (TIV part), B-372 closed once built. P-049 approved in principle only. Not a production approval; T-027 veto stands.

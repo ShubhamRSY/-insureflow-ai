@@ -41,6 +41,7 @@ BANNER = ""  # set by serve(); the sandbox screenshots label the page with it
 MESSAGES: dict[str, tuple[bool, str]] = {}  # submission -> (ok, plain-words result of the last action); shown once
 # D-065 item 5: one line per user-visible feature: date, task or proposal, decision number, what an underwriter sees.
 WHATS_NEW = (
+    ("2026-10-16", "P-050", "D-096", "When TIV is missing, a held file shows the route its class gives: \"Provisional route: senior_referral (provisional — TIV needed to confirm)\". No TIV cap is applied until the TIV is known, and sending stays blocked. The habitational-without-sprinklers referral now cites AG:37, AG:62."),
     ("2026-10-15", "P-048", "D-095", "A file on hold now shows the route it would take: \"Provisional route: carrier_c (provisional — file on hold: <reason>)\". Sending stays blocked until the hold clears. A scanned or image-only carrier loss run gives \"complete — review pending\" (check the date against the page), not hold."),
     ("2026-10-15", "P-047", "D-094", "Operations keeps every stated detail (alcohol, seats, units, stories, cooking, hours, live music). If the documents state one the value leaves out, it shows NEEDS REVIEW: \"operations may be missing: <item>\". Carrier match and the bar/liquor referral read the full cited operations; \"no bar\" or \"no alcohol\" does not trigger a referral."),
     ("2026-10-15", "P-046", "D-093", "Every loss-run document in a file is checked. When one is accepted but another is undated, a copy or sample, a scan or spreadsheet, or not a recognised carrier layout, the file shows \"complete — review pending\" and the loss-run note names that document and its reason."),
@@ -135,6 +136,7 @@ def _tiv(report: dict) -> int | None:
 
 
 PROVISIONAL = "provisional — file on hold: {}"  # P-048 (c) (D-095)
+PROVISIONAL_TIV = "provisional — TIV needed to confirm"  # P-050 (D-096): a class-based route while TIV is missing
 
 
 def match(report: dict) -> dict:
@@ -146,7 +148,8 @@ def match(report: dict) -> dict:
         p = _match(report, gated=False)
         m["provisional"] = p["route"] if p["route"] != "hold" else None
         m["provisional_note"] = p["note"] if p["route"] != "hold" else ""
-        m["provisional_label"] = PROVISIONAL.format(m["note"])
+        tiv = _tiv(report)
+        m["provisional_label"] = PROVISIONAL_TIV if p["route"] != "hold" and (tiv is None or tiv <= 0) else PROVISIONAL.format(m["note"])
     return m
 
 
@@ -165,7 +168,10 @@ def _match(report: dict, gated: bool) -> dict:
         return out("hold", "open conflict" if ops and report.get("status") == prepare.REVIEW_PENDING else "missing information")
     tiv = _tiv(report)
     if tiv is None or tiv <= 0:
-        return out("hold", "TIV missing or unreadable")  # D-061, B-203 (D-062): never read as 0 or negative
+        if gated:
+            return out("hold", "TIV missing or unreadable")  # D-061, B-203 (D-062): never read as 0 or negative
+        tiv = None  # P-050 (D-096): the provisional route is class-based; no TIV cap or limit is applied without a TIV
+    over = lambda cap: tiv is not None and tiv > cap
     if barred and food:  # D-079 (B-290): a bar word with restaurant evidence is a person's call, not a rule's
         return out("senior_referral", "possible bar/liquor exposure — confirm liquor sales")
     hit = [k for k, words in CLASSES.items() if _has(ops, words)]
@@ -177,19 +183,19 @@ def _match(report: dict, gated: bool) -> dict:
         return out("senior_referral", "class matches more than one carrier: " + ", ".join(hit))
     kind = hit[0]
     if kind == "contractor":
-        return out("senior_referral", "contractor (AG:38); suggested market: carrier_b" + (f"; {OUT_TIV}" if tiv > PILOT_TIV else ""), suggested="carrier_b")
+        return out("senior_referral", "contractor (AG:38); suggested market: carrier_b" + (f"; {OUT_TIV}" if over(PILOT_TIV) else ""), suggested="carrier_b")
     if kind == "habitational":
         spr = report.get("sprinklers")
         if spr == "yes" or "sprinklers yes" in ops or (_has(ops, ("sprinklered",)) and spr != "no"):
-            return out("senior_referral", OUT_TIV) if tiv > PILOT_TIV else out("carrier_c")
+            return out("senior_referral", OUT_TIV) if over(PILOT_TIV) else out("carrier_c")
         if spr == "no" or _has(ops, ("unsprinklered", "no sprinklers", "sprinklers no")):
-            return out("senior_referral", "habitational without sprinklers (AG:61)")
+            return out("senior_referral", "habitational without sprinklers (AG:37, AG:62)")
         return out("hold", "habitational: sprinkler answer missing")
-    if tiv > PILOT_TIV:
+    if over(PILOT_TIV):
         return out("senior_referral", OUT_TIV)
     if kind == "a":
         return out("carrier_a")
-    if tiv > CAP_B:
+    if over(CAP_B):
         return out("senior_referral", "over Carrier B TIV cap $2,000,000 (provisional)")
     return out("carrier_b", "3 clean years not checked")
 
@@ -1191,7 +1197,7 @@ if __name__ == "__main__":
         }
         ready = dict(held)
         ready["sprinklers"] = "yes"
-        assert route(held) == "senior_referral"  # D-059 item 6: sprinklers "no" (AG:61)
+        assert route(held) == "senior_referral"  # D-059 item 6: sprinklers "no" (AG:37, AG:62; D-096 citation fix)
         assert route({**held, "sprinklers": None}) == "hold"
         # P-048 (c): a held file still routes, provisionally; route stays "hold" so no send gate opens.
         waiting = {**ready, "complete": False, "status": "incomplete"}
@@ -1199,6 +1205,14 @@ if __name__ == "__main__":
         assert (m["route"], m["provisional"], m["provisional_label"]) == ("hold", "carrier_c", "provisional — file on hold: missing information"), m
         assert match({**held, "complete": False, "status": "incomplete"})["provisional"] == "senior_referral" and match({**waiting, "sprinklers": None})["provisional"] is None
         assert "provisional" not in match(ready) and package._route(waiting) == "hold" and not package._overridable(waiting), "no send, no override on a held file"
+        # P-050 (D-096): TIV missing gives a class-based provisional route; the send stays blocked. SUB-142 and SUB-144 shapes (dev reports).
+        notiv = lambda ops, **kw: {"complete": False, "status": "incomplete", "fields": [{"field_id": "operations", "value": ops}, {"field_id": "tiv_building", "value": None}], **kw}
+        m142 = match(notiv("Roofing contractor, 5 employees, shop and yard"))
+        assert (m142["route"], m142["provisional"], m142["provisional_label"]) == ("hold", "senior_referral", PROVISIONAL_TIV) and "AG:38" in m142["provisional_note"], m142
+        m144 = match(notiv("outpatient pediatric physical and speech therapy, treatment rooms, waiting room, offices, no overnight, no beds"))
+        assert m144["route"] == "hold" and m144["provisional"] and m144["provisional_label"] == PROVISIONAL_TIV and not package._overridable(notiv("x")), m144
+        assert match(notiv("sprinklered apartments", sprinklers="yes"))["provisional"] == "carrier_c" and match(notiv("apartments"))["provisional"] is None, "no cap check without TIV; a missing sprinkler answer still gives no route"
+        assert match(notiv("office"))["provisional_note"] == "" and "TIV" not in match(notiv("restaurant"))["provisional_note"], "no TIV cap note is guessed"
         assert route(ready) == "carrier_c"
         # T-083: D-059 + D-060, written to the temp-free in-memory report only.
         def r(ops, tiv="$1,000,000", **kw):
@@ -1227,8 +1241,8 @@ if __name__ == "__main__":
         for bad in ("", "TBD", None, "$0", "0", "-$5,000",  # B-203: 0 or negative holds
                     "50,000 sq ft", "50000 SF", "12,000 square feet", "8,000 sq. ft.", "9000sqft", "1 square foot"):  # B-209
             m = match(r("office", bad))
-            assert m == {"route": "hold", "note": "TIV missing or unreadable", "suggested": "", "overridable": False, "provisional": None, "provisional_note": "",
-                         "provisional_label": "provisional — file on hold: TIV missing or unreadable"}, (bad, m)
+            assert m == {"route": "hold", "note": "TIV missing or unreadable", "suggested": "", "overridable": False, "provisional": "carrier_a", "provisional_note": "",
+                         "provisional_label": PROVISIONAL_TIV}, (bad, m)  # P-050: class-based, TIV needed to confirm
         assert route(r("oficina")) == "carrier_a" and route(r("")) == "hold"
         # D-078 (B-286): cuisine and ethnic words never decide the class. Alone they give the same no_match; with generic evidence the same carrier_b.
         cuisines = ("taqueria", "panadería", "pho house", "diner", "pizzeria", "soul food", "curry house", "halal cart", "bbq")  # "deli" is food service (D-079); bar words: see below

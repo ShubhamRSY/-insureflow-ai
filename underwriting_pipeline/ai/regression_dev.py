@@ -25,6 +25,22 @@ import prepare  # noqa: E402
 OUT = Path(sys.argv[1]) if len(sys.argv) > 1 and not sys.argv[1].startswith("--") else (
     ROOT / "deliverables" / "ai-engineer" / "evals" / "regression-SUB-017-076.json"
 )
+WRITE = "--write" in sys.argv  # D-096 item 4: score files are written only with --write; without it the run is read-only
+_SCRATCH: list[Path] = []
+
+
+def kept(path: Path) -> Path:
+    """D-096 item 4: the path itself with --write; otherwise the same name in a temp folder that is not kept."""
+    if WRITE:
+        return path
+    if not _SCRATCH:
+        import tempfile
+
+        _SCRATCH.append(Path(tempfile.mkdtemp(prefix="read-only-score-")))
+        print(f"read-only (no --write): score files go to {_SCRATCH[0]}, nothing in the repo is written", flush=True)
+    return _SCRATCH[0] / path.name
+
+
 BANDS = (
     ("017-026", "eval_holdout"),
     ("027-036", "eval_holdout_027"),
@@ -194,6 +210,8 @@ def _self_check() -> None:
         assert len(slept) == 1 and 44 < slept[0] <= 45, slept
     finally:
         PACE, _started[:] = 0, []
+    real = Path("deliverables/x.json")
+    assert kept(real) == (real if WRITE else _SCRATCH[0] / "x.json") and (WRITE or not str(kept(real)).startswith(str(ROOT))), "D-096 item 4"
     print("regression_dev self-check ok")
 
 
@@ -231,6 +249,9 @@ def score_retry(module, sid: str, score=None) -> dict:
 def holdout(module_name: str) -> None:
     """Run one hold-out scorer's own report, with the same retry. python regression_dev.py --holdout eval_holdout_077"""
     module = __import__(module_name)
+    for name in ("OUT_JSON", "OUT_MD", "_OUT"):  # D-096 item 4: frozen scorers stay unedited; the driver decides where they write
+        if hasattr(module, name):
+            setattr(module, name, kept(getattr(module, name)))
     plain = module.score_one
     module.score_one = lambda sid: score_retry(module, sid, plain)
     module.main()
@@ -280,6 +301,7 @@ if __name__ == "__main__":
     if sys.argv[1:2] == ["--holdout"]:
         holdout(sys.argv[2])
     elif sys.argv[1:2] == ["--quick"]:
-        quick(Path(sys.argv[2]) if len(sys.argv) > 2 else OUT.with_name("regression-quick-15.json"))
+        quick(kept(Path(sys.argv[2]) if len(sys.argv) > 2 and sys.argv[2] != "--write" else OUT.with_name("regression-quick-15.json")))
     else:
+        OUT = kept(OUT)
         main()
