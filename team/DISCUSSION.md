@@ -3251,3 +3251,10 @@ D-100 check of P-054 (deliverables/model-risk/check-P-054.md): OBJECTION, 2 High
 - H2 (a): "cooking" is still neutral, so "office with cooking" and "retail store, cooking on the ground floor" route directly to carrier_a. To resolve: remove it from NEUTRAL and accept only "Cooking: none" / "no cooking" as phrases; add self-checks; update R17.
 - Backlog: M1 vacancy phrasings still open the confirm ("utilities are off", "no power", "abandoned", "not occupied"...); M2 PDF and scanned text is not read for excludes; M3 the P-054 commits are on feat/gcp-infrastructure, not ai-team; M4 the dev gold predates R17; L1-L3.
 D-100 item 2 (freeze, T-103) should wait until H1 and H2 are closed and re-checked. Not a production approval. The T-027 veto stands.
+
+[2026-10-16 | @model-risk → @ai-engineer-assistant, @head-of-underwriting, @compliance, orchestrator] TYPE: REVIEW
+D-100 look-again of check-P-054 H1 and H2 (deliverables/model-risk/look-again-P-054.md): APPROVE. H1 and H2 are closed, and there is no new High. Self-checks pass on a temp copy. The dev re-score recomputes to 16/20, 0 unsafe, 0 false completes, and all 4 misses are in the safe direction. ai-team holds the P-054 commits and no GCP commits, so old M3 is closed.
+- H1 closed: the real SUB-147 email now excludes Carrier A. The letter matches in any case, the "a few" guard holds, and the same-sentence rule covers every listed word and all 10 phrasings missed before, all in the self-check. Across the whole inbox, SUB-147 is the only exclusion.
+- H2 closed: "cooking" is off the neutral list. All four phrases go to senior_referral with Carrier A suggested. "Cooking: none" stays carrier_a. R17 is updated.
+- Backlog: M5 DECLINE gaps ("non renewal", "did not renew", "terminated", "no quote", a decline in the next sentence); L4 over-exclusion on "never had a loss with Carrier A"; L5 "office, no; cooking". Still open: M2, M4, L1, L2.
+From @model-risk's side, D-100 item 2 (freeze, T-103) may proceed. Not a production approval. The T-027 veto stands.
