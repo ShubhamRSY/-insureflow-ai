@@ -1,33 +1,34 @@
 # Next session
 
-Written 2026-10-15 by the orchestrator at wrap-up. Wrap-up commit: `d0e362b` on `ai-team`, pushed to `origin/ai-team` (private).
+Written 2026-10-15 by the orchestrator at wrap-up. Wrap-up commit: `8b921b7` on `ai-team`, pushed to `origin/ai-team` (private).
 
 - Budget rule 8: demo blockers only (weekly limit resets 2026-10-17).
 - Standing rules: D-065, D-069. One AI session on this repo (D-090). The frontend/ files and `.claude/settings.json` are the user's and are never staged.
 - **Run every pipeline command with `.venv/bin/python`.**
 - Model: qwen/qwen3.8-27b (P-039), `LLM_PACE_SECONDS=55`.
 
-## Frozen for the hold-out
-
-| What | Commit |
-|---|---|
-| **Hold-out code** (last commit touching `underwriting_pipeline/`; @model-risk APPROVE as frozen hold-out code) | `3a7741506c72ae966654f529d56f3ab242389d7f` |
-| **Hold-out files and gold** SUB-127–146 | `bd9168e13fcd91a4e64421a69b1d8284798ab01a` |
-
-- Do not change `underwriting_pipeline/` before the hold-out run. A change means a new freeze and a user decision.
-- SUB-127–146 have not been opened, run or changed since the gold was frozen.
-
 ## Where we stopped
 
-- **D-093**
-  - B-349 confirmed (`28b6d4d`, `ecf69c2` are within D-092 1c).
-  - **P-046:** each loss-run document is judged separately. Plain "complete" only when every loss-run document is accepted. An undated, copy/sample, scan/spreadsheet or unrecognised run beside an accepted one gives "complete — review pending" with that document's reason. No-known-loss letters are not loss-run documents (P-040).
-  - Built at `57d56b9`. @model-risk REJECT twice (H1 letter words in a carrier run; H2 file-name-only detection; H3 undated run pasted elsewhere), fixed at `cb7b259` and `3a77415`. **H1–H3 resolved; APPROVE `3a77415`.**
-  - Dev file SUB-153 (dated Carrier A plus undated Carrier B): @producer built it, @senior-underwriter wrote the gold first.
-- **Dev check SUB-147–153** (`dev-SUB-147-153-D-093c-cached.md`; SUB-153 one live paced qwen call, the rest cached):
-  - 0 false completes; plain complete on 147 and 149.
-  - SUB-153 is "complete — review pending" naming `loss-runs-b.md` as undated. Its email.md also adds an undated-history reason (noise, L7).
-- @producer cannot write `team/STANDUP.md`, so it has no standup entry for its SUB-153 turn.
+- **T-027 official hold-out SUB-127–146 is done:** run once and scored once on frozen code `3a77415` with gold `bd9168e`, following the rules the user typed.
+  - Checks before the run:
+    - smoke_readers 8/8.
+    - No cached replies for SUB-127–146.
+  - Calls: 20 model calls, 0 failed. One 429 on SUB-145 was posted again once.
+  - Retry limit: the frozen code retries more than the user's rule allows, so `deliverables/ai-engineer/evals/T-027/t027_run.py` capped retries from outside the pipeline. No pipeline file was edited.
+  - Score files: `SUB-127-146-holdout.md` and `.json`. Run record and per-file reports: `deliverables/ai-engineer/evals/T-027/`.
+- **Results:**
+  - 0 false completes.
+  - Fields at 9/10 or better: 3 of 9 (named insured 20/20, effective date 18, sales 18). Below: premises 17, tiv 17, construction 17, year built 16, operations 12, loss runs 5 hit / 3 miss / 12 not credited.
+  - Silent error rate 3.9% (7 of 180, all in operations). Automation rate 73.3%. Status automation 4 of 6.
+  - Route 14/20. carrier_c 0 of 2 and senior_referral 0 of 2 (both held).
+  - Loss runs: 5 of 5 typed carrier runs accepted. Scans, letters and undated runs went to review.
+  - Cost: $0 (free tier). About $0.0021 per file at the 8.3 list prices; 1,778 tokens per call on average.
+- **@model-risk KEEP** (`deliverables/model-risk/T-027-holdout-127-memo.md`, OBJECTION in `team/DISCUSSION.md`):
+  - H1: the 9/10 floor is not met.
+  - H2: operations drops underwriting-material qualifiers (liquor, beer and wine, seats, units) at confidence 1.0, unflagged.
+  - M1–M6 and L1–L4 are in the memo. They are not yet in `team/BACKLOG.md`.
+- **SUB-127–146 is now development data.**
+- @model-risk has no `team/STANDUP.md` entry for its T-027 turn this session.
 - Self-checks at wrap-up (.venv, no host): all six ok.
 
 ## Approved, not built
@@ -41,24 +42,25 @@ Written 2026-10-15 by the orchestrator at wrap-up. Wrap-up commit: `d0e362b` on 
 
 ## Pending decisions for the user
 
-1. **When to run the hold-out SUB-127–146** on the frozen code `3a77415`.
-2. **B-350 (M3):** a prefixed carrier header ("> ", "#", "Fwd:") with letter words is still excused as a letter. @model-risk says this needs a P-### after the hold-out.
+1. Whether to raise a P-### for H2 (operations keeps the full stated text, with a test on these shapes). This is @model-risk's resolution path.
+2. B-350 (M3 from D-093): prefixed carrier header with letter words. @model-risk said it needs a P-### after the hold-out.
+3. M5 scorer convention (null on gold "missing" for sales/tiv/construction/year built) before the next gold set. It must never be applied backward.
 
 ## Open vetoes and what resolves each
 
 | Task | Holder | Resolves when |
 |---|---|---|
-| T-027 | @model-risk (production) | SUB-127–146 run once on `3a77415` (`smoke_readers.py` first, checked .venv, paced) with all 9 fields at 9/10 or better and 0 false completes |
+| T-027 | @model-risk (production) | An approved P-### for H2 is built. @senior-underwriter sets a gold convention for qualifiers. A fresh 20-file hold-out runs under the same rules with all 9 fields at 9/10 or better and 0 false completes. |
 | T-082 | @responsible-ai (fairness) | As written in its veto message in `team/DISCUSSION.md` |
 
 ## First 3 tasks next session
 
-1. Confirm HEAD's `underwriting_pipeline/` equals `3a77415` (`git diff 3a77415 HEAD -- underwriting_pipeline/` is empty). Run `smoke_readers.py` (8 file types, uncached).
-2. Hold-out run: one paced qwen run of SUB-127–146 with `regression_dev.py --holdout eval_holdout_127`, recording commit, model, Python and library versions. Retry failed calls only.
-3. @model-risk scores it from the frozen gold `bd9168e`: per field, status safety (false completes must be 0), status automation, silent error rate, automation rate and route. It then states whether T-027 is lifted.
+1. @pm: route the memo's M1–M6 and L1–L4 to `team/BACKLOG.md` (one line each), and record the T-027 KEEP on the T-027 card.
+2. @ai-engineer-assistant: write the P-### for H2 (operations qualifiers). It is a proposal only, waiting for the user's "approve change P-###".
+3. @senior-underwriter: gold conventions for operations qualifiers and M5 (missing fields), written before any new hold-out gold.
 
 ## For the AI Engineer
 
-- Pending proposals: none. B-350 may need one after the hold-out.
-- Latest scores: dev SUB-147–153, 0 false completes and 2 plain completes. Dev SUB-107–126 (comma-blind): 0 false completes, silent error rate 1.7%, automation rate 61.1%.
-- Top failure to fix next: none blocking. Next is the frozen hold-out run (code `3a77415`, gold `bd9168e`).
+- Pending proposals: none yet. H2 (operations) and B-350 each need a P-###.
+- Latest scores: hold-out SUB-127–146 has 0 false completes, 3 of 9 fields at 9/10, silent error rate 3.9%, automation 73.3%, route 14/20.
+- Top failure to fix next: operations shortened at confidence 1.0 (7 silent errors).
