@@ -268,7 +268,7 @@ def main() -> None:
         "- Author: @ai-engineer-assistant",
         f"- {LABEL}.",
         f"- Commit: {head}" + (f", with uncommitted changes in: {', '.join(dirty)}. This is not a score of that commit." if dirty else "."),
-        "- Scored by @model-risk with this file unchanged after the gold answers were written.",
+        "- Scored with this file unchanged after the gold answers were written. A development re-check is not a hold-out.",
         "- A null that matches a missing gold line is not_credited. It is not a correct answer.",
         "- Correctly flagged for human means the documents disagree and the AI stored both sides without picking one. It is not a hit and not a miss.",
         "- Synthetic. Not a production approval.",

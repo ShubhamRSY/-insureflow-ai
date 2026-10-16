@@ -814,6 +814,13 @@ OPS_ITEMS = (
 OPS_COUNTS = (("seats", r"(\d[\d,]*)\s+(?:seats|seating|asientos)|seating (?:for|capacity of)\s+(\d[\d,]*)", r"seat"),
               ("units", r"(\d[\d,]*)\s+(?:\w+\s+)?(?:units|unidades|departamentos)", r"unit|apartment"))
 OPS_MISSING = "operations may be missing: {}"
+# P-047 H1 (@model-risk): labeled lines elsewhere in the cited file that state a rule item are part of the operations source.
+OPS_LABEL = re.compile(r"(?im)^[ \t>*-]*(?:liquor|alcohol|beer|wine|bar|seating|seats|units|number of units|cooking[\w ]*|hours[\w ]*|entertainment|live music)[ \t]*:.*$")
+
+
+def ops_lines(text: str, skip: str = "") -> str:
+    """The rule-item labeled lines of a file that are not already in the cited text."""
+    return "\n".join(line for line in (m.group(0).strip() for m in OPS_LABEL.finditer(text)) if line not in skip)
 
 
 def _ops_source(text: str, start: int, end: int) -> str:
@@ -849,7 +856,11 @@ def check_operations(merged: dict, texts: dict) -> None:
     text = texts.get(row.get("source") or "")
     if not row.get("value") or not text or row.get("start") is None:
         return
-    missing = ops_missing(row["value"], _ops_source(text, row["start"], row["end"]))
+    cited = _ops_source(text, row["start"], row["end"])
+    context = ops_lines(text, cited)
+    if context:
+        row["context"] = context  # P-047 (c): carrier match and the D-079 referral read it too
+    missing = ops_missing(row["value"], f"{cited}\n{context}")
     if missing:
         reason = OPS_MISSING.format(", ".join(missing))
         row["reason"] = f"{row['reason']}; {reason}" if row.get("reason") else reason
@@ -1195,6 +1206,7 @@ def _saved_payload(report: dict) -> dict:
                 "end": row.get("end"),
                 "quote": row.get("quote"),  # P-016 Q1: the exact cited text. The app shows it
                 **({"also_quoted": row["also_quoted"]} if row.get("also_quoted") else {}),  # P-036: the agreeing values' other quotes
+                **({"context": row["context"]} if row.get("context") else {}),  # P-047 H1: operations rule lines outside the cited text
                 "reason": row.get("reason"),  # P-016 R1: why the row is flagged or has no value
             }
         )
@@ -1569,7 +1581,7 @@ if __name__ == "__main__":
         assert ops_missing("Breakfast and lunch cafe, 64 seats, beer and wine only, no liquor license.", "Operations: Breakfast and lunch cafe, 64 seats, beer and wine only, no liquor license. Dine-in and takeout.") == []
         assert ops_missing("Residential apartments, 6 units", "Operations: Residential apartments, 16 units") == ["16 units"], "a wrong count is missing"
         assert _ops_source("Name: X\nOperations: wholesale of wire,\nconduit. 2nd floor.\nSales: 1\n", 9, 20) == "Operations: wholesale of wire,\nconduit. 2nd floor.", "a wrapped line is read; the next label ends it"
-        text = "Operations: Mexican restaurant, 70 seats, beer and wine only, no bar.\nLiquor: none\n"
+        text = "Operations: Mexican restaurant, 70 seats, beer and wine only, no bar.\nSales: $900,000\n"
         row = {"field_id": "operations", "value": "Mexican restaurant", "source": "a.md", "start": 0, "end": 69, "confidence": 1.0, "needs_review": False, "reason": None}
         held = {"operations": dict(row)}
         check_operations(held, {"a.md": text})
@@ -1577,7 +1589,13 @@ if __name__ == "__main__":
         assert held["operations"]["reason"] == "operations may be missing: beer, wine, bar, 70 seats", held["operations"]["reason"]
         full = {"operations": {**row, "value": "Mexican restaurant, 70 seats, beer and wine only, no bar"}}
         check_operations(full, {"a.md": text})
-        assert not full["operations"]["needs_review"] and full["operations"]["confidence"] == 1.0, "the next labeled line is not part of operations"
+        assert not full["operations"]["needs_review"] and full["operations"]["confidence"] == 1.0, "a labeled line with no rule item is not part of operations"
+        # P-047 H1 (@model-risk probes): a separate liquor line or cooking line the answer drops is read, and kept for routing.
+        text = "Operations: Mexican restaurant, 70 seats.\nSales: $900,000\nLiquor: full bar, 35% of sales\nCooking operations: wood-fired oven, two fryers.\n"
+        probe = {"operations": {**row, "value": "Mexican restaurant, 70 seats", "end": 40}}
+        check_operations(probe, {"a.md": text})
+        assert probe["operations"]["reason"] == "operations may be missing: liquor, bar, frying or open flame", probe["operations"]["reason"]
+        assert probe["operations"]["context"] == "Liquor: full bar, 35% of sales\nCooking operations: wood-fired oven, two fryers." and "context" in _saved_payload({"fields": [probe["operations"]]})["fields"][0]
         assert same_operations(
             "habitational, 8 units, no commercial cooking",
             "Small apartments, 8 units, sprinklers throughout.",

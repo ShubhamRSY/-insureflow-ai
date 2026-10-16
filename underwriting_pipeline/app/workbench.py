@@ -86,7 +86,7 @@ def _ops(report: dict) -> str:
     """P-047 (c): the full operations, value and cited text, so a detail the value dropped still routes. Negated words are removed."""
     for row in report["fields"]:
         if row["field_id"] == "operations" and row["value"]:
-            return NEGATED.sub(" ", f"{row['value']} {row.get('quote') or ''}".lower())
+            return NEGATED.sub(" ", f"{row['value']} {row.get('quote') or ''} {row.get('context') or ''}".lower())  # H1: and the rule lines
     return ""
 
 
@@ -1223,6 +1223,9 @@ if __name__ == "__main__":
         assert match(quoted("Full-service restaurant", "Operations: Full-service restaurant and bar, 180 seats, full liquor license")) == bar_ref
         assert route(quoted("Mexican restaurant", "Operations: Mexican restaurant, 70 seats, beer and wine only, no bar.")) == "carrier_b"
         assert route(quoted("Dry retail gift shop", "Operations: Dry retail gift shop. No food, no alcohol.")) == "carrier_a"
+        lined = quoted("Mexican restaurant", "Operations: Mexican restaurant, 70 seats.")
+        lined["fields"][0]["context"] = "Liquor: full bar, 35% of sales"
+        assert match(lined) == bar_ref, "P-047 H1: a separate liquor line still refers"
         for ops in ("bakery", "coffee shop", "deli"):
             assert route(r(ops)) == "carrier_b", ops
         assert route(r("sprinklered apartments", "$4,000,000")) == "carrier_c"
