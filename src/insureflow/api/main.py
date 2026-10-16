@@ -4,8 +4,10 @@ import asyncio
 import json as _json
 import logging
 import os
+import re
 import uuid
 from contextlib import asynccontextmanager
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Optional
 
@@ -725,12 +727,23 @@ def signup_user(req: SignupRequest, request: Request) -> dict[str, Any]:
         company_name=company_name,
     )
 
-    # Set plan in pricing store
+    # Set plan in pricing store. Paid plans stay pending until checkout completes,
+    # so a plan choice alone never grants paid entitlements.
     plan = req.plan.strip().lower() or "free"
-    from insureflow.pricing.engine import get_pricing_store
+    from insureflow.billing.events import record_billing_event
+    from insureflow.pricing.engine import get_pricing_store, is_paid_tier
 
     pricing = get_pricing_store()
-    pricing.set_subscription(org_id, plan)
+    paid = is_paid_tier(plan)
+    pricing.set_subscription(org_id, plan, status="pending" if paid else "active")
+    record_billing_event(
+        "plan_selected",
+        org_id=org_id,
+        plan=plan,
+        actor=username,
+        status="pending" if paid else "active",
+        metadata={"signup": True, "company_name": company_name},
+    )
 
     # Issue API key
     raw_key, api_key = pricing.create_api_key(org_id, tier=plan, label=f"{company_name}-default")
@@ -743,6 +756,8 @@ def signup_user(req: SignupRequest, request: Request) -> dict[str, Any]:
         "token": token,
         "org_id": org_id,
         "plan": plan,
+        "plan_status": "checkout_required" if paid else "active",
+        "checkout_required": paid,
         "api_key": raw_key,
         "role": "admin",
     }
@@ -9259,6 +9274,51 @@ def surplus_lines_all_states(current: TokenData = Depends(require_role(Role.VIEW
 # ── Per-Submission Pricing & Billing ─────────────────────────────────────
 
 
+class CheckoutStartRequest(BaseModel):
+    tier: str
+
+
+class CheckoutConfirmRequest(BaseModel):
+    card_number: str = ""
+    card_exp: str = ""
+    card_cvc: str = ""
+    card_name: str = ""
+    billing_zip: str = ""
+
+
+def _luhn_ok(card_number: str) -> bool:
+    digits = [int(c) for c in card_number if c.isdigit()]
+    if len(digits) < 13 or len(digits) > 19:
+        return False
+    total = 0
+    for index, digit in enumerate(reversed(digits)):
+        if index % 2 == 1:
+            digit *= 2
+            if digit > 9:
+                digit -= 9
+        total += digit
+    return total % 10 == 0
+
+
+def _validate_card(req: CheckoutConfirmRequest) -> tuple[bool, str, str]:
+    """Placeholder card check — no processor is wired in. Returns (ok, reason, last4)."""
+    number = "".join(c for c in (req.card_number or "") if c.isdigit())
+    if not _luhn_ok(number):
+        return False, "Card number is invalid", ""
+    exp = (req.card_exp or "").strip()
+    if not re.fullmatch(r"(0[1-9]|1[0-2])\s*/\s*\d{2}", exp):
+        return False, "Expiry must be in MM/YY format", ""
+    month, year = [int(p) for p in re.split(r"\s*/\s*", exp)]
+    now = datetime.now(tz=timezone.utc)
+    if (2000 + year, month) < (now.year, now.month):
+        return False, "Card has expired", ""
+    if not re.fullmatch(r"\d{3,4}", (req.card_cvc or "").strip()):
+        return False, "Security code must be 3 or 4 digits", ""
+    if not (req.card_name or "").strip():
+        return False, "Name on card is required", ""
+    return True, "", number[-4:]
+
+
 @app.get("/pricing/plans")
 def pricing_plans(current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
     """List all available pricing plans."""
@@ -9371,6 +9431,191 @@ def pricing_record_submission(
         state_code=body.get("state_code", ""),
     )
     return summary.model_dump()
+
+
+# ── Paid-plan checkout ─────────────────────────────────────────────────────
+
+
+@app.post("/pricing/checkout", status_code=201)
+def pricing_checkout_start(
+    req: CheckoutStartRequest,
+    response: Response,
+    current: TokenData = Depends(require_role(Role.ADMIN)),
+) -> dict[str, Any]:
+    """Open a checkout for a paid plan. The subscription stays pending until confirm.
+
+    Idempotent: a repeat call for the same tier returns the already-open session
+    (HTTP 200) instead of minting a second one, so a double-click or retry cannot
+    create duplicate sessions or billing events.
+    """
+    from insureflow.billing.events import record_billing_event
+    from insureflow.pricing.engine import PricingEngine
+
+    engine = PricingEngine()
+    result = engine.start_checkout(current.org_id, req.tier)
+    if result.get("error"):
+        record_billing_event(
+            "checkout_failed",
+            org_id=current.org_id,
+            plan=req.tier,
+            actor=current.username or "",
+            reason=result["error"],
+        )
+        raise HTTPException(status_code=400, detail=result["error"])
+
+    reused = bool(result.get("reused"))
+    if reused:
+        response.status_code = 200
+    else:
+        record_billing_event(
+            "checkout_started",
+            org_id=current.org_id,
+            plan=result["tier"],
+            amount=result["amount"],
+            checkout_id=result["checkout_id"],
+            actor=current.username or "",
+            status="pending",
+        )
+    return {
+        "checkout_id": result["checkout_id"],
+        "tier": result["tier"],
+        "amount_due": result["amount"],
+        "currency": result["currency"],
+        "status": result["status"],
+        "reused": reused,
+        "next": "confirm",
+    }
+
+
+@app.post("/pricing/checkout/{checkout_id}/confirm")
+def pricing_checkout_confirm(
+    checkout_id: str,
+    req: CheckoutConfirmRequest,
+    current: TokenData = Depends(require_role(Role.ADMIN)),
+) -> dict[str, Any]:
+    """Confirm a checkout: validate details, activate the plan, log the purchase."""
+    from insureflow.billing.events import record_billing_event
+    from insureflow.pricing.engine import PricingEngine
+
+    engine = PricingEngine()
+    checkout = engine.get_checkout(checkout_id)
+    if checkout is None or checkout.get("org_id") != current.org_id:
+        raise HTTPException(status_code=404, detail="Checkout session not found")
+    if checkout.get("status") == "completed":
+        raise HTTPException(status_code=409, detail="Checkout already completed")
+    if checkout.get("status") == "cancelled":
+        raise HTTPException(status_code=409, detail="Checkout was cancelled — start a new one")
+
+    ok, reason, last4 = _validate_card(req)
+    if not ok:
+        record_billing_event(
+            "checkout_failed",
+            org_id=current.org_id,
+            plan=checkout.get("tier", ""),
+            amount=checkout.get("amount"),
+            checkout_id=checkout_id,
+            actor=current.username or "",
+            reason=reason,
+        )
+        raise HTTPException(status_code=400, detail=reason)
+
+    completed = engine.complete_checkout(checkout_id, card_last4=last4)
+    if completed is None:
+        # Lost the race: another confirm completed or a cancel closed it first.
+        raise HTTPException(status_code=409, detail="Checkout already completed")
+
+    record_billing_event(
+        "checkout_completed",
+        org_id=current.org_id,
+        plan=completed["tier"],
+        amount=completed["amount"],
+        checkout_id=checkout_id,
+        actor=current.username or "",
+        status="active",
+        metadata={"card_last4": last4, "billing_zip": req.billing_zip.strip()},
+    )
+    record_billing_event(
+        "subscription_activated",
+        org_id=current.org_id,
+        plan=completed["tier"],
+        amount=completed["amount"],
+        checkout_id=checkout_id,
+        actor=current.username or "",
+        status="active",
+    )
+
+    billing = engine.get_billing_summary(current.org_id)
+    return {
+        "checkout_id": checkout_id,
+        "status": "completed",
+        "tier": completed["tier"],
+        "plan_status": "active",
+        "card_last4": last4,
+        "billing": billing.model_dump(),
+    }
+
+
+@app.post("/pricing/checkout/{checkout_id}/cancel")
+def pricing_checkout_cancel(
+    checkout_id: str,
+    current: TokenData = Depends(require_role(Role.ADMIN)),
+) -> dict[str, Any]:
+    """Cancel an open checkout. The pending plan reverts to free entitlements."""
+    from insureflow.billing.events import record_billing_event
+    from insureflow.pricing.engine import PricingEngine, get_pricing_store
+
+    engine = PricingEngine()
+    checkout = engine.get_checkout(checkout_id)
+    if checkout is None or checkout.get("org_id") != current.org_id:
+        raise HTTPException(status_code=404, detail="Checkout session not found")
+    if checkout.get("status") == "completed":
+        raise HTTPException(status_code=409, detail="Checkout already completed")
+    if checkout.get("status") == "cancelled":
+        raise HTTPException(status_code=409, detail="Checkout already cancelled")
+
+    if engine.cancel_checkout(checkout_id) is None:
+        # Lost the race with a concurrent confirm/cancel.
+        raise HTTPException(status_code=409, detail="Checkout already closed")
+
+    # Only drop the org back to free when it is still waiting on this checkout —
+    # never clobber a plan that has already been paid for.
+    store = get_pricing_store()
+    record = store.get_subscription_record(current.org_id)
+    if record.get("status") != "active":
+        store.set_subscription(current.org_id, "free", status="active", checkout_id=checkout_id)
+    record_billing_event(
+        "checkout_cancelled",
+        org_id=current.org_id,
+        plan=checkout.get("tier", ""),
+        amount=checkout.get("amount"),
+        checkout_id=checkout_id,
+        actor=current.username or "",
+        status="cancelled",
+    )
+    tier_after = store.get_subscription(current.org_id)
+    return {"checkout_id": checkout_id, "status": "cancelled", "tier": tier_after}
+
+
+@app.get("/pricing/events")
+def pricing_events(
+    limit: int = 100,
+    event_type: str = "",
+    own_org: bool = False,
+    current: TokenData = Depends(require_role(Role.ADMIN)),
+) -> dict[str, Any]:
+    """Billing event log + rollup for monitoring plan and checkout activity."""
+    from insureflow.billing.events import get_billing_event_log
+
+    log = get_billing_event_log()
+    scope = current.org_id if own_org else ""
+    events = log.list_events(limit=max(1, min(limit, 1000)), org_id=scope, event_type=event_type)
+    summary = log.summary()
+    return {
+        "events": events,
+        "total": len(events),
+        "summary": summary,
+        "scoped_to_org": scope or None,
+    }
 
 
 # ── Automated Law Tracking & Regulatory Alerts ────────────────────────────

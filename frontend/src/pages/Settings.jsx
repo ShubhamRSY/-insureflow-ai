@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { auth, endpoints } from '../lib/api';
 import ThemeToggle from '../components/ThemeToggle';
@@ -11,6 +11,10 @@ export default function SettingsPage({ onLogin, onAuthReset }) {
   const [companies, setCompanies] = useState([]);
   const [companyName, setCompanyName] = useState('');
   const [companyError, setCompanyError] = useState('');
+  const [addingCompany, setAddingCompany] = useState(false);
+  const [resetting, setResetting] = useState(false);
+  const addCompanyRef = useRef(false);
+  const resetRef = useRef(false);
 
   useEffect(() => {
     endpoints.roles().then((d) => setRoles(d.roles || [])).catch(() => {});
@@ -18,9 +22,12 @@ export default function SettingsPage({ onLogin, onAuthReset }) {
   }, []);
 
   const handleReset = async () => {
+    if (resetRef.current) return;
     if (!window.confirm('Delete ALL login accounts on this server? You will need to run First-time Setup again.')) {
       return;
     }
+    resetRef.current = true;
+    setResetting(true);
     try {
       await endpoints.authReset();
       auth.wipeSession();
@@ -28,6 +35,9 @@ export default function SettingsPage({ onLogin, onAuthReset }) {
       window.location.href = '/dashboard';
     } catch (e) {
       toast.error(e.message);
+    } finally {
+      resetRef.current = false;
+      setResetting(false);
     }
   };
 
@@ -108,13 +118,19 @@ export default function SettingsPage({ onLogin, onAuthReset }) {
             className="flex flex-wrap gap-2 border-t border-white/[0.04] px-6 py-4"
             onSubmit={async (e) => {
               e.preventDefault();
+              if (addCompanyRef.current) return;
               setCompanyError('');
+              addCompanyRef.current = true;
+              setAddingCompany(true);
               try {
                 const created = await endpoints.addInsuranceCompany({ name: companyName });
                 setCompanies((prev) => [...prev.filter((c) => c.id !== created.id), created]);
                 setCompanyName('');
               } catch (err) {
                 setCompanyError(err.message || 'Could not add company');
+              } finally {
+                addCompanyRef.current = false;
+                setAddingCompany(false);
               }
             }}
           >
@@ -124,7 +140,7 @@ export default function SettingsPage({ onLogin, onAuthReset }) {
               placeholder="Add appointed company"
               className="input-field min-w-[12rem] flex-1 text-sm"
             />
-            <button type="submit" className="btn-secondary btn-sm text-sm" disabled={!companyName.trim()}>Add</button>
+            <button type="submit" className="btn-secondary btn-sm text-sm" disabled={!companyName.trim() || addingCompany}>Add</button>
             {companyError ? <p className="w-full text-xs text-amber-400">{companyError}</p> : null}
           </form>
         </div>
@@ -142,7 +158,7 @@ export default function SettingsPage({ onLogin, onAuthReset }) {
           Clears every account on this server instance so you can run First-time Setup again.
           Does not affect saved underwriting jobs.
         </p>
-        <button type="button" onClick={handleReset} className="mt-4 w-full rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm font-semibold text-red-300 transition hover:bg-red-500/20">
+        <button type="button" onClick={handleReset} disabled={resetting} className="mt-4 w-full rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm font-semibold text-red-300 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-50">
           Clear all login accounts
         </button>
       </div>

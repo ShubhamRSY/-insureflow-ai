@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   CheckCircle2, Circle, AlertTriangle, XCircle, MinusCircle,
   Shield, GitCompare, DollarSign, ClipboardCheck, Loader2,
@@ -768,7 +768,7 @@ function ProvenancePanel({ provenance }) {
   );
 }
 
-function HumanCheckpoints({ checkpoints, bundleId, onResolve }) {
+function HumanCheckpoints({ checkpoints, bundleId, onResolve, busy }) {
   const list = asList(checkpoints);
   if (!list.length) return <p className="text-sm text-emerald-400/90">No pending human checkpoints.</p>;
   return (
@@ -779,8 +779,8 @@ function HumanCheckpoints({ checkpoints, bundleId, onResolve }) {
           <p className="mt-1 text-sm text-amber-200/70">{displayText(cp.reason)}</p>
           {cp.status === 'pending' && onResolve && (
             <div className="mt-2 flex gap-2">
-              <button type="button" onClick={() => onResolve(cp.id, 'approve')} className="btn-secondary btn-sm text-sm">Approve</button>
-              <button type="button" onClick={() => onResolve(cp.id, 'reject')} className="btn-secondary btn-sm text-xs text-red-300">Reject</button>
+              <button type="button" onClick={() => onResolve(cp.id, 'approve')} disabled={busy === cp.id} className="btn-secondary btn-sm text-sm disabled:cursor-not-allowed disabled:opacity-50">Approve</button>
+              <button type="button" onClick={() => onResolve(cp.id, 'reject')} disabled={busy === cp.id} className="btn-secondary btn-sm text-xs text-red-300 disabled:cursor-not-allowed disabled:opacity-50">Reject</button>
             </div>
           )}
         </div>
@@ -1069,6 +1069,8 @@ export default function SubmissionJourney({ job }) {
   const [brokerRequest, setBrokerRequest] = useState(null);
   const [checkpoints, setCheckpoints] = useState(ctx.checkpoints);
   const [expandedStage, setExpandedStage] = useState(null);
+  const [resolvingCheckpointId, setResolvingCheckpointId] = useState('');
+  const checkpointRef = useRef(false);
 
   useEffect(() => {
     setCheckpoints(ctx.checkpoints);
@@ -1119,11 +1121,17 @@ export default function SubmissionJourney({ job }) {
   };
 
   const handleResolveCheckpoint = async (checkpointId, action) => {
+    if (checkpointRef.current) return;
+    checkpointRef.current = true;
+    setResolvingCheckpointId(checkpointId);
     try {
       await endpoints.resolveCheckpoint(ctx.bundleId, checkpointId, action);
       setCheckpoints((prev) => asList(prev).map((c) => (c.id === checkpointId ? { ...c, status: action === 'approve' ? 'approved' : 'rejected' } : c)));
     } catch (e) {
       toast.error(e.message);
+    } finally {
+      checkpointRef.current = false;
+      setResolvingCheckpointId('');
     }
   };
 
@@ -1175,7 +1183,7 @@ export default function SubmissionJourney({ job }) {
       )}
 
       <Section title="Human Checkpoints" icon={Users} defaultOpen={asList(checkpoints).length > 0}>
-        <HumanCheckpoints checkpoints={checkpoints} bundleId={ctx.bundleId} onResolve={ctx.bundleId ? handleResolveCheckpoint : null} />
+        <HumanCheckpoints checkpoints={checkpoints} bundleId={ctx.bundleId} onResolve={ctx.bundleId ? handleResolveCheckpoint : null} busy={resolvingCheckpointId} />
       </Section>
 
       {!ctx.processing && (

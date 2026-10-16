@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { endpoints, auth } from '../lib/api';
 import PasswordInput from '../components/PasswordInput';
@@ -23,6 +23,7 @@ export default function SignupPage() {
   const [checkout, setCheckout] = useState(null);
   const [billing, setBilling] = useState(EMPTY_BILLING);
   const [formData, setFormData] = useState({ company_name: '', full_name: '', username: '', email: '', password: '' });
+  const busyRef = useRef(false);
 
   useEffect(() => {
     if (auth.isLoggedIn) {
@@ -45,6 +46,8 @@ export default function SignupPage() {
 
   const handleAccountSubmit = async (e) => {
     e.preventDefault();
+    if (busyRef.current) return;
+    busyRef.current = true;
     setError('');
     setLoading(true);
     try {
@@ -63,6 +66,7 @@ export default function SignupPage() {
     } catch (err) {
       setError(err.message);
     } finally {
+      busyRef.current = false;
       setLoading(false);
     }
   };
@@ -87,6 +91,8 @@ export default function SignupPage() {
   };
 
   const handlePlanSubmit = async () => {
+    if (busyRef.current) return;
+    busyRef.current = true;
     setError('');
     setLoading(true);
     try {
@@ -103,12 +109,15 @@ export default function SignupPage() {
     } catch (err) {
       setError(err.message);
     } finally {
+      busyRef.current = false;
       setLoading(false);
     }
   };
 
   const handleCheckoutSubmit = async (e) => {
     e.preventDefault();
+    if (busyRef.current) return;
+    busyRef.current = true;
     setError('');
     setLoading(true);
     try {
@@ -126,16 +135,25 @@ export default function SignupPage() {
     } catch (err) {
       setError(err.message);
     } finally {
+      busyRef.current = false;
       setLoading(false);
     }
   };
 
   const handleCancelCheckout = async () => {
-    if (checkout?.checkout_id) {
-      try { await endpoints.cancelCheckout(checkout.checkout_id); } catch { /* ignore */ }
+    if (busyRef.current) return;
+    busyRef.current = true;
+    setLoading(true);
+    try {
+      if (checkout?.checkout_id) {
+        try { await endpoints.cancelCheckout(checkout.checkout_id); } catch { /* ignore */ }
+      }
+      setCheckout(null);
+      setStep(2);
+    } finally {
+      busyRef.current = false;
+      setLoading(false);
     }
-    setCheckout(null);
-    setStep(2);
   };
 
   const isSuccess = result && step === successStep;
@@ -192,7 +210,8 @@ export default function SignupPage() {
                     key={plan.id}
                     type="button"
                     onClick={() => setSelectedPlan(plan.id)}
-                    className={`w-full text-left p-4 rounded-xl border transition-all ${
+                    disabled={loading}
+                    className={`w-full text-left p-4 rounded-xl border transition-all disabled:cursor-not-allowed disabled:opacity-60 ${
                       selectedPlan === plan.id
                         ? 'border-brand-light bg-brand-light/10'
                         : 'border-white/10 bg-white/[0.03] hover:border-white/20'
@@ -218,7 +237,7 @@ export default function SignupPage() {
                 ))}
               </div>
               <div className="flex gap-3">
-                <button type="button" onClick={() => setStep(1)} className="flex-1 rounded-xl border border-white/15 px-4 py-2.5 text-sm text-slate-200 hover:border-white/30 transition-colors">
+                <button type="button" onClick={() => setStep(1)} disabled={loading} className="flex-1 rounded-xl border border-white/15 px-4 py-2.5 text-sm text-slate-200 hover:border-white/30 transition-colors disabled:cursor-not-allowed disabled:opacity-60">
                   Back
                 </button>
                 <button type="button" onClick={handlePlanSubmit} disabled={loading} className="btn-primary flex-1">
@@ -248,7 +267,7 @@ export default function SignupPage() {
                 <input name="billing_zip" placeholder="Billing ZIP" className="input-field" autoComplete="postal-code" value={billing.billing_zip} onChange={updateBilling('billing_zip')} />
                 <p className="text-xs text-slate-400">Test/demo checkout — no real charge is processed.</p>
                 <div className="flex gap-3">
-                  <button type="button" onClick={handleCancelCheckout} className="flex-1 rounded-xl border border-white/15 px-4 py-2.5 text-sm text-slate-200 hover:border-white/30 transition-colors">
+                  <button type="button" onClick={handleCancelCheckout} disabled={loading} className="flex-1 rounded-xl border border-white/15 px-4 py-2.5 text-sm text-slate-200 hover:border-white/30 transition-colors disabled:cursor-not-allowed disabled:opacity-60">
                     Back
                   </button>
                   <button type="submit" disabled={loading} className="btn-primary flex-1">

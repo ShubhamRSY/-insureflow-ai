@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   BookOpen, RefreshCw, Plus, CheckCircle, XCircle, Send, Camera,
   GitCompare, Upload, ListChecks, FlaskConical, FileText, Cpu, Shield,
@@ -124,7 +124,7 @@ function DiffView({ diff }) {
   );
 }
 
-function EntryCard({ entry, onAction }) {
+function EntryCard({ entry, onAction, busy }) {
   const meta = TYPE_META[entry.component_type] || { label: entry.component_type, icon: Boxes, accent: 'text-slate-400', bg: 'bg-white/5' };
   const Icon = meta.icon;
   const lastComment = entry.review_comments?.length ? entry.review_comments[entry.review_comments.length - 1] : null;
@@ -157,16 +157,16 @@ function EntryCard({ entry, onAction }) {
         </div>
         <div className="flex shrink-0 gap-1.5">
           {entry.status === 'draft' && (
-            <button onClick={() => onAction(entry.entry_id, 'submit')} className="rounded-lg bg-sky-500/20 px-2.5 py-1 text-xs text-sky-400 transition hover:bg-sky-500/30" title="Submit for review">
+            <button onClick={() => onAction(entry.entry_id, 'submit')} disabled={busy} className="rounded-lg bg-sky-500/20 px-2.5 py-1 text-xs text-sky-400 transition hover:bg-sky-500/30 disabled:cursor-not-allowed disabled:opacity-50" title="Submit for review">
               <Send className="mr-1 inline h-3 w-3" />Submit
             </button>
           )}
           {entry.status === 'review' && (
             <>
-              <button onClick={() => onAction(entry.entry_id, 'approve')} className="rounded-lg bg-emerald-500/20 px-2.5 py-1 text-xs text-emerald-400 transition hover:bg-emerald-500/30" title="Approve">
+              <button onClick={() => onAction(entry.entry_id, 'approve')} disabled={busy} className="rounded-lg bg-emerald-500/20 px-2.5 py-1 text-xs text-emerald-400 transition hover:bg-emerald-500/30 disabled:cursor-not-allowed disabled:opacity-50" title="Approve">
                 <CheckCircle className="mr-1 inline h-3 w-3" />Approve
               </button>
-              <button onClick={() => onAction(entry.entry_id, 'reject')} className="rounded-lg bg-red-500/20 px-2.5 py-1 text-xs text-red-400 transition hover:bg-red-500/30" title="Reject">
+              <button onClick={() => onAction(entry.entry_id, 'reject')} disabled={busy} className="rounded-lg bg-red-500/20 px-2.5 py-1 text-xs text-red-400 transition hover:bg-red-500/30 disabled:cursor-not-allowed disabled:opacity-50" title="Reject">
                 <XCircle className="mr-1 inline h-3 w-3" />Reject
               </button>
             </>
@@ -224,6 +224,8 @@ export default function RegistryPage() {
   const [diffA, setDiffA] = useState('');
   const [diffB, setDiffB] = useState('');
   const [bootstrapping, setBootstrapping] = useState(false);
+  const [busyActionId, setBusyActionId] = useState('');
+  const actionRef = useRef(false);
   const [form, setForm] = useState({ component: 'prompt', key: '', version: '1.0.0', description: '', change_notes: '' });
 
   const load = useCallback(async () => {
@@ -264,6 +266,9 @@ export default function RegistryPage() {
   };
 
   const handleAction = async (id, action) => {
+    if (actionRef.current) return;
+    actionRef.current = true;
+    setBusyActionId(id);
     try {
       if (action === 'submit') await endpoints.submitRegistryEntry(id);
       else if (action === 'approve') await endpoints.approveRegistryEntry(id);
@@ -271,6 +276,9 @@ export default function RegistryPage() {
       await load();
     } catch (err) {
       toast.error(err.message);
+    } finally {
+      actionRef.current = false;
+      setBusyActionId('');
     }
   };
 
@@ -512,7 +520,7 @@ export default function RegistryPage() {
           />
         ) : (
           <div className="grid gap-3 md:grid-cols-2">
-            {visible.map((e) => <EntryCard key={e.entry_id} entry={e} onAction={handleAction} />)}
+            {visible.map((e) => <EntryCard key={e.entry_id} entry={e} onAction={handleAction} busy={busyActionId === e.entry_id} />)}
           </div>
         )}
       </div>
