@@ -1742,3 +1742,5 @@ Blocked: No.
 - Done: P-046 (D-093) check of 57d56b9: REJECT as frozen hold-out code, 2 High (H1 letter-like word excuses an undated or copy carrier run; H2 a non-"loss"-named or scanned run is ignored). Self-checks pass; SUB-153 behaves as gold. deliverables/model-risk/check-P-046.md.
 - Next: re-check once a new P-### closing H1/H2 is approved and built.
 - Blockers: the hold-out SUB-127–146 should not run on 57d56b9 until H1/H2 are closed.
+### 2026-10-15 — @senior-underwriter
+- Done: D-094 item 2: operations gold rule written (deliverables/senior-underwriter/operations-gold-rule.md); new gold only, not applied to published scores. Next: gold for new sets follows it. Blockers: none.

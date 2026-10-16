@@ -369,3 +369,13 @@ Also open from T-097, already in the register's Section D so not repeated as row
 | B-349 | D-092 | @model-risk | Low (L6): ecf69c2 and 28b6d4d complete P-045 (c) without a P-### of their own; @user to confirm they fall within D-092 1c. | 2026-10-15 |
 | B-350 | D-093 | @model-risk | Medium (M3): an undated no-claims run whose carrier header has a prefix ("> ", "# ", "Fwd:") is still excused as a letter when a letter word ("agent", "signed") is present (probes R2, R4, R5). Needs a P-### after the hold-out. | 2026-10-15 |
 | B-351 | D-093 | @model-risk | Low (L6–L8, L1, L2, L5): undated run inside an application shows plain complete by design; SUB-153 email.md adds a second card reason; R6 reads as a letter; "loss" file names (loss-control report) and SOV spreadsheets give false reviews (safe). | 2026-10-15 |
+| B-352 | T-027 | @software-engineer, @head-of-underwriting | Medium (M1): no carrier_c or senior_referral route shown on SUB-127–146; SUB-134 glass shop gets the restaurant-evidence note (class lookup, repeat of SUB-107–126 M2). | 2026-10-15 |
+| B-353 | T-027 | @ai-engineer-assistant | Medium (M2): scanned JPG applications (SUB-129, SUB-144) give null premises/construction/tiv/year built. | 2026-10-15 |
+| B-354 | T-027 | @senior-underwriter, @ai-engineer-assistant | Medium (M3): multi-location year built, construction and premises are null or a false conflict (SUB-140, SUB-144); needs a multi-location convention. | 2026-10-15 |
+| B-355 | T-027 | @ai-engineer-assistant | Medium (M4): SUB-129 email-vs-application sales conflict (3,100,000 vs 2,600,000) not detected; value was flagged, so not silent. | 2026-10-15 |
+| B-356 | T-027 | @ai-engineer-assistant, @senior-underwriter | Medium (M5): sales/tiv/construction/year built score null on gold "missing" as a miss, unlike effective date/loss runs; settle before next gold, never retro-apply (D-094 item 4). | 2026-10-15 |
+| B-357 | T-027 | @software-engineer | Medium (M6): loss-run field reason for scanned runs says "no valued-as-of date" though the per-document rule says "from scan" (SUB-129, 131, 133). | 2026-10-15 |
+| B-358 | T-027 | @senior-underwriter | Low (L1): SUB-132 held incomplete on "liquor sales" extra for a beer-and-wine cafe that gold calls complete. | 2026-10-15 |
+| B-359 | T-027 | @software-engineer | Low (L2): per-document readout flags application.jpg as a loss run from scan (SUB-129, SUB-144). | 2026-10-15 |
+| B-360 | T-027 | @ai-engineer-assistant | Low (L3): frozen code retries more than the run rule; the driver capped it (D-094 item 5). | 2026-10-15 |
+| B-361 | T-027 | @ai-engineer-assistant | Low (L4): score header shows HEAD 15265d4, not frozen 3a77415; record the frozen commit in the header next time. | 2026-10-15 |
