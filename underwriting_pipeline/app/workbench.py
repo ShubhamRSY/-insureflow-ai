@@ -41,6 +41,7 @@ BANNER = ""  # set by serve(); the sandbox screenshots label the page with it
 MESSAGES: dict[str, tuple[bool, str]] = {}  # submission -> (ok, plain-words result of the last action); shown once
 # D-065 item 5: one line per user-visible feature: date, task or proposal, decision number, what an underwriter sees.
 WHATS_NEW = (
+    ("2026-10-16", "P-049", "D-097", "Carrier match follows the written rules (carrier-match.md); each note shows its rule ID (R1-R14). Carrier A is the only direct route. Restaurants and apartments (sprinklered or not) go to senior referral, with Carrier B or C shown as the suggested market for the underwriter to confirm. Hazardous goods, lab or medical, cold storage, liquor and vacant files go to senior referral even when an office or retail word is present. The unsourced Carrier B $2,000,000 cap is gone."),
     ("2026-10-16", "P-050", "D-096", "When TIV is missing, a held file shows the route its class gives: \"Provisional route: senior_referral (provisional — TIV needed to confirm)\". No TIV cap is applied until the TIV is known, and sending stays blocked. The habitational-without-sprinklers referral now cites AG:37, AG:62."),
     ("2026-10-15", "P-048", "D-095", "A file on hold now shows the route it would take: \"Provisional route: carrier_c (provisional — file on hold: <reason>)\". Sending stays blocked until the hold clears. A scanned or image-only carrier loss run gives \"complete — review pending\" (check the date against the page), not hold."),
     ("2026-10-15", "P-047", "D-094", "Operations keeps every stated detail (alcohol, seats, units, stories, cooking, hours, live music). If the documents state one the value leaves out, it shows NEEDS REVIEW: \"operations may be missing: <item>\". Carrier match and the bar/liquor referral read the full cited operations; \"no bar\" or \"no alcohol\" does not trigger a referral."),
@@ -92,13 +93,26 @@ def _ops(report: dict) -> str:
     return ""
 
 
+# P-049 (D-097): the rules and word lists are deliverables/head-of-underwriting/carrier-match.md (R1..R14, W1, W2); notes cite the IDs.
 # D-059 as amended by D-060. Whole word or exact phrase, case-insensitive, never substring.
 # Spanish entries are translations of sourced classes only (D-060); @responsible-ai review is B-197.
 # ponytail: plain lists in code; move to a data file when @head-of-underwriting edits them often.
 PROHIBITED = ("bar", "bars", "nightclub", "nightclubs", "tavern", "taverns", "cantina", "taberna", "antro", "discoteca",
               "cannabis", "marijuana", "marihuana", "dispensary", "dispensario", "fireworks", "firework", "explosives", "explosive",
               "fuegos artificiales", "explosivos", "armed security", "armed guard", "seguridad armada", "guardia armado",
-              "student housing", "subsidized housing", "alojamiento estudiantil", "vivienda subsidiada")  # CAG/AG:45-49
+              "student housing", "subsidized housing", "alojamiento estudiantil", "vivienda subsidiada",
+              "hookah", "adult entertainment", "ammunition", "bail bonds", "sawmill", "sawmills", "pallet manufacturing",
+              "plastics manufacturing", "recycling")  # W1 (R1; AG:45-50)
+# W2 (R14, D-097 1d): referral words, checked before any class word; each sends the file to senior_referral, never to a carrier.
+REFERRAL = (
+    (("fertilizer", "fertilizers", "pesticide", "pesticides", "herbicide", "chemical", "chemicals", "hazardous", "flammable", "solvent",
+      "solvents", "propane", "fuel", "fertilizante", "pesticida", "químico", "químicos"), "wholesale/retail with hazardous goods - not Carrier A (R14; AG:31)"),
+    (("laboratory", "laboratories", "lab", "medical", "clinic", "clinics", "therapy", "therapist", "physician", "doctor", "dental", "dentist",
+      "pediatric", "chiropractic", "hospital", "médico", "clínica", "terapia", "pediátrico"), "lab or medical occupancy - not Carrier A (R14; AG:29)"),
+    (("cold storage", "refrigerated", "freezer", "freezers", "almacenamiento en frío", "refrigerado"), "cold storage - not Carrier A (R14; AG:31)"),
+    (("liquor", "liquor store", "package store", "licor"), "liquor sales, share of receipts not checked - not Carrier A (R14; AG:30)"),
+    (("vacant", "vacío"), "vacant: renovation with signed GC contract is a referral, true vacancy is prohibited; a person decides (R14; AG:40, AG:51)"),
+)
 NOT_READ = "Not read — extraction failed"  # D-079 (B-295)
 BAR_WORDS = ("bar", "bars", "tavern", "taverns", "nightclub", "nightclubs", "pub", "pubs", "lounge", "lounges")  # D-079
 
@@ -110,12 +124,14 @@ CLASSES = {
           "kitchen", "kitchens", "cocina", "eatery", "eateries", "comedor", "cafe", "café", "cafeteria", "cafetería",
           "catering", "banquetes", "bakery", "bakeries", "coffee shop", "coffee shops", "deli", "delis"),  # D-079 (B-293)
     "contractor": ("contractor", "contractors", "contratista", "roofing", "roofer", "techado", "techador", "handyman", "painter", "painting",
-                   "pintor", "pintura", "carpenter", "carpentry", "carpintero", "carpintería", "flooring", "drywall", "plumbing", "electrician"),
+                   "pintor", "pintura", "carpenter", "carpentry", "carpintero", "carpintería", "flooring", "drywall", "plumbing", "electrician",
+                   "hvac", "glazier", "mason"),  # R11
     "habitational": ("habitational", "habitacional", "apartment", "apartments", "apartamento", "apartamentos", "flats", "multifamily",
                      "multifamiliar", "duplex", "triplex", "fourplex"),
 }
-CAP_A, CAP_B, PILOT_TIV = 5_000_000, 2_000_000, 5_000_000  # B cap provisional (@actuary, D-060); caps inclusive
-OUT_TIV = "outside pilot TIV limit (AG:16)"
+PILOT_TIV = 5_000_000  # R13, inclusive. R15 (P-049): the unsourced Carrier B $2,000,000 cap is removed
+OUT_TIV = "outside pilot TIV limit (R13; AG:16)"
+CONFIRM = ", underwriter confirms"  # P-049 (c): Carrier B and C are suggested markets only
 
 
 def _has(text: str, words) -> bool:
@@ -162,8 +178,8 @@ def _match(report: dict, gated: bool) -> dict:
     food = bool(ops) and (_has(ops, CLASSES["b"]) or ((report.get("cooking") or {}).get("equipment") or {}).get("state") == "yes")
     barred = bool(ops) and _has(ops, BAR_WORDS)
     other_prohibited = bool(ops) and _has(ops, tuple(w for w in PROHIBITED if w not in BAR_WORDS))
-    if other_prohibited or (ops and _has(ops, PROHIBITED) and not food):
-        return out("no_match", "prohibited class (AG:45-49)")
+    if other_prohibited or (ops and _has(ops, PROHIBITED) and not food):  # W1 before the hold gate, as since D-059 (carrier-match.md lists R5/R6 first: B-378)
+        return out("no_match", "prohibited class (R1; AG:45-50)")
     if (gated and not prepare.ready_to_route(report)) or not ops:  # P-041: review pending routes as complete did before
         return out("hold", "open conflict" if ops and report.get("status") == prepare.REVIEW_PENDING else "missing information")
     tiv = _tiv(report)
@@ -173,31 +189,35 @@ def _match(report: dict, gated: bool) -> dict:
         tiv = None  # P-050 (D-096): the provisional route is class-based; no TIV cap or limit is applied without a TIV
     over = lambda cap: tiv is not None and tiv > cap
     if barred and food:  # D-079 (B-290): a bar word with restaurant evidence is a person's call, not a rule's
-        return out("senior_referral", "possible bar/liquor exposure — confirm liquor sales")
+        return out("senior_referral", "possible bar/liquor exposure — confirm liquor sales (R2; AG:46, AG:39)")
+    for words, note in REFERRAL:  # W2 (D-097 1d): a referral word always wins over appetite (class) words
+        if _has(ops, words):
+            return out("senior_referral", note + (f"; {OUT_TIV}" if over(PILOT_TIV) else ""))
     hit = [k for k, words in CLASSES.items() if _has(ops, words)]
     if "b" not in hit and ((report.get("cooking") or {}).get("equipment") or {}).get("state") == "yes":
         hit.append("b")  # D-078: stated cooking equipment is generic restaurant evidence
     if not hit:
-        return out("no_match", "readable class on no carrier list; a restaurant needs generic evidence (restaurant, food service, kitchen, eatery, café, catering or stated cooking equipment), never a cuisine word (D-078)", overridable=True)
+        return out("no_match", "readable class on no carrier list (R8; KO 8); a restaurant needs generic evidence (restaurant, food service, kitchen, eatery, café, catering or stated cooking equipment), never a cuisine word (D-078)", overridable=True)
+    spr = report.get("sprinklers")
+    raw = " ".join(f"{r.get('value') or ''} {r.get('quote') or ''} {r.get('context') or ''}" for r in report["fields"] if r["field_id"] == "operations").lower()
+    unsprinklered = spr == "no" or _has(raw, ("unsprinklered", "no sprinklers", "sprinklers no"))  # raw: _ops drops "no <word>"
+    knock = "; AG:61 knock-out candidate, a person decides" if "habitational" in hit and unsprinklered and food else ""  # R12: never a decline
     if len(hit) > 1:
-        return out("senior_referral", "class matches more than one carrier: " + ", ".join(hit))
+        return out("senior_referral", "class matches more than one carrier (R7; KO 7): " + ", ".join(hit) + knock)
     kind = hit[0]
+    big = f"; {OUT_TIV}" if over(PILOT_TIV) else ""
     if kind == "contractor":
-        return out("senior_referral", "contractor (AG:38); suggested market: carrier_b" + (f"; {OUT_TIV}" if over(PILOT_TIV) else ""), suggested="carrier_b")
+        return out("senior_referral", "contractor (R11; AG:38, AG:62); suggested market: Carrier B" + CONFIRM + big, suggested="carrier_b")
     if kind == "habitational":
-        spr = report.get("sprinklers")
-        if spr == "yes" or "sprinklers yes" in ops or (_has(ops, ("sprinklered",)) and spr != "no"):
-            return out("senior_referral", OUT_TIV) if over(PILOT_TIV) else out("carrier_c")
-        if spr == "no" or _has(ops, ("unsprinklered", "no sprinklers", "sprinklers no")):
-            return out("senior_referral", "habitational without sprinklers (AG:37, AG:62)")
-        return out("hold", "habitational: sprinkler answer missing")
+        if not unsprinklered and not (spr == "yes" or "sprinklers yes" in ops or _has(ops, ("sprinklered",))):
+            return out("hold", "habitational: sprinkler answer missing")
+        bare = "; no sprinklers" if unsprinklered else ""  # R12: the sprinkler fact stays on the card
+        return out("senior_referral", "habitational (R12; AG:37, AG:62)" + bare + "; suggested market: Carrier C" + CONFIRM + big, suggested="carrier_c")
+    if kind == "b":  # R10 (AG:39, AG:62): every restaurant or cooking occupancy is a senior referral
+        return out("senior_referral", "restaurant / cooking occupancy (R10; AG:39, AG:62); suggested market: Carrier B" + CONFIRM + "; its 3 clean loss years are not checked" + big, suggested="carrier_b")
     if over(PILOT_TIV):
         return out("senior_referral", OUT_TIV)
-    if kind == "a":
-        return out("carrier_a")
-    if over(CAP_B):
-        return out("senior_referral", "over Carrier B TIV cap $2,000,000 (provisional)")
-    return out("carrier_b", "3 clean years not checked")
+    return out("carrier_a", "Carrier A (R14; AG:29-31); verify: no restaurant, liquor <= 10%, no cold storage, no hazardous goods, no lab or medical")
 
 
 def route(report: dict) -> str:
@@ -1202,7 +1222,7 @@ if __name__ == "__main__":
         # P-048 (c): a held file still routes, provisionally; route stays "hold" so no send gate opens.
         waiting = {**ready, "complete": False, "status": "incomplete"}
         m = match(waiting)
-        assert (m["route"], m["provisional"], m["provisional_label"]) == ("hold", "carrier_c", "provisional — file on hold: missing information"), m
+        assert (m["route"], m["provisional"], m["provisional_label"]) == ("hold", "senior_referral", "provisional — file on hold: missing information"), m
         assert match({**held, "complete": False, "status": "incomplete"})["provisional"] == "senior_referral" and match({**waiting, "sprinklers": None})["provisional"] is None
         assert "provisional" not in match(ready) and package._route(waiting) == "hold" and not package._overridable(waiting), "no send, no override on a held file"
         # P-050 (D-096): TIV missing gives a class-based provisional route; the send stays blocked. SUB-142 and SUB-144 shapes (dev reports).
@@ -1210,10 +1230,22 @@ if __name__ == "__main__":
         m142 = match(notiv("Roofing contractor, 5 employees, shop and yard"))
         assert (m142["route"], m142["provisional"], m142["provisional_label"]) == ("hold", "senior_referral", PROVISIONAL_TIV) and "AG:38" in m142["provisional_note"], m142
         m144 = match(notiv("outpatient pediatric physical and speech therapy, treatment rooms, waiting room, offices, no overnight, no beds"))
-        assert m144["route"] == "hold" and m144["provisional"] and m144["provisional_label"] == PROVISIONAL_TIV and not package._overridable(notiv("x")), m144
-        assert match(notiv("sprinklered apartments", sprinklers="yes"))["provisional"] == "carrier_c" and match(notiv("apartments"))["provisional"] is None, "no cap check without TIV; a missing sprinkler answer still gives no route"
-        assert match(notiv("office"))["provisional_note"] == "" and "TIV" not in match(notiv("restaurant"))["provisional_note"], "no TIV cap note is guessed"
-        assert route(ready) == "carrier_c"
+        assert (m144["route"], m144["provisional"], m144["provisional_note"]) == ("hold", "senior_referral", "lab or medical occupancy - not Carrier A (R14; AG:29)") and not package._overridable(notiv("x")), m144
+        # P-049 (d) (D-097): a referral word always wins over class words. SUB-138 and SUB-144 shapes.
+        r = lambda ops, tiv="$1,000,000": {"complete": True, "fields": [{"field_id": "operations", "value": ops}, {"field_id": "tiv_building", "value": tiv}]}
+        for ops, why in (("Wholesale and retail of animal feed, seed and fertilizer bags. Warehouse with loading dock", "AG:31"), ("pediatric therapy offices", "AG:29"),
+                         ("cold storage warehouse, wholesale", "AG:31"), ("retail liquor store", "AG:30"), ("vacant office building", "AG:40")):
+            assert route(r(ops)) == "senior_referral" and why in match(r(ops))["note"], (ops, match(r(ops)))
+        assert route(r("lab-grown diamonds retail")) == "senior_referral" and route(r("labrador breeder office")) == "carrier_a", "whole words only"
+        assert route(r("office, no liquor")) == "carrier_a", "a negated referral word does not refer"
+        assert match(notiv("sprinklered apartments", sprinklers="yes"))["provisional"] == "senior_referral" and match(notiv("apartments"))["provisional"] is None, "R12; a missing sprinkler answer still gives no route"
+        assert "TIV" not in match(notiv("office"))["provisional_note"] and "TIV" not in match(notiv("restaurant"))["provisional_note"], "no TIV cap note is guessed"
+        assert match(ready) == {"route": "senior_referral", "note": "habitational (R12; AG:37, AG:62); suggested market: Carrier C, underwriter confirms", "suggested": "carrier_c", "overridable": False}, "D-097: D-059 item 6 replaced"
+        assert "AG:61 knock-out candidate" in match({**held, "cooking": {"equipment": {"state": "yes"}}})["note"] and "AG:61" not in match(held)["note"], "AG:61 only with cooking, never a decline"
+        assert "no sprinklers" in match(held)["note"] and "no sprinklers" not in match(ready)["note"], "code-review: the sprinkler fact stays on the card"
+        worded = {"complete": True, "fields": [{"field_id": "operations", "value": "apartments with no sprinklers"}, {"field_id": "tiv_building", "value": "$1,000,000"}]}
+        assert route(worded) == "senior_referral" and "no sprinklers" in match(worded)["note"], "code-review: a 'no sprinklers' phrase is read before negation is dropped"
+        R10 = "restaurant / cooking occupancy (R10; AG:39, AG:62); suggested market: Carrier B, underwriter confirms; its 3 clean loss years are not checked"
         # T-083: D-059 + D-060, written to the temp-free in-memory report only.
         def r(ops, tiv="$1,000,000", **kw):
             f = [{"field_id": "operations", "value": ops}]
@@ -1223,17 +1255,18 @@ if __name__ == "__main__":
 
         m = match(r("barber shop"))
         assert m["route"] == "no_match" and m["overridable"]
-        assert route(r("barbecue restaurant")) == "carrier_b" and match(r("Barbecue Restaurant"))["note"] == "3 clean years not checked"
+        assert match(r("Barbecue Restaurant")) == {"route": "senior_referral", "note": "restaurant / cooking occupancy (R10; AG:39, AG:62); suggested market: Carrier B, underwriter confirms; its 3 clean loss years are not checked", "suggested": "carrier_b", "overridable": False}
         m = match(r("accounting office", "$8,000,000"))
-        assert m["route"] == "senior_referral" and m["note"] == "outside pilot TIV limit (AG:16)"
+        assert m["route"] == "senior_referral" and m["note"] == "outside pilot TIV limit (R13; AG:16)"
         for ops in ("cannabis dispensary retail", "armed security office", "sprinklered student housing", "Bar and grill", "fireworks"):
             m = match(r(ops, sprinklers="yes"))
             assert m["route"] == "no_match" and not m["overridable"], ops
         m = match(r("roofing contractor"))
-        assert m["route"] == "senior_referral" and m["suggested"] == "carrier_b"
+        assert m["route"] == "senior_referral" and m["suggested"] == "carrier_b" and "R11" in m["note"]
+        assert {route(r(f"{w} services")) for w in ("hvac", "glazier", "mason")} == {"senior_referral"}, "R11 words"
         assert match(r("office and restaurant"))["route"] == "senior_referral"
         assert route(r("office", "$5,000,000")) == "carrier_a" and route(r("office", "$5,000,001")) == "senior_referral"
-        assert route(r("restaurant", "$2,000,000")) == "carrier_b" and route(r("restaurant", "$2,000,001")) == "senior_referral"
+        assert match(r("restaurant", "$2,000,001"))["note"] == match(r("restaurant", "$2,000,000"))["note"], "R15: no Carrier B cap"
         # D-061: the existing normalizer; missing or unreadable TIV holds; over $5M is senior referral, no $10M rule.
         assert match(r("office", "$8M"))["note"] == OUT_TIV and route(r("office", "$12,000,000")) == "senior_referral"
         assert route(r("office", "750K")) == "carrier_a" and route(r("office", "$1.2M")) == "carrier_a"
@@ -1241,37 +1274,38 @@ if __name__ == "__main__":
         for bad in ("", "TBD", None, "$0", "0", "-$5,000",  # B-203: 0 or negative holds
                     "50,000 sq ft", "50000 SF", "12,000 square feet", "8,000 sq. ft.", "9000sqft", "1 square foot"):  # B-209
             m = match(r("office", bad))
-            assert m == {"route": "hold", "note": "TIV missing or unreadable", "suggested": "", "overridable": False, "provisional": "carrier_a", "provisional_note": "",
+            assert m == {"route": "hold", "note": "TIV missing or unreadable", "suggested": "", "overridable": False, "provisional": "carrier_a", "provisional_note": match(r("office"))["note"],
                          "provisional_label": PROVISIONAL_TIV}, (bad, m)  # P-050: class-based, TIV needed to confirm
         assert route(r("oficina")) == "carrier_a" and route(r("")) == "hold"
         # D-078 (B-286): cuisine and ethnic words never decide the class. Alone they give the same no_match; with generic evidence the same carrier_b.
         cuisines = ("taqueria", "panadería", "pho house", "diner", "pizzeria", "soul food", "curry house", "halal cart", "bbq")  # "deli" is food service (D-079); bar words: see below
         assert {route(r(c)) for c in cuisines} == {"no_match"} and all(match(r(c))["overridable"] for c in cuisines)
-        assert {route(r(f"{c} restaurant")) for c in cuisines} == {"carrier_b"}
-        assert {route(r(f"{c}, food service")) for c in cuisines} == {"carrier_b"} and route(r("catering kitchen")) == "carrier_b"
-        assert route(r("pho house", cooking={"equipment": {"state": "yes"}, "hood_suppression": {"state": "not_stated"}})) == "carrier_b", "stated cooking equipment is generic evidence"
+        assert {match(r(f"{c} restaurant"))["note"] for c in cuisines} == {R10}, "D-078: the same route for every cuisine"
+        assert {route(r(f"{c}, food service")) for c in cuisines} == {"senior_referral"} and match(r("catering kitchen"))["note"] == R10
+        assert match(r("pho house", cooking={"equipment": {"state": "yes"}, "hood_suppression": {"state": "not_stated"}}))["note"] == R10, "stated cooking equipment is generic evidence"
         # D-079 (B-290): bar words with restaurant evidence go to a person; without it, as before. (B-293): bakery, coffee shop, deli are food service.
-        bar_ref = {"route": "senior_referral", "note": "possible bar/liquor exposure — confirm liquor sales", "suggested": "", "overridable": False}
+        bar_ref = {"route": "senior_referral", "note": "possible bar/liquor exposure — confirm liquor sales (R2; AG:46, AG:39)", "suggested": "", "overridable": False}
         for ops in ("sushi bar restaurant", "bar-b-q restaurant", "pub and kitchen", "hotel lounge with catering"):
             assert match(r(ops)) == bar_ref, (ops, match(r(ops)))
-        assert route(r("bbq restaurant")) == "carrier_b"
+        assert match(r("bbq restaurant"))["note"] == R10
         for ops in ("sports bar", "tavern", "nightclub"):
-            assert match(r(ops)) == {"route": "no_match", "note": "prohibited class (AG:45-49)", "suggested": "", "overridable": False}, ops
+            assert match(r(ops)) == {"route": "no_match", "note": "prohibited class (R1; AG:45-50)", "suggested": "", "overridable": False}, ops
+        assert {route(r(w)) for w in ("hookah lounge", "recycling yard", "sawmill", "bail bonds office")} == {"no_match"}, "W1 additions; prohibited wins over office"
         assert route(r("pub")) == "no_match" and match(r("nail lounge"))["overridable"], "pub, lounge alone: as before"
         assert route(r("cannabis dispensary restaurant")) == "no_match", "other prohibited words are unchanged"
         assert route(r("restaurant bar", None)) == "hold", "holds come before the referral"
         # P-047 (c): the cited text is read too, so a dropped "and bar" still refers; a negated word does not.
         quoted = lambda ops, quote: {"complete": True, "fields": [{"field_id": "operations", "value": ops, "quote": quote}, {"field_id": "tiv_building", "value": "$1,000,000"}]}
         assert match(quoted("Full-service restaurant", "Operations: Full-service restaurant and bar, 180 seats, full liquor license")) == bar_ref
-        assert route(quoted("Mexican restaurant", "Operations: Mexican restaurant, 70 seats, beer and wine only, no bar.")) == "carrier_b"
+        assert match(quoted("Mexican restaurant", "Operations: Mexican restaurant, 70 seats, beer and wine only, no bar."))["note"] == R10
         assert route(quoted("Dry retail gift shop", "Operations: Dry retail gift shop. No food, no alcohol.")) == "carrier_a"
         lined = quoted("Mexican restaurant", "Operations: Mexican restaurant, 70 seats.")
         lined["fields"][0]["context"] = "Liquor: full bar, 35% of sales"
         assert match(lined) == bar_ref, "P-047 H1: a separate liquor line still refers"
         for ops in ("bakery", "coffee shop", "deli"):
-            assert route(r(ops)) == "carrier_b", ops
-        assert route(r("sprinklered apartments", "$4,000,000")) == "carrier_c"
-        assert match(r("sprinklered apartments", "$6,000,000"))["note"] == OUT_TIV
+            assert match(r(ops))["note"] == R10, ops
+        assert match(r("sprinklered apartments", "$4,000,000"))["suggested"] == "carrier_c" and route(r("sprinklered apartments", "$4,000,000")) == "senior_referral"
+        assert match(r("sprinklered apartments", "$6,000,000"))["note"].endswith(OUT_TIV)
         assert route(r("office")) == "carrier_a" and route(r("barley mill")) == "no_match"
         assert "COOKING" not in points.score_run({**fake, "status": "complete"})["reason_codes"]
 

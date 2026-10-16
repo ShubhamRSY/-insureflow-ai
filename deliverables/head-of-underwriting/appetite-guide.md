@@ -13,7 +13,7 @@ Profitability first. A class is in appetite only if we can explain a decline in 
 | Gate | Target | Outside pilot |
 |---|---|---|
 | Account premium (package) | ≤ $25,000 | > $25,000 refer to a human; > $75,000 out of pilot |
-| TIV per location | ≤ $5,000,000 | > $5,000,000 out of pilot |
+| TIV per location | ≤ $5,000,000 | > $5,000,000 senior referral (outside the pilot limit) |
 | Locations | 1–3 | 4–10 refer; > 10 out of pilot |
 | Revenue (GL exposure base) | ≤ $10,000,000 | > $10,000,000 out of pilot |
 | Building age | Known | Unknown building age cannot auto-quote |
@@ -43,7 +43,7 @@ No other class is a target. "Target" means eligible for auto-quote, not "we like
 ## Prohibited (decline only by a human, citing this list)
 
 - Student housing and subsidized housing.
-- Bars, nightclubs, hookah, adult entertainment; liquor receipts > 50%.
+- Bars, pubs, lounges, taverns, nightclubs, hookah, adult entertainment; liquor receipts > 50%.
 - Cannabis cultivation, processing, or retail.
 - Fireworks, explosives, ammunition manufacturing.
 - Armed security, bail bonds.
@@ -57,9 +57,11 @@ No other class is a target. "Target" means eligible for auto-quote, not "we like
 1. IF class is on the prohibited list THEN decline, reason = class name, human sends the notice.
 2. IF territory is out of appetite THEN decline, reason = territory exclusion.
 3. IF 5-year currently valued carrier loss runs are missing, OR the only loss document is a "no known loss" letter, THEN Incomplete. Do not quote, do not decline, and do not store zero claims.
-4. IF construction, protection class, or year built is unknown THEN refer; do not auto-quote.
+4. IF construction, protection class, year built, or TIV is unknown THEN refer; do not auto-quote. (A carrier route may be shown only as provisional, with sends blocked.)
 5. IF habitational AND cooking AND no sprinklers THEN decline, reason = habitational cooking without sprinklers. Human sends the notice.
 6. IF class is habitational, contractor, or restaurant THEN senior referral, never auto-quote.
+7. IF the class matches more than one carrier's list THEN senior referral; never pick one silently.
+8. IF the class is readable but on no carrier list THEN no match (not a decline); a person may override with a reason.
 
 ## What I will not defend
 

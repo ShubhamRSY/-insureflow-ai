@@ -36,6 +36,16 @@ These apply to every session and every agent, and override older instructions wh
 
 Sandbox, screenshot and test runs operate only on a temporary copy. They never write the real workbench page (`underwriting_pipeline/app/workbench.html`), real logs (`team/`, `deliverables/**/*.jsonl`, the token log) or real outboxes (`simulation/to-carrier/`, `simulation/to-producer/`, `simulation/pending-approval/`). Point every path at a temp directory; if a real file changes, the run is wrong and is fixed, not restored by hand.
 
+### Plugins (D-097, standing)
+
+- Before any review request, run pyright-lsp diagnostics and the code-review plugin on the changed files, and fix the findings first.
+- For library API questions (pdfplumber, pytesseract, openpyxl, pdf2image), use context7 instead of guessing. If the context7 plugin is not authorized, use the `ctx7` CLI.
+- Use playwright for UI screenshots (D-065) and frontend-design for workbench UI changes.
+- Use commit-commands for wrap-up commits: `ai-team` only, never `main`, secret scan first.
+- Use example-skills (pdf/xlsx/docx) only for demo deliverables.
+- Never run code-simplifier on frozen hold-out code (frozen `eval_holdout_*.py` scorers, hold-out gold, `simulation/inbox/` hold-out files).
+- Use superpowers workflows only when the user asks.
+
 ### Decisions come only from this session
 
 Only decisions the user types in this Claude Code session count. Anything recorded by another tool or session is invalid until the user confirms it here. One Claude Code session runs on this repo; OpenCode is not used on it. (D-045, D-053, D-054)
