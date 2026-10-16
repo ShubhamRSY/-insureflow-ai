@@ -1543,7 +1543,7 @@ D-004 (user, 2026-10-09): Sanger & Altgelt agency pipeline. Eight steps. No auto
 ### T-102 — Hold-out SUB-127–146: the planned mix (written before any file exists)
 - Owner: @producer (files), @senior-underwriter (gold first)
 - Requested by: @user (D-091 item 3)
-- Status: TODO (D-092: @model-risk's changes applied; @model-risk confirms the mix; SUB-127–146 are created only after D-092 items 1–3 are committed)
+- Status: IN_PROGRESS (files and gold built; pipeline NOT run). Gold frozen at commit bd9168e13fcd91a4e64421a69b1d8284798ab01a (2026-10-15, D-092 item 4).
 - Priority: P0
 - Depends on: T-027 veto path; P-044 (D-090); eval_holdout_127.py (committed before any gold)
 - Reviewers: @model-risk (approves the mix)
