@@ -1,21 +1,18 @@
 # Next session
 
-Written 2026-10-16 by the orchestrator at wrap-up. Wrap-up commit: `33e399a` on `ai-team`, pushed to `origin/ai-team` (private).
+Written 2026-10-16 by the orchestrator at wrap-up. Wrap-up commit: `7b2b1e6` on `ai-team`, pushed to `origin/ai-team` (private).
 
 - Budget rule 8: demo blockers only (the weekly limit resets 2026-10-17).
 - Standing rules: D-065, D-069, the CLAUDE.md "Plugins" section (D-097). One AI session on this repo (D-090). The frontend/ files and `.claude/settings*.json` belong to the user and are never staged.
-- **Run every pipeline command with `.venv/bin/python`.** Score files are written only with `--write`; re-scores use `HOLDOUT_RESCORE=1`, a temp cache copy in `LLM_CACHE_DIR`, `LLM_PACE_SECONDS=0`. Hold-outs use `eval_holdout_v4`.
-- **Branch warning (D-100).** At 14:31 something outside this session checked the main repo folder out to `feat/gcp-infrastructure` and kept committing there (Terraform, `infra/gcp/`, including two ~119 MB provider binaries that GitHub will refuse). This session's P-054 commits first landed there and were cherry-picked onto ai-team; the rest of the session ran in a separate ai-team worktree (user's choice). **Before work: `git branch --show-current` must say `ai-team`.** The GCP commits are not confirmed (D-045/D-053) and are not on ai-team. The main folder still holds the user's uncommitted `src/`, `tests/`, `docs/rag/`, `scripts/` changes.
+- **Work in the permanent worktree `/Users/disastershubz/INSURANCE FLOW AI/insureflow-ai-team` (branch `ai-team`, D-101).** `.venv` there is a symlink to the main folder's venv (excluded in `.git/info/exclude`). The main folder `-insureflow-ai-1` stays on `feat/gcp-infrastructure` with the user's uncommitted `src/`, `tests/`, `docs/rag/`, `scripts/` changes: never touch it. Check `git branch --show-current` says `ai-team` before work.
+- **Run every pipeline command with `.venv/bin/python`.** Score files are written only with `--write`; re-scores use `HOLDOUT_RESCORE=1`, a temp cache copy in `LLM_CACHE_DIR`, `LLM_PACE_SECONDS=0`. intake.py's self-check runs with no argument (not `--self-check`).
 
-## Where we stopped (D-100)
+## Where we stopped (D-101)
 
-- **P-054 built and approved** (`9320666`, `3557e4a`): neutral list holds only non-occupancy words (shop, store, gift, home, trade and goods words, and "cooking" except the empty "Cooking: none" label, go to senior_referral, Carrier A suggested); W2e vacancy variants block the confirm; a carrier named in the same sentence as a decline word in any note on the file (route note, fields, text documents) is excluded. @model-risk check-P-054 OBJECTION (H1, H2) → fixed → look-again **APPROVE**, no High.
-- **Code frozen at `3557e4a`** (D-100 item 2).
-- **Dev re-check SUB-127–146** (`8d3e4f0`; v4, cache, 0 calls, clean `3557e4a`): 0 unsafe, 0 false completes, route 16/20, **dev route gate FAIL** on gold that predates R17 (SUB-127/128/129/135 gold carrier_a, now senior_referral; safe direction). senior_referral 18/20, carrier_a 1.
-- **T-103 built, gold frozen at `33e399a`**: SUB-154–173 by @producer per the mix and @model-risk's 2026-10-16 addendum (condition 3: file 13 is the JPG applicant note; file 8 light wholesale states non-hazardous; file 11 states a TIV). SUB-154/155/162 operations reworded to R17 words before the freeze (my first dispatch left out that constraint). Gold by @senior-underwriter from documents and written rules only: carrier_a 3 (154, 155, 162), senior_referral 12, no_match 3, hold 2; complete 5, review pending 3, incomplete 12. **Pipeline not run on them.**
-- Self-checks at wrap-up: llm_extract, prepare, intake, package, workbench, points all ok.
-- Standup missing: @producer (outside party, cannot write team/).
-- Backlog B-392, B-393.
+- **T-103 run once and scored once** (scorer v4, `--write`), code `3557e4a`, gold `33e399a`, both confirmed unchanged by git; smoke ok first; qwen paced 55 s; 20 calls, 0 failed, 4 logged 429 retries, 38,396 tokens (~1,920/file, $0 on the free host). Files: `deliverables/ai-engineer/evals/SUB-154-173-holdout-v4.md/.json`, `-run-record.md`, `-mismatches.md` (as-is, cache replay, 0 calls).
+- Result: 0 false completes, 0 unsafe routes; route 16/20 (**gate FAIL**); fields at 9/10: only named_insured 19/20 (premises 16, effective 17, operations 7, sales 17, tiv 17, construction 17, year built 16, loss runs 5 hit + 11 not credited). Silent error 3.3%, automation 71.7%, status automation 4/8.
+- **@model-risk T-027 memo: KEEP** (`deliverables/model-risk/T-027-gate-memo-T-103.md`). Nothing was fixed (user's instruction). Backlog B-394 (H1 fields), B-395 (H2 route), B-396 (M1–M5, L1–L3).
+- Standup missing: @model-risk (took a turn, wrote the memo and a DISCUSSION message, no standup line).
 
 ## Approved, not built
 
@@ -28,27 +25,27 @@ Written 2026-10-16 by the orchestrator at wrap-up. Wrap-up commit: `33e399a` on 
 
 ## Pending decisions for the user
 
-1. **Run T-103** on the frozen code `3557e4a` with frozen gold `33e399a`: smoke_readers.py first, .venv, paced, scorer v4 with `--write`, run and scored once (T-027 path). Note: SUB-154/155/162 business names hold trade words (Tax, Candle, Bookkeeping); R17 reads only operations text, so if extraction copies a name into operations they go to senior_referral (safe miss).
-2. **@model-risk L2 (check-P-048):** state whether route is part of the T-027 gate before T-103 is scored (v4 gate says yes: 0 unsafe, ≥18/20).
-3. **Dev gold** (B-392 M4): have @senior-underwriter update SUB-127–146 gold to R17, or leave the dev gate failing on stale gold.
+1. **What to fix first for T-027** (B-394, B-395): the scanned application SUB-170 (every field lost though OCR read it), scanned carrier-run dates 0/3 (SUB-159–161), empty date/address/operations on email-only and Spanish files, multi-location address/year built. Each fix needs a numbered P-### and "approve change P-###".
+2. **Gold conventions for the next hold-out** (B-396 M1, M4, decide before any new gold): "missing, not given" vs "not in documents" for empty fields; gold route "hold" vs D-097 (route after the hold clears); and whether the operations all-words rule (M2) stays.
+3. **Dev gold** (B-392 M4): update SUB-127–146 gold to R17, or leave the dev gate failing on stale gold.
 4. **The GCP branch** and the `5ceeef8` roles (B-388): confirm or reject.
-5. Senior-underwriter ambiguities for @head-of-underwriting (T-103-gold-summary.md): SUB-161 negated hazard words, SUB-173 "retail food", SUB-167 hold with no provisional route.
+5. Senior-underwriter ambiguities for @head-of-underwriting (T-103-gold-summary.md): SUB-161, SUB-173, SUB-167.
 
 ## Open vetoes and what resolves each
 
 | Task | Holder | Resolves when |
 |---|---|---|
-| T-027 | @model-risk (production) | T-103 runs: gold first (done, `33e399a`), smoke first, .venv, paced, scorer v4 with `--write`, run and scored once on a frozen commit (`3557e4a`); all 9 fields at 9/10 or better, 0 false completes, 0 unsafe routes, route at least 18/20. |
+| T-027 | @model-risk (production) | Approved P-### fixes for H1 (field floor) and H2 (route), then a new frozen 20-file hold-out, gold first (after M1/M4 are settled), smoke first, .venv, paced, scorer v4 `--write`, run and scored once: all 9 fields at 9/10, 0 false completes, 0 unsafe, route ≥18/20. T-103's score stays as published. |
 | T-082 | @responsible-ai (fairness) | As written in its veto message in team/DISCUSSION.md. |
 
 ## First 3 tasks next session
 
-1. Check the branch (`ai-team`), then user decisions 1–2.
-2. If the user says run: T-103 run and score once (decision 1), @model-risk reads the result against the T-027 gate.
+1. Check the worktree and branch (`ai-team`); user decisions 1–2.
+2. @ai-engineer-assistant writes the P-### for the top T-103 failure (SUB-170 scanned application and scanned run dates), from the saved replies, no model call.
 3. Decisions 3–5.
 
 ## For the AI Engineer
 
-- Pending: no open P-###. Decisions: run T-103; dev gold update; GCP branch; B-388 roles.
-- Latest scores (dev SUB-127–146, v4, cache, `3557e4a`): 0 unsafe, 0 false completes, route 16/20 (gate FAIL on stale gold), loss runs 8/0/12, operations 19/20.
-- Top failure to fix next: the dev gold predates R17, so the dev route gate cannot pass; T-103 is the real measure.
+- Pending: no open P-###. Decisions: what to fix first (B-394/B-395); gold conventions (B-396 M1/M4); dev gold; GCP branch.
+- Latest scores (T-103 hold-out SUB-154–173, v4, live, `3557e4a`): 0 unsafe, 0 false completes, route 16/20, operations 7/20, only named_insured at 9/10; T-027 KEEP.
+- Top failure to fix next: scanned inputs: SUB-170's scanned application lost every field, and scanned carrier runs gave 0/3 dates.
