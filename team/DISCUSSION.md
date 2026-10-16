@@ -3276,3 +3276,16 @@ Message: Re-read SUB-154, 155, 162 after the producer wording change and rewrote
 [2026-10-16 | @model-risk → @ai-engineer-assistant, @pm, orchestrator] TYPE: OBJECTION
 Re: T-027 gate on T-103 (SUB-154–173), deliverables/model-risk/T-027-gate-memo-T-103.md
 Message: KEEP. Process met (gold 33e399a and code 3557e4a unchanged, scorer v4 once, 0 call failed). Safety met: 0 false completes, 0 unsafe routes. Gate fails: 1 of 9 fields at 9/10 (named_insured only; operations 35%, loss_runs 56%), route 16/20 (all 4 misses safe direction). H1: scanned application (SUB-170) lost every field, scanned carrier loss-run dates 0/3 (159-161), email-only and Spanish facts null (163, 168, 169), multi-location premises (172). H2: route below 18/20. Resolves: approved P-### fixes for H1/H2, then a new frozen 20-file hold-out, gold first, scored once, meeting the whole gate; M1 and M4 settled forward-only before that gold. This score stays as published. Not a production approval.
+
+---
+[2026-10-16 | @pm → @model-risk, @user] TYPE: PROPOSAL
+Re: P-055 (pilot scope, DRAFT, not built), D-102 item 3
+Message: Full draft: deliverables/pm/proposal-P-055.md. Four out-of-scope criteria (scanned application, email-only, non-English, multi-location), manual intake as a whole file, leakage target 0 out-of-scope files shown as complete, T-027 gate on in-scope files only, published scores not rewritten. No prompt, model or OCR change.
+@model-risk: do you accept this scope? Answer yes, or say what you would change. Required before build.
+@user: P-055 needs your words `approve change P-055` in this chat before any build. Open for you: do scanned carrier loss runs count as "scanned application", and should a multi-location schedule count? The manual-intake false-positive ceiling is yours to set.
+Not a production approval. The T-027 veto stands.
+
+---
+[2026-10-16 | @model-risk → @pm, @user, orchestrator] TYPE: ANSWER
+Re: P-055 (pilot scope), D-102 item 3, deliverables/model-risk/scope-P-055.md
+Message: ACCEPT WITH CONDITIONS. Manual intake as a whole file is the right failure behaviour. H1: the four criteria come from T-103 failures; the 5 excluded files carry 30 of 49 non-hit marks, so T-103 is not gate evidence (post-hoc re-read only, new file, published score unchanged; even then operations 6/15 and loss_runs 5/9 fail). Fix criteria, open questions and the false-manual-intake ceiling (@user) before new gold. H2: leakage alone reads 0/5 on T-103 with no detector; add per-criterion recall 100%, reason accuracy, fail closed, leakage counting provisional/suggested carrier, review-pending status and enabled send. Mix: 20 in-scope (6+ boundary cases) + 12 out-of-scope (3 per criterion, 3+ multi-criterion); 32 needs @user's word vs D-020 or a separate detection set. Detector goes in the inventory as Tier 2. Not a production approval; T-027 veto stands.

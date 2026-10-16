@@ -1134,3 +1134,14 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: done this session. Score SUB-154-173-holdout-v4.md/.json; run record; as-is mismatches; @model-risk memo T-027-gate-memo-T-103.md: **KEEP**. Findings B-394, B-395, B-396.
 - Status: ACCEPTED
 - Amends: none. Not a production approval; T-027 veto stands.
+
+## D-102 — T-103 root cause (analysis only), gold rules for all future gold, P-055 pilot scope draft, stronger-model test plan
+- Date / Owner: 2026-10-16 / @user
+- Context: team/NEXT-SESSION.md after D-101 (pending decisions 1–2); @model-risk T-027 memo on T-103 (KEEP; B-394, B-395, B-396).
+- Options considered: none. The user's words.
+- Decision: In the user's words (summary of the pasted instruction): no code changes this session; 0 model calls (saved replies only). (1) Root cause of T-103 in `deliverables/ai-engineer/analysis/T-103-root-cause.md`: operations 19/20 dev vs 7/20 T-103 (each of the 13 misses and 6 silent errors with source text, extracted value, gold, and why the P-047 check did not flag it); SUB-170 (where the values are lost); scanned carrier runs SUB-159–161 (why no date was kept); SUB-172 multi-location and the email-only/Spanish files; each miss classed as extraction, prompt, check, OCR, scorer or gold convention. (2) **Gold rules for all future gold: an empty field is written "not in documents"; "hold" is a status, never a route.** Written into the gold-writing guide. (3) @pm drafts P-055 (pilot scope), not built: files detected as scanned application, email-only, non-English or multi-location go to "manual intake" as a whole file (no auto-fill shown as complete, no carrier route); the T-027 gate applies to in-scope files; out-of-scope detection itself is measured (must never let an out-of-scope file through as complete). Ask @model-risk whether it accepts this scope. (4) @ai-engineer (retired handle → @ai-engineer-assistant) drafts a plan to test one stronger model on SUB-127–146 (dev only), with cost per file. (5) Standups: the orchestrator may write an entry for any role that took a turn and did not write one, labelled "written by orchestrator". /wrap-up and push ai-team only.
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-16 (D-032).
+- Dissent: none
+- Follow-up tasks: root-cause file; gold guide section; P-055 draft + @model-risk scope answer; model-test plan.
+- Status: ACCEPTED
+- Amends: B-396 M1 and M4 settled forward only (never applied to published scores). Not a production approval; T-027 veto stands.
