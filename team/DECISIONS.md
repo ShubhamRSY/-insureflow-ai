@@ -1090,3 +1090,14 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: @head-of-underwriting rewrites the rules file with (c) and (d); P-049 built in the main session from that file; @senior-underwriter updates dev gold under the new rules and H3; scorer v4; dev re-check; @model-risk check; @senior-underwriter UI check.
 - Status: ACCEPTED
 - Amends: D-059 item 6 (replaced, above); D-079 (restaurant route); D-096 (H3 answered; unsafe-route definition). Not a production approval; T-027 veto stands.
+
+## D-098 — approve change P-051 (Carrier A allow-list; second operation, vacant/unoccupied/no utilities → senior_referral; W1 never overridable); approve change P-052 (senior-referral market confirm by a senior underwriter); backlog: frozen scorers score saved outputs; dev re-check
+- Date / Owner: 2026-10-16 / @user
+- Context: team/NEXT-SESSION.md after D-097 (pending decisions 1–3); @model-risk P-049 OBJECTION H1.
+- Options considered: none. The user's words.
+- Decision: In the user's words. "1. approve change P-051 (allow-list routing): (a) Carrier A direct route only for classes on an explicit allow-list taken from the written guide (cite each line). Everything not on it → senior_referral or no_match per the rules file, never Carrier A. (b) Any second distinct operation (e.g. office + pub, retail + lounge) → senior_referral. (c) Vacant, unoccupied, "no utilities" → senior_referral. (d) Prohibited words are never overridable (D-057/D-060); fix the rules file wording (W1). Self-checks include all four @model-risk phrases plus the thrift shop and clothing store. 2. approve change P-052 (senior-referral send path): only an underwriter with "senior": true in underwriters.json (set UW-001 Dana Reyes as senior, synthetic) can confirm a market on a senior_referral file; they pick the carrier and type a reason; logged and bound to the run hash; the normal send gate still applies (exact line "send to carrier SUB-###"); never available for prohibited words or held files. Card shows who confirmed and why. 3. Backlog: frozen scorers should score saved run outputs, not recompute routes with live code. 4. Dev re-check SUB-127–146 from cache with v4: route gate, unsafe routes, false completes. @model-risk and @compliance check P-051 and P-052, High only. @senior-underwriter UI check of the senior confirm screen. /wrap-up and push."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-16.
+- Dissent: none
+- Follow-up tasks: P-051 and P-052 built in the main session (budget rule 3, as P-047–P-050); backlog row; dev re-check; @model-risk and @compliance checks; @senior-underwriter UI check; screenshot.
+- Status: ACCEPTED
+- Amends: D-057/D-060 (a senior_referral market may now be confirmed by a senior underwriter; no_match override unchanged); D-097 (closes @model-risk P-049 H1 once built and checked). Not a production approval; T-027 veto stands.

@@ -56,6 +56,65 @@ def underwriters() -> set[str]:
     return ids
 
 
+def seniors() -> dict[str, str]:
+    """P-052 (D-098): id -> name of the listed underwriters with "senior": true. Only they may confirm a senior-referral market."""
+    ids = underwriters()
+    return {u["id"].strip(): u.get("name", "") for u in json.loads(UNDERWRITERS.read_text())["underwriters"] if u.get("senior") is True and (u.get("id") or "").strip() in ids}
+
+
+def confirms_path() -> Path:
+    return DECISIONS_LOG.with_name("market_confirms.jsonl")  # a sibling file: a confirm is not a decision, so the latest approve still gates the send
+
+
+def confirm_problem(report: dict) -> str:
+    """P-052: empty when a senior may confirm a market on this (reviewed) file. Never on a held file or one with a prohibited word."""
+    from workbench import PROHIBITED, _has, _ops, match
+
+    if report.get("status") in prepare.REFUSED_STATUSES:
+        return f"this file's status is {report.get('status')}"
+    route = match(report)["route"]
+    if route != "senior_referral":
+        return f"the carrier match is {route}; a market confirm is only for a senior referral"
+    if _has(_ops(report), PROHIBITED):
+        return "a prohibited word (bar, pub, lounge or another W1 word) is on the file; no market confirm (D-057, D-060)"
+    if report.get("needs_human"):
+        return "an unread page is still on the file"
+    return conflict_problem(report)
+
+
+def market_confirmation(submission: str, run_hash: str) -> dict | None:
+    """P-052: the latest confirm by a listed senior on this saved run (same run_hash), or None. Another run's confirm does not count."""
+    path, ok = confirms_path(), seniors()
+    rows = [json.loads(l) for l in path.read_text().splitlines() if l.strip()] if path.is_file() else []
+    rows = [r for r in rows if isinstance(r, dict) and r.get("submission") == submission and r.get("underwriter_id") in ok
+            and r.get("carrier") in CARRIERS and (r.get("reason") or "").strip() and run_hash and r.get("run_hash") == run_hash]
+    return rows[-1] if rows else None
+
+
+def confirm_market(submission: str, underwriter_id: str, carrier: str, reason: str, shown_hash: str = "") -> dict:
+    """P-052 (D-098): a senior underwriter picks the carrier for a senior_referral file, with a reason. Logged with the run hash.
+    It opens no send gate: the send still needs the approve on this run, the acknowledgments and the typed line."""
+    submission, who, carrier, reason = (submission or "").strip(), (underwriter_id or "").strip(), (carrier or "").strip().lower(), (reason or "").strip()
+    if who not in seniors():
+        raise ValueError("only a senior underwriter on underwriters.json may confirm a market")
+    if carrier not in CARRIERS:
+        raise ValueError("pick carrier_a, carrier_b or carrier_c")
+    if not reason:
+        raise ValueError("a market confirm needs a written reason")
+    report = reviewed(submission)
+    if shown_hash and shown_hash != report.get("saved_hash"):
+        raise ValueError("the saved run changed since this card was opened; reload the page and review again")
+    problem = confirm_problem(report)
+    if problem:
+        raise ValueError(problem)
+    row = {"submission": submission, "action": "confirm_market", "underwriter_id": who, "underwriter_name": seniors()[who], "carrier": carrier,
+           "reason": reason, "run_hash": report["saved_hash"], "at": datetime.now().astimezone().isoformat(timespec="seconds")}
+    confirms_path().parent.mkdir(parents=True, exist_ok=True)
+    with confirms_path().open("a") as handle:
+        handle.write(json.dumps(row) + "\n")
+    return row
+
+
 def decisions(submission: str, log_path: Path) -> list[dict]:
     """D-055: this file's decisions by a listed underwriter, in seq order. Raises on a repeated seq (fail closed)."""
     allowed = underwriters()
@@ -157,6 +216,9 @@ def build_package(submission: str, carrier_override: str = "", override_reason: 
         if not (override_reason or "").strip():
             raise ValueError("a carrier override needs a written reason")
         carrier, label = chosen, f"{OVERRIDE_LABEL}\nOverride reason: {override_reason.strip()}\n"
+    elif carrier == "senior_referral" and not confirm_problem(report) and market_confirmation(submission, report.get("saved_hash") or ""):  # P-052
+        c = market_confirmation(submission, report["saved_hash"])
+        carrier, label = c["carrier"], f"Senior referral — market confirmed by {c['underwriter_id']} {c.get('underwriter_name', '')}\nConfirm reason: {c['reason']}\n"
     elif carrier not in CARRIERS:
         raise ValueError(f"no carrier is named for this file (match is {carrier})")
     from workbench import snippet
@@ -578,6 +640,41 @@ if __name__ == "__main__":
             row = json.loads(sends.read_text().splitlines()[-1])
             assert row["carrier_override"] == "carrier_b" and row["override_reason"].startswith("client asked") and row["submission"] == "SUB-401"
 
+            # P-052 (D-098): only a senior confirms a senior_referral market, with a reason, bound to the run; the send gate still applies.
+            save(ext, "SUB-410", "complete", complete=True, fields=full(operations="family restaurant, 60 seats"))
+            save(ext, "SUB-411", "complete", complete=True, fields=full(operations="office building with ground-floor pub"))
+            save(ext, "SUB-412", "complete", complete=True, fields=full(operations="apartments, 8 units"))  # held: sprinkler answer missing
+            assert set(seniors()) == {"UW-001"} and "UW-002" in underwriters()
+            for args in (("SUB-410", "UW-002", "carrier_b", "x"), ("SUB-410", "user", "carrier_b", "x"), ("SUB-410", "UW-001", "carrier_z", "x"),
+                         ("SUB-410", "UW-001", "carrier_b", " "), ("SUB-411", "UW-001", "carrier_b", "x"), ("SUB-412", "UW-001", "carrier_c", "x"),
+                         ("SUB-401", "UW-001", "carrier_b", "x"), ("SUB-410", "UW-001", "carrier_b", "x", "stale-hash")):
+                try:
+                    confirm_market(*args)
+                    raise SystemExit(f"confirm {args} must be refused")
+                except ValueError:
+                    pass
+            assert not confirms_path().exists() and market_confirmation("SUB-410", _current_hash("SUB-410")) is None
+            try:
+                send_to_carrier("SUB-410", "user", dest_dir, user_line=LINE("SUB-410"))
+                raise SystemExit("no confirm: a senior referral names no carrier")
+            except ValueError:
+                pass
+            c = confirm_market("SUB-410", "UW-001", "carrier_b", "3 clean years seen on the loss runs", _current_hash("SUB-410"))
+            assert c["run_hash"] == _current_hash("SUB-410") and c["underwriter_name"].startswith("Dana Reyes")
+            for gate in ("no approve", "account-manager", "no line"):
+                try:
+                    if gate == "account-manager":
+                        decide("SUB-410", "approve")
+                    send_to_carrier("SUB-410", "account-manager" if gate == "account-manager" else "user", dest_dir, reason="x", user_line="" if gate == "no line" else LINE("SUB-410"))
+                    raise SystemExit(f"{gate}: the normal send gate must still refuse")
+                except ValueError:
+                    pass
+            body = send_to_carrier("SUB-410", "user", dest_dir, user_line=LINE("SUB-410")).read_text()
+            assert "Carrier: carrier_b" in body and "market confirmed by UW-001" in body and "3 clean years" in body
+            assert agency_problem("SUB-410") == "the file is not in appetite", "the account manager still cannot send a senior referral"
+            save(ext, "SUB-410", "complete", complete=True, fields=full(operations="family restaurant, 70 seats"))  # a new run: the old confirm does not count
+            assert market_confirmation("SUB-410", _current_hash("SUB-410")) is None
+
             # T-079 / D-053: the log decides, for every actor, with no decision passed in.
             for sub in ("SUB-301", "SUB-302", "SUB-303", "SUB-304"):
                 save(ext, sub, "complete", complete=True, fields=office, sprinklers="no")
@@ -595,7 +692,7 @@ if __name__ == "__main__":
                         (dest_dir / f"{sub}.md").unlink()  # B-233: the next actor sends afresh
                     except ValueError:
                         assert not ok, f"{sub} must pass for {actor}"
-            assert len(log.read_text().splitlines()) == 16  # history untouched by the sends
+            assert len(log.read_text().splitlines()) == 17  # history untouched by the sends (16 + the P-052 approve)
 
             # D-055: highest seq wins, not line order; an unlisted id or an AI role is not a decision;
             # a repeated seq refuses; no seq is not a decision; underwriters.json may not list an AI role.

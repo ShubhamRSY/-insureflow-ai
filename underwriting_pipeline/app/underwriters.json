@@ -1,8 +1,8 @@
 {
-  "note": "D-055: only these ids count as an underwriter on the decision log. The user plus named synthetic underwriters. AI roles never count; package.underwriters() refuses this file if one is listed.",
+  "note": "D-055: only these ids count as an underwriter on the decision log. The user plus named synthetic underwriters. AI roles never count; package.underwriters() refuses this file if one is listed. P-052 (D-098): \"senior\": true marks who may confirm a market on a senior_referral file.",
   "underwriters": [
     {"id": "user", "name": "the AI Engineer (the user)"},
-    {"id": "UW-001", "name": "Dana Reyes (synthetic)"},
+    {"id": "UW-001", "name": "Dana Reyes (synthetic)", "senior": true},
     {"id": "UW-002", "name": "Sam Okafor (synthetic)"}
   ]
 }
