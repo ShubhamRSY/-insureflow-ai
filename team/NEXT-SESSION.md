@@ -1,39 +1,45 @@
 # Next session
 
-Written 2026-10-16 by the orchestrator at wrap-up. Wrap-up commit: `a11ab83` on `ai-team`, pushed to `origin/ai-team` (private).
+Written 2026-10-16 by the orchestrator at wrap-up. Wrap-up commit: `b4c4790` on `ai-team`, pushed to `origin/ai-team` (private).
 
 - Budget rule 8: demo blockers only (the weekly limit resets 2026-10-17).
-- Standing rules: D-065, D-069. One AI session on this repo (D-090). The frontend/ files and `.claude/settings.json` belong to the user and are never staged.
+- Standing rules: D-065, D-069, the CLAUDE.md "Plugins" section (D-097). One AI session on this repo (D-090). The frontend/ files and `.claude/settings*.json` belong to the user and are never staged.
 - **Run every pipeline command with `.venv/bin/python`.**
-- **Score files are written only with `--write`** (D-096 item 4). Re-scores use `HOLDOUT_RESCORE=1`, a temp copy of the cache in `LLM_CACHE_DIR`, and `LLM_PACE_SECONDS=0` (RUN-RULES.md).
-- **Standups:** the orchestrator writes the entry for any role that took a turn but cannot write to team/ (D-096 item 5).
+- **Score files are written only with `--write`.** Re-scores use `HOLDOUT_RESCORE=1`, a temp copy of the cache in `LLM_CACHE_DIR`, and `LLM_PACE_SECONDS=0`.
+- Hold-outs are scored with **`eval_holdout_v4`**. v2 and v3 are frozen; their self-checks now fail on the old sprinklered → carrier_c route. This is expected and recorded in RUN-RULES.
 - Model: qwen/qwen3.8-27b (P-039), `LLM_PACE_SECONDS=55` for live runs.
+- The context7 plugin needs authorization (`/mcp`); until then use the `ctx7` CLI. The pyright CLI is not installed; VS Code diagnostics were empty for the changed files.
 
-## Where we stopped (D-096)
+## Where we stopped (D-097)
 
-- **P-050 is built** (`512c049`). When TIV is missing, a held file shows the route its class gives: "Provisional route: X (provisional — TIV needed to confirm)". No TIV cap is applied, and sends stay blocked.
-  - @model-risk: APPROVE WITH CHANGES, no High finding on P-050.
-  - @senior-underwriter UI check: APPROVE WITH CHANGES (B-375).
-  - The habitational referral now cites AG:37, AG:62 (it said AG:61, a citation bug).
-- **Scorer v3** (`eval_holdout_v3.py`) adds the T-027 route gate: 0 unsafe routes, and at least 18/20 counted over every file in the set. Any file without a route mark makes the gate NOT EVALUABLE; an unsafe route always fails it. v2 stays frozen.
-  - @model-risk H1 (dev script crashed) and H2 (loose pass rule) were closed at `86f82fd`.
-  - **H3 waits on the user** (pending decision 2).
-- **`--write` flag:** `regression_dev.py` and `P-048-dev/run.py` run read-only without it. The frozen scorers are unedited; the driver redirects their output.
-- **Dev route gate** (SUB-127–146, v3, cache, 0 calls): **FAIL**.
-  - 1 unsafe route: SUB-138 → carrier_a, gold hold.
-  - Route 16/20. Misses: SUB-135 (thrift shop has no class word), SUB-138, SUB-143 (clothing store → no_match, gold hold), SUB-144 ("offices" → carrier_a, gold no_match).
-  - Loss runs 8/0/12. 0 false completes.
-- **P-049** final list from @head-of-underwriting (not built): `deliverables/head-of-underwriting/proposal-P-049.md`.
-  - 15 rules: 14 written down, 1 removed (the unsourced Carrier B $2M cap). Rules file: `deliverables/head-of-underwriting/carrier-match.md`.
-  - (a) "All restaurants → senior_referral" is justified, not narrowed: AG:39, AG:62 and AG:66 say so, and the code cannot check Carrier B's 3 clean years.
-  - (b) Sprinklered apartments → senior_referral is intended (AG:37, AG:62), not a typo for unsprinklered. It reverses D-059 item 6 (sprinklered → carrier_c), so it is the user's call, not a code-bug fix.
-  - If approved, carrier_b and carrier_c become suggested markets only; T-103 gold rows 3, 5, 6, 10, 17 and 19 and dev gold SUB-130, 132, 133, 136 and 140 change; the T-103 mix needs re-approval.
+- **P-049 is built** (`96deed8`, `a6cebb3`, `213d884`, `b4c4790`). The rules file is `deliverables/head-of-underwriting/carrier-match.md` (R1–R14, W1, W2); notes show the rule ID.
+  - Carrier A is the only direct route.
+  - Restaurants and apartments, sprinklered or not, go to senior_referral, with Carrier B or C as the suggested market. **D-059 item 6 is replaced** (AG:37, AG:62).
+  - W2 referral words (hazardous goods, lab/medical, cold storage, liquor, vacant) always win over class words.
+  - The Carrier B $2M cap is removed.
+  - Senior-referral cards say "No send from this screen".
+- **Scorer v4** implements H3: "hold" is a status, not a route; unsafe = a carrier route, held or not, where gold says senior_referral or no_match. @model-risk: APPROVE.
+- **Dev re-check SUB-127–146** (v4, cache, 0 calls, clean `a6cebb3`; confirmed by @model-risk at `213d884`):
+
+  | Measure | Result |
+  |---|---|
+  | Route gate | **PASS** |
+  | Unsafe routes | 0 |
+  | Route accuracy | 18/20 |
+  | False completes | 0 |
+  | Loss runs, hit / miss / not credited | 8 / 0 / 12 |
+  | Operations | 19/20 |
+
+  The 2 misses are SUB-135 (thrift shop) and SUB-143 (clothing store): no_match where gold says carrier_a, which is the safe direction. This is dev data with gold changed alongside the code, so it is not hold-out evidence (B-379).
+- **Reviews:**
+  - @model-risk: P-049 routing **OBJECTION, H1**. "office building with ground-floor pub", "retail store and cocktail lounge", "office building, no utilities" and "office, unoccupied" still route to carrier_a. It resolves when those never route to carrier_a, rule lines are added to carrier-match.md, each case has a self-check, **and the user approves a new P-###**.
+  - @senior-underwriter UI: APPROVE WITH CHANGES. Its High was resolved by the "No send" line.
+- Backlog: B-377 (3 clean years) to B-381.
 
 ## Approved, not built
 
 | Proposal | Task |
 |---|---|
-| P-049 | principle only (D-096); the rules list awaits "approve change P-049" |
 | P-006 EasyOCR fallback | T-062, T-068 |
 | P-011 read-only published scores | T-072 |
 | P-017 Parts 1–3 | with T-072 |
@@ -41,26 +47,30 @@ Written 2026-10-16 by the orchestrator at wrap-up. Wrap-up commit: `a11ab83` on 
 
 ## Pending decisions for the user
 
-1. **"approve change P-049"** on the final list, including the two rulings: all restaurants → senior_referral, and sprinklered apartments → senior_referral (reverses D-059 item 6).
-2. **H3:** does a held file's provisional carrier route count as unsafe in the gate? v3 counts it now (conservative). @senior-underwriter then writes the gold rule for TIV-missing files (B-376).
-3. When to build T-103. It needs P-049, H3 and B-376 decided first.
+1. **P-051 (to approve):** close @model-risk H1 of P-049.
+   - Add pub(s) and lounge(s) as words that block carrier_a. With restaurant evidence they still give the R2 referral; with office/retail words they give senior_referral; alone, as now.
+   - Add "no utilities" (read before the negation drop) and "unoccupied" to W2e vacant.
+   - Rule lines go into carrier-match.md and each H1 case gets a self-check.
+2. **Senior-referral send path.** Today a senior_referral file cannot be sent from the workbench: overrides are only allowed on no_match (D-060). Since P-049, that covers every restaurant and apartment file. Should the underwriter be able to confirm the suggested market and send in the workbench? That would change a send gate.
+3. W1 prohibited words: the rules file says "overridable by a person", but the code keeps them not overridable (D-057/D-060). Confirm which.
+4. When to build T-103. Its gold rows change under P-049 (rows 3, 5, 6, 10, 17, 19 → senior_referral), so the mix needs @senior-underwriter and @model-risk re-approval.
 
 ## Open vetoes and what resolves each
 
 | Task | Holder | Resolves when |
 |---|---|---|
-| T-027 | @model-risk (production) | T-103 runs: gold first, smoke first, .venv, paced, scorer v3 with `--write`, run and scored once on a frozen commit. It needs all 9 fields at 9/10 or better, 0 false completes, 0 unsafe routes and route at least 18/20. |
+| T-027 | @model-risk (production) | T-103 runs: gold first, smoke first, .venv, paced, scorer v4 with `--write`, run and scored once on a frozen commit. It needs all 9 fields at 9/10 or better, 0 false completes, 0 unsafe routes and route at least 18/20. |
 | T-082 | @responsible-ai (fairness) | As written in its veto message in team/DISCUSSION.md. |
-| v3 / T-103 gold | @model-risk (OBJECTION) | H3 answered by the user and the TIV-missing gold rule written (B-376). |
+| P-049 routing | @model-risk (OBJECTION H1) | P-051 approved and built, as above. |
 
 ## First 3 tasks next session
 
-1. User decisions: P-049 approval, H3.
-2. If P-049 is approved: build it (rules file first, then code), re-score SUB-127–146 read-only with v3, get a @model-risk check, then fix @senior-underwriter UI items B-373/B-375.
-3. @senior-underwriter: the TIV-missing gold rule (B-376), then T-103 re-approval of the mix by @model-risk. Build T-103 only when the user says so.
+1. User decisions: P-051, the senior-referral send path, W1 overridable.
+2. Build P-051 if approved. Run a read-only v4 dev re-score, then a @model-risk look-again on H1.
+3. @senior-underwriter rewrites the T-103 gold plan under P-049; @model-risk re-approves the mix. Build T-103 only when the user says so.
 
 ## For the AI Engineer
 
-- Pending proposals: P-049 (awaits "approve change P-049"). P-050 is built and checked.
-- Latest scores (dev SUB-127–146, v3, cache): route gate FAIL (1 unsafe SUB-138, 16/20); loss runs 8/0/12; operations 19/20; 0 false completes; 0 silent errors.
-- Top failure to fix next: the class lists. SUB-138 (fertilizer → carrier_a) is the unsafe route; SUB-135, SUB-143 and SUB-144 are class-word gaps. All of these are P-049 territory.
+- Pending proposals: P-051 (close P-049 H1: pub/lounge, no utilities, unoccupied). P-049 is built; scorer v4 is approved.
+- Latest scores (dev SUB-127–146, v4, cache): route gate PASS (0 unsafe, 18/20), 0 false completes, loss runs 8/0/12, operations 19/20, 0 silent errors.
+- Top failure to fix next: prohibited and vacant words that still reach carrier_a (P-049 H1), then the no-send path for senior referrals.
