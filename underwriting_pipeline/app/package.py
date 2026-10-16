@@ -31,6 +31,7 @@ Run: python underwriting_pipeline/app/package.py
 
 import hashlib
 import json
+import re
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -86,6 +87,18 @@ def confirm_problem(report: dict) -> str:
     return conflict_problem(report)
 
 
+def match_note(report: dict) -> str:
+    from workbench import match
+
+    return match(report)["note"]
+
+
+def excluded_carriers(report: dict) -> set[str]:
+    """@compliance M1 (D-099): carriers the file's own route note excludes ("not Carrier A"). A senior cannot confirm one; they pick
+    another market, or the note is fixed at source and the file re-run."""
+    return {f"carrier_{x}" for x in re.findall(r"not carrier ([abc])\b", match_note(report).lower())}
+
+
 def _reviewed_values(report: dict) -> str:
     """P-052 security review: the confirm is bound to the reviewed values too, so an edit or resolve logged after it voids it."""
     return hashlib.sha256(json.dumps([[r.get("field_id"), r.get("value")] for r in report.get("fields") or []]).encode()).hexdigest()
@@ -95,12 +108,13 @@ def market_confirmation(submission: str, run_hash: str) -> dict | None:
     """P-052: the latest confirm by a listed senior on this saved run (same run_hash) and the same reviewed values, or None."""
     path, ok = confirms_path(), seniors()
     try:
-        values = _reviewed_values(reviewed(submission))
+        report = reviewed(submission)
     except ValueError:
         return None
+    values, excluded = _reviewed_values(report), excluded_carriers(report)
     rows = [json.loads(l) for l in path.read_text().splitlines() if l.strip()] if path.is_file() else []
     rows = [r for r in rows if isinstance(r, dict) and r.get("submission") == submission and r.get("underwriter_id") in ok
-            and r.get("carrier") in CARRIERS and (r.get("reason") or "").strip() and run_hash and r.get("run_hash") == run_hash and r.get("reviewed_values") == values]
+            and r.get("carrier") in CARRIERS and (r.get("reason") or "").strip() and run_hash and r.get("run_hash") == run_hash and r.get("reviewed_values") == values and r.get("carrier") not in excluded]
     return rows[-1] if rows else None
 
 
@@ -120,6 +134,8 @@ def confirm_market(submission: str, underwriter_id: str, carrier: str, reason: s
     problem = confirm_problem(report)
     if problem:
         raise ValueError(problem)
+    if carrier in excluded_carriers(report):  # @compliance M1
+        raise ValueError(f"the file's note excludes {carrier} ({match_note(report)}); pick another market, or fix the note at source and re-run the file")
     row = {"submission": submission, "action": "confirm_market", "underwriter_id": who, "underwriter_name": seniors()[who], "carrier": carrier,
            "reason": reason, "run_hash": report["saved_hash"], "reviewed_values": _reviewed_values(report), "at": datetime.now().astimezone().isoformat(timespec="seconds")}
     confirms_path().parent.mkdir(parents=True, exist_ok=True)
@@ -694,6 +710,20 @@ if __name__ == "__main__":
             assert market_confirmation("SUB-410", _current_hash("SUB-410")) is None
             save(ext, "SUB-410", "complete", complete=True, fields=full(operations="family restaurant, 70 seats"))  # a new run: the old confirm does not count
             assert market_confirmation("SUB-410", _current_hash("SUB-410")) is None
+            # @compliance M1 (D-099): a carrier the note excludes ("not Carrier A") cannot be confirmed, and a logged confirm for it does not count.
+            save(ext, "SUB-430", "complete", complete=True, fields=full(operations="office with a medical clinic"))
+            assert excluded_carriers(reviewed("SUB-430")) == {"carrier_a"}
+            try:
+                confirm_market("SUB-430", "UW-001", "carrier_a", "x", _current_hash("SUB-430"))
+                raise SystemExit("M1: an excluded carrier must be refused")
+            except ValueError as exc:
+                assert "excludes carrier_a" in str(exc), exc
+            with confirms_path().open("a") as handle:
+                handle.write(json.dumps({"submission": "SUB-430", "underwriter_id": "UW-001", "carrier": "carrier_a", "reason": "x", "run_hash": _current_hash("SUB-430"), "reviewed_values": _reviewed_values(reviewed("SUB-430"))}) + "\n")
+            assert market_confirmation("SUB-430", _current_hash("SUB-430")) is None
+            assert confirm_market("SUB-430", "UW-001", "carrier_b", "medical tenant fits B", _current_hash("SUB-430"))["carrier"] == "carrier_b"
+            save(ext, "SUB-431", "complete", complete=True, fields=full(operations="office and casino"))  # P-053: Carrier A suggested, so a senior may confirm it
+            assert not excluded_carriers(reviewed("SUB-431")) and confirm_market("SUB-431", "UW-001", "carrier_a", "casino is a lobby slot room, seen", _current_hash("SUB-431"))
 
             # T-079 / D-053: the log decides, for every actor, with no decision passed in.
             for sub in ("SUB-301", "SUB-302", "SUB-303", "SUB-304"):

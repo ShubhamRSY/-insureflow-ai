@@ -42,6 +42,8 @@ MESSAGES: dict[str, tuple[bool, str]] = {}  # submission -> (ok, plain-words res
 # D-065 item 5: one line per user-visible feature: date, task or proposal, decision number, what an underwriter sees.
 WHATS_NEW = (
     ("2026-10-16", "P-052", "D-098", "A senior underwriter (marked senior on the underwriter list) can confirm the market on a senior-referral card: pick the carrier and write a reason. The card shows who confirmed and why. The send still needs an approve on this run and the typed line. Never offered on a held file, a file with a prohibited word (bar, pub, lounge), or a vacant, unoccupied or no-utilities file (AG:51)."),
+    ("2026-10-16", "M1", "D-099", "A senior cannot confirm a carrier the carrier match note excludes (\"not Carrier A\"). The card says which carrier is not offered and why; pick another market, or fix the note at source and re-run the file."),
+    ("2026-10-16", "P-053", "D-099", "Carrier A direct only when every operations word is on the allow-list or the short neutral-word list. Any other word goes to senior referral with Carrier A suggested, and the card names the unlisted words. Wholesale never routes directly."),
     ("2026-10-16", "P-051", "D-098", "Carrier A only for a file whose one operation is on the written allow-list (office, retail incl. clothing and thrift shops, light wholesale; AG:29-31). A second operation (office + pub, retail + lounge, office + retail) goes to senior referral (R16). Vacant, unoccupied and \"no utilities\" go to senior referral. Pubs and lounges are prohibited words (AG:46) and are never overridable."),
     ("2026-10-16", "P-049", "D-097", "Carrier match follows the written rules (carrier-match.md); each note shows its rule ID (R1-R14). Carrier A is the only direct route. Restaurants and apartments (sprinklered or not) go to senior referral, with Carrier B or C shown as the suggested market for the underwriter to confirm. Hazardous goods, lab or medical, cold storage, liquor and vacant files go to senior referral even when an office or retail word is present. The unsourced Carrier B $2,000,000 cap is gone."),
     ("2026-10-16", "P-050", "D-096", "When TIV is missing, a held file shows the route its class gives: \"Provisional route: senior_referral (provisional — TIV needed to confirm)\". No TIV cap is applied until the TIV is known, and sending stays blocked. The habitational-without-sprinklers referral now cites AG:37, AG:62."),
@@ -128,9 +130,29 @@ ALLOW_A = {
     "wholesale": ("wholesale", "light wholesale", "mayoreo", "mayorista"),  # AG:31 "Wholesale: light"
 }
 # P-051 (b): an occupancy word for a class that is not a target (AG:33 "No other class is a target"). Beside an allow-list word it is a
-# second operation (senior_referral); alone it is R8. ponytail: a closed list, like W2 (B-379); a word not here still reaches Carrier A.
+# second operation (senior_referral); alone it is R8. A word on no list goes to senior_referral under P-053 (NEUTRAL below).
 OTHER_OPS = ("gym", "gyms", "fitness", "salon", "salons", "spa", "spas", "daycare", "day care", "school", "schools", "church", "churches",
              "hotel", "hotels", "motel", "motels", "theater", "theatre", "auto repair", "car wash", "gas station", "manufacturing", "factory")
+# P-053 (D-099): the direct Carrier A route needs every operations word to be an allow-list phrase, a listed negation or a neutral word
+# below; any other word goes to senior_referral with Carrier A suggested. Read on the raw text, so "no tenants" is not dropped.
+NEUTRAL_NO = ("no food", "no alcohol", "no liquor", "no cooking", "no inventory", "no goods", "no repackaging", "no manufacturing")
+NEUTRAL = frozenset((
+    "and", "or", "of", "on", "by", "for", "with", "the", "a", "an", "de", "y",  # joining words
+    "operations", "cooking", "none",  # field labels in the cited text
+    "floor", "floors", "story", "stories", "suite", "room", "back", "front",  # where in the building
+    "financial", "advisory", "tax", "accounting", "bookkeeping", "insurance", "professional", "services", "clients", "appointment",  # AG:29 office tenants
+    "shop", "shops", "store", "stores", "gift", "gifts", "goods", "home", "greeting", "cards", "wrap", "candles",  # AG:30 dry goods
+    "book", "books", "used", "donated", "sorted", "site", "sales", "sale", "held"))
+ORDINAL = re.compile(r"\d+(st|nd|rd|th)?")
+
+
+def _unlisted(raw: str) -> list[str]:
+    """P-053: the operations words that are not an allow-list phrase, a listed negation or a neutral word. Empty = Carrier A direct."""
+    for phrase in sorted(NEUTRAL_NO + tuple(w for words in ALLOW_A.values() for w in words), key=len, reverse=True):
+        raw = re.sub(rf"(?<!\w){re.escape(phrase)}(?!\w)", " ", raw)
+    return [w for w in re.findall(r"[^\W_]+", raw) if w not in NEUTRAL and not ORDINAL.fullmatch(w)]
+
+
 CLASSES = {
     **ALLOW_A,
     # D-078 (B-286): generic restaurant evidence only, never a cuisine or ethnic word; Spanish only as translations (D-060).
@@ -240,6 +262,12 @@ def _match(report: dict, gated: bool) -> dict:
     if over(PILOT_TIV):
         return out("senior_referral", OUT_TIV)
     assert kind in ALLOW_A  # P-051 (a): Carrier A only from the allow-list
+    suggest_a = "; suggested market: Carrier A" + CONFIRM
+    if kind == "wholesale":  # P-053: wholesale never routes directly; light or not is a person's call (AG:31 "Wholesale: light")
+        return out("senior_referral", "wholesale: whether it is light is a person's call (P-053; AG:31)" + suggest_a, suggested="carrier_a")
+    extra = _unlisted(raw)
+    if extra:  # P-053: a word outside the allow-list and the neutral list (e.g. "office and casino")
+        return out("senior_referral", "words not on the Carrier A allow-list: " + ", ".join(list(dict.fromkeys(extra))[:5]) + " (P-053; AG:29-30)" + suggest_a, suggested="carrier_a")
     return out("carrier_a", "Carrier A (R14; AG:29-31); verify: no restaurant, liquor <= 10%, no cold storage, no hazardous goods, no lab or medical")
 
 
@@ -639,9 +667,12 @@ def confirm_html(item: dict, report: dict) -> str:
                 "The send below still needs an approve on this run and the typed line.</p>")
     seniors = package.seniors()
     opts = "".join(f'<option value="{html.escape(i)}">{html.escape(i)} {html.escape(n)}</option>' for i, n in sorted(seniors.items()))
-    carriers = "".join(f'<option{" selected" if c == item.get("suggested") else ""}>{c}</option>' for c in sorted(package.CARRIERS))
+    excluded = package.excluded_carriers(package.reviewed(item["id"]))
+    carriers = "".join(f'<option{" selected" if c == item.get("suggested") else ""}>{c}</option>' for c in sorted(package.CARRIERS - excluded))
+    why = (f'<p class="bad">Not offered: {html.escape(", ".join(sorted(excluded)))}. The carrier match note excludes it ({html.escape(item.get("note") or "")}). '
+           "Pick another market, or fix the note at source and re-run the file.</p>") if excluded else ""  # @compliance M1 (D-099)
     return (
-        '<form method="post" action="/confirm-market"><fieldset><legend>Confirm the market (senior underwriter only)</legend>'
+        '<form method="post" action="/confirm-market"><fieldset><legend>Confirm the market (senior underwriter only)</legend>' + why +
         f'<input type="hidden" name="submission" value="{sid}"><input type="hidden" name="run_hash" value="{html.escape(report.get("saved_hash") or "")}">'
         f'<label>Senior underwriter <select name="underwriter_id" required><option value="">choose</option>{opts}</select></label> '
         f'<label>Carrier <select name="carrier">{carriers}</select></label> '
@@ -1312,7 +1343,7 @@ if __name__ == "__main__":
         for ops, why in (("Wholesale and retail of animal feed, seed and fertilizer bags. Warehouse with loading dock", "AG:31"), ("pediatric therapy offices", "AG:29"),
                          ("cold storage warehouse, wholesale", "AG:31"), ("retail liquor store", "AG:30"), ("vacant office building", "AG:40")):
             assert route(r(ops)) == "senior_referral" and why in match(r(ops))["note"], (ops, match(r(ops)))
-        assert route(r("lab-grown diamonds retail")) == "senior_referral" and route(r("labrador breeder office")) == "carrier_a", "whole words only"
+        assert route(r("lab-grown diamonds retail")) == "senior_referral" and "P-053" in match(r("labrador breeder office"))["note"], "whole words only (P-053: breeder is not an office word)"
         assert route(r("office, no liquor")) == "carrier_a", "a negated referral word does not refer"
         assert "R10" in match(r("cafe, Type I hood with wet chemical suppression"))["note"] and "AG:31" in match(r("chemical supply wholesale"))["note"], "SUB-130: wet chemical hood"
         assert {route(r(x)) for x in ("wet chemicals wholesale", "wet chemical wholesale", "wet-chemical retail supply")} == {"senior_referral"}, "security review: the exemption never opens Carrier A"
@@ -1377,9 +1408,18 @@ if __name__ == "__main__":
         assert "R16" in match(r("retail store and cocktail lounge"))["note"] and "AG:51" in match(r("office building, no utilities"))["note"]
         assert route({"complete": True, "fields": [{"field_id": "operations", "value": "Office building", "quote": "Operations: office building. No utilities connected."}, {"field_id": "tiv_building", "value": "$1,000,000"}]}) == "senior_referral", "P-051 (c): read before the negation drop"
         for ops in ("Used book and thrift shop, donated goods sorted on site", "Clothing boutique retail store", "clothing store tienda de ropa",
-                    "Dry retail gift shop", "Financial advisory and tax office, 2nd floor", "Light wholesale of electrical supplies"):
+                    "Dry retail gift shop", "Financial advisory and tax office, 2nd floor"):
             assert route(r(ops)) == "carrier_a", (ops, match(r(ops)))  # P-051 (a): AG:29-31 allow-list (SUB-135, SUB-143)
-        assert route(r("office, utilities on")) == "carrier_a" and route(r("gym")) == "no_match", "only the listed phrases; a non-target class alone is R8"
+        assert route(r("office, utilities on")) == "senior_referral" and route(r("gym")) == "no_match", "P-053: utilities is not a listed word; a non-target class alone is R8"
+        # P-053 (D-099): the @model-risk check-P-051-P-052 probe phrases (H1 and M1) all go to senior_referral with Carrier A suggested.
+        for ops in ("office and warehouse", "office and auto body shop", "retail and tattoo parlor", "retail and pawn shop", "office with veterinary practice",
+                    "office with indoor shooting range", "office and data center", "office and kennel", "office and casino", "retail with bowling alley",
+                    "retail and brewery taproom", "retail and winery tasting room", "retail and cbd", "retail smoke shop", "retail - vape shop",
+                    "office tenants; second floor event hall", "office and storage of tires", "lumber wholesale", "steel wholesale", "scrap metal wholesale",
+                    "tire wholesale", "wholesale firearms", "office, no tenants", "retail, building empty", "office, utilities shut off",
+                    "office, power disconnected", "office, under renovation", "Light wholesale of electrical supplies"):
+            m = match(r(ops))
+            assert (m["route"], m["suggested"]) == ("senior_referral", "carrier_a") and "P-053" in m["note"], (ops, m)
         assert route(r("cannabis dispensary restaurant")) == "no_match", "other prohibited words are unchanged"
         assert route(r("restaurant bar", None)) == "hold", "holds come before the referral"
         # P-047 (c): the cited text is read too, so a dropped "and bar" still refers; a negated word does not.
@@ -1387,6 +1427,8 @@ if __name__ == "__main__":
         assert match(quoted("Full-service restaurant", "Operations: Full-service restaurant and bar, 180 seats, full liquor license")) == bar_ref
         assert match(quoted("Mexican restaurant", "Operations: Mexican restaurant, 70 seats, beer and wine only, no bar."))["note"] == R10
         assert route(quoted("Dry retail gift shop", "Operations: Dry retail gift shop. No food, no alcohol.")) == "carrier_a"
+        assert route(quoted("Financial advisory and tax office, 2nd floor", "Operations: Financial advisory and tax office, 2nd floor. Clients by appointment. No inventory, no goods held for sale.")) == "carrier_a", "SUB-127"
+        assert route(quoted("Dry retail gift shop: candles, home goods, greeting cards, gift wrap.", "No food, no alcohol, no repackaging.")) == "carrier_a", "SUB-128"
         lined = quoted("Mexican restaurant", "Operations: Mexican restaurant, 70 seats.")
         lined["fields"][0]["context"] = "Liquor: full bar, 35% of sales"
         assert match(lined) == bar_ref, "P-047 H1: a separate liquor line still refers"
@@ -1557,6 +1599,16 @@ if __name__ == "__main__":
                 stored("SUB-907", "complete", [{**r, "value": "office building with ground-floor pub"} if r["field_id"] == "operations" else r for r in good])
                 card = art(render(load_queue(), None), "SUB-907")
                 assert "No market confirm and no send from this screen: a prohibited word" in card and "No send: no market can be confirmed on this file (a prohibited word" in card
+                # @compliance M1 (D-099): the excluded carrier is not offered, the card says why, and a posted confirm for it is refused.
+                stored("SUB-961", "complete", [{**r, "value": "office with a medical clinic"} if r["field_id"] == "operations" else r for r in good])
+                card = art(render(load_queue(), None), "SUB-961")
+                form = card.split('action="/confirm-market"')[1].split("</form>")[0]
+                assert "Not offered: carrier_a. The carrier match note excludes it" in form and "<option>carrier_a</option>" not in form and "<option>carrier_b</option>" in form, form
+                m1_reply = act("/confirm-market", {"submission": "SUB-961", "underwriter_id": "UW-001", "carrier": "carrier_a", "reason": "x", "run_hash": prepare.read_saved_run("SUB-961")["saved_hash"]})[2]
+                assert "Market confirm refused: the file's note excludes carrier_a" in m1_reply, m1_reply
+                stored("SUB-962", "complete", [{**r, "value": "office and casino"} if r["field_id"] == "operations" else r for r in good])
+                card = art(render(load_queue(), None), "SUB-962")
+                assert "Suggested market: <b>carrier_a</b>" in card and "words not on the Carrier A allow-list: casino" in card and "Not offered" not in card  # P-053
                 assert "Suggested market" not in art(render(load_queue(), None), "SUB-901")  # B-264: senior referrals only
                 env_old = {k: os.environ.get(k) for k in ("LLM_API_KEY", "LLM_BASE_URL", "LLM_MODEL")}
                 try:
