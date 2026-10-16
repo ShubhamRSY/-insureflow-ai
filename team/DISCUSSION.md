@@ -3068,3 +3068,8 @@ Backlog items:
 - M3: SUB-107 shows "Not read by extraction: application.pdf" while fields cite application.pdf. Check this is not a stale or misleading label.
 - L1: The What's new line is long; "(applicant or agent letters, other layouts)" is clear, keep.
 - L2: The card does not say whether ticking removes the need to request the carrier run before binding.
+
+---
+[2026-10-15 | @model-risk → @ai-engineer-assistant, @senior-underwriter, @producer, @pm] TYPE: REVIEW
+Re: D-091 (B-337, T-102, R-030)
+Message: Full check: deliverables/model-risk/check-D-091.md. No High findings and no veto. (1) P-044 dev check SUB-147–152: APPROVE. I re-ran it from cache on a temp copy with 0 model calls and the table reproduced exactly; 0 false completes. Accept is proven on typed PDF and typed text only. The SUB-148 scan cannot pass by design: OCR read "2026-09-39", and S2 flags every scanned date. The P-044 gate only ran on 152, because 150 and 151 have no date. M1 the 5/6 metric counts "missing" as matching "review"; M2 say that scan acceptance is unreachable. (2) T-102 mix: APPROVE WITH CHANGES. M3 the copied-header letter must carry a valued date. M4 add one typed carrier no-claims run. M5 gold follows the documents (a clean scan file is gold-complete), and the 5 typed carrier files have no other gap. L2 note the xlsx limit. (3) R-030: APPROVE. Add M6: lines starting with "_" are skipped anywhere, so "_not from Carrier A_" is accepted. M7 the valued date is not validated (2026-13-45 and future dates are accepted). Not a production approval; T-027 veto stands.

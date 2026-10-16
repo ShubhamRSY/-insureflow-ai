@@ -358,3 +358,7 @@ Also open from T-097, already in the register's Section D so not repeated as row
 | B-338 | D-090 | @model-risk | Low (L1/L2): valued date not checked as a real date or against the policy period; a date matched from another file keeps its original citation. | 2026-10-15 |
 | B-339 | D-090 | @senior-underwriter | Medium: the reason does not say what "recognised" means (A/B/C layouts); the tick box quotes an unverified date without saying so; "Not read by extraction: application.pdf" while fields cite it. | 2026-10-15 |
 | B-340 | D-090 | @senior-underwriter | Low: What's new line is long; the card does not say whether ticking removes the need for the carrier run before bind. | 2026-10-15 |
+| B-341 | D-091 | @model-risk | Medium (M6): "_" lines are skipped anywhere in a carrier run, so "_not from Carrier A_" after the table is ignored and the run accepted (same as B-336). Needs a P-###. | 2026-10-15 |
+| B-342 | D-091 | @model-risk | Medium (M7): the valued-as-of date is not validated (2026-13-45 and a future 2031-01-01 are accepted). Needs a P-###. | 2026-10-15 |
+| B-343 | D-091 | orchestrator | Medium: a scanned carrier loss run can never be accepted (OCR breaks the exact layout; S2 flags scan dates); an xlsx carrier run can never match (tab-joined cells). Decide whether scans/xlsx should ever auto-accept. | 2026-10-15 |
+| B-344 | D-091 | orchestrator | Low: when a loss-run document exists but has no readable date (SUB-150/151), the field shows only as missing, with no "not a recognised carrier loss run" reason on the card. | 2026-10-15 |

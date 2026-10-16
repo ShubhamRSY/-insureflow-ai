@@ -1539,3 +1539,21 @@ D-004 (user, 2026-10-09): Sanger & Altgelt agency pipeline. Eight steps. No auto
   - Output: deliverables/pm/lob-expansion-plan.md
 - Notes: P2 because it is not a demo blocker (budget rule 8: demo blockers only while the weekly budget is low). Planning document only — no code, no new agents. @pm wrote the skeleton (title and five section headers) and the rollout rationale; @head-of-underwriting fills in families, pack format, roles and appetite content. Handoff posted in team/DISCUSSION.md.
 
+
+### T-102 — Hold-out SUB-127–146: the planned mix (written before any file exists)
+- Owner: @producer (files), @senior-underwriter (gold first)
+- Requested by: @user (D-091 item 3)
+- Status: TODO (mix to be approved by @model-risk; do not create SUB-127–146 until it is)
+- Priority: P0
+- Depends on: T-027 veto path; P-044 (D-090); eval_holdout_127.py (committed before any gold)
+- Reviewers: @model-risk (approves the mix)
+- Acceptance criteria:
+  - [ ] 20 files. Loss runs: **8 carrier-format** (Carrier A 3, B 3, C 2, exactly per simulation/carrier-loss-run-formats.md), **6 non-carrier**, **6 none**.
+  - [ ] Carrier-format loss-run formats: 3 typed PDF (text layer), 2 typed text (.md), 2 scans as JPG (1 greyscale, 1 colour, one of them rotated), 1 image-only PDF. No carrier-format loss run in xlsx: the xlsx reader joins cells with tabs, so the pipe-table layout cannot match (dev finding, D-091); xlsx is used for schedules only.
+  - [ ] Non-carrier (6): 2 no-known-loss letters (1 English, 1 Spanish), 1 applicant letter that copies a carrier header, 1 agent summary that names a carrier, 1 unknown carrier layout, 1 carrier layout with the valued-as-of line missing.
+  - [ ] None (6): no loss-run document at all, 2 of them email-only submissions.
+  - [ ] Gold says complete or incomplete only (B-325). At least 5 files are gold-complete, so status automation is measurable; all of them carry a typed carrier-format loss run (a loss run read from a scan is always flagged for review, so a scanned run cannot be plain complete).
+  - [ ] The rest of the hard mix as SUB-107–126: typed and scanned applications, Spanish, conflicts, multiple locations, restaurants with cooking lines, a bar, an over-cap TIV, a duplicate. Every route appears at least once in gold, including carrier_c and senior_referral.
+  - [ ] All fictional. Gold is written and committed before any extraction; smoke_readers.py passes first; scored once, paced, by eval_holdout_127.py.
+- Output: simulation/inbox/SUB-127 … SUB-146, deliverables/senior-underwriter/gold-set/SUB-127.md … SUB-146.md
+- Notes: D-091. Plan only. No SUB-127–146 file exists when this was written. 2026-10-15, @model-risk: APPROVE WITH CHANGES on the mix (deliverables/model-risk/check-D-091.md), no High. Required before any file is created, not yet applied: M3 the copied-header letter contains a valued-as-of date so the P-044 gate is reached; M4 one typed carrier run uses the carrier's no-claims line; M5 gold follows the documents (a clean scan file can be gold-complete) and the 5 typed carrier files have no other planned gap; L2 state that an xlsx carrier loss run always goes to review. Status stays TODO until these are applied and @model-risk confirms. SUB-147–152 are development files for the P-044 accept path and are never part of this hold-out.

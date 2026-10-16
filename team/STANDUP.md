@@ -1712,3 +1712,8 @@ Blocked: No.
 - Done: D-091 gold for dev files SUB-147 to SUB-152, written by hand before any extraction. Accept: 147 (A pdf), 148 (B scan), 149 (C) = 2026-09-30, complete. Review: 150 (applicant letter), 151 (B, no valuation date), 152 (unknown layout) = not a recognised carrier loss run, complete - review pending.
 - Next: none from me; the run is the next step.
 - Blockers: none. Note for @model-risk: 150 to 152 have Status incomplete (no usable carrier-verified loss run) while the pipeline is expected at complete - review pending (B-325).
+
+### 2026-10-15 — @model-risk
+- Done: D-091 check (deliverables/model-risk/check-D-091.md). Dev check SUB-147–152 APPROVE (re-run from cache, 0 false completes reproduced); T-102 mix APPROVE WITH CHANGES (M3–M5); R-030 APPROVE (add M6 "_" line skip, M7 date validity). No High, no veto.
+- Next: confirm T-102 is updated with M3–M5 before any SUB-127–146 file is created.
+- Blockers: none. T-027 veto stands; nothing here is a production approval.
