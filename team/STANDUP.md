@@ -1727,3 +1727,8 @@ Blocked: No.
 - Done: D-092 check (deliverables/model-risk/check-D-092.md). P-045/B-343: CHANGES REQUIRED. H1: an undated carrier run keeps an extracted date, giving review pending instead of incomplete. Self-checks ok; cached SUB-147–152 reproduced with 0 false completes. T-102 mix CONFIRMED.
 - Next: verify the H1 fix once a P-### is approved.
 - Blockers: H1 open; T-027 veto stands; nothing here is a production approval.
+
+### 2026-10-15 — @senior-underwriter
+- Done: D-092 item 4. Hold-out gold SUB-127 to SUB-146 written by hand from the documents only (scans and the image-only PDF rendered and read), before any extraction. Status 6 complete, 14 incomplete. Each file also has Expected loss run and Expected pipeline status. No code, inbox or scorer touched.
+- Next: @model-risk may check the gold; freeze and commit is the orchestrator's step.
+- Blockers: none. Judgment calls to see: SUB-137 read as the copied-header case (missing, D-092 1c); SUB-131 sq ft 2,100 vs 2,800 treated as a conflict.
