@@ -1112,3 +1112,14 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: item 2 was already done before the pause (31e2a16, e5326dc, 50435a2 carry the same patch-ids as d53e250, 83e7c31, c232a2c; 5ceeef8 is not an ancestor of ai-team). 774d8b1 .env examples: empty keys and dev placeholders only. P-053 and M1 built in the main session (budget rule 3); rules file R17; backlog row for the 5ceeef8 roles; @compliance look-again on P-052 H1; @model-risk check P-053; @senior-underwriter UI check (D-065); dev re-check.
 - Status: ACCEPTED
 - Amends: D-098 (P-051 R14: a direct Carrier A route now also needs R17; P-052: a confirm may not name a carrier the route note excludes). The roles in 5ceeef8 stay unconfirmed (D-045/D-053). Not a production approval; T-027 veto stands.
+
+## D-100 — approve change P-054 (B-389 non-occupancy neutral words; B-390 vacancy variants; M1 reads every note); freeze; T-103 build
+- Date / Owner: 2026-10-16 / @user
+- Context: team/NEXT-SESSION.md after D-099 (pending decisions 1–4); @model-risk check-P-053 M1 (B-389); @compliance look-again M1, M2 (B-390).
+- Options considered: none. The user's words.
+- Decision: In the user's words. "1. approve change P-054: (a) B-389: the neutral list holds only non-occupancy words (articles, "LLC", "suite", "floor" etc.). Remove shop, store, gift, home and any other occupancy word. "home office" → senior_referral. (b) B-390: extend vacancy words for the no-confirm rule (incl. "desocupado", "vacante", "power disconnected", "utilities off"). (c) M1 covers every note in the file, including producer remarks like "declined by Carrier A". Self-checks; dev re-check SUB-127–146 from cache with v4. @model-risk check, High only. 2. If P-054 passes with no High: freeze the code, record the commit hash in NEXT-SESSION.md. Then build T-103 (SUB-154–173) per the approved mix: @producer builds files, @senior-underwriter writes gold from documents and the written rules only (gold route = route after any hold clears). Freeze gold, commit, record the hash. Do not run the pipeline on them. /wrap-up and push ai-team only."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-16 (D-032).
+- Dissent: none
+- Follow-up tasks: P-054 built in the main session (budget rule 3). (a) read strictly: trade and goods words (financial, tax, bookkeeping, used, book...) are occupancy words too, so SUB-127/128/135 leave carrier_a. Rules file R17, W2e; dev re-check; @model-risk check; screenshot; then item 2 only if no High.
+- Status: ACCEPTED
+- Amends: D-099 (R17 neutral list narrowed; M1 scope widened to every note). B-389 M1, B-390 M1/M2 answered. Not a production approval; T-027 veto stands.

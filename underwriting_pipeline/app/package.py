@@ -93,10 +93,29 @@ def match_note(report: dict) -> str:
     return match(report)["note"]
 
 
-def excluded_carriers(report: dict) -> set[str]:
-    """@compliance M1 (D-099): carriers the file's own route note excludes ("not Carrier A"). A senior cannot confirm one; they pick
-    another market, or the note is fixed at source and the file re-run."""
-    return {f"carrier_{x}" for x in re.findall(r"not carrier ([abc])\b", match_note(report).lower())}
+# P-054 (c): words that take a carrier out of a confirm, in any note on the file (route note, extracted fields, the submission's documents).
+_CARRIER = r"(?:(?i:carrier)[ \t-]*([ABC])|carrier_([abc]))\b"  # an upper-case letter or carrier_x, so "carrier a few times" is not a carrier
+EXCLUDES = re.compile(r"(?i:\bnot|\bnever|declined by|non-?renewed by|cancell?ed by|rejected by|refused by|turned down by)\s+" + _CARRIER +
+                      "|" + _CARRIER +
+                      r"\s+(?i:declined|non-?renewed|cancell?ed|rejected|refused|turned (?:it )?down|will not|won't|would not)")
+
+
+def excluded_carriers(report: dict) -> dict[str, str]:
+    """@compliance M1 (D-099), P-054 (c): carrier -> where a note on the file excludes it ("not Carrier A", "declined by Carrier A").
+    A senior cannot confirm one; they pick another market, or the note is fixed at source and the file re-run."""
+    notes = [("carrier match note", match_note(report))]
+    notes += [(r.get("field_id") or "a field", f"{r.get('value') or ''} {r.get('quote') or ''} {r.get('context') or ''}") for r in report.get("fields") or []]
+    folder = prepare.INBOX_DIR / (report.get("submission") or "")
+    for path in sorted(folder.iterdir()) if report.get("submission") and folder.is_dir() else []:
+        try:
+            notes.append((path.name, path.read_text()))
+        except (UnicodeDecodeError, OSError):  # a scan or PDF has no text here; its extracted fields are read above
+            continue
+    found: dict[str, str] = {}
+    for where, text in notes:
+        for hit in EXCLUDES.finditer(text):
+            found.setdefault(f"carrier_{next(g for g in hit.groups() if g).lower()}", f'{where}: "{" ".join(hit.group(0).split())}"')
+    return found
 
 
 def _reviewed_values(report: dict) -> str:
@@ -135,7 +154,7 @@ def confirm_market(submission: str, underwriter_id: str, carrier: str, reason: s
     if problem:
         raise ValueError(problem)
     if carrier in excluded_carriers(report):  # @compliance M1
-        raise ValueError(f"the file's note excludes {carrier} ({match_note(report)}); pick another market, or fix the note at source and re-run the file")
+        raise ValueError(f"the file's notes exclude {carrier} ({excluded_carriers(report)[carrier]}); pick another market, or fix the note at source and re-run the file")
     row = {"submission": submission, "action": "confirm_market", "underwriter_id": who, "underwriter_name": seniors()[who], "carrier": carrier,
            "reason": reason, "run_hash": report["saved_hash"], "reviewed_values": _reviewed_values(report), "at": datetime.now().astimezone().isoformat(timespec="seconds")}
     confirms_path().parent.mkdir(parents=True, exist_ok=True)
@@ -491,7 +510,7 @@ if __name__ == "__main__":
         return payload
 
     def full(**over):
-        vals = {f: "x" for f in prepare.FIELDS} | {"operations": "accounting office", "tiv_building": "$1,000,000"} | over
+        vals = {f: "x" for f in prepare.FIELDS} | {"operations": "office building", "tiv_building": "$1,000,000"} | over
         return [{"field_id": f, "value": v, "source": "application.md", "start": 0, "end": 3} for f, v in vals.items()]
 
     office = full()
@@ -712,16 +731,28 @@ if __name__ == "__main__":
             assert market_confirmation("SUB-410", _current_hash("SUB-410")) is None
             # @compliance M1 (D-099): a carrier the note excludes ("not Carrier A") cannot be confirmed, and a logged confirm for it does not count.
             save(ext, "SUB-430", "complete", complete=True, fields=full(operations="office with a medical clinic"))
-            assert excluded_carriers(reviewed("SUB-430")) == {"carrier_a"}
+            assert set(excluded_carriers(reviewed("SUB-430"))) == {"carrier_a"}
             try:
                 confirm_market("SUB-430", "UW-001", "carrier_a", "x", _current_hash("SUB-430"))
                 raise SystemExit("M1: an excluded carrier must be refused")
             except ValueError as exc:
-                assert "excludes carrier_a" in str(exc), exc
+                assert "notes exclude carrier_a" in str(exc), exc
             with confirms_path().open("a") as handle:
                 handle.write(json.dumps({"submission": "SUB-430", "underwriter_id": "UW-001", "carrier": "carrier_a", "reason": "x", "run_hash": _current_hash("SUB-430"), "reviewed_values": _reviewed_values(reviewed("SUB-430"))}) + "\n")
             assert market_confirmation("SUB-430", _current_hash("SUB-430")) is None
             assert confirm_market("SUB-430", "UW-001", "carrier_b", "medical tenant fits B", _current_hash("SUB-430"))["carrier"] == "carrier_b"
+            # P-054 (c): a producer remark in a document or a field excludes too ("declined by Carrier A"); a loss run from Carrier A does not.
+            (tmp / "inbox" / "SUB-432").mkdir(parents=True)
+            (tmp / "inbox" / "SUB-432" / "email.md").write_text("Prior carrier: Carrier A loss run attached. Renewal was declined by Carrier A in 2025. Quote declined by carrier a few times.\n")
+            save(ext, "SUB-432", "complete", complete=True, fields=full(operations="office and casino"))
+            assert excluded_carriers(reviewed("SUB-432")) == {"carrier_a": 'email.md: "declined by Carrier A"'}, excluded_carriers(reviewed("SUB-432"))
+            try:
+                confirm_market("SUB-432", "UW-001", "carrier_a", "x", _current_hash("SUB-432"))
+                raise SystemExit("P-054 (c): a producer remark must exclude")
+            except ValueError as exc:
+                assert "email.md" in str(exc), exc
+            save(ext, "SUB-433", "complete", complete=True, fields=full(operations="office and casino", loss_run_valued_through="Carrier B will not renew"))
+            assert set(excluded_carriers(reviewed("SUB-433"))) == {"carrier_b"}
             save(ext, "SUB-431", "complete", complete=True, fields=full(operations="office and casino"))  # P-053: Carrier A suggested, so a senior may confirm it
             assert not excluded_carriers(reviewed("SUB-431")) and confirm_market("SUB-431", "UW-001", "carrier_a", "casino is a lobby slot room, seen", _current_hash("SUB-431"))
 
