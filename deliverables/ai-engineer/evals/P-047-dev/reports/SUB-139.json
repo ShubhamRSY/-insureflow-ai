@@ -58,7 +58,8 @@
       "ocr_cited_confidence": null,
       "needs_review": false,
       "reason": null,
-      "quote": "Residential apartments, 6 units in two two-story buildings, long-term leases, occupancy 83 percent."
+      "quote": "Residential apartments, 6 units in two two-story buildings, long-term leases, occupancy 83 percent.",
+      "context": "Cooking operations: None"
     },
     {
       "field_id": "sales_or_payroll",

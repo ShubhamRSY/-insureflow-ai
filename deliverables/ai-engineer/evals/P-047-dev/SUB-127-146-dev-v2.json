@@ -1,9 +1,7 @@
 {
   "label": "9 of 9 extracted fields scored; claims not read; loss runs = date only",
-  "commit": "7362ed8e90ce8f9a29a5364445ffbd372e531a93 (last pipeline commit 7362ed8e90ce8f9a29a5364445ffbd372e531a93)",
-  "uncommitted": [
-    "underwriting_pipeline/ai/prepare.py"
-  ],
+  "commit": "b73bd40c37f66355e698541e15b2f2dc233f2452 (last pipeline commit b73bd40c37f66355e698541e15b2f2dc233f2452)",
+  "uncommitted": [],
   "model": "qwen/qwen3.8-27b",
   "host": "api.groq.com",
   "submissions": [

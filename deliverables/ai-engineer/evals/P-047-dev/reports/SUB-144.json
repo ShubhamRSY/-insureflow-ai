@@ -169,7 +169,8 @@
       "ocr_cited_confidence": 0.94,
       "needs_review": true,
       "reason": "value is not in the cited text (translated or reworded)",
-      "quote": "Operations: outpatient pediatric physical and speech therapy. Treatment\nrooms, waiting room, offices. No overnight, no beds."
+      "quote": "Operations: outpatient pediatric physical and speech therapy. Treatment\nrooms, waiting room, offices. No overnight, no beds.",
+      "context": "Cooking operations: None"
     },
     {
       "field_id": "sales_or_payroll",

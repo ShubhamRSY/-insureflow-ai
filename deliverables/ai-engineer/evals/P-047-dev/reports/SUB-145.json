@@ -58,7 +58,8 @@
       "ocr_cited_confidence": null,
       "needs_review": false,
       "reason": null,
-      "quote": "Operations: Residential apartments, 40 units in three two-story buildings, long-term leases, 94 percent occupied. Pools closed for season."
+      "quote": "Operations: Residential apartments, 40 units in three two-story buildings, long-term leases, 94 percent occupied. Pools closed for season.",
+      "context": "Cooking operations: None (tenant electric ranges only)"
     },
     {
       "field_id": "sales_or_payroll",

@@ -1744,3 +1744,8 @@ Blocked: No.
 - Blockers: the hold-out SUB-127–146 should not run on 57d56b9 until H1/H2 are closed.
 ### 2026-10-15 — @senior-underwriter
 - Done: D-094 item 2: operations gold rule written (deliverables/senior-underwriter/operations-gold-rule.md); new gold only, not applied to published scores. Next: gold for new sets follows it. Blockers: none.
+
+- 2026-10-15 @model-risk: D-094/P-047 check written (deliverables/model-risk/check-P-047.md): APPROVE WITH CHANGES, H1 open (operations check and bar/liquor referral read only the cited line). Not a production approval.
+- 2026-10-15 @model-risk: D-094/P-047 H1 look-again at 086a0e0: H1 still open (rule lines read only under exact labels; SUB-122 "Bar / liquor:" missed at 1.0). Probes pass, re-score recomputes. No new High. Not a production approval.
+- 2026-10-15 @model-risk: D-094/P-047 H1 look-again 2 at b73bd40: H1 CLOSED (any rule-item label read; SUB-122 both lines flag at 0.74; dev cache re-score 0 mismatches, 0 silent). No new High; backlog M8, M9, L6, L7. Not a production approval.
+- 2026-10-15 @senior-underwriter: D-094/P-047 UI check: APPROVE, no High; backlog M1-M4 (context line not on card, 'no cooking' wording, vague labels, no next-step text), L1-L2.

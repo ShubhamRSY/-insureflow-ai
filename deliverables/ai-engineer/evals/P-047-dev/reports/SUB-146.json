@@ -58,7 +58,8 @@
       "ocr_cited_confidence": null,
       "needs_review": true,
       "reason": "value is not in the cited text (translated or reworded)",
-      "quote": "Operations: Full-service restaurant and bar, 180 seats, full liquor license (TABC mixed beverage permit), live music Friday and Saturday until 1 am. Dinner and weekend brunch."
+      "quote": "Operations: Full-service restaurant and bar, 180 seats, full liquor license (TABC mixed beverage permit), live music Friday and Saturday until 1 am. Dinner and weekend brunch.",
+      "context": "Cooking operations: Wood-fired oven, charbroiler, two fryers, 8-burner range. Type I hood with UL 300 wet chemical suppression."
     },
     {
       "field_id": "sales_or_payroll",

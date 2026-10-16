@@ -56,7 +56,8 @@
       "ocr_cited_confidence": null,
       "needs_review": false,
       "reason": null,
-      "quote": "Operations: Glass cutting, tempering and framing for commercial storefronts. Shop and small showroom, no chemicals beyond cleaning supplies."
+      "quote": "Operations: Glass cutting, tempering and framing for commercial storefronts. Shop and small showroom, no chemicals beyond cleaning supplies.",
+      "context": "Cooking operations: None"
     },
     {
       "field_id": "sales_or_payroll",

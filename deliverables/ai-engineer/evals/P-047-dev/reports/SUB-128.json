@@ -56,7 +56,8 @@
       "ocr_cited_confidence": null,
       "needs_review": false,
       "reason": null,
-      "quote": "Operations: Dry retail gift shop: candles, home goods, greeting cards, gift wrap. No food, no alcohol, no repackaging."
+      "quote": "Operations: Dry retail gift shop: candles, home goods, greeting cards, gift wrap. No food, no alcohol, no repackaging.",
+      "context": "Cooking operations: None"
     },
     {
       "field_id": "sales_or_payroll",

@@ -58,7 +58,8 @@
       "ocr_cited_confidence": null,
       "needs_review": false,
       "reason": null,
-      "quote": "Operations: Wholesale and retail of animal feed, seed and fertilizer bags. Warehouse with loading dock and a small trade counter."
+      "quote": "Operations: Wholesale and retail of animal feed, seed and fertilizer bags. Warehouse with loading dock and a small trade counter.",
+      "context": "Cooking operations: None"
     },
     {
       "field_id": "sales_or_payroll",

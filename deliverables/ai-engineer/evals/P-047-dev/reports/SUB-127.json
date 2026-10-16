@@ -56,7 +56,8 @@
       "ocr_cited_confidence": null,
       "needs_review": false,
       "reason": null,
-      "quote": "Operations: Financial advisory and tax office, 2nd floor. Clients by appointment. No inventory, no goods held for sale."
+      "quote": "Operations: Financial advisory and tax office, 2nd floor. Clients by appointment. No inventory, no goods held for sale.",
+      "context": "Cooking operations: None"
     },
     {
       "field_id": "sales_or_payroll",

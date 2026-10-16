@@ -55,7 +55,8 @@
       "ocr_cited_confidence": 0.92,
       "needs_review": false,
       "reason": null,
-      "quote": "Light wholesale of electrical supplies (wire, breakers,\nconduit, fixtures) to licensed electricians. Counter and warehouse,\nwill-call pickup. No manufacturing."
+      "quote": "Light wholesale of electrical supplies (wire, breakers,\nconduit, fixtures) to licensed electricians. Counter and warehouse,\nwill-call pickup. No manufacturing.",
+      "context": "Cooking operations: None"
     },
     {
       "field_id": "sales_or_payroll",

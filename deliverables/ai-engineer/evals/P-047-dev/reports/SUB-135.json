@@ -58,7 +58,8 @@
       "ocr_cited_confidence": null,
       "needs_review": false,
       "reason": null,
-      "quote": "Operations: Used book and thrift shop, donated goods sorted on site, sales floor and back room. No food, no alcohol."
+      "quote": "Operations: Used book and thrift shop, donated goods sorted on site, sales floor and back room. No food, no alcohol.",
+      "context": "Cooking operations: None"
     },
     {
       "field_id": "sales_or_payroll",

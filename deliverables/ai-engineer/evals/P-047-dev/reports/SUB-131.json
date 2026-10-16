@@ -87,7 +87,8 @@
       "ocr_cited_confidence": null,
       "needs_review": false,
       "reason": null,
-      "quote": "Operations: Commercial plumbing service and repair, water heater installs, small remodel work. Office and shop on premises, 2 service vans kept on site overnight. No roofing, no hot work on premises."
+      "quote": "Operations: Commercial plumbing service and repair, water heater installs, small remodel work. Office and shop on premises, 2 service vans kept on site overnight. No roofing, no hot work on premises.",
+      "context": "Cooking operations: None"
     },
     {
       "field_id": "sales_or_payroll",

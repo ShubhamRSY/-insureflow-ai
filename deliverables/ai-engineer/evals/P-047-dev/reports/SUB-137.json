@@ -58,7 +58,8 @@
       "ocr_cited_confidence": null,
       "needs_review": false,
       "reason": null,
-      "quote": "Operations: HVAC installation and service contractor. Office and warehouse on premises, trucks off site overnight, light shop work."
+      "quote": "Operations: HVAC installation and service contractor. Office and warehouse on premises, trucks off site overnight, light shop work.",
+      "context": "Cooking operations: None"
     },
     {
       "field_id": "sales_or_payroll",
