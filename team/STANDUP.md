@@ -1732,3 +1732,8 @@ Blocked: No.
 - Done: D-092 item 4. Hold-out gold SUB-127 to SUB-146 written by hand from the documents only (scans and the image-only PDF rendered and read), before any extraction. Status 6 complete, 14 incomplete. Each file also has Expected loss run and Expected pipeline status. No code, inbox or scorer touched.
 - Next: @model-risk may check the gold; freeze and commit is the orchestrator's step.
 - Blockers: none. Judgment calls to see: SUB-137 read as the copied-header case (missing, D-092 1c); SUB-131 sq ft 2,100 vs 2,800 treated as a conflict.
+
+### 2026-10-15 — @senior-underwriter
+- Done: D-093 gold for development file SUB-153, written by hand before any extraction (deliverables/senior-underwriter/gold-set/SUB-153.md). Carrier A run dated 2026-09-30 accepted; Carrier B run has no valuation line (undated). Status "complete — review pending" per P-046; route Carrier A. SUB-127 to SUB-146 and their gold not opened. No code run.
+- Next: @model-risk check; commit is the orchestrator's step.
+- Blockers: none. Judgment call: the missing valuation line makes the Carrier B run undated, not unrecognised; the reason on the card should say undated.

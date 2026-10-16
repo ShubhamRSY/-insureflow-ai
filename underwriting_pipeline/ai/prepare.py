@@ -562,6 +562,10 @@ def gate_loss_run(merged: dict, texts: dict, scans: dict | None = None) -> None:
     seen = [x for x in (row["value"], row.get("quote")) if x]
     valued = {c[1] for n, c in checks.items() if c[0] == "accepted" and not sheet(n)}
     if digits_of(row["value"]) in {digits_of(v) for v in valued}:  # P-044: the valued-as-of date of a typed recognised carrier run, whichever file is cited
+        others = [why for n in texts if (why := _run_doc_reason(n, texts[n], checks[n], kinds[n], sheet(n)))]
+        if others:  # P-046 (D-093): every loss-run document is judged; one not accepted makes the file review pending, with its reason
+            row["needs_review"] = True
+            row["reason"] = "; ".join(x for x in (row.get("reason"), *others) if x)
         return
     undated = [n for n, c in checks.items() if c[0] == "no_date"]
     if undated:  # P-045 (c), @model-risk H1 look-again: an undated carrier run and no accepted run: missing, whatever file the model cited
@@ -583,6 +587,23 @@ def gate_loss_run(merged: dict, texts: dict, scans: dict | None = None) -> None:
            else RUN_NO_DATE.format(source) if state == "no_date" else RUN_UNCLEAR.format(source))
     row["needs_review"] = True
     row["reason"] = "; ".join(x for x in (row.get("reason"), why) if x)
+
+
+LOSS_RUN_NAME = re.compile(r"loss|claim|siniestr|perdid|reclam", re.I)  # ponytail: file-name cue; a loss run named "doc1.pdf" is caught only by its carrier header
+
+
+def _run_doc_reason(name: str, text: str, check: tuple, kind: str, from_sheet: bool) -> str | None:
+    """P-046: None when this document is not a loss-run document or is an accepted typed carrier run; else its review reason.
+    A no-known-loss letter is not a loss-run document (P-040), so it never blocks."""
+    state, date, line = check
+    if kind == "letter" or (state is None and not LOSS_RUN_NAME.search(name)):
+        return None
+    if from_sheet:
+        return SCAN_SHEET.format(name)
+    if state == "accepted":
+        return None
+    return (RUN_NEGATED.format(name, line) if state == "negated" else RUN_BAD_DATE.format(date, name) if state == "bad_date"
+            else RUN_NO_DATE.format(name) if state == "no_date" else RUN_UNCLEAR.format(name))
 
 
 def ready_to_route(report: dict) -> bool:
@@ -2022,6 +2043,21 @@ if __name__ == "__main__":
         box = {"loss_run_valued_through": {"field_id": "loss_run_valued_through", "value": "2026-01-01", "source": src, "quote": "2026-01-01", "needs_review": False, "reason": None}}
         gate_loss_run(box, {"loss-runs.md": run_110.replace("Valuation date: 2026-09-30\n", ""), "application.md": "Loss runs valued 2026-01-01", **extra})
         assert box["loss_run_valued_through"]["value"] is None and box["loss_run_valued_through"]["reason"] == RUN_NO_DATE.format("loss-runs.md"), ("H1 look-again P2-P5", src, box)
+    # P-046 (D-093): each loss-run document is judged; plain complete only when every one is accepted.
+    a_run = {"loss_run_valued_through": {"source": "loss-runs-a.md", "value": "2026-09-30", "quote": "2026-09-30"}}
+    alone = run_case(a_run, {"loss-runs-a.md": run_107})
+    assert alone["status"] == "complete", "one accepted typed carrier run: plain complete"
+    b_run = run_110.replace("kitchen fire", "roof leak")  # no restaurant cue: the only gap is the loss run under test
+    b_undated = b_run.replace("Valuation date: 2026-09-30\n", "")
+    for extra, why in (({"loss-runs-b.md": b_undated}, RUN_NO_DATE.format("loss-runs-b.md")),
+                       ({"loss-runs-b.md": b_run + "COPY for the file\n"}, RUN_NEGATED.format("loss-runs-b.md", "COPY for the file")),
+                       ({"loss-runs-x.md": "Harbor Point Mutual - Claims History\nValued 2026-09-30\nNo claims."}, RUN_UNCLEAR.format("loss-runs-x.md")),
+                       ({"loss-runs-b.csv": "date,claim\n2025-01-02,0\n"}, SCAN_SHEET.format("loss-runs-b.csv"))):
+        both = run_case(a_run, {"loss-runs-a.md": run_107, **extra})
+        row = {r["field_id"]: r for r in both["fields"]}["loss_run_valued_through"]
+        assert both["status"] == REVIEW_PENDING and row["value"] == "2026-09-30" and why in (row["reason"] or ""), (extra.keys(), both["status"], row.get("reason"))
+    with_letter = run_case(a_run, {"loss-runs-a.md": run_107, "loss-runs-letter.md": letters[2]})
+    assert with_letter["status"] == "complete", "P-040: a no-known-loss letter beside an accepted run is not a loss-run document"
     undated = run_case({"loss_run_valued_through": {"source": "loss-runs.md", "value": "2026-01-01", "quote": "2026-01-01"}},
                        {"loss-runs.md": run_110.replace("Valuation date: 2026-09-30\n", "")})
     assert undated["status"] == "incomplete" and "loss_run_valued_through" in undated["missing"], "@model-risk H1: undated carrier layout stays incomplete end to end"

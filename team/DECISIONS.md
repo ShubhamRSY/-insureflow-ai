@@ -1034,3 +1034,14 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: P-045 built in the main session (budget rule 3); dev gold for SUB-150/151 corrected by @senior-underwriter; T-102 edited in the main session (board update); one @model-risk dispatch covers P-045 and the T-102 mix; then @producer and @senior-underwriter for SUB-127–146. Orchestrator's reading: "matching a carrier layout" in (c) means the first line is a Carrier A/B/C header.
 - Status: ACCEPTED
 - Amends: D-090 P-044 (adds P-045 rules); B-341, B-342, B-343, B-344 closed by this decision. Not a production approval; T-027 veto stands.
+
+## D-093 — B-349 confirmed; approve change P-046 (each loss-run document judged separately)
+- Date / Owner: 2026-10-15 / @user
+- Context: D-092 @model-risk LOOK-AGAIN 2 (M5 → B-346; L6 → B-349). Hold-out SUB-127–146 built, gold frozen at bd9168e, pipeline not run.
+- Options considered: none. The user's words.
+- Decision: In the user's words. "1. B-349: confirmed. 28b6d4d and ecf69c2 are within D-092 1c. 2. approve change P-046 (B-346): each loss-run document is judged separately. A file shows plain "complete" only if every loss-run document is accepted. Any undated, copy/sample, scan or unrecognised loss run alongside an accepted one gives "complete — review pending" with that document's reason on the card. Self-checks on dev files only (add one dev file: dated carrier A run plus undated carrier B run). Do not open, run or change SUB-127–146 or their gold. @model-risk check, High only. Record the code commit hash in team/NEXT-SESSION.md as the frozen hold-out code."
+- Rationale: The user typed this in this Claude Code session on 2026-10-15.
+- Dissent: none
+- Follow-up tasks: P-046 built in the main session (budget rule 3); dev file SUB-153 by @producer, gold first by @senior-underwriter; @model-risk check. Orchestrator's reading: a no-known-loss letter is not a loss-run document under P-040, so a letter beside an accepted carrier run does not block plain complete; "loss-run document" means a file that is a carrier layout (any state), is named as a loss run, or shows all loss-run parts.
+- Status: ACCEPTED
+- Amends: D-092 (adds P-046). B-346 and B-349 closed. Not a production approval; T-027 veto stands.
