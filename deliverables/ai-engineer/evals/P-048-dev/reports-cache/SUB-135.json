@@ -1,0 +1,159 @@
+{
+  "complete": false,
+  "missing": [
+    "loss_run_valued_through"
+  ],
+  "request": "Submission SUB-135\nNothing has been declined. Nothing has been bound.\n\nMissing:\n- currently valued carrier loss runs (a no-known-loss letter does not count)\n",
+  "conflicts": [],
+  "extra": [],
+  "fields": [
+    {
+      "field_id": "named_insured",
+      "value": "Lone Oak Thrift & Books LLC",
+      "source": "application.md",
+      "start": 139,
+      "end": 181,
+      "confidence": 1.0,
+      "model_confidence": 1.0,
+      "ocr_cited_confidence": null,
+      "needs_review": false,
+      "reason": null,
+      "quote": "Named insured: Lone Oak Thrift & Books LLC"
+    },
+    {
+      "field_id": "premises_address",
+      "value": "412 W Oak St, Denton, TX 76201",
+      "source": "application.md",
+      "start": 216,
+      "end": 264,
+      "confidence": 1.0,
+      "model_confidence": 1.0,
+      "ocr_cited_confidence": null,
+      "needs_review": false,
+      "reason": null,
+      "quote": "Premises address: 412 W Oak St, Denton, TX 76201",
+      "address_check": "ok"
+    },
+    {
+      "field_id": "effective_date",
+      "value": "2027-01-15",
+      "source": "application.md",
+      "start": 265,
+      "end": 291,
+      "confidence": 1.0,
+      "model_confidence": 1.0,
+      "ocr_cited_confidence": null,
+      "needs_review": false,
+      "reason": null,
+      "quote": "Effective date: 2027-01-15"
+    },
+    {
+      "field_id": "operations",
+      "value": "Used book and thrift shop, donated goods sorted on site, sales floor and back room. No food, no alcohol.",
+      "source": "application.md",
+      "start": 420,
+      "end": 536,
+      "confidence": 1.0,
+      "model_confidence": 1.0,
+      "ocr_cited_confidence": null,
+      "needs_review": false,
+      "reason": null,
+      "quote": "Operations: Used book and thrift shop, donated goods sorted on site, sales floor and back room. No food, no alcohol.",
+      "context": "Cooking operations: None"
+    },
+    {
+      "field_id": "sales_or_payroll",
+      "value": "390000",
+      "source": "application.md",
+      "start": 560,
+      "end": 582,
+      "confidence": 1.0,
+      "model_confidence": 1.0,
+      "ocr_cited_confidence": null,
+      "needs_review": false,
+      "reason": null,
+      "quote": "Annual sales: $390,000"
+    },
+    {
+      "field_id": "tiv_building",
+      "value": "430000",
+      "source": "application.md",
+      "start": 583,
+      "end": 605,
+      "confidence": 1.0,
+      "model_confidence": 1.0,
+      "ocr_cited_confidence": null,
+      "needs_review": false,
+      "reason": null,
+      "quote": "Building TIV: $430,000"
+    },
+    {
+      "field_id": "construction",
+      "value": "Frame",
+      "source": "application.md",
+      "start": 665,
+      "end": 684,
+      "confidence": 1.0,
+      "model_confidence": 1.0,
+      "ocr_cited_confidence": null,
+      "needs_review": false,
+      "reason": null,
+      "quote": "Construction: Frame"
+    },
+    {
+      "field_id": "year_built",
+      "value": "1958",
+      "source": "application.md",
+      "start": 685,
+      "end": 701,
+      "confidence": 1.0,
+      "model_confidence": 1.0,
+      "ocr_cited_confidence": null,
+      "needs_review": false,
+      "reason": null,
+      "quote": "Year built: 1958"
+    },
+    {
+      "field_id": "loss_run_valued_through",
+      "value": null,
+      "start": null,
+      "end": null,
+      "source": null,
+      "confidence": 0.0,
+      "needs_review": true
+    }
+  ],
+  "folder": "SUB-135",
+  "sprinklers": "no",
+  "cooking": {
+    "equipment": {
+      "state": "not_stated",
+      "terms": [],
+      "source": null,
+      "start": null,
+      "end": null,
+      "quote": null
+    },
+    "hood_suppression": {
+      "state": "not_stated",
+      "terms": [],
+      "source": null,
+      "start": null,
+      "end": null,
+      "quote": null
+    }
+  },
+  "needs_human": [],
+  "unread": [],
+  "locations": [],
+  "error": null,
+  "model_version": "qwen/qwen3.8-27b",
+  "prompt_version": "b025802c0dfa",
+  "ocr_settings": "tesseract psm6; osd turn; deskew +-12; rule lift; x2 lanczos; pdf 200dpi; fill in image mode",
+  "host": "api.groq.com",
+  "temperature": 0,
+  "cache_key": "622f84e693345282cc90029b96139146a478888ca49829e1b3748e088621a2bd",
+  "retries": [],
+  "status": "incomplete",
+  "status_reason": null
+}

@@ -1,0 +1,155 @@
+{
+  "complete": false,
+  "missing": [
+    "premises_address",
+    "construction"
+  ],
+  "request": "Submission SUB-129\nNothing has been declined. Nothing has been bound.\n\nMissing:\n- premises address\n- construction type\n",
+  "conflicts": [],
+  "extra": [],
+  "fields": [
+    {
+      "field_id": "named_insured",
+      "value": "Brazos Electrical Supply Inc",
+      "source": "application.jpg",
+      "start": 60,
+      "end": 103,
+      "confidence": 0.95,
+      "model_confidence": 1.0,
+      "ocr_cited_confidence": 0.95,
+      "needs_review": false,
+      "reason": null,
+      "quote": "Named insured: Brazos Electrical Supply Inc"
+    },
+    {
+      "field_id": "premises_address",
+      "value": null,
+      "start": null,
+      "end": null,
+      "source": null,
+      "confidence": 0.0,
+      "needs_review": true
+    },
+    {
+      "field_id": "effective_date",
+      "value": "2027-04-01",
+      "source": "application.jpg",
+      "start": 192,
+      "end": 218,
+      "confidence": 0.65,
+      "model_confidence": 1.0,
+      "ocr_cited_confidence": 0.65,
+      "needs_review": true,
+      "reason": "Low-confidence scan read \u2014 check against the page",
+      "quote": "Effective date: 2027-04-01"
+    },
+    {
+      "field_id": "operations",
+      "value": "Light wholesale of electrical supplies (wire, breakers, conduit, fixtures) to licensed electricians. Counter and warehouse, will-call pickup. No manufacturing.",
+      "source": "application.jpg",
+      "start": 359,
+      "end": 518,
+      "confidence": 0.92,
+      "model_confidence": 1.0,
+      "ocr_cited_confidence": 0.92,
+      "needs_review": false,
+      "reason": null,
+      "quote": "Light wholesale of electrical supplies (wire, breakers,\nconduit, fixtures) to licensed electricians. Counter and warehouse,\nwill-call pickup. No manufacturing.",
+      "context": "Cooking operations: None"
+    },
+    {
+      "field_id": "sales_or_payroll",
+      "value": "2600000",
+      "source": "application.jpg",
+      "start": 545,
+      "end": 569,
+      "confidence": 0.76,
+      "model_confidence": 0.9,
+      "ocr_cited_confidence": 0.76,
+      "needs_review": true,
+      "reason": "number or date read from a scan; conflict with rejected value: \"3100000\" (email.md)",
+      "quote": "Annual sales: $2,600,000"
+    },
+    {
+      "field_id": "tiv_building",
+      "value": "2400000",
+      "source": "application.jpg",
+      "start": 571,
+      "end": 595,
+      "confidence": 0.76,
+      "model_confidence": 1.0,
+      "ocr_cited_confidence": 0.76,
+      "needs_review": true,
+      "reason": "number or date read from a scan",
+      "quote": "Building TLV: $2,400,000"
+    },
+    {
+      "field_id": "construction",
+      "value": null,
+      "start": null,
+      "end": null,
+      "source": null,
+      "confidence": 0.0,
+      "needs_review": true
+    },
+    {
+      "field_id": "year_built",
+      "value": "2004",
+      "source": "application.jpg",
+      "start": 692,
+      "end": 708,
+      "confidence": 0.96,
+      "model_confidence": 1.0,
+      "ocr_cited_confidence": 0.96,
+      "needs_review": true,
+      "reason": "number or date read from a scan",
+      "quote": "Year built: 2004"
+    },
+    {
+      "field_id": "loss_run_valued_through",
+      "value": "2026-09-30",
+      "source": "loss-runs.pdf",
+      "start": 160,
+      "end": 184,
+      "confidence": 0.55,
+      "model_confidence": 1.0,
+      "ocr_cited_confidence": 0.55,
+      "needs_review": true,
+      "reason": "Low-confidence scan read \u2014 check against the page; loss run from scan/spreadsheet: check it (loss-runs.pdf)",
+      "quote": "Valued as of: 2026-09-30"
+    }
+  ],
+  "folder": "SUB-129",
+  "sprinklers": "yes",
+  "cooking": {
+    "equipment": {
+      "state": "not_stated",
+      "terms": [],
+      "source": null,
+      "start": null,
+      "end": null,
+      "quote": null
+    },
+    "hood_suppression": {
+      "state": "not_stated",
+      "terms": [],
+      "source": null,
+      "start": null,
+      "end": null,
+      "quote": null
+    }
+  },
+  "needs_human": [],
+  "unread": [],
+  "locations": [],
+  "error": null,
+  "model_version": "qwen/qwen3.8-27b",
+  "prompt_version": "b025802c0dfa",
+  "ocr_settings": "tesseract psm6; osd turn; deskew +-12; rule lift; x2 lanczos; pdf 200dpi; fill in image mode",
+  "host": "api.groq.com",
+  "temperature": 0,
+  "cache_key": "d01f0e5dd559ed8437934a2b13202424e11db76fef9e7d4e013537bd38f07b3d",
+  "retries": [],
+  "status": "incomplete",
+  "status_reason": null
+}

@@ -3149,3 +3149,13 @@ Message: H1 CLOSED. Self-checks (prepare, llm_extract, regression_dev, eval_hold
 Re: D-094 / P-047 UI check (D-065 item 3)
 Message: APPROVE, no High. On SUB-132 the card shows value, 0.74 and "NEEDS REVIEW: operations may be missing: beer, wine, 90 seats" beside the cited line, so an underwriter sees what was dropped and fixes the value. What's new line is plain and accurate.
 Backlog: M1 items from a labeled line elsewhere in the file (Liquor:, Seating capacity:) are not in the Cited text column, so the reason points at text not on the card; show the context line. M2 "no cooking" (source) shows "may be missing: cooking"; say "stated: no cooking" or skip. M3 vague labels: "hours", "bar", "stories or floor" give no value; show the matched words. M4 the card has no next-step text ("add to operations or confirm not relevant"); one short line would do. L1 "NEEDS REVIEW" wording is the same for 0.74 confidence and missing items; fine. L2 What's new line does not say it also feeds the bar/liquor referral.
+
+---
+[2026-10-15 | @senior-underwriter → @head-of-underwriting] TYPE: REVIEW
+Re: D-095 item 2 (B-364), your turn
+Message: Gold checked against written rules. SUB-134 carrier_c -> no_match (no source gives light manufacturing to any carrier; D-060 no_match, overridable). SUB-139 no_match -> senior_referral (AG:37, D-059 item 6; code route right but cites AG:61, which needs cooking). Provisional routes added to 10 held gold files; 138 and 143 stay hold. 7 code rules have no or a wrong source; one written conflict (AG:39 vs carriers.md for restaurants). Please confirm and raise the P-### for the unwritten rules. Findings: deliverables/senior-underwriter/B-364-gold-check.md
+
+---
+[2026-10-15 | @head-of-underwriting → @user, @senior-underwriter, @ai-engineer-assistant] TYPE: PROPOSAL
+Re: P-049 (D-095 item 2, B-364)
+Message: I agree with the SUB-134 (no_match) and SUB-139 (senior_referral) gold and the 10 provisional routes; no gold edits. P-049 (needs your `approve change P-049`): Option A write down 11 unwritten rules in the guides, plus 3 rulings: restaurant = senior_referral with Carrier B suggested (AG:39 wins, CAG supplies the market); sprinklered habitational = senior_referral with Carrier C suggested; SUB-139 label cites AG:37/62, not AG:61. Option B removes 7 rules (1-6, 8) instead; not recommended. Item 15 (written, not applied: territory, locations, loss history) goes to backlog. Details: deliverables/head-of-underwriting/proposal-P-049.md
