@@ -1,0 +1,24 @@
+# Check of D-096: P-050, scorer v3 route gate, --write flag — @model-risk, 2026-10-16
+
+**Verdict: OBJECTION on scorer v3 and the dev script (H1–H3 open). P-050 workbench change: APPROVE WITH CHANGES (no High of its own).** Scorer v3 must not be used to score T-103 (SUB-154–173), and no T-103 gold should be written, until H2 and H3 are closed: scorers are frozen once gold exists (D-020), so the fix has to land before then. An approved P-050 is not a production approval; the T-027 veto stands.
+
+## What I re-ran (commit 512c049, no model calls)
+- A temp copy of `underwriting_pipeline/cache/extractions` set as `LLM_CACHE_DIR/extractions`, `LLM_PACE_SECONDS=0`, `HOLDOUT_RESCORE=1`, no `--write`. `git status` was the same before and after the run.
+- `eval_holdout_v3 --self-check` ok. `regression_dev --self-check` ok. `eval_holdout_v2.py` is unchanged since ec23c34 (no diff).
+- `regression_dev.py --holdout eval_holdout_v3` on SUB-127–146: 20 of 20 from cache, 0 calls. Output went to a temp folder, as item 4 requires. **Route gate: FAIL. 1 unsafe route (SUB-138: provisional carrier_a, gold hold). Route accuracy 16/20.** Field counts are the same as the committed v2 re-score. 0 false completes.
+- P-050 changed two dev routes and the net is 0. SUB-142: before, hold; now senior_referral (AG:38), a hit. SUB-143: before, hold, a hit against gold hold; now provisional no_match, a miss. SUB-138 was already unsafe under P-048. P-050 did not cause it.
+
+## High findings
+**H1 — The dev script does not run (item 4).** `deliverables/ai-engineer/evals/P-048-dev/run.py` line 20, `OUT = regression_dev.kept(OUT / "x").parent`, raises `NameError: name 'OUT' is not defined` at import, both with and without `--write` and with `--readout`. Even after it is renamed to `HERE`, `--readout` without `--write` reads `reports-cache` and the rescore JSON from the empty temp folder, so the read-only mode fails. **Resolve:** read inputs from `HERE`, send only the writes (`reports-cache`, `readout.json`) through `kept()`, and add a self-check that imports the script and runs `--readout` read-only. Owner: the main session, which built it.
+
+**H2 — The gate accepts fewer than 18 of 20 (item 2).** `route_gate` passes when `hits >= 0.9 * scored`, and `scored` leaves out failed calls and files with no route mark. Probe: 17 hits out of 18 scored, plus 2 `call_failed` files, gives `pass: True`. The user's words are "at least 18/20". **Resolve:** before any T-103 gold exists, change the pass rule to absolute hits ≥ 18 with all 20 files route-marked. If any file is `call_failed` or has no mark, report "gate not evaluable" and do not report PASS. Add this case to the self-check.
+
+**H3 — Under P-050 the gate counts any held file that shows a carrier route where gold says hold as unsafe, and the gold rules for files with TIV missing were never brought in line with P-050.** v3 judges a held file by its provisional route. The user defined unsafe as "sent to a carrier", and a held file is never sent. Under P-050, every file with TIV missing and a carrier class now shows a carrier as its provisional route. The current dev gold, and the D-095 gold note on SUB-143, say "no provisional route when TIV is missing, so hold". Probe: a dry-retail file with TIV missing shows provisional carrier_a, and against gold hold it counts as 1 unsafe and the gate fails. The T-103 gold results will therefore depend on which gold rule the gold writers follow, not on the model. **Resolve:** (a) @user rules whether a provisional carrier route on a held file counts as unsafe. That is the user's decision on scorer design; I am posting it as a QUESTION. (b) @senior-underwriter writes down the gold rule for TIV-missing files under P-050 (the expected class-based provisional route, or hold) before T-103 gold is written, and updates the dev gold for SUB-143 to match.
+
+## Medium / Low (backlog, one line each)
+- M1: The SUB-144 self-check only asserts that some provisional route exists. The dev report gives carrier_a ("offices"), but gold says no_match because medical occupancy is excluded from the Office class (AG:29), so the self-check accepts a wrong route.
+- M2: SUB-143, a clothing store, now shows provisional no_match. Gold says dry retail goes to Carrier A. "clothing store" is not a class word.
+- M3: v2 is "frozen", but its route column calls the live `workbench.match`, so v2 re-scores change with routing code (SUB-142/143 moved). State this in RUN-RULES.
+- L1: The label "TIV needed to confirm" replaces "file on hold: <reason>" even when the hold has another cause. The Carrier match line still shows the reason.
+- L2: A contractor's senior_referral (AG:38, whatever the TIV) is still labelled "TIV needed to confirm".
+- L3: The screenshot shows "manifest check: FAILED — no saved run" from the sandbox. Use a sandbox with a manifest so that reviewers are not confused.

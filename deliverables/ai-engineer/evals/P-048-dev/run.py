@@ -17,7 +17,8 @@ import regression_dev  # noqa: E402
 import workbench  # noqa: E402
 import eval_holdout_v2  # noqa: E402
 
-OUT = regression_dev.kept(OUT / "x").parent  # D-096 item 4: this folder only with --write
+OUT = regression_dev.kept(HERE / "x").parent  # D-096 item 4: this folder only with --write
+SRC = HERE  # where readout reads saved reports and the score: this folder, or OUT after a run in this process
 
 IDS = [f"SUB-{n:03d}" for n in range(127, 147)]
 GOLD = ROOT / "deliverables/senior-underwriter/gold-set"
@@ -28,6 +29,8 @@ def gold_of(sid: str) -> dict:
 
 
 def run() -> None:
+    global SRC
+    SRC = OUT
     (OUT / "reports-cache").mkdir(exist_ok=True)
     real = prepare.process_submission
 
@@ -41,10 +44,10 @@ def run() -> None:
 
 
 def readout() -> None:
-    scores = {r["submission"]: r for r in json.loads((OUT / "SUB-127-146-dev-v2-cache-rescore.json").read_text())["submissions"]}
+    scores = {r["submission"]: r for r in json.loads((SRC / "SUB-127-146-dev-v2-cache-rescore.json").read_text())["submissions"]}
     rows, right = [], 0
     for sid in IDS:
-        rep, g = json.loads((OUT / "reports-cache" / f"{sid}.json").read_text()), gold_of(sid)
+        rep, g = json.loads((SRC / "reports-cache" / f"{sid}.json").read_text()), gold_of(sid)
         m = workbench.match(rep) if not rep.get("error") else {"route": "call_failed", "note": rep["error"]}
         m = {**m, "route": eval_holdout_v2.route_used(rep), "held": m["route"] == "hold"}  # P-048 (c): the provisional route of a held file
         lr = next(f for f in rep["fields"] if f["field_id"] == "loss_run_valued_through")
