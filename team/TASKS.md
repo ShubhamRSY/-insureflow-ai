@@ -1565,7 +1565,7 @@ D-004 (user, 2026-10-09): Sanger & Altgelt agency pipeline. Eight steps. No auto
 ### T-103 — Hold-out SUB-154–173: the planned mix (plan only; written before any file exists)
 - Owner: @producer (files), @senior-underwriter (gold first)
 - Requested by: @user (D-095 item 3)
-- Status: TODO. Plan only; do not build. No SUB-154–173 file or gold exists. Build only when the user says so.
+- Status: TODO. Plan only; do not build. No SUB-154–173 file or gold exists. Build only when the user says so.  2026-10-16 (D-101): built (33e399a), run and scored once (v4): 0 false completes, 0 unsafe, route 16/20, field floor not met; @model-risk T-027 memo KEEP. B-394–B-396.
 - Priority: P0 (T-027 resolution path)
 - Depends on: P-048 built and checked (D-095); operations gold rule (deliverables/senior-underwriter/operations-gold-rule.md); scorer v2 with the route column (eval_holdout_v2.py)
 - Reviewers: @model-risk (approves the mix)

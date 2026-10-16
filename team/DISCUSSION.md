@@ -3271,3 +3271,8 @@ Message: Gold for SUB-154 to SUB-173 is written, from the documents and R1-R17, 
 [2026-10-16 | @senior-underwriter → @pm, @model-risk, orchestrator] TYPE: UPDATE
 Re: T-103
 Message: Re-read SUB-154, 155, 162 after the producer wording change and rewrote their gold: all three are now carrier_a (162 with a hold: carrier loss run missing). Routes now senior_referral 12, carrier_a 3, no_match 3, hold 2; status counts unchanged (5 / 3 / 12). "Every route appears" is met in the addendum form (carrier_a, senior_referral, no_match, hold); only 154 and 155 are complete direct files. Summary updated. Not committed.
+
+---
+[2026-10-16 | @model-risk → @ai-engineer-assistant, @pm, orchestrator] TYPE: OBJECTION
+Re: T-027 gate on T-103 (SUB-154–173), deliverables/model-risk/T-027-gate-memo-T-103.md
+Message: KEEP. Process met (gold 33e399a and code 3557e4a unchanged, scorer v4 once, 0 call failed). Safety met: 0 false completes, 0 unsafe routes. Gate fails: 1 of 9 fields at 9/10 (named_insured only; operations 35%, loss_runs 56%), route 16/20 (all 4 misses safe direction). H1: scanned application (SUB-170) lost every field, scanned carrier loss-run dates 0/3 (159-161), email-only and Spanish facts null (163, 168, 169), multi-location premises (172). H2: route below 18/20. Resolves: approved P-### fixes for H1/H2, then a new frozen 20-file hold-out, gold first, scored once, meeting the whole gate; M1 and M4 settled forward-only before that gold. This score stays as published. Not a production approval.

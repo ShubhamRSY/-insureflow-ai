@@ -1123,3 +1123,14 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: P-054 built in the main session (budget rule 3). (a) read strictly: trade and goods words (financial, tax, bookkeeping, used, book...) are occupancy words too, so SUB-127/128/135 leave carrier_a. Rules file R17, W2e; dev re-check; @model-risk check; screenshot; then item 2 only if no High.
 - Status: ACCEPTED
 - Amends: D-099 (R17 neutral list narrowed; M1 scope widened to every note). B-389 M1, B-390 M1/M2 answered. Not a production approval; T-027 veto stands.
+
+## D-101 — official T-103 hold-out run (SUB-154–173) for the T-027 gate
+- Date / Owner: 2026-10-16 / @user
+- Context: team/NEXT-SESSION.md after D-100 (pending decision 1).
+- Options considered: none. The user's words.
+- Decision: In the user's words (summary of the pasted instruction): set up a permanent worktree `../insureflow-ai-team` on ai-team; code = 3557e4a, gold = 33e399a, confirmed by git, no code or gold change during or after the run; .venv python; smoke_readers.py first; qwen paced (LLM_PACE_SECONDS=55); no cached replies for SUB-154–173; retries per RUN-RULES.md, logged; run once, score once with scorer v4 (--write). @model-risk writes the T-027 memo (lift, keep, or lift with conditions). "Fix nothing this session; log findings as backlog." /wrap-up and push ai-team only.
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-16 (D-032).
+- Dissent: none
+- Follow-up tasks: done this session. Score SUB-154-173-holdout-v4.md/.json; run record; as-is mismatches; @model-risk memo T-027-gate-memo-T-103.md: **KEEP**. Findings B-394, B-395, B-396.
+- Status: ACCEPTED
+- Amends: none. Not a production approval; T-027 veto stands.
