@@ -22,3 +22,12 @@
 - L1: The label "TIV needed to confirm" replaces "file on hold: <reason>" even when the hold has another cause. The Carrier match line still shows the reason.
 - L2: A contractor's senior_referral (AG:38, whatever the TIV) is still labelled "TIV needed to confirm".
 - L3: The screenshot shows "manifest check: FAILED — no saved run" from the sandbox. Use a sandbox with a manifest so that reviewers are not confused.
+
+## Look-again at 86f82fd (2026-10-16): H1 and H2 closed. H3 stays open (with @user).
+No model calls: a temp cache copy, `HOLDOUT_RESCORE=1`, `LLM_PACE_SECONDS=0`, no `--write`. `git status` was the same before and after.
+- **H1 closed.** `run.py --readout` imports and runs, exit 0. It reads the committed `reports-cache` and the rescore JSON from `HERE`. `readout.json` goes to the temp folder; nothing in the repo changed. Readout: operations 19/20, loss runs 8/0/12, 0 false completes, route 16/20. The self-check I asked for (import + read-only `--readout`) was not added; it is moved to the backlog as M5.
+- **H2 closed.** The pass rule is now hits ≥ 0.9 × all files, and it is "evaluable" only when every file has a route mark. Probes: 17/18 marked + 2 failed calls gives NOT EVALUABLE, no pass. 17/20 gives FAIL. 18/20 with 0 unsafe gives PASS (self-check). `eval_holdout_v3 --self-check` ok.
+- Dev re-score with v3 at 86f82fd: **route gate FAIL. 1 unsafe (SUB-138), 16/20, 0 files unmarked.** Same as before.
+- M4 (new): when one file is unmarked and a known unsafe route exists, the gate reports NOT EVALUABLE instead of FAIL (probe: 18 hits, 1 unsafe, 1 failed call). Any unsafe route should report FAIL whatever the marks.
+- L4 (new): the floor scales with set size (0.9 × files). That equals 18/20 only for a 20-file set. State this in the header, or assert that the set has 20 files.
+- v3 can be used for T-103 once H3 is answered and the gold rule for TIV-missing files is written. Not a production approval; the T-027 veto stands.

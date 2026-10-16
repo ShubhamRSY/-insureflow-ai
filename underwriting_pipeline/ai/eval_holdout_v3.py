@@ -301,7 +301,8 @@ def route_gate(rows: list[dict]) -> dict:
     hits = sum(r["checks"]["route"] == "hit" for r in marked)
     evaluable = bool(rows) and len(marked) == len(rows)  # @model-risk H2: 17/18 with 2 failed calls is not 18/20
     passed = evaluable and not unsafe and hits >= ROUTE_FLOOR * len(rows)
-    return {"unsafe": len(unsafe), "unsafe_ids": unsafe, "hits": hits, "scored": len(marked), "files": len(rows), "evaluable": evaluable, "pass": passed}
+    verdict = "PASS" if passed else "FAIL" if evaluable or unsafe else "NOT EVALUABLE"  # @model-risk M4: an unsafe route always fails
+    return {"unsafe": len(unsafe), "unsafe_ids": unsafe, "hits": hits, "scored": len(marked), "files": len(rows), "evaluable": evaluable, "pass": passed, "verdict": verdict}
 
 
 def status_counts(rows: list[dict]) -> dict:
@@ -355,7 +356,7 @@ def main() -> None:
               "", "## T-027 route gate (D-096)", "",
               f"- Unsafe routes (a carrier where gold says senior_referral or hold): **{gate['unsafe']}** ({', '.join(gate['unsafe_ids']) or 'none'}). Must be 0.",
               f"- Route accuracy: {gate['hits']}/{gate['files']} ({gate['files'] - gate['scored']} files with no route mark). Must be at least 18/20.",
-              f"- Route gate: **{'PASS' if gate['pass'] else 'FAIL' if gate['evaluable'] else 'NOT EVALUABLE'}**."]
+              f"- Route gate: **{gate['verdict']}**."]
     lines.append("")
     lines.append("## Per submission")
     lines.append("")
@@ -403,12 +404,13 @@ if __name__ == "__main__":
                 judge(True, None, False, "missing"), judge(False, "a", True, "a")] == ["hit", "miss", "miss", "not_credited", "hit"], "v2 rule; v1 lines unchanged"
         mk = lambda sid, mark, gold, used: {"submission": sid, "checks": {"route": mark}, "gold_route": gold, "route_used": used}
         good = [mk(f"S{i}", "hit", "carrier_a", "carrier_a") for i in range(18)] + [mk("M1", "miss", "no_match", "carrier_b"), mk("M2", "miss", "carrier_b", "no_match")]
-        assert route_gate(good) == {"unsafe": 0, "unsafe_ids": [], "hits": 18, "scored": 20, "files": 20, "evaluable": True, "pass": True}, route_gate(good)
+        assert route_gate(good) == {"unsafe": 0, "unsafe_ids": [], "hits": 18, "scored": 20, "files": 20, "evaluable": True, "pass": True, "verdict": "PASS"}, route_gate(good)
         bad = good[:19] + [mk("U", "miss", "senior_referral", "carrier_c")]
         assert route_gate(bad)["unsafe_ids"] == ["U"] and not route_gate(bad)["pass"], "one unsafe route fails the gate even at 18/20"
         low = good[:17] + [mk(f"X{i}", "miss", "carrier_a", "no_match") for i in range(3)]
         assert route_gate(low)["hits"] == 17 and not route_gate(low)["pass"] and route_gate(good[:18] + [{"submission": "F", "checks": {"route": "call_failed"}}])["scored"] == 18
         h2 = good[:17] + [mk("M", "miss", "carrier_a", "no_match")] + [{"submission": f"F{i}", "checks": {"route": "call_failed"}} for i in range(2)]
+        assert route_gate(h2)["verdict"] == "NOT EVALUABLE" and route_gate(good[:18] + [mk("U", "miss", "hold", "carrier_b"), {"submission": "F", "checks": {"route": "call_failed"}}])["verdict"] == "FAIL", "M4"
         assert not route_gate(h2)["evaluable"] and not route_gate(h2)["pass"], "@model-risk H2: 17/18 with 2 failed calls is not a pass"
         assert not route_gate(good[:18] + [{"submission": f"F{i}", "checks": {"route": "call_failed"}} for i in range(2)])["pass"], "18 hits, 2 unmarked: not evaluable"
         assert route_gate([mk("H", "miss", "hold", "carrier_a")])["unsafe"] == 1 and route_gate([mk("H", "hit", "hold", "hold")])["unsafe"] == 0
