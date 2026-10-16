@@ -190,8 +190,9 @@ def _match(report: dict, gated: bool) -> dict:
     over = lambda cap: tiv is not None and tiv > cap
     if barred and food:  # D-079 (B-290): a bar word with restaurant evidence is a person's call, not a rule's
         return out("senior_referral", "possible bar/liquor exposure — confirm liquor sales (R2; AG:46, AG:39)")
+    w2 = re.sub(r"wet[\s-]+chemical", " ", ops)  # a wet chemical hood is kitchen fire suppression, not hazardous goods (as P-047)
     for words, note in REFERRAL:  # W2 (D-097 1d): a referral word always wins over appetite (class) words
-        if _has(ops, words):
+        if _has(w2, words):
             return out("senior_referral", note + (f"; {OUT_TIV}" if over(PILOT_TIV) else ""))
     hit = [k for k, words in CLASSES.items() if _has(ops, words)]
     if "b" not in hit and ((report.get("cooking") or {}).get("equipment") or {}).get("state") == "yes":
@@ -1238,6 +1239,7 @@ if __name__ == "__main__":
             assert route(r(ops)) == "senior_referral" and why in match(r(ops))["note"], (ops, match(r(ops)))
         assert route(r("lab-grown diamonds retail")) == "senior_referral" and route(r("labrador breeder office")) == "carrier_a", "whole words only"
         assert route(r("office, no liquor")) == "carrier_a", "a negated referral word does not refer"
+        assert "R10" in match(r("cafe, Type I hood with wet chemical suppression"))["note"] and "AG:31" in match(r("chemical supply wholesale"))["note"], "SUB-130: wet chemical hood"
         assert match(notiv("sprinklered apartments", sprinklers="yes"))["provisional"] == "senior_referral" and match(notiv("apartments"))["provisional"] is None, "R12; a missing sprinkler answer still gives no route"
         assert "TIV" not in match(notiv("office"))["provisional_note"] and "TIV" not in match(notiv("restaurant"))["provisional_note"], "no TIV cap note is guessed"
         assert match(ready) == {"route": "senior_referral", "note": "habitational (R12; AG:37, AG:62); suggested market: Carrier C, underwriter confirms", "suggested": "carrier_c", "overridable": False}, "D-097: D-059 item 6 replaced"
