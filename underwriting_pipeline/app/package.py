@@ -29,6 +29,7 @@ submission. It is checked after every other gate, so it opens none of them, and 
 Run: python underwriting_pipeline/app/package.py
 """
 
+import hashlib
 import json
 import sys
 from datetime import datetime
@@ -82,12 +83,21 @@ def confirm_problem(report: dict) -> str:
     return conflict_problem(report)
 
 
+def _reviewed_values(report: dict) -> str:
+    """P-052 security review: the confirm is bound to the reviewed values too, so an edit or resolve logged after it voids it."""
+    return hashlib.sha256(json.dumps([[r.get("field_id"), r.get("value")] for r in report.get("fields") or []]).encode()).hexdigest()
+
+
 def market_confirmation(submission: str, run_hash: str) -> dict | None:
-    """P-052: the latest confirm by a listed senior on this saved run (same run_hash), or None. Another run's confirm does not count."""
+    """P-052: the latest confirm by a listed senior on this saved run (same run_hash) and the same reviewed values, or None."""
     path, ok = confirms_path(), seniors()
+    try:
+        values = _reviewed_values(reviewed(submission))
+    except ValueError:
+        return None
     rows = [json.loads(l) for l in path.read_text().splitlines() if l.strip()] if path.is_file() else []
     rows = [r for r in rows if isinstance(r, dict) and r.get("submission") == submission and r.get("underwriter_id") in ok
-            and r.get("carrier") in CARRIERS and (r.get("reason") or "").strip() and run_hash and r.get("run_hash") == run_hash]
+            and r.get("carrier") in CARRIERS and (r.get("reason") or "").strip() and run_hash and r.get("run_hash") == run_hash and r.get("reviewed_values") == values]
     return rows[-1] if rows else None
 
 
@@ -108,7 +118,7 @@ def confirm_market(submission: str, underwriter_id: str, carrier: str, reason: s
     if problem:
         raise ValueError(problem)
     row = {"submission": submission, "action": "confirm_market", "underwriter_id": who, "underwriter_name": seniors()[who], "carrier": carrier,
-           "reason": reason, "run_hash": report["saved_hash"], "at": datetime.now().astimezone().isoformat(timespec="seconds")}
+           "reason": reason, "run_hash": report["saved_hash"], "reviewed_values": _reviewed_values(report), "at": datetime.now().astimezone().isoformat(timespec="seconds")}
     confirms_path().parent.mkdir(parents=True, exist_ok=True)
     with confirms_path().open("a") as handle:
         handle.write(json.dumps(row) + "\n")
@@ -672,6 +682,10 @@ if __name__ == "__main__":
             body = send_to_carrier("SUB-410", "user", dest_dir, user_line=LINE("SUB-410")).read_text()
             assert "Carrier: carrier_b" in body and "market confirmed by UW-001" in body and "3 clean years" in body
             assert agency_problem("SUB-410") == "the file is not in appetite", "the account manager still cannot send a senior referral"
+            assert market_confirmation("SUB-410", _current_hash("SUB-410"))
+            with log.open("a") as handle:  # security review: an edit after the confirm voids it, on the same run
+                handle.write(json.dumps({"seq": next(seq), "submission": "SUB-410", "action": "edit", "underwriter_id": "UW-002", "reason": "typo", "field_id": "operations", "new_value": "roofing contractor", "run_hash": _current_hash("SUB-410")}) + "\n")
+            assert market_confirmation("SUB-410", _current_hash("SUB-410")) is None
             save(ext, "SUB-410", "complete", complete=True, fields=full(operations="family restaurant, 70 seats"))  # a new run: the old confirm does not count
             assert market_confirmation("SUB-410", _current_hash("SUB-410")) is None
 
@@ -692,7 +706,7 @@ if __name__ == "__main__":
                         (dest_dir / f"{sub}.md").unlink()  # B-233: the next actor sends afresh
                     except ValueError:
                         assert not ok, f"{sub} must pass for {actor}"
-            assert len(log.read_text().splitlines()) == 17  # history untouched by the sends (16 + the P-052 approve)
+            assert len(log.read_text().splitlines()) == 18  # history untouched by the sends (16 + the P-052 approve and edit)
 
             # D-055: highest seq wins, not line order; an unlisted id or an AI role is not a decision;
             # a repeated seq refuses; no seq is not a decision; underwriters.json may not list an AI role.
