@@ -563,6 +563,10 @@ def gate_loss_run(merged: dict, texts: dict, scans: dict | None = None) -> None:
     valued = {c[1] for n, c in checks.items() if c[0] == "accepted" and not sheet(n)}
     if digits_of(row["value"]) in {digits_of(v) for v in valued}:  # P-044: the valued-as-of date of a typed recognised carrier run, whichever file is cited
         return
+    undated = [n for n, c in checks.items() if c[0] == "no_date"]
+    if undated:  # P-045 (c), @model-risk H1 look-again: an undated carrier run and no accepted run: missing, whatever file the model cited
+        row.update(value=None, needs_review=True, reason=RUN_NO_DATE.format(undated[0]))
+        return
     source = row.get("source") or "no file named"
     from_sheet = [n for n in texts if sheet(n) and (n == row.get("source") or any(x in texts[n] for x in seen))]
     if from_sheet and kinds.get(row.get("source")) != "letter":  # B-343: never auto-accepted in the pilot
@@ -575,9 +579,6 @@ def gate_loss_run(merged: dict, texts: dict, scans: dict | None = None) -> None:
         row.update(value=None, needs_review=True, reason=NKL_DROPPED.format(source))
         return
     state, date, line = checks.get(row.get("source"), (None, None, None))
-    if state == "no_date":  # @model-risk H1 (check of P-045): (c) holds whatever the model extracted: the field stays missing
-        row.update(value=None, needs_review=True, reason=RUN_NO_DATE.format(source))
-        return
     why = (RUN_NEGATED.format(source, line) if state == "negated" else RUN_BAD_DATE.format(date, source) if state == "bad_date"
            else RUN_NO_DATE.format(source) if state == "no_date" else RUN_UNCLEAR.format(source))
     row["needs_review"] = True
@@ -2017,6 +2018,10 @@ if __name__ == "__main__":
     on_run = {"loss_run_valued_through": {"source": "loss-runs.md"}}
     clean = run_case(on_run, {"loss-runs.md": run_107})
     assert clean["status"] == "complete" and clean["complete"] and ready_to_route(clean) and clean["request"] is None, clean["status"]
+    for src, extra in (("application.md", {}), (None, {}), ("schedule.csv", {"schedule.csv": "location,valued\n1,2026-01-01\n"}), ("email.md", {"email.md": "Loss runs valued 2026-01-01."})):
+        box = {"loss_run_valued_through": {"field_id": "loss_run_valued_through", "value": "2026-01-01", "source": src, "quote": "2026-01-01", "needs_review": False, "reason": None}}
+        gate_loss_run(box, {"loss-runs.md": run_110.replace("Valuation date: 2026-09-30\n", ""), "application.md": "Loss runs valued 2026-01-01", **extra})
+        assert box["loss_run_valued_through"]["value"] is None and box["loss_run_valued_through"]["reason"] == RUN_NO_DATE.format("loss-runs.md"), ("H1 look-again P2-P5", src, box)
     undated = run_case({"loss_run_valued_through": {"source": "loss-runs.md", "value": "2026-01-01", "quote": "2026-01-01"}},
                        {"loss-runs.md": run_110.replace("Valuation date: 2026-09-30\n", "")})
     assert undated["status"] == "incomplete" and "loss_run_valued_through" in undated["missing"], "@model-risk H1: undated carrier layout stays incomplete end to end"

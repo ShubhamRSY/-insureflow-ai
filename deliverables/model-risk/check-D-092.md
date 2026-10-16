@@ -43,3 +43,32 @@
 ## Decision
 - Item 1: not approved; H1 open. Item 2: mix confirmed.
 - This is a development check. It is not a production approval; the T-027 veto stands. An approved P-045 is not a production approval.
+
+## LOOK-AGAIN — H1 (P-045 criterion c), commit 28b6d4d
+
+- Evidence: `git show 28b6d4d -- underwriting_pipeline/`, `gate_loss_run` and its self-checks, dev-SUB-147-152-D-092-cached.md. Author messages not read.
+- Re-run (D-069, scratch copy): `prepare.py` self-check with LLM_API_KEY, LLM_BASE_URL, LLM_MODEL unset: "prepare ok"; `workbench.py`: "workbench ok". `dev_p044_147.py` from a copy of cache-D-091, placeholder key, outbound network denied: 0 model calls, 6 of 6 from cache, table identical to the committed report; 0 false completes.
+- Probes (stubbed model reply through `process_submission`, Carrier A layout with the "Valued as of" line removed; the control with the line is plain "complete"):
+
+| Probe: model value, cited source | Status | Routable | Field |
+|---|---|---|---|
+| P1 2026-01-01, loss-runs.md (the undated run) | incomplete | no | missing, 1c reason |
+| P8 no value | incomplete | no | missing, 1c reason |
+| P2 2026-01-01, application.md | complete — review pending | **yes** | value kept, "not a recognised carrier loss run (application.md)" |
+| P3 2026-01-01, no source | complete — review pending | **yes** | value kept, "(no file named)" |
+| P4 2026-08-31 from email "valued as of", email.md | complete — review pending | **yes** | value kept, no 1c reason |
+| P5 2026-01-01, loss-runs.md, an sov.csv also holds that date | complete — review pending | **yes** | value kept, "loss run from scan/spreadsheet: check it (sov.csv)" |
+
+### H1: PARTLY RESOLVED, STILL OPEN (High)
+- Fixed: when the model cites the undated carrier run, the value is dropped, the file is incomplete and the card shows the 1c text (P1, new self-checks, end-to-end `run_case`).
+- Still open: the new `no_date` branch runs only on the cited source and only after the spreadsheet branch. If the model cites another file or no file (P2, P3, P4), or any csv/xlsx contains the date string (P5), the file is "complete — review pending", `ready_to_route` is True, and the card does not say "loss run found but no valued-as-of date". (c) is about the document: if a carrier-layout document with no valued date is present and no typed carrier run is accepted, the status stays incomplete. P2 is likely in practice because the application often states a loss-run date, and `run_case` cites application.md by default.
+- What closes it: in `gate_loss_run`, after the accepted-run match (`valued`) and before the spreadsheet and letter branches, if any file in `checks` is `no_date`, set value None with the 1c reason naming that file, whatever the source. Add self-checks for P2, P3 and P5 that assert incomplete and not routable. Re-run SUB-147–152 from cache with the table unchanged. This is extraction code: it needs a P-### and the user's `approve change P-###`.
+
+### Medium / Low (one line each)
+- M1 (D-092 check): closed. A negated run with no value now shows its reason (self-check present and passes).
+- L4 again: the dev report header records 0a56520, the parent of the commit under check; the table is unchanged at 28b6d4d (reproduced).
+- L6: the H1 code change in 28b6d4d has no P-### of its own. It stays within D-092 1c, but the user should confirm that reading.
+- M2, L1–L3 (D-092 check) unchanged.
+
+### Decision
+- P-045 (D-092 item 1): still not approved; H1 open. Do not run the pipeline on SUB-127–146 until it closes. This is a development check, not a production approval. The T-027 veto stands.
