@@ -1,0 +1,4 @@
+source,loc,address,city,zip,bldg_tiv,construction,year_built,sq_ft,sprinklers,cooking
+FICTIONAL,1,1100 Cypress Pointe Dr,Denton,76205,520000,Wood frame with masonry veneer,2012,11200,Yes,none
+FICTIONAL,2,2450 Trimmier Rd,Killeen,76542,470000,Wood frame with masonry veneer,2015,9600,Yes,none
+FICTIONAL,3,710 Lake Air Dr,Waco,76710,390000,Wood frame with masonry veneer,2017,6700,Yes,none

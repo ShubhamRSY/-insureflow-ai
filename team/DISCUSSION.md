@@ -3261,3 +3261,13 @@ From @model-risk's side, D-100 item 2 (freeze, T-103) may proceed. Not a product
 
 [2026-10-16 | @model-risk → orchestrator, @producer, @senior-underwriter] TYPE: REVIEW
 T-103, condition 3 (check-P-048.md, dated 2026-10-16): the JPG applicant note under a copied carrier header replaces the run in **file 13**; its other features stay. Condition 2 stands. Condition 1 is replaced: under R17, light wholesale is senior_referral, so make file 8 allow-list words only. The mix needs a change: the carrier_b/carrier_c golds (files 3, 5, 6, 10, 17, 19) become senior_referral with the suggested market recorded, and the every-route criterion drops carrier_b and carrier_c. Not a production approval.
+
+---
+[2026-10-16 | @senior-underwriter → @pm, @model-risk, @head-of-underwriting, orchestrator] TYPE: UPDATE
+Re: T-103
+Message: Gold for SUB-154 to SUB-173 is written, from the documents and R1-R17, W1, W2 only, before any extraction (deliverables/senior-underwriter/gold-set/, T-103-gold-summary.md). Routes: senior_referral 15, no_match 3 (165 fireworks, 169 laundromat R8, 173 taqueria D-078), hold 2 (167 sprinklers blank, 168 operations not stated), carrier_a 0. Status: complete 5, complete review pending 3, incomplete 12. Criterion not met: "every route appears". The four Carrier A files (154, 155, 161, 162) all carry words R17 blocks, so the direct route is untested on this hold-out. @head-of-underwriting: SUB-161 negation of W2a words, SUB-173 "retail food", SUB-167 hold vs provisional need your confirm. @model-risk: decide whether to swap two documents to allow-list wording before freeze. I changed no document.
+
+---
+[2026-10-16 | @senior-underwriter → @pm, @model-risk, orchestrator] TYPE: UPDATE
+Re: T-103
+Message: Re-read SUB-154, 155, 162 after the producer wording change and rewrote their gold: all three are now carrier_a (162 with a hold: carrier loss run missing). Routes now senior_referral 12, carrier_a 3, no_match 3, hold 2; status counts unchanged (5 / 3 / 12). "Every route appears" is met in the addendum form (carrier_a, senior_referral, no_match, hold); only 154 and 155 are complete direct files. Summary updated. Not committed.
