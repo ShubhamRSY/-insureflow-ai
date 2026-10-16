@@ -5,6 +5,7 @@ Uncached: set LLM_CACHE_DIR to a new empty folder. Paced by LLM_PACE_SECONDS thr
 Run: LLM_CACHE_DIR=<empty dir> .venv/bin/python deliverables/ai-engineer/analysis/dev_p044_147.py
 """
 import json
+import os
 import re
 import subprocess
 import sys
@@ -19,7 +20,7 @@ import regression_dev  # noqa: E402
 
 IDS = [f"SUB-{n}" for n in range(147, 153)]
 GOLD = ROOT / "deliverables" / "senior-underwriter" / "gold-set"
-OUT = ROOT / "deliverables" / "ai-engineer" / "evals" / "dev-SUB-147-152-D-091"
+OUT = ROOT / "deliverables" / "ai-engineer" / "evals" / f"dev-SUB-147-152-{os.environ.get('DEV_TAG') or 'D-091'}"  # D-092: a tagged re-run never overwrites D-091
 
 
 def gold(sid: str) -> dict:
@@ -56,7 +57,7 @@ def main() -> None:
     summary = {"plain_complete": [r["submission"] for r in rows if r["status"] == "complete"], "false_completes": [r["submission"] for r in rows if r["false_complete"]],
                "loss_run_as_gold": sum(r["loss_run_as_gold"] for r in rows), "status_as_gold": sum(r["status_as_gold"] for r in rows), "files": len(rows)}
     OUT.with_suffix(".json").write_text(json.dumps({"env": env, "summary": summary, "rows": rows}, indent=2, ensure_ascii=False) + "\n")
-    lines = ["# DEVELOPMENT CHECK — P-044 accept/reject cases SUB-147 to SUB-152 (D-091), not a hold-out", "",
+    lines = [f"# DEVELOPMENT CHECK — P-044/P-045 accept/reject cases SUB-147 to SUB-152 ({OUT.name}), not a hold-out", "",
              f"- Commit {env['commit']}, model {env['model']}, paced {env['pace_seconds']} s, python {env['python']}, {json.dumps(env['libraries'])}.",
              f"- Model calls: {json.dumps(env['tokens'])}; failed attempts: {json.dumps(env['failed_attempts'])}.",
              f"- Plain \"complete\": {', '.join(summary['plain_complete']) or 'none'}. False completes: **{len(summary['false_completes'])}** ({', '.join(summary['false_completes']) or 'none'}).",

@@ -1023,3 +1023,14 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: @producer builds SUB-147–152; @senior-underwriter writes their gold first (gold is the senior underwriter's job under the protocol); the run is a development check (process_submission only, temp cache, no drafts or outboxes written); plan and risk entry written in the main session; one @model-risk check.
 - Status: ACCEPTED
 - Amends: none. B-337 closed by this decision. Not a production approval; T-027 veto stands.
+
+## D-092 — approve change P-045 (no "_" skip, carrier-negation lines, real valued date, dated-run reason); B-343 scans/xlsx never auto-accepted; T-102 changes; build SUB-127–146 and freeze gold
+- Date / Owner: 2026-10-15 / @user
+- Context: D-091 @model-risk check (M1–M7, L1–L2), B-341 to B-344.
+- Options considered: none. The user's words.
+- Decision: In the user's words. "1. approve change P-045: (a) B-341: lines starting with "_" are not skipped in loss-run documents; any line negating the carrier ("not from", "not issued by", "copy", "sample") sends the document to review with its reason. (b) B-342: the valued-as-of date must parse as a real calendar date, not in the future; otherwise review with reason. (c) A document matching a carrier layout but with no readable valued date: status stays incomplete, and the card states "loss run found but no valued-as-of date; ask the producer for a dated carrier loss run". Correct dev gold for SUB-150/151 with a note explaining why. Self-checks for each. Re-run SUB-147–152 from cache: 0 false completes. 2. B-343 decision: scanned, image-only and xlsx loss runs are never auto-accepted in the pilot; they go to review with the reason "loss run from scan/spreadsheet: check it". Log xlsx reader fix as backlog. 3. T-102: apply all four @model-risk changes, plus the hold-out gold must expect review for the 2 scans and 1 image-only PDF. @model-risk confirms the mix. 4. Only after 1–3 are committed: @producer creates SUB-127–146 per T-102. Gold is written from the documents only by @senior-underwriter, not by anyone who changed the code. Freeze gold, commit, record the commit hash. Do not run the pipeline on them yet. @model-risk check P-045, High only."
+- Rationale: The user typed this in this Claude Code session on 2026-10-15.
+- Dissent: none
+- Follow-up tasks: P-045 built in the main session (budget rule 3); dev gold for SUB-150/151 corrected by @senior-underwriter; T-102 edited in the main session (board update); one @model-risk dispatch covers P-045 and the T-102 mix; then @producer and @senior-underwriter for SUB-127–146. Orchestrator's reading: "matching a carrier layout" in (c) means the first line is a Carrier A/B/C header.
+- Status: ACCEPTED
+- Amends: D-090 P-044 (adds P-045 rules); B-341, B-342, B-343, B-344 closed by this decision. Not a production approval; T-027 veto stands.

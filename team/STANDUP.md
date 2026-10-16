@@ -1717,3 +1717,8 @@ Blocked: No.
 - Done: D-091 check (deliverables/model-risk/check-D-091.md). Dev check SUB-147–152 APPROVE (re-run from cache, 0 false completes reproduced); T-102 mix APPROVE WITH CHANGES (M3–M5); R-030 APPROVE (add M6 "_" line skip, M7 date validity). No High, no veto.
 - Next: confirm T-102 is updated with M3–M5 before any SUB-127–146 file is created.
 - Blockers: none. T-027 veto stands; nothing here is a production approval.
+
+### 2026-10-15 — @senior-underwriter
+- Done: D-092 1c dev gold correction. SUB-150 and SUB-151 both open with a Carrier header and have no valued-as-of date: expected loss run "loss run found but no valued-as-of date; ask the producer for a dated carrier loss run", expected pipeline status incomplete. Gold note added to each. No other gold, code or inbox touched.
+- Next: none from me.
+- Blockers: none.
