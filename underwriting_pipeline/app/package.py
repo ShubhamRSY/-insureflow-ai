@@ -69,7 +69,7 @@ def confirms_path() -> Path:
 
 def confirm_problem(report: dict) -> str:
     """P-052: empty when a senior may confirm a market on this (reviewed) file. Never on a held file or one with a prohibited word."""
-    from workbench import PROHIBITED, _has, _ops, match
+    from workbench import PROHIBITED, VACANT, _has, _ops, match
 
     if report.get("status") in prepare.REFUSED_STATUSES:
         return f"this file's status is {report.get('status')}"
@@ -78,6 +78,9 @@ def confirm_problem(report: dict) -> str:
         return f"the carrier match is {route}; a market confirm is only for a senior referral"
     if _has(_ops(report), PROHIBITED):
         return "a prohibited word (bar, pub, lounge or another W1 word) is on the file; no market confirm (D-057, D-060)"
+    raw = " ".join(f"{r.get('value') or ''} {r.get('quote') or ''} {r.get('context') or ''}" for r in report.get("fields") or [] if r.get("field_id") == "operations").lower()
+    if _has(_ops(report), VACANT) or _has(raw, VACANT):  # compliance H1: AG:51 prohibits true vacancy and no utilities
+        return "vacant, unoccupied or no utilities: the guide prohibits true vacancy and buildings with no utilities (AG:51); a renovation under a signed GC contract (AG:40) needs its own rule; no market confirm"
     if report.get("needs_human"):
         return "an unread page is still on the file"
     return conflict_problem(report)
@@ -655,6 +658,9 @@ if __name__ == "__main__":
             save(ext, "SUB-411", "complete", complete=True, fields=full(operations="office building with ground-floor pub"))
             save(ext, "SUB-412", "complete", complete=True, fields=full(operations="apartments, 8 units"))  # held: sprinkler answer missing
             assert set(seniors()) == {"UW-001"} and "UW-002" in underwriters()
+            for i, ops in enumerate(("office building, no utilities", "office, unoccupied", "fully vacant building", "office, utilities disconnected")):  # compliance H1
+                save(ext, f"SUB-42{i}", "complete", complete=True, fields=full(operations=ops))
+                assert "AG:51" in confirm_problem(reviewed(f"SUB-42{i}")), ops
             for args in (("SUB-410", "UW-002", "carrier_b", "x"), ("SUB-410", "user", "carrier_b", "x"), ("SUB-410", "UW-001", "carrier_z", "x"),
                          ("SUB-410", "UW-001", "carrier_b", " "), ("SUB-411", "UW-001", "carrier_b", "x"), ("SUB-412", "UW-001", "carrier_c", "x"),
                          ("SUB-401", "UW-001", "carrier_b", "x"), ("SUB-410", "UW-001", "carrier_b", "x", "stale-hash")):
