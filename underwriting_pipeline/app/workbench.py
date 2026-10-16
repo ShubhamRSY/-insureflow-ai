@@ -825,6 +825,7 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
                              f" ({html.escape(pv['provisional_label'])}) · No send until the hold clears</p>")
             if item["route"] == "senior_referral":  # B-264: only a senior referral names a market
                 lines.append(f"<p>Suggested market: <b>{html.escape(item.get('suggested') or 'none')}</b> · recommendation only; the underwriter decides</p>")
+                lines.append("<p>No send from this screen: a senior referral is confirmed and sent by the underwriter outside the workbench (D-097).</p>")
         lines += [
             f"<p>Extraction: {html.escape(extraction)}</p>",
             unread_html,
@@ -1459,7 +1460,7 @@ if __name__ == "__main__":
 
                 # Suggested market is its own field; the footer shows model and prompt version, never a key or a host.
                 stored("SUB-907", "complete", [{**r, "value": "roofing contractor"} if r["field_id"] == "operations" else r for r in good])
-                assert "Suggested market: <b>carrier_b</b>" in art(render(load_queue(), None), "SUB-907")
+                assert "Suggested market: <b>carrier_b</b>" in art(render(load_queue(), None), "SUB-907") and "No send from this screen: a senior referral" in art(render(load_queue(), None), "SUB-907")  # D-097 UI H1
                 assert "Suggested market" not in art(render(load_queue(), None), "SUB-901")  # B-264: senior referrals only
                 env_old = {k: os.environ.get(k) for k in ("LLM_API_KEY", "LLM_BASE_URL", "LLM_MODEL")}
                 try:
