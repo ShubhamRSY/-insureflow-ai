@@ -553,9 +553,10 @@ def gate_loss_run(merged: dict, texts: dict, scans: dict | None = None) -> None:
     checks = {n: carrier_run_check(t) for n, t in texts.items()}
     if not row.get("value"):  # P-045 (c): a carrier run with no usable valued date: the field stays missing and the card says why
         undated = [n for n, (state, _, _) in checks.items() if state == "no_date"]
-        if undated:
+        negated = [(n, c[2]) for n, c in checks.items() if c[0] == "negated"]  # @model-risk M1: say why here too
+        if undated or negated:
             row["needs_review"] = True
-            row["reason"] = RUN_NO_DATE.format(undated[0])
+            row["reason"] = RUN_NO_DATE.format(undated[0]) if undated else RUN_NEGATED.format(*negated[0])
         return
     kinds = {name: loss_run_kind(text) for name, text in texts.items()}
     seen = [x for x in (row["value"], row.get("quote")) if x]
@@ -574,6 +575,9 @@ def gate_loss_run(merged: dict, texts: dict, scans: dict | None = None) -> None:
         row.update(value=None, needs_review=True, reason=NKL_DROPPED.format(source))
         return
     state, date, line = checks.get(row.get("source"), (None, None, None))
+    if state == "no_date":  # @model-risk H1 (check of P-045): (c) holds whatever the model extracted: the field stays missing
+        row.update(value=None, needs_review=True, reason=RUN_NO_DATE.format(source))
+        return
     why = (RUN_NEGATED.format(source, line) if state == "negated" else RUN_BAD_DATE.format(date, source) if state == "bad_date"
            else RUN_NO_DATE.format(source) if state == "no_date" else RUN_UNCLEAR.format(source))
     row["needs_review"] = True
@@ -1902,6 +1906,14 @@ if __name__ == "__main__":
     gate_loss_run(box, {"loss-runs.md": run_110.replace("Valuation date: 2026-09-30\n", "")})
     assert box["loss_run_valued_through"]["value"] is None and box["loss_run_valued_through"]["reason"] == RUN_NO_DATE.format("loss-runs.md"), "(c) missing, with the reason"
     assert RUN_NO_DATE.startswith("loss run found but no valued-as-of date; ask the producer for a dated carrier loss run")
+    # @model-risk H1 (check of P-045): a date the model extracted from an undated carrier layout is dropped; the file stays incomplete.
+    for value in ("2026-01-01", "2024-09-03"):
+        box = {"loss_run_valued_through": {"field_id": "loss_run_valued_through", "value": value, "source": "loss-runs.md", "quote": value, "needs_review": False, "reason": None}}
+        gate_loss_run(box, {"loss-runs.md": run_110.replace("Valuation date: 2026-09-30\n", "")})
+        assert box["loss_run_valued_through"]["value"] is None and box["loss_run_valued_through"]["reason"] == RUN_NO_DATE.format("loss-runs.md"), (value, box)
+    box = {"loss_run_valued_through": {"field_id": "loss_run_valued_through", "value": None, "source": None, "quote": None, "needs_review": True, "reason": None}}
+    gate_loss_run(box, {"loss-runs.md": run_107 + "Sample report\n"})
+    assert box["loss_run_valued_through"]["reason"] == RUN_NEGATED.format("loss-runs.md", "Sample report"), "@model-risk M1: a negated run with no value still says why"
     # B-343 (D-092): a scan, image-only PDF or spreadsheet loss run is never auto-accepted, even in a perfect layout.
     for name, scans_ in (("loss-runs.jpg", {"loss-runs.jpg": []}), ("loss-runs.pdf", {"loss-runs.pdf": []}), ("loss-runs.xlsx", {})):
         box = {"loss_run_valued_through": {"field_id": "loss_run_valued_through", "value": "2026-09-30", "source": name, "quote": "2026-09-30", "needs_review": False, "reason": None}}
@@ -2005,6 +2017,9 @@ if __name__ == "__main__":
     on_run = {"loss_run_valued_through": {"source": "loss-runs.md"}}
     clean = run_case(on_run, {"loss-runs.md": run_107})
     assert clean["status"] == "complete" and clean["complete"] and ready_to_route(clean) and clean["request"] is None, clean["status"]
+    undated = run_case({"loss_run_valued_through": {"source": "loss-runs.md", "value": "2026-01-01", "quote": "2026-01-01"}},
+                       {"loss-runs.md": run_110.replace("Valuation date: 2026-09-30\n", "")})
+    assert undated["status"] == "incomplete" and "loss_run_valued_through" in undated["missing"], "@model-risk H1: undated carrier layout stays incomplete end to end"
     for letter in (letter_112, letter_123, letter_112.replace("# Carta de pérdidas", "# Historial de pérdidas")):  # SUB-112, SUB-123, 112 renamed
         rep_ = run_case(on_run, {"loss-runs.md": letter})
         row = {r["field_id"]: r for r in rep_["fields"]}["loss_run_valued_through"]

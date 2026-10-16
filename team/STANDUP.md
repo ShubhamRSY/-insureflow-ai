@@ -1722,3 +1722,8 @@ Blocked: No.
 - Done: D-092 1c dev gold correction. SUB-150 and SUB-151 both open with a Carrier header and have no valued-as-of date: expected loss run "loss run found but no valued-as-of date; ask the producer for a dated carrier loss run", expected pipeline status incomplete. Gold note added to each. No other gold, code or inbox touched.
 - Next: none from me.
 - Blockers: none.
+
+### 2026-10-15 — @model-risk
+- Done: D-092 check (deliverables/model-risk/check-D-092.md). P-045/B-343: CHANGES REQUIRED. H1: an undated carrier run keeps an extracted date, giving review pending instead of incomplete. Self-checks ok; cached SUB-147–152 reproduced with 0 false completes. T-102 mix CONFIRMED.
+- Next: verify the H1 fix once a P-### is approved.
+- Blockers: H1 open; T-027 veto stands; nothing here is a production approval.
