@@ -809,7 +809,7 @@ OPS_ITEMS = (
     ("on-site processing", r"manufactur\w*|processing|on[- ]site|repair\w*", r"manufactur\w*|process\w*|on[- ]site|repair\w*"),
     ("patio", r"patio|outdoor seating|outdoor service", r"patio|outdoor"),
     ("security staff", r"security|bouncers?|guards?", r"security|bouncers?|guards?"),
-    ("hazardous materials", r"hazardous|flammables?|chemicals?|propane", r"hazardous|flammables?|chemicals?|propane"),
+    ("hazardous materials", r"hazardous|flammables?|(?<!wet )chemicals?|propane", r"hazardous|flammables?|chemicals?|propane"),  # a wet chemical hood system is suppression
 )
 OPS_COUNTS = (("seats", r"(\d[\d,]*)\s+(?:seats|seating|asientos)|seating (?:for|capacity of)\s+(\d[\d,]*)", r"seat"),
               ("units", r"(\d[\d,]*)\s+(?:\w+\s+)?(?:units|unidades|departamentos)", r"unit|apartment"))
@@ -1563,6 +1563,8 @@ if __name__ == "__main__":
         assert ops_missing("Mexican restaurant", "Operations: Mexican restaurant, 70 seats, beer and wine only, no bar.") == ["beer", "wine", "bar", "70 seats"]
         assert ops_missing("Financial advisory and tax office", "Operations: Financial advisory and tax office, 2nd floor. Clients by appointment.") == ["stories or floor"]
         assert ops_missing("Used book and thrift shop", "Operations: Used book and thrift shop, donated goods sorted on site. No food, no alcohol.") == ["alcohol", "on-site processing"]
+        assert ops_missing("restaurant", "Cooking: fryer. Type I hood with UL 300 wet chemical system") == ["frying or open flame"], "wet chemical is suppression"
+        assert ops_missing("glass shop", "Glass shop, no chemicals beyond cleaning supplies") == ["hazardous materials"]
         assert ops_missing("clothing store", "tienda de ropa") == [] and ops_missing("restaurant", "restaurante con cerveza y 40 asientos") == ["beer", "40 seats"]
         assert ops_missing("Breakfast and lunch cafe, 64 seats, beer and wine only, no liquor license.", "Operations: Breakfast and lunch cafe, 64 seats, beer and wine only, no liquor license. Dine-in and takeout.") == []
         assert ops_missing("Residential apartments, 6 units", "Operations: Residential apartments, 16 units") == ["16 units"], "a wrong count is missing"

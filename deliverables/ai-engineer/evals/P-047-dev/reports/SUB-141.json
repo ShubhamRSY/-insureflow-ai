@@ -1,0 +1,158 @@
+{
+  "complete": false,
+  "missing": [
+    "loss_run_valued_through"
+  ],
+  "request": "Submission SUB-141\nNothing has been declined. Nothing has been bound.\n\nMissing:\n- currently valued carrier loss runs (a no-known-loss letter does not count)\n",
+  "conflicts": [],
+  "extra": [],
+  "fields": [
+    {
+      "field_id": "named_insured",
+      "value": "Ember and Oak Kitchen & Bar LLC",
+      "source": "application.md",
+      "start": 139,
+      "end": 185,
+      "confidence": 1.0,
+      "model_confidence": 1.0,
+      "ocr_cited_confidence": null,
+      "needs_review": false,
+      "reason": null,
+      "quote": "Named insured: Ember and Oak Kitchen & Bar LLC"
+    },
+    {
+      "field_id": "premises_address",
+      "value": "3400 Coit Rd, Plano, TX 75075",
+      "source": "application.md",
+      "start": 220,
+      "end": 267,
+      "confidence": 1.0,
+      "model_confidence": 1.0,
+      "ocr_cited_confidence": null,
+      "needs_review": false,
+      "reason": null,
+      "quote": "Premises address: 3400 Coit Rd, Plano, TX 75075",
+      "address_check": "ok"
+    },
+    {
+      "field_id": "effective_date",
+      "value": "2027-02-01",
+      "source": "application.md",
+      "start": 268,
+      "end": 294,
+      "confidence": 1.0,
+      "model_confidence": 1.0,
+      "ocr_cited_confidence": null,
+      "needs_review": false,
+      "reason": null,
+      "quote": "Effective date: 2027-02-01"
+    },
+    {
+      "field_id": "operations",
+      "value": "Full-service restaurant and bar, 180 seats, full liquor license, live music Friday and Saturday until 1 am, dinner and weekend brunch, wood-fired oven, charbroiler, two fryers, 8-burner range",
+      "source": "application.md",
+      "start": 435,
+      "end": 887,
+      "confidence": 0.95,
+      "model_confidence": 0.95,
+      "ocr_cited_confidence": null,
+      "needs_review": true,
+      "reason": "value is not in the cited text (translated or reworded)",
+      "quote": "Operations: Full-service restaurant and bar, 180 seats, full liquor license (TABC mixed beverage permit), live music Friday and Saturday until 1 am. Dinner and weekend brunch.\nNumber of employees: 46\nAnnual sales: $2,400,000\nBuilding TIV: $1,250,000\nBusiness personal property: $380,000\nSquare footage: 6,200\nConstruction: Masonry\nYear built: 2006\nStories: 1\nSprinklers: Yes\nCooking operations: Wood-fired oven, charbroiler, two fryers, 8-burner range."
+    },
+    {
+      "field_id": "sales_or_payroll",
+      "value": "2400000",
+      "source": "application.md",
+      "start": 635,
+      "end": 659,
+      "confidence": 1.0,
+      "model_confidence": 1.0,
+      "ocr_cited_confidence": null,
+      "needs_review": false,
+      "reason": null,
+      "quote": "Annual sales: $2,400,000"
+    },
+    {
+      "field_id": "tiv_building",
+      "value": "1250000",
+      "source": "application.md",
+      "start": 660,
+      "end": 684,
+      "confidence": 1.0,
+      "model_confidence": 1.0,
+      "ocr_cited_confidence": null,
+      "needs_review": false,
+      "reason": null,
+      "quote": "Building TIV: $1,250,000"
+    },
+    {
+      "field_id": "construction",
+      "value": "Masonry",
+      "source": "application.md",
+      "start": 744,
+      "end": 765,
+      "confidence": 1.0,
+      "model_confidence": 1.0,
+      "ocr_cited_confidence": null,
+      "needs_review": false,
+      "reason": null,
+      "quote": "Construction: Masonry"
+    },
+    {
+      "field_id": "year_built",
+      "value": "2006",
+      "source": "application.md",
+      "start": 766,
+      "end": 782,
+      "confidence": 1.0,
+      "model_confidence": 1.0,
+      "ocr_cited_confidence": null,
+      "needs_review": false,
+      "reason": null,
+      "quote": "Year built: 2006"
+    },
+    {
+      "field_id": "loss_run_valued_through",
+      "value": null,
+      "start": null,
+      "end": null,
+      "source": null,
+      "confidence": 0.0,
+      "needs_review": true
+    }
+  ],
+  "folder": "SUB-141",
+  "sprinklers": "yes",
+  "cooking": {
+    "equipment": {
+      "state": "not_stated",
+      "terms": [],
+      "source": null,
+      "start": null,
+      "end": null,
+      "quote": null
+    },
+    "hood_suppression": {
+      "state": "not_stated",
+      "terms": [],
+      "source": null,
+      "start": null,
+      "end": null,
+      "quote": null
+    }
+  },
+  "needs_human": [],
+  "unread": [],
+  "locations": [],
+  "error": null,
+  "model_version": "qwen/qwen3.8-27b",
+  "prompt_version": "b025802c0dfa",
+  "ocr_settings": "tesseract psm6; osd turn; deskew +-12; rule lift; x2 lanczos; pdf 200dpi; fill in image mode",
+  "host": "api.groq.com",
+  "temperature": 0,
+  "cache_key": "d84eca13a29597b9b6ff784f23b38d65c5a8d891c52a153d08449740382d15c4",
+  "retries": [],
+  "status": "incomplete",
+  "status_reason": null
+}

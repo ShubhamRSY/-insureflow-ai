@@ -1,0 +1,162 @@
+{
+  "complete": false,
+  "missing": [
+    "loss_run_valued_through"
+  ],
+  "request": "Submission SUB-133\nNothing has been declined. Nothing has been bound.\n\nMissing:\n- currently valued carrier loss runs (a no-known-loss letter does not count)\n",
+  "conflicts": [],
+  "extra": [],
+  "fields": [
+    {
+      "field_id": "named_insured",
+      "value": "Canyon Oaks Apartments LP",
+      "source": "application.md",
+      "start": 139,
+      "end": 179,
+      "confidence": 1.0,
+      "model_confidence": 1.0,
+      "ocr_cited_confidence": null,
+      "needs_review": false,
+      "reason": null,
+      "quote": "Named insured: Canyon Oaks Apartments LP"
+    },
+    {
+      "field_id": "premises_address",
+      "value": "4120 82nd St, Lubbock, TX 79423",
+      "source": "application.md",
+      "start": 214,
+      "end": 263,
+      "confidence": 1.0,
+      "model_confidence": 1.0,
+      "ocr_cited_confidence": null,
+      "needs_review": false,
+      "reason": null,
+      "quote": "Premises address: 4120 82nd St, Lubbock, TX 79423",
+      "address_check": "ok"
+    },
+    {
+      "field_id": "effective_date",
+      "value": "2027-04-01",
+      "source": "application.md",
+      "start": 264,
+      "end": 290,
+      "confidence": 1.0,
+      "model_confidence": 1.0,
+      "ocr_cited_confidence": null,
+      "needs_review": false,
+      "reason": null,
+      "quote": "Effective date: 2027-04-01"
+    },
+    {
+      "field_id": "operations",
+      "value": "Residential apartments, 12 units in one two-story building, long-term leases. Occupancy 91 percent. No cooking operations (tenant electric ranges only).",
+      "source": "application.md",
+      "start": 420,
+      "end": 857,
+      "confidence": 0.95,
+      "model_confidence": 0.95,
+      "ocr_cited_confidence": null,
+      "needs_review": true,
+      "reason": "value is not in the cited text (translated or reworded)",
+      "quote": "Operations: Residential apartments, 12 units in one two-story building, long-term leases. Occupancy 91 percent.\nNumber of employees: 3\nAnnual sales: $236,000 (gross annual rents)\nBuilding TIV: $1,460,000\nBusiness personal property: $35,000\nSquare footage: 12,900\nConstruction: Wood frame with masonry veneer\nYear built: 1989\nStories: 2\nSprinklers: Yes, NFPA 13 system, retrofit 2020\nCooking operations: None (tenant electric ranges only)"
+    },
+    {
+      "field_id": "sales_or_payroll",
+      "value": "236000",
+      "source": "application.md",
+      "start": 555,
+      "end": 598,
+      "confidence": 1.0,
+      "model_confidence": 1.0,
+      "ocr_cited_confidence": null,
+      "needs_review": false,
+      "reason": null,
+      "quote": "Annual sales: $236,000 (gross annual rents)"
+    },
+    {
+      "field_id": "tiv_building",
+      "value": "1460000",
+      "source": "application.md",
+      "start": 599,
+      "end": 623,
+      "confidence": 1.0,
+      "model_confidence": 1.0,
+      "ocr_cited_confidence": null,
+      "needs_review": false,
+      "reason": null,
+      "quote": "Building TIV: $1,460,000"
+    },
+    {
+      "field_id": "construction",
+      "value": "Wood frame with masonry veneer",
+      "source": "application.md",
+      "start": 683,
+      "end": 727,
+      "confidence": 1.0,
+      "model_confidence": 1.0,
+      "ocr_cited_confidence": null,
+      "needs_review": false,
+      "reason": null,
+      "quote": "Construction: Wood frame with masonry veneer"
+    },
+    {
+      "field_id": "year_built",
+      "value": "1989",
+      "source": "application.md",
+      "start": 728,
+      "end": 744,
+      "confidence": 1.0,
+      "model_confidence": 1.0,
+      "ocr_cited_confidence": null,
+      "needs_review": false,
+      "reason": null,
+      "quote": "Year built: 1989"
+    },
+    {
+      "field_id": "loss_run_valued_through",
+      "value": null,
+      "source": "loss-runs.jpg",
+      "start": 101,
+      "end": 119,
+      "confidence": 0.8,
+      "model_confidence": 1.0,
+      "ocr_cited_confidence": 0.8,
+      "needs_review": true,
+      "reason": "loss run found but no valued-as-of date; ask the producer for a dated carrier loss run (loss-runs.jpg)",
+      "quote": "Valued: 2026-09-30"
+    }
+  ],
+  "folder": "SUB-133",
+  "sprinklers": "yes",
+  "cooking": {
+    "equipment": {
+      "state": "not_stated",
+      "terms": [],
+      "source": null,
+      "start": null,
+      "end": null,
+      "quote": null
+    },
+    "hood_suppression": {
+      "state": "not_stated",
+      "terms": [],
+      "source": null,
+      "start": null,
+      "end": null,
+      "quote": null
+    }
+  },
+  "needs_human": [],
+  "unread": [],
+  "locations": [],
+  "error": null,
+  "model_version": "qwen/qwen3.8-27b",
+  "prompt_version": "b025802c0dfa",
+  "ocr_settings": "tesseract psm6; osd turn; deskew +-12; rule lift; x2 lanczos; pdf 200dpi; fill in image mode",
+  "host": "api.groq.com",
+  "temperature": 0,
+  "cache_key": "cc0799c64dd7b1cc8bd3c3080f2516c73e3875e1dabf1596d7cb11b2df9531ff",
+  "retries": [],
+  "status": "incomplete",
+  "status_reason": null
+}
