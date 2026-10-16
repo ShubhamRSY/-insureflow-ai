@@ -1001,3 +1001,14 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: built in the main session (budget rule 3); @model-risk check; @senior-underwriter UI check (D-065). Orchestrator's reading: P-043 adds the issuer condition to P-040's loss-run test; P-040's policy-period condition is kept (P-043 does not withdraw it). Item 4 edits eval_holdout_127.py, which has no gold yet, so it is not a frozen scorer; the 107 scorer stays frozen and the item 6 safety/automation figures are computed beside it in the dev script.
 - Status: ACCEPTED
 - Amends: D-088 P-040 (adds the carrier-issuer condition); B-322, B-323, B-324, B-325 closed by this decision. Not a production approval; @model-risk's T-027 veto stands. No send is authorized.
+
+## D-090 — T-101 kept; approve change P-044 (recognised carrier loss-run formats only; replaces P-043); comma-blind dev re-check
+- Date / Owner: 2026-10-15 / @user
+- Context: P-043 rejected three times by @model-risk (B-329); NEXT-SESSION pending decisions 1 and 2.
+- Options considered: B-329 (a), (b), (c); T-101 keep or remove.
+- Decision: In the user's words. "0. T-101: KEEP — I ran it, commit it. Only one AI session on this repo from now on. 1. approve change P-044 (replaces P-043, option a): a loss run is accepted automatically only when the document matches a recognised carrier format (carrier A/B/C synthetic loss-run layouts: issuer header, valued-as-of date, claims table or carrier no-claims statement). Everything else that looks like a loss run (applicant or agent letters, unknown layouts) goes to needs review with the reason "not a recognised carrier loss run". Remove the sentence-pattern issuer logic from P-043. Self-checks include the B-329 sentence and one real carrier A/B/C loss run. 2. Re-check SUB-107–126 with the comma-blind scorer, as a dev-set check only: status safety, status automation, silent error rate, automation rate. @model-risk check P-044 (High only), @senior-underwriter UI check of the new reason text."
+- Rationale: The user typed this in this Claude Code session on 2026-10-15 (T-101 choice via the session's question prompt).
+- Dissent: none
+- Follow-up tasks: built in the main session (budget rule 3). Orchestrator's reading: P-040's letter rule (no-known-loss letters dropped, the field stays missing) stays; P-044 replaces only P-043's issuer test. Item 2 scores the dev set with eval_holdout_127's rules (no SUB-127 gold exists; the 127 scorer file is not edited).
+- Status: ACCEPTED
+- Amends: D-089 P-043 (replaced); B-329 closed by this decision. Not a production approval; T-027 veto stands. No send is authorized.

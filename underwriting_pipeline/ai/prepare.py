@@ -456,66 +456,64 @@ NO_CLAIMS = re.compile(r"\bno (?:known )?(?:claims|losses)\b|\bzero claims\b|\b0
                        r"|no se reportaron reclamaciones|ningun (?:reclamo|siniestro)|aucun sinistre|sans sinistre|sem sinistros?|nenhum sinistro")
 LETTERISH = re.compile(r"\bletter\b|\blettre\b|\bagente?\b|\bowner\b|applicant (?:states|says|reports)|per (?:the )?applicant|\bsolicitante\b|to our knowledge|\bsegun\b"
                        r"|\bfirmad[oa]\b|\bsigned\b|\bdeclar\w*|\bstates\b|\bproprietaire\b|\bproprietario\b|\bdono\b")
-# P-043 (D-089): a loss run is issued by the carrier. A summary written by the applicant, insured, owner, agent or broker, even one
-# that names a carrier, a period and claims, is not one: needs review.
-AUTHORED = re.compile(
-    r"(?:applicant|insured|owner|agent|broker|producer|solicitante|asegurado|agente|dueno|propietario)\s+(?:states|says|reports|declares|certifies|confirms|"
-    r"lists|declara|indica|afirma|certifica|reporta)\b|prepared by (?:the )?(?:applicant|insured|owner|agent|broker|producer|agency)"
-    r"|preparad[oa] por (?:el |la )?(?:solicitante|asegurado|agente|agencia)|per (?:the )?(?:applicant|insured|owner|agent|broker)"
-    r"|segun el (?:solicitante|asegurado|agente|dueno)|to our knowledge|our records|signed by (?:the )?(?:applicant|insured|owner|agent|broker)"
-    r"|firmad[oa] por (?:el )?(?:solicitante|asegurado|agente)|self[- ]reported|loss summary from (?:the )?(?:applicant|insured|agent|broker)")
-# @model-risk H1 (check of P-043, LOOK-AGAIN): naming a carrier is not issuing. The document's first line must start with a carrier's
-# own name (words ending in a carrier word, no business suffix) followed by a loss-run title, or the text says "issued/prepared by
-# <carrier name>" with only an article between. When the document states its carrier ("Carrier:"/"Aseguradora:"), that name must
-# match. Subject lines, prior/my/our/client wording and people or roles as preparer never pass. Anything else goes to review.
-_CARRIER_END = r"(?:mutual|insurance|assurance|casualty|indemnity|specialty|surplus|underwriters)"
-_NAME = (r"(?P<name>(?:[a-z0-9&'.]+ ){0,3}?" + _CARRIER_END + r"(?: (?:insurance )?(?:company|co\.?|group|corp\.?))?"
-         r"|(?:seguros|aseguradora)(?: [a-z]+){0,3}?)(?: \((?:fictional|ficticia)\))?")
-_TITLE = r"\s*[-—–:|]?\s*(?:loss runs?(?: report)?|loss history(?: report)?|claims history|historial de (?:siniestros|perdidas|reclamaciones))\b"
-HEADER_ISSUER = re.compile("^" + _NAME + _TITLE)
-HEADER_TITLE_FIRST = re.compile("^" + _TITLE.replace(r"\s*[-—–:|]?\s*", "", 1) + r"\s*[-—–:|]\s*" + _NAME + r"\s*$")  # "Loss Run Report - <carrier>"
-ISSUED_BY = re.compile(r"\b(?:issued|prepared|produced|generated|emitid[oa]|preparad[oa])\s+(?:by|por)\s+(?:the\s+|la\s+|el\s+)?" + _NAME + r"\s*(?:$|[.;\n])", re.M)
-NOT_ISSUER = re.compile(r"\b(?:prior|previous|my|our|your|i|we|client|clients|company's|subject|re|from|llc|inc|ltd|loss|history|claims|with|for|to|by|was|had|agency|agent|broker|owner|insured|applicant)\b")
-STATED_CARRIER = re.compile(r"(?:^|\n)\s*[-*]?\s*(?:carrier|insurer|aseguradora)\s*:\s*([^\n,(]+)")
-OTHER_AUTHOR = re.compile(
-    r"\b(?:provided|submitted|written|prepared|compiled|completed|signed|sent)\s+by\s+(?:the\s+|an?\s+)?(?:applicant|insured|owner|agent|broker|producer|agency)"
-    r"|\b(?:applicant|agent|producer|broker|owner|insured)(?:'s|s'|-provided|-prepared)|^\s*from\s*:|\bwe\s+(?:had|have|did|were)\b"
-    r"|\bour\s+(?:prior|previous|old|records|carrier|insurer)\b|per\s+(?:the\s+)?(?:insured|applicant|owner)|\breports\s*:", re.M)
+# P-044 (D-090, replaces P-043): a loss run is accepted automatically only in a recognised carrier format (carrier A/B/C synthetic
+# layouts, simulation/carrier-loss-run-formats.md): issuer header, insured, period(s), valued-as-of date, then a claims table or the
+# carrier's own no-claims line, and nothing after. Everything else that looks like a loss run goes to review. No sentence patterns.
+_D = r"(20\d\d-\d\d-\d\d)"
+CARRIER_RUN_FORMATS = {
+    "carrier_a": (r"CARRIER A — LOSS RUN \(FICTIONAL\)", r"Named insured: \S.*", rf"Policy period: {_D} to {_D}", rf"Valued as of: {_D}",
+                  r"\| Date of loss \| Cause \| Paid \| Reserve \| Status \|", r"\| 20\d\d-\d\d-\d\d \|[^|]+\|[^|]+\|[^|]+\|[^|]+\|",
+                  r"No claims reported by Carrier A for the policy periods above\."),
+    "carrier_b": (r"Carrier B Loss History Report \(fictional\)", r"Insured: \S.*", rf"Policy term: {_D} to {_D}", rf"Valuation date: {_D}",
+                  r"\| Loss date \| Description \| Paid \| Outstanding \|", r"\| 20\d\d-\d\d-\d\d \|[^|]+\|[^|]+\|[^|]+\|",
+                  r"Carrier B certifies no claims for the policy terms above\."),
+    "carrier_c": (r"CARRIER C \| LOSS RUN \| FICTIONAL", r"Account: \S.*", rf"Term: {_D} - {_D}", rf"Valued: {_D}",
+                  r"\| Claim no\. \| Loss date \| Type \| Paid \| Open reserve \|", r"\| C-\d+ \| 20\d\d-\d\d-\d\d \|[^|]+\|[^|]+\|[^|]+\|",
+                  r"Carrier C: no claims reported\."),
+}
 
 
-def _issued_by_carrier(low: str) -> bool:
-    """P-043: the carrier shows as the issuer (header or issued-by line), and it is the carrier the document names."""
-    lines = [ln.strip(" #*_\t") for ln in low.splitlines()]
-    head = next((ln for ln in lines if ln and "test data" not in ln and "no real applicant" not in ln), "")  # skip the synthetic-data banner
-    found = [m.group("name") for m in (HEADER_ISSUER.match(head), HEADER_TITLE_FIRST.match(head), *ISSUED_BY.finditer(low)) if m]
-    names = [n for n in found if not NOT_ISSUER.search(n)]
-    if not names:
-        return False
-    stated = STATED_CARRIER.search(low)
-    if not stated:
-        return True
-    core = lambda t: re.sub(r"\((?:fictional|ficticia)\)|\b(?:insurance|company|co|group|corp)\b|[.,]", " ", t).split()
-    want = core(stated.group(1))
-    return any(core(n)[:2] == want[:2] for n in names)
+def carrier_run_valued(text: str) -> str | None:
+    """P-044: the valued-as-of date when the whole text is one recognised carrier loss run, else None."""
+    lines = [ln.strip() for ln in text.splitlines() if ln.strip() and not ln.strip().startswith("_")]
+    for header, insured, period, valued, table, row, no_claims in CARRIER_RUN_FORMATS.values():
+        if len(lines) < 5 or not re.fullmatch(header, lines[0]) or not re.fullmatch(insured, lines[1]):
+            continue
+        i = 2
+        while i < len(lines) and re.fullmatch(period, lines[i]):
+            i += 1
+        date = re.fullmatch(valued, lines[i]) if i > 2 and i < len(lines) else None
+        if not date:
+            continue
+        rest = lines[i + 1 :]
+        if rest == [] or (len(rest) == 1 and not re.fullmatch(no_claims, rest[0])):
+            continue
+        if len(rest) == 1 or (len(rest) >= 3 and re.fullmatch(table, rest[0]) and re.fullmatch(r"\|(?:\s*-{3,}\s*\|)+", rest[1])
+                              and all(re.fullmatch(row, r) for r in rest[2:])):
+            return date.group(1)
+    return None
 
 
 NKL_DROPPED = "not a loss run: {} is a no-known-loss letter; carrier loss runs are still needed"
-RUN_UNCLEAR = "check this is a carrier loss run: {} does not show a carrier, a policy period, a valued-as-of date and a claims list"
+RUN_UNCLEAR = "not a recognised carrier loss run ({}); check it or ask the producer for the carrier's loss run"
 
 
 def _fold(text: str) -> str:
     return "".join(ch for ch in unicodedata.normalize("NFKD", text.lower()) if not unicodedata.combining(ch))
 
 
+def digits_of(value) -> str:
+    return "".join(ch for ch in str(value or "") if ch.isdigit())
+
+
 def loss_run_kind(text: str) -> str:
-    """P-040: "loss_run", "letter" (a no-known-loss letter), or "unclear". A letter phrase beside every loss-run part is unclear."""
+    """P-040/P-044: "loss_run" (a recognised carrier format), "letter" (a no-known-loss letter), or "unclear" (everything else)."""
+    if carrier_run_valued(text):
+        return "loss_run"
     low = _fold(text)
-    full = all(part.search(low) for part in RUN_PARTS)
     if NKL_LETTER.search(low) or (NO_CLAIMS.search(low) and LETTERISH.search(low)):
-        return "unclear" if full else "letter"
-    if full and (AUTHORED.search(low) or OTHER_AUTHOR.search(low) or not _issued_by_carrier(low)):  # P-043: carrier-issued only
-        return "unclear"
-    return "loss_run" if full else "unclear"
+        return "unclear" if all(part.search(low) for part in RUN_PARTS) else "letter"  # a letter phrase beside every loss-run part: review
+    return "unclear"
 
 
 def gate_loss_run(merged: dict, texts: dict) -> None:
@@ -526,7 +524,8 @@ def gate_loss_run(merged: dict, texts: dict) -> None:
         return
     kinds = {name: loss_run_kind(text) for name, text in texts.items()}
     seen = [x for x in (row["value"], row.get("quote")) if x]
-    if kinds.get(row.get("source")) == "loss_run" or any(kinds[n] == "loss_run" and any(x in t for x in seen) for n, t in texts.items()):
+    valued = {carrier_run_valued(t) for t in texts.values()} - {None}
+    if digits_of(row["value"]) in {digits_of(v) for v in valued}:  # P-044: the valued-as-of date of a recognised carrier run, whichever file is cited
         return
     source = row.get("source") or "no file named"
     in_letter = [n for n, t in texts.items() if kinds[n] == "letter" and any(x in t for x in seen)]
@@ -1817,10 +1816,13 @@ if __name__ == "__main__":
             for k, v in saved_env.items():
                 os.environ.pop(k, None) if v is None else os.environ.__setitem__(k, v)
     # P-040 / P-041 (D-088): letters are never loss runs; a file is complete only with nothing left to review.
-    run_107 = ("# Northline Mutual (fictional) - Loss Run Report\nValued through: 2026-09-30\n- Northline Mutual (fictional), policy 2023-03-01 to 2024-03-01: 0 claims, $0 paid\n"
-               "- Policy 2024-03-01 to 2025-03-01: 0 claims, $0 paid\n")
-    run_110 = "# Loss runs\nIssued by Lakeshore Specialty (fictional)\nValued through: 2026-09-30\n- Lakeshore Specialty (fictional), 2023-24: 0 claims\n- 2024-25: 0 claims\n- Open reserve: $0\n"
-    run_es = "# Historial de siniestros - Seguros del Valle (ficticia)\nAseguradora: Seguros del Valle (ficticia)\nVigencia 2025-01-01 a 2026-01-01\nValuado al 2026-09-30\nSin reclamos en este periodo.\n"
+    # P-044 (D-090): the three recognised carrier formats (simulation/carrier-loss-run-formats.md).
+    run_107 = ("CARRIER A — LOSS RUN (FICTIONAL)\nNamed insured: Juniper Ridge Bookkeeping LLC\nPolicy period: 2024-03-01 to 2025-03-01\n"
+               "Policy period: 2025-03-01 to 2026-03-01\nValued as of: 2026-09-30\nNo claims reported by Carrier A for the policy periods above.\n")
+    run_110 = ("_FICTIONAL / SYNTHETIC test data._\nCarrier B Loss History Report (fictional)\nInsured: Casa Mesquite Cantina LLC\nPolicy term: 2025-01-01 to 2026-01-01\n"
+               "Valuation date: 2026-09-30\n| Loss date | Description | Paid | Outstanding |\n|---|---|---|---|\n| 2025-08-02 | kitchen fire | $12,000 | $3,000 |\n")
+    run_es = ("CARRIER C | LOSS RUN | FICTIONAL\nAccount: Tienda Luna Azul LLC\nTerm: 2025-04-01 - 2026-04-01\nValued: 2026-09-30\n"
+              "| Claim no. | Loss date | Type | Paid | Open reserve |\n|---|---|---|---|---|\n| C-1042 | 2025-11-20 | wind/hail | $8,500 | $0 |\n")
     letter_112 = ("# Carta de pérdidas\nNamed insured: Hernandez Plumbing & Drain LLC\nValued through: 2026-09-30\n"
                   "- Sin reclamos reportados en los ultimos 3 anos (2024, 2025 y hasta 2026-09-30).\n- Carta firmada por el agente anterior (ficticio), 2026-09-22.\n")
     letter_123 = ("# Carta de pérdidas\nNamed insured: Tienda Luna Azul LLC\nValued through: 2026-09-30\n"
@@ -1832,7 +1834,13 @@ if __name__ == "__main__":
     for text in letters:
         assert loss_run_kind(text) == "letter", text
     for text in (run_107, run_110, run_es):
-        assert loss_run_kind(text) == "loss_run", text
+        assert loss_run_kind(text) == "loss_run" and carrier_run_valued(text) == "2026-09-30", text
+    # P-044: anything outside the layout is not recognised: an extra line, a missing valued line, a no-claims line by someone else, B-329's sentence.
+    for text in (run_107 + "Applicant states this is complete.\n", run_107.replace("Valued as of: 2026-09-30\n", ""),
+                 run_107.replace("No claims reported by Carrier A for the policy periods above.", "No claims, says the owner."),
+                 "My policy was issued by Northline Mutual.\nCarrier: Northline Mutual (fictional), policy 2024-01-01 to 2025-01-01. Valued through 2026-09-30. 1 claim, $4,000 paid.",
+                 run_110.replace("Carrier B Loss History Report (fictional)", "Carrier B Loss History Report (prepared by agent)")):
+        assert loss_run_kind(text) == "unclear" and carrier_run_valued(text) is None, text
     # @model-risk H1: the letters without their headings, and other wordings, are still letters.
     for text in (letter_112.replace("# Carta de pérdidas", "# Historial de pérdidas"), letter_123.replace("# Carta de pérdidas\n", "").replace("Carta de pérdidas sin reclamos", "Sin reclamos"),
                  "Valued through 2026-09-30. No claims letter: the owner states the account has been loss-free.",
@@ -1857,7 +1865,7 @@ if __name__ == "__main__":
         assert loss_run_kind(pre + "\n" + body) == "unclear", pre
     assert loss_run_kind("# Loss runs (typed)\nValued through: 2026-09-30\n- Northline Mutual (fictional), policy 2023-03-01 to 2024-03-01: 0 claims, $0 paid\n") == "unclear", \
         "a carrier named only in a row, with no issuer header or issued-by line: review"
-    assert loss_run_kind("Northline Mutual Insurance Company - Loss Run Report\n" + body) == "loss_run"
+    assert loss_run_kind("Northline Mutual Insurance Company - Loss Run Report\n" + body) == "unclear", "P-044: an unknown layout is not recognised"
     # @model-risk H1 (LOOK-AGAIN): business names with a carrier word, the author naming the carrier, and people as preparer all go to review.
     for head in ("# Specialty Plumbing LLC - Loss History", "Casualty Restoration Inc. loss history", "Surplus Supply Co - claims summary",
                  "Loss history - prior carrier Northline Mutual (fictional)", "My prior carrier was Northline Mutual (fictional).", "Re: loss history with Northline Mutual (fictional)",
@@ -1870,14 +1878,18 @@ if __name__ == "__main__":
     assert loss_run_kind("Specialty Tacos LLC - historial\n" + es_body) == "unclear"
     for good in ("Northline Mutual (fictional) - Loss Run Report\nAgent: Smith Insurance Agency\n" + body, "# Northline Mutual Insurance Company Loss Runs\n" + body,
                  "Loss runs\nIssued by Northline Mutual (fictional).\n" + body, "Seguros del Valle (ficticia) - Historial de siniestros\n" + es_body):
-        assert loss_run_kind(good) == "loss_run", good
+        assert loss_run_kind(good) == "unclear", good  # P-044: these looked like carrier runs under P-043; unknown layouts now go to review
     box = {"loss_run_valued_through": {"field_id": "loss_run_valued_through", "value": "2026-09-30", "source": "loss-runs.md", "quote": "2026-09-30", "needs_review": False, "reason": None}}
     gate_loss_run(box, {"loss-runs.md": "Written by the applicant.\n" + body})
     assert box["loss_run_valued_through"]["needs_review"] and box["loss_run_valued_through"]["value"], "kept for review, never silently satisfied"
     box = {"loss_run_valued_through": {"field_id": "loss_run_valued_through", "value": "2026-09-30", "source": "loss-runs.md", "quote": "2026-09-30", "needs_review": False, "reason": None}}
     gate_loss_run(box, {"loss-runs.md": "Applicant states: prior carrier Lakeshore Specialty (fictional), 2023-24, valued through 2026-09-30, 1 claim paid $2,100."})
     row = box["loss_run_valued_through"]
-    assert row["value"] == "2026-09-30" and row["needs_review"] and row["reason"] == RUN_UNCLEAR.format("loss-runs.md"), "P-043: kept, needs review"
+    assert row["value"] == "2026-09-30" and row["needs_review"] and row["reason"] == RUN_UNCLEAR.format("loss-runs.md"), "kept, needs review"
+    assert RUN_UNCLEAR.startswith("not a recognised carrier loss run")
+    box = {"loss_run_valued_through": {"field_id": "loss_run_valued_through", "value": "2025-08-02", "source": "loss-runs.md", "quote": "2025-08-02", "needs_review": False, "reason": None}}
+    gate_loss_run(box, {"loss-runs.md": run_110})
+    assert box["loss_run_valued_through"]["needs_review"], "P-044: a claim date from a carrier run is not its valued-as-of date: review"
     lr = lambda src, val="2026-09-30": {"loss_run_valued_through": {"field_id": "loss_run_valued_through", "value": val, "source": src, "quote": val, "needs_review": False, "reason": None}}
     for text in letters:
         box = lr("loss-runs.md")
