@@ -1,6 +1,6 @@
 {
   "env": {
-    "commit": "0a5652026bd703afe749ca4e5aa77c6cc987e629",
+    "commit": "ecf69c283e7c3d7784c1dd953f571c9abb7a4d46",
     "model": "qwen/qwen3.8-27b",
     "python": "/Users/disastershubz/INSURANCE FLOW AI/-insureflow-ai-1/.venv/bin/python",
     "libraries": {
