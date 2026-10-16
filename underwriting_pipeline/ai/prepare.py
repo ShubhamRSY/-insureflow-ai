@@ -815,7 +815,8 @@ OPS_COUNTS = (("seats", r"(\d[\d,]*)\s+(?:seats|seating|asientos)|seating (?:for
               ("units", r"(\d[\d,]*)\s+(?:\w+\s+)?(?:units|unidades|departamentos)", r"unit|apartment"))
 OPS_MISSING = "operations may be missing: {}"
 # P-047 H1 (@model-risk): labeled lines elsewhere in the cited file that state a rule item are part of the operations source.
-OPS_LABEL = re.compile(r"(?im)^[ \t>*-]*(?:liquor|alcohol|beer|wine|bar|seating|seats|units|number of units|cooking[\w ]*|hours[\w ]*|entertainment|live music)[ \t]*:.*$")
+# Any label (up to 40 characters, slashes allowed) that contains a rule-item word: "Bar / liquor:", "Liquor sales:", "Seating capacity:".
+OPS_LABEL = re.compile(r"(?im)^[ \t>*-]*(?=[\w /&().-]{0,40}:)[\w /&().-]*?\b(?:liquor|licor|alcohol\w*|beer|wine|bar|seating|seats|units|cooking|hours|entertainment|live music|patio|security|hazardous\w*)\b[\w /&().-]*:.*$")
 
 
 def ops_lines(text: str, skip: str = "") -> str:
@@ -1595,6 +1596,9 @@ if __name__ == "__main__":
         probe = {"operations": {**row, "value": "Mexican restaurant, 70 seats", "end": 40}}
         check_operations(probe, {"a.md": text})
         assert probe["operations"]["reason"] == "operations may be missing: liquor, bar, frying or open flame", probe["operations"]["reason"]
+        forms = "Bar / liquor: Full bar, last call 1am\nCooking / hood / suppression: two fryers\nLiquor sales: 8 percent\nSeating capacity: 60 seats\nPatio: yes\nSecurity: door staff Fri-Sat\nHazardous materials: propane\nAnnual sales: $1\nStories: 2\nBarbecue pit: no\n"
+        assert ops_lines(forms).splitlines() == forms.splitlines()[:7], ops_lines(forms)
+        assert ops_missing("restaurant", ops_lines(forms)) == ["liquor", "bar", "hours", "frying or open flame", "patio", "security staff", "hazardous materials", "60 seats"], ops_missing("restaurant", ops_lines(forms))
         assert probe["operations"]["context"] == "Liquor: full bar, 35% of sales\nCooking operations: wood-fired oven, two fryers." and "context" in _saved_payload({"fields": [probe["operations"]]})["fields"][0]
         assert same_operations(
             "habitational, 8 units, no commercial cooking",
