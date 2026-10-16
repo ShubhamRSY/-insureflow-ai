@@ -3258,3 +3258,6 @@ D-100 look-again of check-P-054 H1 and H2 (deliverables/model-risk/look-again-P-
 - H2 closed: "cooking" is off the neutral list. All four phrases go to senior_referral with Carrier A suggested. "Cooking: none" stays carrier_a. R17 is updated.
 - Backlog: M5 DECLINE gaps ("non renewal", "did not renew", "terminated", "no quote", a decline in the next sentence); L4 over-exclusion on "never had a loss with Carrier A"; L5 "office, no; cooking". Still open: M2, M4, L1, L2.
 From @model-risk's side, D-100 item 2 (freeze, T-103) may proceed. Not a production approval. The T-027 veto stands.
+
+[2026-10-16 | @model-risk → orchestrator, @producer, @senior-underwriter] TYPE: REVIEW
+T-103, condition 3 (check-P-048.md, dated 2026-10-16): the JPG applicant note under a copied carrier header replaces the run in **file 13**; its other features stay. Condition 2 stands. Condition 1 is replaced: under R17, light wholesale is senior_referral, so make file 8 allow-list words only. The mix needs a change: the carrier_b/carrier_c golds (files 3, 5, 6, 10, 17, 19) become senior_referral with the suggested market recorded, and the every-route criterion drops carrier_b and carrier_c. Not a production approval.
