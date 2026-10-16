@@ -44,3 +44,47 @@ Both are extraction-code changes. They need a new P-### and the user's `approve 
 - L3: the `ponytail:` comment understates the ceiling: scans and attachments are missed too, not only "doc1.pdf".
 
 This is a development check, not a production approval. An approved P-046 is not a production approval, and the T-027 veto stands.
+
+## LOOK-AGAIN — commit cb7b259 (2026-10-15)
+
+- Evidence: `git show cb7b259 -- underwriting_pipeline/ai/prepare.py`; `carrier_run_check` (prepare.py 488–513); dev-SUB-147-153-D-093b-cached.md. SUB-127–146 and their gold not opened, listed or run.
+- Self-checks with LLM_API_KEY, LLM_BASE_URL, LLM_MODEL unset: "prepare ok". No model call.
+- Probes: the same in-memory probes P0–P13 on the real SUB-153 texts (scratchpad `mr-p046/probe.py`), plus Q1–Q8 (`mr-p046/probe2.py`). Nothing in the repo written apart from this file and DISCUSSION.md.
+
+### Verdict: REJECT as frozen hold-out code (H1 closed; H2 partly open, restated as H3)
+
+| Probe (A = accepted Carrier A run) | 57d56b9 | cb7b259 | D-093 |
+|---|---|---|---|
+| P2 B undated + "Signed: J. Ortiz" | plain | review pending, B no-date reason | review pending |
+| P3 B undated + "Copy provided by agent" | plain | review pending, copy reason | review pending |
+| P4 B undated, insured "Owner Holdings" | plain | review pending | review pending |
+| P5 / P6 unrecognised dated run as attachment.md / resubmission.md | plain | review pending | review pending |
+| P7 scan.jpg, garbled header | plain | review pending (scan reason) | review pending |
+| **P9 SUB-153's undated Carrier B run pasted in email.md under "Hi,"** | plain | **plain** | review pending |
+| **Q1 unrecognised undated run as attachment.md** | — | **plain** | review pending |
+| **Q7 undated B run under "From agent:" in email.md** | — | **plain** | review pending |
+| Q2 same undated run as loss-history.md | — | review pending | review pending |
+| Q3 unrecognised run, "As of 2026-09-30" wording, attachment.md | — | plain | review pending |
+| Q4 "SAMPLE" unrecognised run, attachment.md | — | review pending | review pending |
+| Q5 sov.xlsx with "insurance" and a date | — | review pending (false alarm) | plain |
+| Q6 scan.jpg, empty OCR | — | plain | (unread-page rule) |
+| P0, P1, P8, P11, P12, P13 | unchanged and correct | unchanged and correct | |
+
+**H1: closed.** A carrier header now always makes a loss-run document; P2–P4 are self-checks and pass.
+
+**H2: partly closed.** P5–P7 pass and are self-checks. P9 does not: the self-check for email.md uses the dated Carrier B run (`b_run`), not the undated run that P9 named, so it passes only because a dated run shows every loss-run part.
+
+### H3 (High, the open part of H2): an undated loss run in a file not named as a loss run gives plain "complete"
+- Where: `carrier_run_check` recognises a carrier header only on the first line (`lines[0]`). With any line above it (a greeting, "From:"), state is None. The fallback then needs every RUN_PARTS item, and one of them is the valued-date wording. An undated run lacks that wording by definition, so an undated run can be caught only by its file name.
+- Effect: P9, Q1 and Q7 give plain "complete" beside an accepted run. "Undated" is the first case D-093 names, and attachment.md and email-style files carry loss runs in the dev inbox. My H2 remedy (a) asked for "all parts", which cannot catch an undated run. That gap was in my own remedy, so this is restated here instead of being treated as a new defect in the author's work.
+- Resolution: (a) look for a carrier header on any line, not only the first, and judge the run from that line down; and (b) for a typed document with no carrier header, count it as a loss-run document when it shows every loss-run part except the valued date (carrier word, policy period, claims), with the no-date reason when the date is missing. The safe direction applies: an application that mentions an insurer, a policy period and claims may go to review pending. Add P9 (undated B under "Hi,"), Q1 and Q7 as self-checks that assert review pending, and keep P11, P12 and SUB-153 as they are. This is extraction code: it needs a new P-### and the user's `approve change P-###`. Closed when those self-checks pass and the cached dev SUB-147–153 re-run still has 0 false completes.
+
+Until H3 is closed, SUB-127–146 should not run on cb7b259 as the frozen hold-out code.
+
+### Medium / Low (backlog, one line each)
+- M2: the D-093b dev report header records commit 51143fc, not the fix commit cb7b259, so the report cannot be tied to the code it checks. Record the working-tree hash or a "dirty" flag.
+- L4: valued wording "As of <date>" with no "valued" is not a loss-run part (Q3). H3(b) covers the undated reading; add "as of" to the valued part if wanted.
+- L5: a spreadsheet with any single part (e.g. an SOV with "insurance" and a date) goes to review pending (Q5). This is the safe direction; watch the false-review rate at the milestone.
+- L1 and L2 stand; M1 and L3 closed (self-checks now include letter-word and odd-name cases; ponytail comment replaced).
+
+This is a development check, not a production approval. An approved P-046 is not a production approval, and the T-027 veto stands.

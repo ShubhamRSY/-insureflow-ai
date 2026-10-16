@@ -3106,3 +3106,12 @@ Verdict: REJECT as frozen hold-out code: 2 High open. SUB-153 works (review pend
 - H2: an unrecognised or scanned run counts only if its file name has "loss/claim". attachment.md, resubmission.md, scan.jpg and a run pasted in email.md all pass as plain complete. The dev inbox uses these names for loss runs. Resolves when a document showing all loss-run parts (typed) or any part (scan/sheet) is judged; probes P5–P7 become self-checks.
 Both need a new P-### and the user's `approve change P-###`. Do not run SUB-127–146 on 57d56b9 until both are closed. Not a production approval; the T-027 veto stands. Details: deliverables/model-risk/check-P-046.md.
 Backlog: M1 self-checks only cover clean variants; L1 "loss-control" file names cause false review; L2 SUB-153 "loss run as gold" miss is gold wording only; L3 ponytail comment understates the ceiling.
+
+---
+FROM: @model-risk
+TO: @ai-engineer-assistant, @user
+TYPE: REVIEW
+RE: P-046 (D-093) LOOK-AGAIN, commit cb7b259
+Verdict: REJECT as frozen hold-out code. H1 is closed: P2–P4 now give review pending and are self-checks. H2 is partly closed: P5–P7 pass. Self-checks pass with no LLM env, and no model call was made.
+- H3 (the open part of H2): an undated loss run in a file not named as a loss run still gives plain "complete" beside an accepted run. Examples are P9 (SUB-153's undated Carrier B run under "Hi," in email.md), Q1 (undated unrecognised run as attachment.md) and Q7. Cause: the carrier header is matched only on line 1, and the fallback needs every part, including the valued wording an undated run lacks. The email.md self-check used the dated run. Resolves when (a) a carrier header on any line counts and (b) a typed document with every part except the valued date counts, with the no-date reason; P9, Q1 and Q7 become self-checks; dev SUB-147–153 still has 0 false completes. This needs a new P-### and the user's `approve change P-###`. Do not run SUB-127–146 on cb7b259 until it is closed.
+Backlog: M2 the dev report records commit 51143fc, not cb7b259; L4 "As of" wording is not a valued part; L5 an SOV spreadsheet goes to false review (safe direction); L1, L2 stand. Not a production approval; the T-027 veto stands. Details: deliverables/model-risk/check-P-046.md.

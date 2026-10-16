@@ -597,10 +597,20 @@ def _run_doc_reason(name: str, text: str, check: tuple, kind: str, from_sheet: b
     A no-known-loss letter is not a loss-run document (P-040), so it never blocks."""
     state, date, line = check
     if state is None:  # @model-risk H1 (check of P-046): a carrier header always makes a loss-run document, letter words or not
-        parts = sum(bool(part.search(_fold(text))) for part in RUN_PARTS)
-        looks = LOSS_RUN_NAME.search(name) or parts == len(RUN_PARTS) or (from_sheet and parts > 0)  # @model-risk H2: content, not only the name
+        lines = text.splitlines()
+        at = next((i for i, ln in enumerate(lines) if any(re.fullmatch(f[0], ln.strip()) for f in CARRIER_RUN_FORMATS.values())), None)
+        if at is not None:  # @model-risk H3: a carrier header on any line (a run pasted into an email) is a loss-run document, never accepted there
+            state, date, line = carrier_run_check("\n".join(lines[at:]))
+            return (SCAN_SHEET.format(name) if from_sheet else RUN_NEGATED.format(name, line) if state == "negated"
+                    else RUN_BAD_DATE.format(date, name) if state == "bad_date" else RUN_NO_DATE.format(name) if state == "no_date" else RUN_UNCLEAR.format(name))
+        found = [bool(part.search(_fold(text))) for part in RUN_PARTS]
+        application = len(re.findall(r"effective date|fecha de vigencia|description of operations|year built|ano de construccion", _fold(text))) >= 2
+        undated_run = found[0] and found[1] and found[3] and not found[2] and not application  # @model-risk H3: every part but the valued date; an application's loss-history answers are not a run
+        looks = LOSS_RUN_NAME.search(name) or all(found) or undated_run or (from_sheet and any(found))  # @model-risk H2: content, not only the name
         if kind == "letter" or not looks:
             return None
+        if undated_run and not from_sheet:
+            return RUN_NO_DATE.format(name)
     if from_sheet:
         return SCAN_SHEET.format(name)
     if state == "accepted":
@@ -2065,13 +2075,18 @@ if __name__ == "__main__":
                        ({"carrier-b.md": b_undated.replace("Insured: Casa Mesquite Cantina LLC", "Insured: Owner Holdings LLC")}, RUN_NO_DATE.format("carrier-b.md")),
                        ({"attachment.md": "Harbor Point Mutual - Claims History\nPolicy period 2024-06-01 to 2025-06-01\nValued through 2026-09-30\n1 claim, $2,000 paid."}, RUN_UNCLEAR.format("attachment.md")),
                        ({"resubmission.md": "Harbor Point Mutual - Claims History\nPolicy period 2024-06-01 to 2025-06-01\nValued through 2026-09-30\n1 claim, $2,000 paid."}, RUN_UNCLEAR.format("resubmission.md")),
-                       ({"email.md": "From: producer\nPasted below:\n" + b_run}, RUN_UNCLEAR.format("email.md"))):
+                       ({"email.md": "From: producer\nPasted below:\n" + b_run}, RUN_UNCLEAR.format("email.md")),
+                       ({"email.md": "Hi,\n\n" + b_undated}, RUN_NO_DATE.format("email.md")),  # @model-risk H3 P9
+                       ({"notes.md": "Prior carrier Northline Mutual (fictional), policy 2023-03-01 to 2024-03-01, 1 claim paid $2,000."}, RUN_NO_DATE.format("notes.md")),  # Q1
+                       ({"attachment.md": "Summary\n" + b_undated + "Thanks\n"}, RUN_NO_DATE.format("attachment.md"))):  # Q7
         both = run_case(a_run, {"loss-runs-a.md": run_107, **extra})
         row = {r["field_id"]: r for r in both["fields"]}["loss_run_valued_through"]
         assert both["status"] == REVIEW_PENDING and why in (row["reason"] or ""), (list(extra), both["status"], row.get("reason"))
     box = {"loss_run_valued_through": {"field_id": "loss_run_valued_through", "value": "2026-09-30", "source": "loss-runs-a.md", "quote": "2026-09-30", "needs_review": False, "reason": None}}
     gate_loss_run(box, {"loss-runs-a.md": run_107, "scan.jpg": "Carrier RB Loss History Report (fictional)\nPolicy term; 2024-01~91\nValuation date; 2026-09-39\n"}, {"scan.jpg": []})
     assert box["loss_run_valued_through"]["needs_review"] and SCAN_SHEET.format("scan.jpg") in box["loss_run_valued_through"]["reason"], "@model-risk H2 P7: a garbled scanned run counts"
+    app_with_history = "Effective date: 2027-03-01\nYear built: 1998\nPrior carrier: Carrier B, policy term 2024-03-01 to 2025-03-01, no claims.\n"
+    assert _run_doc_reason("application.md", app_with_history, (None, None, None), "unclear", False) is None, "an application's loss-history answers are not a loss-run document"
     with_letter = run_case(a_run, {"loss-runs-a.md": run_107, "loss-runs-letter.md": letters[2]})
     assert with_letter["status"] == "complete", "P-040: a no-known-loss letter beside an accepted run is not a loss-run document"
     undated = run_case({"loss_run_valued_through": {"source": "loss-runs.md", "value": "2026-01-01", "quote": "2026-01-01"}},
