@@ -110,8 +110,9 @@ PROHIBITED = ("bar", "bars", "nightclub", "nightclubs", "tavern", "taverns", "ca
               "plastics manufacturing", "recycling", "pub", "pubs", "lounge", "lounges")  # W1 (R1; AG:45-50); P-051: pubs, lounges per AG:46. Never overridable (D-057/D-060)
 # W2 (R14, D-097 1d): referral words, checked before any class word; each sends the file to senior_referral, never to a carrier.
 NO_UTILITIES = ("no utilities", "without utilities", "utilities off", "utilities disconnected", "utilities shut off", "power off", "power disconnected",
-                "sin servicios", "sin luz", "no tenants", "building empty", "empty building")  # P-051 (c), P-054 (b): read on the raw text, before the negation drop
-VACANT = ("vacant", "vacancy", "vacante", "vacío", "vacio", "vacía", "vacia", "desocupado", "desocupada", "unoccupied") + NO_UTILITIES  # W2e; AG:51 lists true vacancy and no utilities as prohibited, so no market confirm (P-052)
+                "sin servicios", "sin luz", "no tenants", "building empty", "empty building", "utilities are off", "utilities turned off", "power is off",
+                "no power", "no electricity", "electricity off", "electricity disconnected", "not occupied", "sin ocupar")  # P-051 (c), P-054 (b): read on the raw text, before the negation drop
+VACANT = ("vacant", "vacancy", "vacante", "vacío", "vacio", "vacía", "vacia", "desocupado", "desocupada", "unoccupied", "abandoned", "abandonado", "abandonada", "deshabitado", "deshabitada") + NO_UTILITIES  # W2e; AG:51 lists true vacancy and no utilities as prohibited, so no market confirm (P-052)
 REFERRAL = (
     (("fertilizer", "fertilizers", "pesticide", "pesticides", "herbicide", "chemical", "chemicals", "hazardous", "flammable", "solvent",
       "solvents", "propane", "fuel", "fertilizante", "pesticida", "químico", "químicos"), "wholesale/retail with hazardous goods - not Carrier A (R14; AG:31)"),
@@ -137,12 +138,13 @@ OTHER_OPS = ("gym", "gyms", "fitness", "salon", "salons", "spa", "spas", "daycar
              "hotel", "hotels", "motel", "motels", "theater", "theatre", "auto repair", "car wash", "gas station", "manufacturing", "factory")
 # P-053 (D-099): the direct Carrier A route needs every operations word to be an allow-list phrase, a listed negation or a neutral word
 # below; any other word goes to senior_referral with Carrier A suggested. Read on the raw text, so "no tenants" is not dropped.
-NEUTRAL_NO = ("no food", "no alcohol", "no liquor", "no cooking", "no inventory", "no goods", "no repackaging", "no manufacturing", "held for sale")
+NEUTRAL_NO = ("no food", "no alcohol", "no liquor", "no cooking", "no inventory", "no goods", "no repackaging", "no manufacturing", "held for sale",
+              "cooking operations none", "cooking none")  # check-P-054 H2: "cooking" only as the empty label, matched after punctuation is dropped
 # P-054 (a): non-occupancy words only. A word that names a business, a trade or goods (shop, store, gift, home, tax...) is never neutral.
 NEUTRAL = frozenset((
     "and", "or", "of", "on", "by", "for", "with", "the", "a", "an", "at", "in", "to", "de", "del", "la", "el", "en", "y",  # joining words
     "llc", "inc", "co", "corp", "ltd", "lp", "pllc", "dba",  # company suffixes
-    "operations", "cooking", "none",  # field labels in the cited text
+    "operations", "none",  # field labels in the cited text ("cooking" is an occupancy word: check-P-054 H2)
     "floor", "floors", "story", "stories", "suite", "ground", "level", "room", "back", "front",  # where in the building
     "clients", "appointment", "appointments"))  # how visitors come, not what the business is
 ORDINAL = re.compile(r"\d+(st|nd|rd|th)?")
@@ -150,6 +152,7 @@ ORDINAL = re.compile(r"\d+(st|nd|rd|th)?")
 
 def _unlisted(raw: str) -> list[str]:
     """P-053: the operations words that are not an allow-list phrase, a listed negation or a neutral word. Empty = Carrier A direct."""
+    raw = " ".join(re.findall(r"[^\W_]+", raw.lower()))  # "Cooking: None" and "cooking - none" read alike
     for phrase in sorted(NEUTRAL_NO + tuple(w for words in ALLOW_A.values() for w in words), key=len, reverse=True):
         raw = re.sub(rf"(?<!\w){re.escape(phrase)}(?!\w)", " ", raw)
     return [w for w in re.findall(r"[^\W_]+", raw) if w not in NEUTRAL and not ORDINAL.fullmatch(w)]
@@ -1426,9 +1429,15 @@ if __name__ == "__main__":
                     "tire wholesale", "wholesale firearms", "office, under renovation", "Light wholesale of electrical supplies"):
             m = match(r(ops))
             assert (m["route"], m["suggested"]) == ("senior_referral", "carrier_a") and "P-053" in m["note"], (ops, m)
+        # check-P-054 H2: cooking beside an allow-list word is not neutral; the empty "Cooking: none" label is.
+        for ops in ("office with cooking", "office, cooking", "office, back room cooking", "retail store, cooking on the ground floor"):
+            m = match(r(ops))
+            assert (m["route"], m["suggested"]) == ("senior_referral", "carrier_a"), (ops, m)
+        assert route(r("office building. Cooking: none")) == route(r("office building, cooking operations - none")) == "carrier_a"
         # P-054 (b): vacancy variants are W2e (AG:51), so no market confirm.
         for ops in ("office, no tenants", "retail, building empty", "office, utilities shut off", "office, power disconnected", "oficina desocupada",
-                    "local vacante", "edificio vacío", "retail, power off", "office, vacancy", "oficina, sin servicios"):
+                    "local vacante", "edificio vacío", "retail, power off", "office, vacancy", "oficina, sin servicios", "office, utilities are off",
+                    "office, no power", "office, no electricity", "abandoned retail", "oficina abandonada", "office, not occupied", "local sin ocupar"):
             assert "AG:51" in match(r(ops))["note"] and route(r(ops)) == "senior_referral", (ops, match(r(ops)))
         assert route(r("cannabis dispensary restaurant")) == "no_match", "other prohibited words are unchanged"
         assert route(r("restaurant bar", None)) == "hold", "holds come before the referral"

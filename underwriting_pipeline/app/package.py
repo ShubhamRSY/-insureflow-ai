@@ -93,11 +93,11 @@ def match_note(report: dict) -> str:
     return match(report)["note"]
 
 
-# P-054 (c): words that take a carrier out of a confirm, in any note on the file (route note, extracted fields, the submission's documents).
-_CARRIER = r"(?:(?i:carrier)[ \t-]*([ABC])|carrier_([abc]))\b"  # an upper-case letter or carrier_x, so "carrier a few times" is not a carrier
-EXCLUDES = re.compile(r"(?i:\bnot|\bnever|declined by|non-?renewed by|cancell?ed by|rejected by|refused by|turned down by)\s+" + _CARRIER +
-                      "|" + _CARRIER +
-                      r"\s+(?i:declined|non-?renewed|cancell?ed|rejected|refused|turned (?:it )?down|will not|won't|would not)")
+# P-054 (c): any note on the file (route note, extracted fields, the submission's text documents) can take a carrier out of a confirm.
+# @model-risk check-P-054 H1: a carrier named in the same sentence as a decline word is excluded; over-excluding is the safe side.
+CARRIER_NAME = re.compile(r"\b(?i:carrier)[\s_-]*(?:([ABCbc])|(a)(?!\s+(?:few|lot|bit|little|couple|number)\b))\b")  # the guard is for a lower-case "a" only
+DECLINE = re.compile(r"declin|non-?renew|not renewing|cancel|refus|reject|turned (?:it )?down|no longer|not interested|will not|won't|would not|\bpassed\b"
+                     r"|\bnot (?:a )?carrier|\bnever\b", re.I)
 
 
 def excluded_carriers(report: dict) -> dict[str, str]:
@@ -113,8 +113,10 @@ def excluded_carriers(report: dict) -> dict[str, str]:
             continue
     found: dict[str, str] = {}
     for where, text in notes:
-        for hit in EXCLUDES.finditer(text):
-            found.setdefault(f"carrier_{next(g for g in hit.groups() if g).lower()}", f'{where}: "{" ".join(hit.group(0).split())}"')
+        for sentence in re.split(r"[.;!?\n]+", text):
+            if DECLINE.search(sentence):
+                for hit in CARRIER_NAME.finditer(sentence):
+                    found.setdefault(f"carrier_{(hit.group(1) or hit.group(2)).lower()}", f'{where}: "{" ".join(sentence.split())[:120]}"')
     return found
 
 
@@ -745,7 +747,21 @@ if __name__ == "__main__":
             (tmp / "inbox" / "SUB-432").mkdir(parents=True)
             (tmp / "inbox" / "SUB-432" / "email.md").write_text("Prior carrier: Carrier A loss run attached. Renewal was declined by Carrier A in 2025. Quote declined by carrier a few times.\n")
             save(ext, "SUB-432", "complete", complete=True, fields=full(operations="office and casino"))
-            assert excluded_carriers(reviewed("SUB-432")) == {"carrier_a": 'email.md: "declined by Carrier A"'}, excluded_carriers(reviewed("SUB-432"))
+            assert set(excluded_carriers(reviewed("SUB-432"))) == {"carrier_a"} and "email.md" in excluded_carriers(reviewed("SUB-432"))["carrier_a"], excluded_carriers(reviewed("SUB-432"))
+            # check-P-054 H1: the SUB-147 email and the phrasings the first pattern missed; "carrier a few times" and a plain loss run do not exclude.
+            for i, remark in enumerate(("coming to you guys from Carrier A, they are not renewing the account with them", "declined by carrier a in 2025",
+                                        "Carrier A has declined", "Carrier A: declined", "Carrier A - declined 2024", "Carrier A (declined)",
+                                        "Prior carrier Carrier A, non-renewed", "Carrier A not interested", "Carrier A no longer writes this class",
+                                        "non-renewal notice from Carrier A", "Not a Carrier A risk", "Carrier A passed",
+                                        "declined by Carrier A while the loss run was open", "Carrier A new business: declined")):
+                (tmp / "inbox" / f"SUB-44{i:02d}").mkdir(parents=True)
+                (tmp / "inbox" / f"SUB-44{i:02d}" / "email.md").write_text(remark + "\n")
+                save(ext, f"SUB-44{i:02d}", "complete", complete=True, fields=full(operations="office and casino"))
+                assert set(excluded_carriers(reviewed(f"SUB-44{i:02d}"))) == {"carrier_a"}, (remark, excluded_carriers(reviewed(f"SUB-44{i:02d}")))
+            (tmp / "inbox" / "SUB-4499").mkdir(parents=True)
+            (tmp / "inbox" / "SUB-4499" / "email.md").write_text("Carrier A loss run attached, five years. We called carrier a few times about the quote.\n")
+            save(ext, "SUB-4499", "complete", complete=True, fields=full(operations="office and casino"))
+            assert not excluded_carriers(reviewed("SUB-4499")), excluded_carriers(reviewed("SUB-4499"))
             try:
                 confirm_market("SUB-432", "UW-001", "carrier_a", "x", _current_hash("SUB-432"))
                 raise SystemExit("P-054 (c): a producer remark must exclude")

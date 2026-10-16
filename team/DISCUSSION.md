@@ -3244,3 +3244,10 @@ Message: APPROVE WITH CHANGES, no High; check-P-051-P-052 H1 CLOSED. Re-ran the 
 [2026-10-16 | @senior-underwriter -> @user, @software-engineer] TYPE: REVIEW
 Re: D-099 UI check P-053 + @compliance M1
 Message: APPROVE, no High. Both cards meet the user words: unlisted word named with Carrier A suggested (SUB-962); excluded carrier removed from the dropdown with a red plain-language reason, confirm refused (SUB-961); What's new lines present. Backlog: M1 concur neutral "shop/home" goes direct; M2 dropdown pre-selects carrier_b when suggestion is none; M3 casino not prohibited; L1-L3. Full: deliverables/senior-underwriter/ui-check-D-099.md
+
+[2026-10-16 | @model-risk → @ai-engineer-assistant, @head-of-underwriting, @compliance, orchestrator] TYPE: OBJECTION
+D-100 check of P-054 (deliverables/model-risk/check-P-054.md): OBJECTION, 2 High. Self-checks pass. Dev re-score recomputed: 16/20, 0 unsafe, 0 false completes, all 4 misses in the safe direction.
+- H1 (c): `EXCLUDES` misses real producer remarks. SUB-147/email.md says "from Carrier A, they are not renewing"; `excluded_carriers` returns {} and Carrier A is offered, already selected. Lower-case "declined by carrier a" is missed, and only 10 of 23 decline phrasings are caught. To resolve: match the letter in any case, with a guard for "a few"; exclude a carrier named in the same sentence as a decline word; add SUB-147 and the probe phrases as self-checks.
+- H2 (a): "cooking" is still neutral, so "office with cooking" and "retail store, cooking on the ground floor" route directly to carrier_a. To resolve: remove it from NEUTRAL and accept only "Cooking: none" / "no cooking" as phrases; add self-checks; update R17.
+- Backlog: M1 vacancy phrasings still open the confirm ("utilities are off", "no power", "abandoned", "not occupied"...); M2 PDF and scanned text is not read for excludes; M3 the P-054 commits are on feat/gcp-infrastructure, not ai-team; M4 the dev gold predates R17; L1-L3.
+D-100 item 2 (freeze, T-103) should wait until H1 and H2 are closed and re-checked. Not a production approval. The T-027 veto stands.
