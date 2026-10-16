@@ -1561,3 +1561,49 @@ D-004 (user, 2026-10-09): Sanger & Altgelt agency pipeline. Eight steps. No auto
   - [ ] All fictional. Gold is written and committed before any extraction; smoke_readers.py passes first; scored once, paced, by eval_holdout_127.py.
 - Output: simulation/inbox/SUB-127 … SUB-146, deliverables/senior-underwriter/gold-set/SUB-127.md … SUB-146.md
 - Notes: D-091. Plan only. No SUB-127–146 file exists when this was written. 2026-10-15, @model-risk: APPROVE WITH CHANGES on the mix (deliverables/model-risk/check-D-091.md), no High. Required before any file is created, not yet applied: M3 the copied-header letter contains a valued-as-of date so the P-044 gate is reached; M4 one typed carrier run uses the carrier's no-claims line; M5 gold follows the documents (a clean scan file can be gold-complete) and the 5 typed carrier files have no other planned gap; L2 state that an xlsx carrier loss run always goes to review. Status stays TODO until these are applied and @model-risk confirms. 2026-10-15, orchestrator (D-092 item 3): M3, M4, M5 and L2 applied above, plus the scan/image-only review rule and the no-banner rule; waiting for @model-risk to confirm. SUB-147–152 are development files for the P-044 accept path and are never part of this hold-out.
+
+### T-103 — Hold-out SUB-154–173: the planned mix (plan only; written before any file exists)
+- Owner: @producer (files), @senior-underwriter (gold first)
+- Requested by: @user (D-095 item 3)
+- Status: TODO. Plan only; do not build. No SUB-154–173 file or gold exists. Build only when the user says so.
+- Priority: P0 (T-027 resolution path)
+- Depends on: P-048 built and checked (D-095); operations gold rule (deliverables/senior-underwriter/operations-gold-rule.md); scorer v2 with the route column (eval_holdout_v2.py)
+- Reviewers: @model-risk (approves the mix)
+- Acceptance criteria:
+  - [ ] 20 files. Loss runs as T-102: **8 carrier-format** (Carrier A 3, B 3, C 2, exactly per simulation/carrier-loss-run-formats.md), **6 non-carrier**, **6 none**. Formats: 3 typed PDF (text layer), 2 typed .md, 2 JPG scans (1 greyscale, 1 colour and rotated), 1 image-only PDF. No carrier-format run in xlsx. One typed carrier run uses the carrier's own no-claims line. No "_" banner line in any carrier-format run.
+  - [ ] **8 gold-complete files, each with a carrier-format run, covering every send route:**
+
+    | # | Business (fictional) | Loss run | Gold route | Expected status |
+    |---|---|---|---|---|
+    | 1 | office | Carrier A, typed PDF, claims table | carrier_a | complete |
+    | 2 | dry retail | Carrier A, typed .md, no-claims line | carrier_a | complete |
+    | 3 | restaurant (generic word, cooking line, no alcohol) | Carrier B, typed PDF | carrier_b | complete |
+    | 4 | restaurant and bar, full liquor | Carrier B, typed .md | senior_referral (D-079) | complete |
+    | 5 | apartments, sprinklered, TIV under $5M | Carrier C, typed PDF | carrier_c | complete |
+    | 6 | café / bakery | Carrier B, JPG greyscale scan | carrier_b | review pending (P-048 b) |
+    | 7 | apartments, not sprinklered | Carrier C, JPG colour, rotated | senior_referral (AG:61) | review pending (P-048 b) |
+    | 8 | light wholesale | Carrier A, image-only PDF | carrier_a | review pending (P-048 b) |
+
+    Files 1–5 have no other planned gap (no conflict, missing field or scan elsewhere).
+  - [ ] **12 gold-incomplete files** (route scored as the provisional route, P-048 c):
+
+    | # | Loss run | Other features | Gold route (provisional) |
+    |---|---|---|---|
+    | 9 | no-known-loss letter, English | office | carrier_a |
+    | 10 | no-known-loss letter, Spanish | Spanish application, restaurant with cooking line | carrier_b |
+    | 11 | applicant note under a copied carrier header **with a "Fwd:" or "> " prefix, letter words and a valued-as-of date** (B-350 probe) | roofing contractor | senior_referral (AG:38) |
+    | 12 | agency summary naming a carrier | prohibited class (AG:45-49) | no_match |
+    | 13 | unknown carrier layout | office, TIV over $5M | senior_referral (AG:16) |
+    | 14 | carrier layout with the valued-as-of line missing | apartments, sprinkler answer not given | hold (no provisional route) |
+    | 15 | none | email only, operations not stated | hold (no provisional route) |
+    | 16 | none | Spanish email only, operations stated | per the written rules |
+    | 17 | none | scanned application, 2 locations, a conflict | carrier_b (restaurant) |
+    | 18 | none | duplicate resend of file 4 | senior_referral |
+    | 19 | none | 3-location schedule, sprinklered apartments | carrier_c |
+    | 20 | none | cuisine word only, no generic restaurant evidence (D-078) | no_match |
+
+  - [ ] Every route appears in gold: carrier_a, carrier_b, carrier_c, senior_referral, no_match and hold. carrier_c and senior_referral each appear on at least one gold-complete file with a typed run (5 and 4), so they are reachable without a hold.
+  - [ ] Gold follows the written appetite and referral rules (B-364), the operations gold rule, and the M5 convention ("not in documents"). The gold route is the route the written rules give once any hold clears; "hold" only when the documents cannot decide it.
+  - [ ] Gold is written from the documents only by @senior-underwriter (not by anyone who changed the code), committed and frozen before any extraction. smoke_readers.py passes first. .venv python, paced, scorer v2, run and scored once on a frozen commit (T-027 path: all 9 fields 9/10 or better, 0 false completes). Live and cache outputs kept apart (B-363).
+- Output: simulation/inbox/SUB-154 … SUB-173, deliverables/senior-underwriter/gold-set/SUB-154.md … SUB-173.md
+- Notes: D-095 item 3. Plan only. Waiting for @model-risk to approve the mix.

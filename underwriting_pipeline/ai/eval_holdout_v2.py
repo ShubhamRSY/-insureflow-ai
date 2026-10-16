@@ -3,6 +3,10 @@
    (a null on "missing" stays not credited or a miss, as before; M5 is not applied backward).
 2. Each row carries the file's own failed attempts and retries (report["retries"], D-094 item 5).
 3. The header names the last commit that changed underwriting_pipeline/, beside HEAD (T-027 L4).
+P-048 (D-095), added before any hold-out is scored with v2 (only dev re-checks exist), and no other change:
+4. A "route" column: the provisional route of a held file (workbench.match), else its route, against the gold "Expected carrier route"
+   (first word). A held file with no provisional route counts as "hold".
+5. B-363: a run in which every file came from the cache writes <name>-cache-rescore.json/.md and never the live run's files.
 The ids and output names come from the command line, so one scorer serves each new set. eval_holdout_127.py stays frozen.
 
 v1 notes follow. A null is never a correct answer, except under change 1.
@@ -33,6 +37,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import llm_extract
 import prepare
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "app"))
+import workbench  # noqa: E402  P-048 (c): the route the workbench shows
+
 ROOT = Path(__file__).resolve().parents[2]
 INBOX = ROOT / "simulation" / "inbox"
 GOLD = ROOT / "deliverables" / "senior-underwriter" / "gold-set"
@@ -57,6 +64,7 @@ FIELDS = (
     "loss_runs",
     "conflict",
     "status",
+    "route",  # P-048 (c)
 )
 
 
@@ -227,6 +235,8 @@ def score_one(sid: str) -> dict:
     system_status = report.get("status")
     safety = "false_complete" if system_status == "complete" and not gold_complete else "safe"  # B-325: review pending is safe
     automation = ("automated" if system_status == "complete" else "not_automated") if gold_complete else None  # gold-complete files only
+    if gold.get("expected carrier route") and not report.get("error"):  # P-048 (c): the provisional route of a held file
+        checks["route"] = "hit" if route_used(report) == gold["expected carrier route"].split()[0].strip(".,;") else "miss"
     if report.get("error"):
         checks = dict.fromkeys(checks, "call_failed")  # a failed or empty model call is not a miss
         safety, automation = "call_failed", ("call_failed" if gold_complete else None)
@@ -244,6 +254,16 @@ def score_one(sid: str) -> dict:
     }
 
 
+def route_used(report: dict) -> str:
+    m = workbench.match(report)
+    return (m.get("provisional") or "hold") if m["route"] == "hold" else m["route"]
+
+
+def cache_only(rows: list[dict]) -> bool:
+    """B-363: every file's reply came from the cache, so this is a re-score, not a live run."""
+    return bool(rows) and all(r["call"].startswith("from cache") for r in rows)
+
+
 def status_counts(rows: list[dict]) -> dict:
     """B-325: false completes (critical) and plain-complete automation on gold-complete files, from each row's own marks."""
     return {"false_complete": sum(r.get("status_safety") == "false_complete" for r in rows),
@@ -254,7 +274,10 @@ def status_counts(rows: list[dict]) -> dict:
 
 
 def main() -> None:
+    global OUT_JSON, OUT_MD
     rows = [score_one(sid) for sid in IDS]
+    if cache_only(rows):  # B-363: a cache re-score never overwrites a live run's score or its retry log
+        OUT_JSON, OUT_MD = (_OUT.with_name(_OUT.name + "-cache-rescore").with_suffix(x) for x in (".json", ".md"))
     head, dirty = commit()
     counted = {field: {"hit": 0, "hit (needs review)": 0, "miss": 0, "not_credited": 0, "call_failed": 0, "flagged": 0} for field in FIELDS}
     for row in rows:
@@ -312,6 +335,9 @@ if __name__ == "__main__":
         rows = [{"submission": "A", "status_safety": "false_complete", "status_automation": None}, {"submission": "B", "status_safety": "safe", "status_automation": "not_automated"},
                 {"submission": "C", "status_safety": "safe", "status_automation": "automated"}, {"submission": "D", "status_safety": "call_failed", "status_automation": "call_failed"}]
         assert status_counts(rows) == {"false_complete": 1, "false_complete_ids": ["A"], "gold_complete": 2, "automated": 1, "call_failed": 1}, status_counts(rows)
+        assert cache_only([{"call": "from cache: saved reply used, no call in this run"}]) and not cache_only([{"call": "from cache: x"}, {"call": "called: reply used"}]) and not cache_only([])
+        held = {"complete": False, "status": "incomplete", "sprinklers": "yes", "fields": [{"field_id": "operations", "value": "apartments, 8 units"}, {"field_id": "tiv_building", "value": "$3,000,000"}]}
+        assert route_used(held) == "carrier_c" and route_used({**held, "sprinklers": None}) == "hold" and route_used({**held, "complete": True}) == "carrier_c"
         assert [judge(False, None, False, "not in documents"), judge(False, "x", False, "Not in documents."), judge(False, None, False, "missing, not given"),
                 judge(True, None, False, "missing"), judge(False, "a", True, "a")] == ["hit", "miss", "miss", "not_credited", "hit"], "v2 rule; v1 lines unchanged"
         print("eval_holdout_v2 self-check ok")

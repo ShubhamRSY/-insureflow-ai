@@ -458,11 +458,16 @@ def accept_field(item: dict, docs: dict[str, str], ocr_confidence: dict | None =
         return base
     text = docs.get(source, "")
     span = find_quote(text, quote)  # P-016 N: the old fallback to the value's own characters is gone
-    if span is None:
+    spans = [span] if span else None
+    if span is None and "\n" in (quote or ""):  # P-048 (d) (B-365): one quote may cite non-adjacent lines of the same document; each must be found
+        parts = [find_quote(text, part) for part in quote.split("\n") if part.strip()]
+        spans = sorted(parts) if parts and all(parts) else None
+    if not spans:
         base["confidence"] = 0.0
         base["reason"] = REASON_QUOTE.format(source or "no file")
         return base
-    cited_text = text[span[0] : span[1]]
+    span = spans[0]
+    cited_text = "\n".join(text[a:b] for a, b in spans)  # only the cited lines, never the lines between them (B-365 L1)
     if field_id == "loss_run_valued_through" and "no known loss" in cited_text.lower():
         return base
     problem = value_in_span(field_id, value, cited_text)
@@ -488,6 +493,7 @@ def accept_field(item: dict, docs: dict[str, str], ocr_confidence: dict | None =
         "needs_review": flag,
         "reason": reason,
         "quote": cited_text,
+        **({"spans": spans} if len(spans) > 1 else {}),  # P-048 (d): each cited part, for the operations check
     }
 
 
@@ -1342,6 +1348,12 @@ if __name__ == "__main__":
     def one(field, value, quote, text, conf=0.9, scan=None, words=None):
         return accept_field({"field_id": field, "value": value, "source": "f", "quote": quote, "confidence": conf}, {"f": text}, {"f": scan} if scan is not None else None, {"f": words} if words else None)
 
+    # P-048 (d) (B-365, SUB-136 shape): two non-adjacent lines of one document are one citation; the lines between are not quoted.
+    app = "Operations: Mexican restaurant, 70 seats, beer and wine only.\nAnnual sales: $940,000\nCooking operations: two deep fryers, 6-burner range."
+    two = one("operations", "Mexican restaurant, 70 seats, beer and wine, two deep fryers", "Operations: Mexican restaurant, 70 seats, beer and wine only.\nCooking operations: two deep fryers", app)
+    assert two["value"] and two["quote"] == "Operations: Mexican restaurant, 70 seats, beer and wine only.\nCooking operations: two deep fryers" and len(two["spans"]) == 2 and "940" not in two["quote"], two
+    assert one("operations", "Mexican restaurant", "Operations: Mexican restaurant\nLiquor: full bar", app)["reason"] == "quote not found in f", "every part must be found"
+    assert "spans" not in one("operations", "Mexican restaurant", "Operations: Mexican restaurant", app), "a one-part quote is as before"
     # N (no value fallback): the quote is not in the file, so no value, even if the value's characters are there.
     for field, value, text in (("year_built", "1990", "Phone 210-555-1990"), ("tiv_building", "850000", "Policy no. 8500001"), ("construction", "Masonry", "Prior carrier: Masonry Mutual")):
         row = one(field, value, "an invented quote", text)

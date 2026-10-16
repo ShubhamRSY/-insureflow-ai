@@ -41,6 +41,7 @@ BANNER = ""  # set by serve(); the sandbox screenshots label the page with it
 MESSAGES: dict[str, tuple[bool, str]] = {}  # submission -> (ok, plain-words result of the last action); shown once
 # D-065 item 5: one line per user-visible feature: date, task or proposal, decision number, what an underwriter sees.
 WHATS_NEW = (
+    ("2026-10-15", "P-048", "D-095", "A file on hold now shows the route it would take: \"Provisional route: carrier_c (provisional — file on hold: <reason>)\". Sending stays blocked until the hold clears. A scanned or image-only carrier loss run gives \"complete — review pending\" (check the date against the page), not hold."),
     ("2026-10-15", "P-047", "D-094", "Operations keeps every stated detail (alcohol, seats, units, stories, cooking, hours, live music). If the documents state one the value leaves out, it shows NEEDS REVIEW: \"operations may be missing: <item>\". Carrier match and the bar/liquor referral read the full cited operations; \"no bar\" or \"no alcohol\" does not trigger a referral."),
     ("2026-10-15", "P-046", "D-093", "Every loss-run document in a file is checked. When one is accepted but another is undated, a copy or sample, a scan or spreadsheet, or not a recognised carrier layout, the file shows \"complete — review pending\" and the loss-run note names that document and its reason."),
     ("2026-10-15", "P-045/B-343", "D-092", "A loss run marked copy, sample or not from the carrier, or with an impossible or future valued date, shows NEEDS REVIEW with the reason. A carrier run with no valued date says \"loss run found but no valued-as-of date; ask the producer for a dated carrier loss run\". Scanned, image-only and spreadsheet loss runs always show \"loss run from scan/spreadsheet: check it\"."),
@@ -133,8 +134,23 @@ def _tiv(report: dict) -> int | None:
     return None
 
 
+PROVISIONAL = "provisional — file on hold: {}"  # P-048 (c) (D-095)
+
+
 def match(report: dict) -> dict:
-    """route: carrier_a/b/c, no_match, hold or senior_referral. overridable only for no_match (D-057). Never declines."""
+    """route: carrier_a/b/c, no_match, hold or senior_referral. overridable only for no_match (D-057). Never declines.
+    P-048 (c): routing always runs. A held file also carries "provisional" (the route it would take once the hold clears, or None when
+    the class, TIV or sprinkler answer it needs is missing) and its label. route stays "hold", so every send gate stays shut."""
+    m = _match(report, gated=True)
+    if m["route"] == "hold":
+        p = _match(report, gated=False)
+        m["provisional"] = p["route"] if p["route"] != "hold" else None
+        m["provisional_note"] = p["note"] if p["route"] != "hold" else ""
+        m["provisional_label"] = PROVISIONAL.format(m["note"])
+    return m
+
+
+def _match(report: dict, gated: bool) -> dict:
     ops = _ops(report)
 
     def out(route, note="", suggested="", overridable=False):
@@ -145,7 +161,7 @@ def match(report: dict) -> dict:
     other_prohibited = bool(ops) and _has(ops, tuple(w for w in PROHIBITED if w not in BAR_WORDS))
     if other_prohibited or (ops and _has(ops, PROHIBITED) and not food):
         return out("no_match", "prohibited class (AG:45-49)")
-    if not prepare.ready_to_route(report) or not ops:  # P-041: review pending routes as complete did before
+    if (gated and not prepare.ready_to_route(report)) or not ops:  # P-041: review pending routes as complete did before
         return out("hold", "open conflict" if ops and report.get("status") == prepare.REVIEW_PENDING else "missing information")
     tiv = _tiv(report)
     if tiv is None or tiv <= 0:
@@ -231,6 +247,7 @@ def load_queue(only: str | None = None) -> list[dict]:
                 route=route(report),
                 note=match(report)["note"],
                 suggested=match(report)["suggested"],
+                provisional=match(report).get("provisional_label") and match(report),  # P-048 (c)
                 score=scored(folder.name, report),
                 marks=code_marks(folder.name),
                 snippets={r["field_id"]: snippet(folder, r) for r in report["fields"]},
@@ -775,6 +792,10 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
         lines += score_html(item, report)
         if not refused:
             lines.append(f"<p>Carrier match: {html.escape(item['route'])}{html.escape(' · ' + item['note']) if item.get('note') else ''} · recommendation only</p>")
+            if item.get("provisional"):  # P-048 (c) (D-095): routing always runs; the send stays blocked until the hold clears
+                pv = item["provisional"]
+                lines.append(f"<p>Provisional route: <b>{html.escape(pv['provisional'] or 'none yet')}</b>{html.escape(' · ' + pv['provisional_note']) if pv['provisional_note'] else ''}"
+                             f" ({html.escape(pv['provisional_label'])}) · No send until the hold clears</p>")
             if item["route"] == "senior_referral":  # B-264: only a senior referral names a market
                 lines.append(f"<p>Suggested market: <b>{html.escape(item.get('suggested') or 'none')}</b> · recommendation only; the underwriter decides</p>")
         lines += [
@@ -1172,6 +1193,12 @@ if __name__ == "__main__":
         ready["sprinklers"] = "yes"
         assert route(held) == "senior_referral"  # D-059 item 6: sprinklers "no" (AG:61)
         assert route({**held, "sprinklers": None}) == "hold"
+        # P-048 (c): a held file still routes, provisionally; route stays "hold" so no send gate opens.
+        waiting = {**ready, "complete": False, "status": "incomplete"}
+        m = match(waiting)
+        assert (m["route"], m["provisional"], m["provisional_label"]) == ("hold", "carrier_c", "provisional — file on hold: missing information"), m
+        assert match({**held, "complete": False, "status": "incomplete"})["provisional"] == "senior_referral" and match({**waiting, "sprinklers": None})["provisional"] is None
+        assert "provisional" not in match(ready) and package._route(waiting) == "hold" and not package._overridable(waiting), "no send, no override on a held file"
         assert route(ready) == "carrier_c"
         # T-083: D-059 + D-060, written to the temp-free in-memory report only.
         def r(ops, tiv="$1,000,000", **kw):
@@ -1200,7 +1227,8 @@ if __name__ == "__main__":
         for bad in ("", "TBD", None, "$0", "0", "-$5,000",  # B-203: 0 or negative holds
                     "50,000 sq ft", "50000 SF", "12,000 square feet", "8,000 sq. ft.", "9000sqft", "1 square foot"):  # B-209
             m = match(r("office", bad))
-            assert m == {"route": "hold", "note": "TIV missing or unreadable", "suggested": "", "overridable": False}, (bad, m)
+            assert m == {"route": "hold", "note": "TIV missing or unreadable", "suggested": "", "overridable": False, "provisional": None, "provisional_note": "",
+                         "provisional_label": "provisional — file on hold: TIV missing or unreadable"}, (bad, m)
         assert route(r("oficina")) == "carrier_a" and route(r("")) == "hold"
         # D-078 (B-286): cuisine and ethnic words never decide the class. Alone they give the same no_match; with generic evidence the same carrier_b.
         cuisines = ("taqueria", "panadería", "pho house", "diner", "pizzeria", "soul food", "curry house", "halal cart", "bbq")  # "deli" is food service (D-079); bar words: see below
@@ -1302,6 +1330,8 @@ if __name__ == "__main__":
                 assert "<details><summary><b>No saved run" in pg  # closed by default
                 assert "carrier_a" in pg and "Already sent on" in pg and "to carrier_a" in pg and "Resend reason" in pg
                 assert "No send: the carrier match is hold" in pg or "No send: the file is incomplete" in pg  # SUB-929
+                held_card = pg[pg.index('id="SUB-929"') :]  # P-048 (c): the held file shows its provisional route and stays blocked
+                assert "Provisional route: <b>" in held_card and "(provisional — file on hold: missing information) · No send until the hold clears" in held_card, held_card[:3000]
                 assert "No send: this file&#x27;s status is extraction_failed" in pg
                 line = "send to carrier SUB-901"
                 assert act("/send", {"submission": "SUB-901", "user_line": line})[2].startswith("Send refused: already sent on")

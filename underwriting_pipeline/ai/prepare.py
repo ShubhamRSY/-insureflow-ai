@@ -483,12 +483,22 @@ RUN_NEGATED = "loss run says it is not the carrier's own ({}: \"{}\"); check it"
 RUN_BAD_DATE = "valued-as-of date {} in {} is not a real past date; check it"
 RUN_NO_DATE = "loss run found but no valued-as-of date; ask the producer for a dated carrier loss run ({})"
 SCAN_SHEET = "loss run from scan/spreadsheet: check it ({})"  # B-343 (D-092): never auto-accepted in the pilot
+# P-048 (a) (D-095, B-350): a forwarded or quoted run ("> ", "#", "Fwd:" before each line) is still checked as a carrier layout.
+PREFIX = re.compile(r"^(?:(?:>|#+|(?:fwd?|fw)\s*:)\s*)+", re.I)
+
+
+def _unprefix(text: str) -> list[str]:
+    return [PREFIX.sub("", ln.strip()).strip() for ln in text.splitlines() if PREFIX.sub("", ln.strip()).strip()]
+
+
+def _is_header(line: str) -> bool:
+    return any(re.fullmatch(f[0], PREFIX.sub("", line.strip()).strip()) for f in CARRIER_RUN_FORMATS.values())
 
 
 def carrier_run_check(text: str) -> tuple[str | None, str | None, str | None]:
     """P-044/P-045: (state, valued date, the negating line). state: "accepted", "negated", "bad_date", "no_date" (a carrier header
     but no usable valued line or layout), or None (not a carrier layout)."""
-    lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
+    lines = _unprefix(text)  # P-048 (a)
     for header, insured, period, valued, table, row, no_claims in CARRIER_RUN_FORMATS.values():
         if not lines or not re.fullmatch(header, lines[0]):
             continue
@@ -539,6 +549,8 @@ def loss_run_kind(text: str) -> str:
     """P-040/P-044: "loss_run" (a recognised carrier format), "letter" (a no-known-loss letter), or "unclear" (everything else)."""
     if carrier_run_valued(text):
         return "loss_run"
+    if any(_is_header(ln) for ln in text.splitlines()):  # P-048 (a): letter words alone never make a carrier-layout document a letter
+        return "unclear"
     low = _fold(text)
     if NKL_LETTER.search(low) or (NO_CLAIMS.search(low) and LETTERISH.search(low)):
         return "unclear" if all(part.search(low) for part in RUN_PARTS) else "letter"  # a letter phrase beside every loss-run part: review
@@ -552,11 +564,13 @@ def gate_loss_run(merged: dict, texts: dict, scans: dict | None = None) -> None:
     sheet = lambda n: bool(n) and (n in (scans or {}) or n.lower().endswith((".xlsx", ".xls", ".csv")))  # B-343: scans, image-only PDFs, spreadsheets
     checks = {n: carrier_run_check(t) for n, t in texts.items()}
     if not row.get("value"):  # P-045 (c): a carrier run with no usable valued date: the field stays missing and the card says why
-        undated = [n for n, (state, _, _) in checks.items() if state == "no_date"]
+        undated = [n for n, (state, _, _) in checks.items() if state == "no_date" and not sheet(n)]
         negated = [(n, c[2]) for n, c in checks.items() if c[0] == "negated"]  # @model-risk M1: say why here too
-        if undated or negated:
+        scanned = [n for n, (state, _, _) in checks.items() if state and sheet(n)]  # B-357: a scanned run says "from scan"
+        if undated or negated or scanned:
             row["needs_review"] = True
-            row["reason"] = RUN_NO_DATE.format(undated[0]) if undated else RUN_NEGATED.format(*negated[0])
+            row["reason"] = (RUN_NO_DATE.format(undated[0]) if undated else RUN_NEGATED.format(*negated[0]) if negated
+                             else SCAN_SHEET.format(scanned[0]))
         return
     kinds = {name: loss_run_kind(text) for name, text in texts.items()}
     seen = [x for x in (row["value"], row.get("quote")) if x]
@@ -567,7 +581,7 @@ def gate_loss_run(merged: dict, texts: dict, scans: dict | None = None) -> None:
             row["needs_review"] = True
             row["reason"] = "; ".join(x for x in (row.get("reason"), *others) if x)
         return
-    undated = [n for n, c in checks.items() if c[0] == "no_date"]
+    undated = [n for n, c in checks.items() if c[0] == "no_date" and not sheet(n)]  # P-048 (b): OCR breaks the layout; a scan goes to review below
     if undated:  # P-045 (c), @model-risk H1 look-again: an undated carrier run and no accepted run: missing, whatever file the model cited
         row.update(value=None, needs_review=True, reason=RUN_NO_DATE.format(undated[0]))
         return
@@ -598,7 +612,7 @@ def _run_doc_reason(name: str, text: str, check: tuple, kind: str, from_sheet: b
     state, date, line = check
     if state is None:  # @model-risk H1 (check of P-046): a carrier header always makes a loss-run document, letter words or not
         lines = text.splitlines()
-        at = next((i for i, ln in enumerate(lines) if any(re.fullmatch(f[0], ln.strip()) for f in CARRIER_RUN_FORMATS.values())), None)
+        at = next((i for i, ln in enumerate(lines) if _is_header(ln)), None)  # P-048 (a): prefixed headers too
         if at is not None:  # @model-risk H3: a carrier header on any line (a run pasted into an email) is a loss-run document, never accepted there
             state, date, line = carrier_run_check("\n".join(lines[at:]))
             return (SCAN_SHEET.format(name) if from_sheet else RUN_NEGATED.format(name, line) if state == "negated"
@@ -857,7 +871,7 @@ def check_operations(merged: dict, texts: dict) -> None:
     text = texts.get(row.get("source") or "")
     if not row.get("value") or not text or row.get("start") is None:
         return
-    cited = _ops_source(text, row["start"], row["end"])
+    cited = "\n".join(_ops_source(text, a, b) for a, b in row.get("spans") or [(row["start"], row["end"])])  # P-048 (d)
     context = ops_lines(text, cited)
     if context:
         row["context"] = context  # P-047 (c): carrier match and the D-079 referral read it too
@@ -1600,6 +1614,9 @@ if __name__ == "__main__":
         assert ops_lines(forms).splitlines() == forms.splitlines()[:7], ops_lines(forms)
         assert ops_missing("restaurant", ops_lines(forms)) == ["liquor", "bar", "hours", "frying or open flame", "patio", "security staff", "hazardous materials", "60 seats"], ops_missing("restaurant", ops_lines(forms))
         assert probe["operations"]["context"] == "Liquor: full bar, 35% of sales\nCooking operations: wood-fired oven, two fryers." and "context" in _saved_payload({"fields": [probe["operations"]]})["fields"][0]
+        two = {"operations": {**row, "value": "Mexican restaurant, 70 seats, wood-fired oven, two fryers", "end": 40, "spans": [(0, 40), (text.index("Cooking"), len(text) - 1)]}}
+        check_operations(two, {"a.md": text})  # P-048 (d): both cited lines are read, the sales line between them is not
+        assert two["operations"]["reason"] == "operations may be missing: liquor, bar" and two["operations"]["context"] == "Liquor: full bar, 35% of sales", two["operations"]
         assert same_operations(
             "habitational, 8 units, no commercial cooking",
             "Small apartments, 8 units, sprinklers throughout.",
@@ -2200,6 +2217,26 @@ if __name__ == "__main__":
     box = {"loss_run_valued_through": {"field_id": "loss_run_valued_through", "value": "2026-09-30", "source": "loss-runs-a.md", "quote": "2026-09-30", "needs_review": False, "reason": None}}
     gate_loss_run(box, {"loss-runs-a.md": run_107, "scan.jpg": "Carrier RB Loss History Report (fictional)\nPolicy term; 2024-01~91\nValuation date; 2026-09-39\n"}, {"scan.jpg": []})
     assert box["loss_run_valued_through"]["needs_review"] and SCAN_SHEET.format("scan.jpg") in box["loss_run_valued_through"]["reason"], "@model-risk H2 P7: a garbled scanned run counts"
+    # P-048 (a) (B-350, probes R2/R4/R5): a prefixed carrier header is a carrier layout; letter words never make it a letter.
+    nkl_b = "Carrier B Loss History Report (fictional)\nInsured: Owner LLC\nPolicy term: 2025-01-01 to 2026-01-01\nCarrier B certifies no claims for the policy terms above.\nSigned by our agent\n"
+    for pre in ("> ", ">> ", "# ", "## ", "Fwd: ", "FW: ", "> Fwd: "):
+        quoted = "\n".join(pre + ln for ln in nkl_b.splitlines()) + "\n"
+        assert loss_run_kind(quoted) == "unclear" and carrier_run_check(quoted)[0] == "no_date", pre
+        assert _run_doc_reason("loss-runs.md", quoted, carrier_run_check(quoted), loss_run_kind(quoted), False) == RUN_NO_DATE.format("loss-runs.md"), pre
+        assert _run_doc_reason("note.md", "Hi,\n" + quoted, (None, None, None), loss_run_kind("Hi,\n" + quoted), False) == RUN_NO_DATE.format("note.md"), pre
+        box = {"loss_run_valued_through": {"field_id": "loss_run_valued_through", "value": None, "needs_review": True, "reason": None}}
+        gate_loss_run(box, {"loss-runs.md": quoted})
+        assert box["loss_run_valued_through"]["reason"] == RUN_NO_DATE.format("loss-runs.md"), (pre, box)
+        assert carrier_run_valued("\n".join(pre + ln for ln in run_107.splitlines())) == "2026-09-30", "a forwarded dated run is still checked as the layout"
+    # P-048 (b) (D-095, B-343, B-357): a scanned or image-only carrier run keeps its date for review: review pending, never hold, never plain complete.
+    ocr_c = "CARRIER C | LOSS RUN | FICTIONAL\nAccount: Canyon Oaks Apartments LP\nTerm: 2025-04-01 = 2026-04-01\nValued: 2026-09-30\n| Claim no. | Loss date |\n"
+    for value, want in (("2026-09-30", "2026-09-30"), (None, None)):
+        box = {"loss_run_valued_through": {"field_id": "loss_run_valued_through", "value": value, "source": "loss-runs.jpg", "quote": "Valued: 2026-09-30", "needs_review": value is None, "reason": None}}
+        gate_loss_run(box, {"loss-runs.jpg": ocr_c}, {"loss-runs.jpg": []})
+        row = box["loss_run_valued_through"]
+        assert row["value"] == want and row["needs_review"] and row["reason"] == SCAN_SHEET.format("loss-runs.jpg"), (value, row)
+    sheet_run = run_case({"loss_run_valued_through": {"source": "loss-runs.csv", "value": "2026-09-30", "quote": "Valued: 2026-09-30"}}, {"loss-runs.csv": ocr_c})
+    assert sheet_run["status"] == REVIEW_PENDING and ready_to_route(sheet_run), ("P-048 (b): review pending, routable", sheet_run["status"])
     app_with_history = "Effective date: 2027-03-01\nYear built: 1998\nPrior carrier: Carrier B, policy term 2024-03-01 to 2025-03-01, no claims.\n"
     assert _run_doc_reason("application.md", app_with_history, (None, None, None), "unclear", False) is None, "an application's loss-history answers are not a loss-run document"
     with_letter = run_case(a_run, {"loss-runs-a.md": run_107, "loss-runs-letter.md": letters[2]})
