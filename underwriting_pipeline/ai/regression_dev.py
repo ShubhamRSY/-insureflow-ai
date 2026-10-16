@@ -67,7 +67,7 @@ def quick(out: Path) -> None:
     rows = []
     for sid in QUICK:
         row = score_retry(scorer_for(sid), sid)
-        rows.append({"submission": sid, "checks": row["checks"], "name": row.get("extracted_named_insured"), "error": row.get("error"), "attempts": row["attempts"], "metrics": row["metrics"]})
+        rows.append({"submission": sid, "checks": row["checks"], "name": row.get("extracted_named_insured"), "error": row.get("error"), "attempts": row["attempts"], "retries": row["retries"], "metrics": row["metrics"]})
     done = {"bands": [{"band": "quick-15", "counted": tally(rows), "metrics": summarize(rows), "rows": rows}], "failed_attempts": report_failures()}
     out.write_text(json.dumps(done, indent=2) + "\n")
     print("band quick-15", done["bands"][0]["counted"], flush=True)
@@ -208,6 +208,9 @@ def score_retry(module, sid: str, score=None) -> dict:
     _started.append(time.monotonic())
     score = score or module.score_one
     seen = []
+    import llm_extract
+
+    tried = len(llm_extract.ATTEMPTS)  # D-094 item 5: every failed attempt and retry of this file, across all attempts below
     real = prepare.process_submission
     prepare.process_submission = lambda *a, **k: seen.append(real(*a, **k)) or seen[-1]  # the scorer calls prepare.process_submission; keep its report
     try:
@@ -220,8 +223,9 @@ def score_retry(module, sid: str, score=None) -> dict:
         prepare.process_submission = real
     row = {**row, "checks": split_review_hits(row["checks"], seen[-1] if seen else None),
            "metrics": value_metrics(row["checks"], seen[-1] if seen else None)}  # D-084
-    print(time.strftime("%H:%M"), sid, row.get("error") or "ok", "attempts", attempt, flush=True)
-    return {**row, "attempts": attempt}
+    retries = llm_extract.ATTEMPTS[tried:]
+    print(time.strftime("%H:%M"), sid, row.get("error") or "ok", "attempts", attempt, "retries", [r["kind"] for r in retries], flush=True)
+    return {**row, "attempts": attempt, "retries": retries}
 
 
 def holdout(module_name: str) -> None:
@@ -257,7 +261,7 @@ def main() -> None:
         rows = []
         for sid in module.IDS:
             row = score_retry(module, sid)
-            rows.append({"submission": sid, "checks": row["checks"], "name": row.get("extracted_named_insured"), "error": row.get("error"), "attempts": row["attempts"], "metrics": row["metrics"]})
+            rows.append({"submission": sid, "checks": row["checks"], "name": row.get("extracted_named_insured"), "error": row.get("error"), "attempts": row["attempts"], "retries": row["retries"], "metrics": row["metrics"]})
         done["bands"].append({"band": band, "counted": tally(rows), "metrics": summarize(rows), "rows": rows})
         OUT.write_text(json.dumps(done, indent=2) + "\n")
         print("band", band, done["bands"][-1]["counted"], flush=True)

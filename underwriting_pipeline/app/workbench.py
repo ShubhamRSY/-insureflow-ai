@@ -41,6 +41,7 @@ BANNER = ""  # set by serve(); the sandbox screenshots label the page with it
 MESSAGES: dict[str, tuple[bool, str]] = {}  # submission -> (ok, plain-words result of the last action); shown once
 # D-065 item 5: one line per user-visible feature: date, task or proposal, decision number, what an underwriter sees.
 WHATS_NEW = (
+    ("2026-10-15", "P-047", "D-094", "Operations keeps every stated detail (alcohol, seats, units, stories, cooking, hours, live music). If the documents state one the value leaves out, it shows NEEDS REVIEW: \"operations may be missing: <item>\". Carrier match and the bar/liquor referral read the full cited operations; \"no bar\" or \"no alcohol\" does not trigger a referral."),
     ("2026-10-15", "P-046", "D-093", "Every loss-run document in a file is checked. When one is accepted but another is undated, a copy or sample, a scan or spreadsheet, or not a recognised carrier layout, the file shows \"complete — review pending\" and the loss-run note names that document and its reason."),
     ("2026-10-15", "P-045/B-343", "D-092", "A loss run marked copy, sample or not from the carrier, or with an impossible or future valued date, shows NEEDS REVIEW with the reason. A carrier run with no valued date says \"loss run found but no valued-as-of date; ask the producer for a dated carrier loss run\". Scanned, image-only and spreadsheet loss runs always show \"loss run from scan/spreadsheet: check it\"."),
     ("2026-10-15", "P-044", "D-090", "A loss run is accepted automatically only in a recognised carrier A/B/C layout. Anything else that looks like one (applicant or agent letters, other layouts) shows NEEDS REVIEW: \"not a recognised carrier loss run\"."),
@@ -78,10 +79,14 @@ WHATS_NEW = (
 _LOG_LOCK = threading.Lock()  # ponytail: one process writes the log; a file lock if a second writer appears
 
 
+NEGATED = re.compile(r"(?<!\w)(?:no|not an?|without(?: an?)?|sin|non)[- ]\w+")  # P-047 (c): "no bar" is not a bar
+
+
 def _ops(report: dict) -> str:
+    """P-047 (c): the full operations, value and cited text, so a detail the value dropped still routes. Negated words are removed."""
     for row in report["fields"]:
         if row["field_id"] == "operations" and row["value"]:
-            return row["value"].lower()
+            return NEGATED.sub(" ", f"{row['value']} {row.get('quote') or ''}".lower())
     return ""
 
 
@@ -1213,6 +1218,11 @@ if __name__ == "__main__":
         assert route(r("pub")) == "no_match" and match(r("nail lounge"))["overridable"], "pub, lounge alone: as before"
         assert route(r("cannabis dispensary restaurant")) == "no_match", "other prohibited words are unchanged"
         assert route(r("restaurant bar", None)) == "hold", "holds come before the referral"
+        # P-047 (c): the cited text is read too, so a dropped "and bar" still refers; a negated word does not.
+        quoted = lambda ops, quote: {"complete": True, "fields": [{"field_id": "operations", "value": ops, "quote": quote}, {"field_id": "tiv_building", "value": "$1,000,000"}]}
+        assert match(quoted("Full-service restaurant", "Operations: Full-service restaurant and bar, 180 seats, full liquor license")) == bar_ref
+        assert route(quoted("Mexican restaurant", "Operations: Mexican restaurant, 70 seats, beer and wine only, no bar.")) == "carrier_b"
+        assert route(quoted("Dry retail gift shop", "Operations: Dry retail gift shop. No food, no alcohol.")) == "carrier_a"
         for ops in ("bakery", "coffee shop", "deli"):
             assert route(r(ops)) == "carrier_b", ops
         assert route(r("sprinklered apartments", "$4,000,000")) == "carrier_c"

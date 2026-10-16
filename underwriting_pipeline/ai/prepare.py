@@ -791,6 +791,72 @@ def apply_document_rules(merged: dict, conflicts: list, texts: dict, scans: dict
     )
 
 
+# P-047 (b), D-094: the operations gold rule items (deliverables/senior-underwriter/operations-gold-rule.md).
+# (label, words in the source, words in the answer). Whole words, case-insensitive; Spanish only in the source column.
+# ponytail: a fixed word list, not a parser; add words when a dev file shows a gap.
+OPS_ITEMS = (
+    ("liquor", r"liquor|licor(?:es)?|mixed beverage|spirits", r"liquor|mixed beverage|spirits"),
+    ("beer", r"beer|cervezas?", r"beer"),
+    ("wine", r"wine|wines|vinos?", r"wine"),
+    ("alcohol", r"alcohol\w*", r"alcohol\w*"),
+    ("bar", r"bar|bars|tavern|nightclub|pub|lounge|cantina", r"bar|bars|tavern|nightclub|pub|lounge"),
+    ("stories or floor", r"\w+-stor(?:y|ies)|\d+ stor(?:y|ies)|\d+(?:st|nd|rd|th) floor|basement", r"\w+-stor(?:y|ies)|\d+ stor(?:y|ies)|\d+(?:st|nd|rd|th) floor|basement|stor(?:y|ies)|floor"),
+    ("live music or entertainment", r"live music|m[uú]sica en vivo|entertainment|dj|dancing|karaoke", r"live music|music|entertainment|dj|dancing|karaoke"),
+    ("hours", r"24[- ]hours?|until \d{1,2}(?::\d\d)?\s*[ap]\.?\s?m\.?|\d{1,2}(?::\d\d)?\s*[ap]\.?\s?m\.?", r"24[- ]hours?|\d{1,2}(?::\d\d)?\s*[ap]\.?\s?m\.?|hours"),
+    ("frying or open flame", r"fryers?|deep[- ]fr\w*|open flame|grill\w*|wood[- ]fired|charcoal|smokers?|freidoras?", r"fryers?|fried|frying|deep[- ]fr\w*|open flame|grill\w*|wood[- ]fired|charcoal|smokers?"),
+    ("cooking", r"no cooking|full kitchen|commercial cooking|microwave|cocina", r"cook\w*|kitchen|microwave"),
+    ("delivery or catering", r"delivery|catering|banquetes|entregas?", r"delivery|catering"),
+    ("on-site processing", r"manufactur\w*|processing|on[- ]site|repair\w*", r"manufactur\w*|process\w*|on[- ]site|repair\w*"),
+    ("patio", r"patio|outdoor seating|outdoor service", r"patio|outdoor"),
+    ("security staff", r"security|bouncers?|guards?", r"security|bouncers?|guards?"),
+    ("hazardous materials", r"hazardous|flammables?|chemicals?|propane", r"hazardous|flammables?|chemicals?|propane"),
+)
+OPS_COUNTS = (("seats", r"(\d[\d,]*)\s+(?:seats|seating|asientos)|seating (?:for|capacity of)\s+(\d[\d,]*)", r"seat"),
+              ("units", r"(\d[\d,]*)\s+(?:\w+\s+)?(?:units|unidades|departamentos)", r"unit|apartment"))
+OPS_MISSING = "operations may be missing: {}"
+
+
+def _ops_source(text: str, start: int, end: int) -> str:
+    """The cited line(s) and the unlabeled lines that continue them (a wrapped scan line). A "Label:" line or a blank line ends it."""
+    first = text.rfind("\n", 0, start) + 1
+    last = text.find("\n", end)
+    last = len(text) if last < 0 else last
+    while last < len(text):
+        nxt = text.find("\n", last + 1)
+        line = text[last + 1 : len(text) if nxt < 0 else nxt]
+        if not line.strip() or re.match(r"\s*[A-Za-zÁÉÍÓÚáéíóúñ ]{2,40}:", line):
+            break
+        last = len(text) if nxt < 0 else nxt
+    return text[first:last]
+
+
+def ops_missing(value: str, source: str) -> list[str]:
+    """P-047 (b): rule items the source states that the answer does not carry."""
+    low_v, low_s = value.casefold(), source.casefold()
+    has = lambda pattern, text: re.search(rf"(?<!\w)(?:{pattern})(?!\w)", text)
+    missing = [label for label, src, ans in OPS_ITEMS if has(src, low_s) and not has(ans, low_v)]
+    for label, src, ans in OPS_COUNTS:
+        for match in re.finditer(src, low_s):
+            number = (match.group(1) or match.group(2)).replace(",", "")
+            if number not in low_v.replace(",", "") or not re.search(ans, low_v):
+                missing.append(f"{number} {label}")
+    return missing
+
+
+def check_operations(merged: dict, texts: dict) -> None:
+    """P-047 (b): the cited source line names a rule item the answer lacks -> needs review, below the confidence line, with the items."""
+    row = merged["operations"]
+    text = texts.get(row.get("source") or "")
+    if not row.get("value") or not text or row.get("start") is None:
+        return
+    missing = ops_missing(row["value"], _ops_source(text, row["start"], row["end"]))
+    if missing:
+        reason = OPS_MISSING.format(", ".join(missing))
+        row["reason"] = f"{row['reason']}; {reason}" if row.get("reason") else reason
+        row["needs_review"] = True
+        row["confidence"] = min(row.get("confidence") or 0.0, llm_extract.MIN_CONFIDENCE - 0.01)  # never full confidence
+
+
 def extract_labeled(text: str, labels: tuple[str, ...]) -> list[dict]:
     offset = 0
     for line in text.splitlines(keepends=True):
@@ -889,6 +955,7 @@ def process_submission(folder: Path) -> dict:
     rejected = False
     readable = [doc for doc in docs if doc.get("text") and not doc.get("needs_human")]
     key = llm_extract.key_for(docs) if readable else None  # P-028 (D-075): the extraction cache key; None when no model call is made
+    attempts_before = len(llm_extract.ATTEMPTS)
     if not readable:
         extracted = {"fields": [], "conflicts": []}
     else:
@@ -956,6 +1023,7 @@ def process_submission(folder: Path) -> dict:
         conflicts.append(item)
     _apply_reply(conflicts, texts.get("reply.md", ""))
     apply_document_rules(merged, conflicts, texts, scans)
+    check_operations(merged, texts)  # P-047 (b), after every rule that can set operations
     gate_loss_run(merged, texts, scans)  # P-040/P-044/P-045/B-343, after every rule that can set the date
     locations = apply_locations(merged, conflicts, texts, scans)
     listed = extracted.get("schedule") or []  # P-036: several schedule addresses are locations, not a conflict
@@ -1002,6 +1070,7 @@ def process_submission(folder: Path) -> dict:
     report["error"] = error
     report.update(_run_metadata())
     report["cache_key"] = key  # P-028 (D-075)
+    report["retries"] = llm_extract.ATTEMPTS[attempts_before:]  # D-094 item 5: each failed attempt and retry of this file's call; [] when none
     # D-024: an answered reply the gate rejected is not a failed call, and it gets no request and no draft.
     if error:
         report["status"] = "extraction_failed"
@@ -1485,6 +1554,28 @@ if __name__ == "__main__":
             assert row["value"] == "280000" and row["needs_review"] is want, (flags, row)
             assert (row["reason"], row["quote"]) == (("number or date read from a scan", "280,000" if flags[0] else "$280k") if want else (None, "280,000")), row
             assert out["conflicts"] == []
+        # P-047 (b), D-094: SUB-127-146 shapes. A rule item in the cited line that the answer drops is named; a full answer passes.
+        line = "Operations: Full-service restaurant and bar, 180 seats, full liquor license (TABC mixed beverage permit), live music Friday and Saturday until 1 am. Dinner and weekend brunch."
+        assert ops_missing("Full-service restaurant and bar", line) == ["liquor", "live music or entertainment", "hours", "180 seats"]
+        assert ops_missing("Full-service restaurant and bar, 180 seats, full liquor license, live music Friday and Saturday until 1 am", line) == []
+        assert ops_missing("Southern breakfast and lunch restaurant", "Operations: Southern breakfast and lunch restaurant, 90 seats, beer and wine only, dine-in and takeout.") == ["beer", "wine", "90 seats"]
+        assert ops_missing("Residential apartments", "Operations: Residential apartments, 12 units in one two-story building, long-term leases.") == ["stories or floor", "12 units"]
+        assert ops_missing("Mexican restaurant", "Operations: Mexican restaurant, 70 seats, beer and wine only, no bar.") == ["beer", "wine", "bar", "70 seats"]
+        assert ops_missing("Financial advisory and tax office", "Operations: Financial advisory and tax office, 2nd floor. Clients by appointment.") == ["stories or floor"]
+        assert ops_missing("Used book and thrift shop", "Operations: Used book and thrift shop, donated goods sorted on site. No food, no alcohol.") == ["alcohol", "on-site processing"]
+        assert ops_missing("clothing store", "tienda de ropa") == [] and ops_missing("restaurant", "restaurante con cerveza y 40 asientos") == ["beer", "40 seats"]
+        assert ops_missing("Breakfast and lunch cafe, 64 seats, beer and wine only, no liquor license.", "Operations: Breakfast and lunch cafe, 64 seats, beer and wine only, no liquor license. Dine-in and takeout.") == []
+        assert ops_missing("Residential apartments, 6 units", "Operations: Residential apartments, 16 units") == ["16 units"], "a wrong count is missing"
+        assert _ops_source("Name: X\nOperations: wholesale of wire,\nconduit. 2nd floor.\nSales: 1\n", 9, 20) == "Operations: wholesale of wire,\nconduit. 2nd floor.", "a wrapped line is read; the next label ends it"
+        text = "Operations: Mexican restaurant, 70 seats, beer and wine only, no bar.\nLiquor: none\n"
+        row = {"field_id": "operations", "value": "Mexican restaurant", "source": "a.md", "start": 0, "end": 69, "confidence": 1.0, "needs_review": False, "reason": None}
+        held = {"operations": dict(row)}
+        check_operations(held, {"a.md": text})
+        assert held["operations"]["needs_review"] and held["operations"]["confidence"] < llm_extract.MIN_CONFIDENCE
+        assert held["operations"]["reason"] == "operations may be missing: beer, wine, bar, 70 seats", held["operations"]["reason"]
+        full = {"operations": {**row, "value": "Mexican restaurant, 70 seats, beer and wine only, no bar"}}
+        check_operations(full, {"a.md": text})
+        assert not full["operations"]["needs_review"] and full["operations"]["confidence"] == 1.0, "the next labeled line is not part of operations"
         assert same_operations(
             "habitational, 8 units, no commercial cooking",
             "Small apartments, 8 units, sprinklers throughout.",
