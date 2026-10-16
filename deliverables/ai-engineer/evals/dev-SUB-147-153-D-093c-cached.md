@@ -16,3 +16,4 @@
 | SUB-153 | review 2026-09-30 | loss run found but no valued-as-of date; ask the producer for a dated carrier loss run (email.md); loss run found but no valued-as-of date; ask the producer for a dated carrier loss run (loss-runs-b.md) | complete — review pending | 2026-09-30 accepted; Carrier B undated | complete — review pending | none |
 
 - Note (orchestrator): run on the working tree after cb7b259 (H3 fix, committed next); the header line names the parent commit. SUB-153 now also flags email.md (prior carrier, policy terms and claims in prose with no valued date). The status is unchanged (review pending, safe); the extra card reason is noise for the underwriter.
+- Note (M2): the code that ran is the H3 fix committed as 3a77415, approved by @model-risk as the frozen hold-out code.

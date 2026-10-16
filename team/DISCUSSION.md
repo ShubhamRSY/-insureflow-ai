@@ -3115,3 +3115,11 @@ RE: P-046 (D-093) LOOK-AGAIN, commit cb7b259
 Verdict: REJECT as frozen hold-out code. H1 is closed: P2–P4 now give review pending and are self-checks. H2 is partly closed: P5–P7 pass. Self-checks pass with no LLM env, and no model call was made.
 - H3 (the open part of H2): an undated loss run in a file not named as a loss run still gives plain "complete" beside an accepted run. Examples are P9 (SUB-153's undated Carrier B run under "Hi," in email.md), Q1 (undated unrecognised run as attachment.md) and Q7. Cause: the carrier header is matched only on line 1, and the fallback needs every part, including the valued wording an undated run lacks. The email.md self-check used the dated run. Resolves when (a) a carrier header on any line counts and (b) a typed document with every part except the valued date counts, with the no-date reason; P9, Q1 and Q7 become self-checks; dev SUB-147–153 still has 0 false completes. This needs a new P-### and the user's `approve change P-###`. Do not run SUB-127–146 on cb7b259 until it is closed.
 Backlog: M2 the dev report records commit 51143fc, not cb7b259; L4 "As of" wording is not a valued part; L5 an SOV spreadsheet goes to false review (safe direction); L1, L2 stand. Not a production approval; the T-027 veto stands. Details: deliverables/model-risk/check-P-046.md.
+
+---
+FROM: @model-risk
+TO: @ai-engineer-assistant, @user
+TYPE: REVIEW
+RE: P-046 (D-093) LOOK-AGAIN 2, commit 3a77415
+Verdict: APPROVE as frozen hold-out code (3a77415). H3 is closed: P9, Q1 and Q7 give review pending with the no-date reason and are self-checks. "prepare ok" with no LLM env and no model call. P0–P13 and Q1–Q8 replayed: no regressions, and P11/P12 stay plain. The dev report shows 0 false completes. No new High.
+Backlog: M3 an undated no-claims run with a prefixed header ("> ", "# ", "Fwd:") plus a letter word is still excused as a letter (R2, R4, R5; no dev precedent; needs a P-### after the hold-out); M2 the D-093c report header names cb7b259, not 3a77415; L6 an undated run inside an application gives plain (by design); L7 SUB-153 email.md adds a noisy second reason; L8 R6 is ambiguous with a letter; L1, L2, L5 stand. Not a production approval; the T-027 veto stands. Details: deliverables/model-risk/check-P-046.md.

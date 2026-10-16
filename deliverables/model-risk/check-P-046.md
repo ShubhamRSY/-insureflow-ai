@@ -88,3 +88,40 @@ Until H3 is closed, SUB-127–146 should not run on cb7b259 as the frozen hold-o
 - L1 and L2 stand; M1 and L3 closed (self-checks now include letter-word and odd-name cases; ponytail comment replaced).
 
 This is a development check, not a production approval. An approved P-046 is not a production approval, and the T-027 veto stands.
+
+## LOOK-AGAIN 2 — commit 3a77415 (2026-10-15)
+
+- Evidence: `git show 3a77415 -- underwriting_pipeline/` (`_run_doc_reason`, self-checks P9, Q1, Q7, application exclusion); dev-SUB-147-153-D-093c-cached.md. SUB-127–146 and their gold not opened, listed or run (dev-inbox grep skipped those folders).
+- Self-checks with LLM_API_KEY, LLM_BASE_URL, LLM_MODEL unset: "prepare ok". No model call.
+- Probes: P0–P13 and Q1–Q8 replayed in memory (scratchpad `mr-p046/probe.py`, `probe2.py`), plus new R1–R8 (`probe3.py`). Nothing in the repo written apart from this file and DISCUSSION.md.
+
+### Verdict: APPROVE as frozen hold-out code (H3 closed; no High open)
+
+| Probe (A = accepted Carrier A run) | cb7b259 | 3a77415 | D-093 |
+|---|---|---|---|
+| P9 undated B under "Hi," in email.md | plain | review pending, no-date reason | review pending |
+| Q1 unrecognised undated run, attachment.md | plain | review pending, no-date reason | review pending |
+| Q7 undated B under "From agent:" in email.md | plain | review pending, no-date reason | review pending |
+| Q3 "As of" wording, attachment.md | plain | review pending (no-date reason) | review pending |
+| P0–P8, P10–P13, Q2, Q4, Q5, Q8 | as before | unchanged | |
+| P11 A + letter (P-040), P12 A alone | plain | plain | plain |
+| R1 undated B quoted with "> " in email.md | — | review pending | review pending |
+| R3 undated B under a "# " heading | — | review pending | review pending |
+| R8 header in capitals, pasted in email | — | review pending | review pending |
+| **R2** "> "-quoted undated B no-claims run + "From agent:" | — | **plain** | review pending |
+| **R4** "# " heading undated B no-claims run + "Signed: J. Ortiz" | — | **plain** | review pending |
+| **R5** "Fwd: " header undated B no-claims run + "Sent by our agent." | — | **plain** | review pending |
+| R6 unrecognised undated no-claims run + "Provided by agent." | — | plain | ambiguous with a P-040 letter |
+| R7 undated unrecognised run inside application.md | — | plain | by design (application exclusion) |
+
+**H3: closed.** A carrier header on any line now makes a loss-run document (P9, Q7), and a typed document with every part but the valued date gets the no-date reason (Q1). All three are self-checks that pass, and the cached dev SUB-147–153 re-run reports 0 false completes. No new High: R2, R4 and R5 need three things at once (a carrier header that is not a clean line on its own, a no-claims-only undated run, and a letter word). No dev file has a prefixed carrier header. Rated Medium.
+
+### Medium / Low (backlog, one line each)
+- M3: in the content path, `kind == "letter"` still excuses an undated no-claims run whose carrier header has a prefix ("> ", "# ", "Fwd:") when a letter word is present (R2, R4, R5). Fix: find the header with `re.search` on each line, or do not excuse as a letter a document that shows a carrier word and a policy period. This needs a P-### after the hold-out.
+- M2 stands: the D-093c report header names cb7b259, but the code it checked is 3a77415 (working tree). Tie the hold-out report to 3a77415.
+- L6: the application exclusion (two application words) lets an undated run pasted inside an application give plain complete (R7). This is by design; check it at the milestone.
+- L7: SUB-153 email.md (prior-carrier prose) now adds a second no-date reason on the card. Status is unchanged (safe), but the card is noisier for the underwriter.
+- L8: R6 (a carrier, a period, no claims and an agent word, with no header) is still read as a P-040 letter. This is ambiguous by design.
+- L1, L2, L5 stand; L4 closed by H3(b) (Q3 now review pending).
+
+This is a development check, not a production approval. The frozen hold-out code is commit 3a77415, and SUB-127–146 may run on it once, under D-020/D-022. An approved P-046 is not a production approval, and the T-027 veto stands.
