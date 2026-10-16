@@ -35,3 +35,18 @@ Conditions:
 2. File 11 (roofing) states a TIV, so the AG:38 referral is tested apart from M3. Alternatively, record that its provisional route depends on M3.
 3. One of the 6 non-carrier runs is a JPG scan of an applicant note under a copied carrier header (gold incomplete). This probes M1 and does not change the carrier-format mix.
 4. Build and run only after H1 is closed (T-103: "Live and cache outputs kept apart (B-363)"). Settle L2 before scoring.
+
+## LOOK-AGAIN on H1, commit 4b313be (2026-10-16, @model-risk)
+
+**Verdict: H1 CLOSED.** P-048 is approved with changes, and no High finding is open. The M and L items stay in the backlog. This is not a production approval, and the T-027 veto stands. The T-103 mix conditions 1–3 still apply. Condition 4 (build only after H1 closes) is now met.
+
+What I re-ran: `eval_holdout_v2 --self-check` passes. All outputs went to my scratchpad, using a temporary cache copy. `urllib.request.urlopen` was replaced with a function that records any attempt and raises an error; no attempt was recorded.
+- Probe 1 (my H1 repro): `HOLDOUT_RESCORE=1`, with a cache copy that lacks SUB-128 and live `live.json`/`live.md` already present. SUB-127 came from the cache. At SUB-128 the run stopped with "re-score refused: a file has no saved reply in the cache … Nothing written". It made no call and wrote no file, and the live files are unchanged.
+- Probe 2: a live run whose score file already exists stopped before any file was read ("refused: live.json exists …"). Nothing was scored and nothing was overwritten.
+- Probe 3: a full `HOLDOUT_RESCORE=1` re-score of SUB-127–146 wrote only `-cache-rescore.*`. Its counts and every per-file check match the committed file: loss runs 8/0/12, route 16/20, 0 false completes.
+- `_no_call` raises SystemExit. No `except BaseException` or bare `except` in llm_extract, prepare, regression_dev or eval_holdout_v2 can swallow it.
+- M4 is closed: NOTES.md now explains the 3 former loss-run misses, and the explanation matches mine.
+
+### Backlog (one line each)
+- L4: the re-score mode is opt-in. A re-score run without `HOLDOUT_RESCORE=1` is a live run: it makes calls, but it can no longer overwrite a score file. Write the flag into RUN-RULES.md and the T-103 run steps.
+- L5: when a re-score is refused, it says only that "a file" has no saved reply. Name the submission id.

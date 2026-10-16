@@ -22,3 +22,8 @@ Any other HTTP error (401, 500, …) or an unusable reply fails at once. A file 
 ## What a run must report
 
 The retry count per file and in total, and every `call_failed` file. A retry is not a rule breach; an unlogged retry is.
+
+## Live runs and re-scores are kept apart (B-363, D-095)
+
+- A re-score from saved replies runs with `HOLDOUT_RESCORE=1` (and a temp copy of the cache in `LLM_CACHE_DIR`, `LLM_PACE_SECONDS=0`). It makes no model call: a file with no saved reply stops the run and nothing is written. It writes `<name>-cache-rescore.json/.md`.
+- A live run refuses to start when its score file exists, so it never overwrites a live score or its retry rows. Use a new `HOLDOUT_OUT`.
