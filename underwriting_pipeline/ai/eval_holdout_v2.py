@@ -6,7 +6,8 @@
 P-048 (D-095), added before any hold-out is scored with v2 (only dev re-checks exist), and no other change:
 4. A "route" column: the provisional route of a held file (workbench.match), else its route, against the gold "Expected carrier route"
    (first word). A held file with no provisional route counts as "hold".
-5. B-363: a run in which every file came from the cache writes <name>-cache-rescore.json/.md and never the live run's files.
+5. B-363 (@model-risk H1 of P-048): HOLDOUT_RESCORE=1 is a re-score: it makes no model call (a file with no saved reply stops the run,
+   nothing written) and writes <name>-cache-rescore.json/.md. A live run refuses to start if its score file exists, so it never overwrites one.
 The ids and output names come from the command line, so one scorer serves each new set. eval_holdout_127.py stays frozen.
 
 v1 notes follow. A null is never a correct answer, except under change 1.
@@ -259,9 +260,20 @@ def route_used(report: dict) -> str:
     return (m.get("provisional") or "hold") if m["route"] == "hold" else m["route"]
 
 
-def cache_only(rows: list[dict]) -> bool:
-    """B-363: every file's reply came from the cache, so this is a re-score, not a live run."""
-    return bool(rows) and all(r["call"].startswith("from cache") for r in rows)
+RESCORE = os.environ.get("HOLDOUT_RESCORE") == "1"
+
+
+def out_paths(rescore: bool) -> tuple[Path, Path]:
+    """B-363: a re-score writes its own files; a live run never overwrites an existing score file."""
+    base = _OUT.with_name(_OUT.name + "-cache-rescore") if rescore else _OUT
+    paths = base.with_suffix(".json"), base.with_suffix(".md")
+    if not rescore and any(path.exists() for path in paths):
+        raise SystemExit(f"refused: {paths[0].name} exists; a live run never overwrites a score file (B-363). Use a new HOLDOUT_OUT, or HOLDOUT_RESCORE=1 to re-score.")
+    return paths
+
+
+def _no_call(settings: dict, payload: dict) -> dict:
+    raise SystemExit("re-score refused: a file has no saved reply in the cache; HOLDOUT_RESCORE=1 makes no model call (B-363). Nothing written.")
 
 
 def status_counts(rows: list[dict]) -> dict:
@@ -275,9 +287,10 @@ def status_counts(rows: list[dict]) -> dict:
 
 def main() -> None:
     global OUT_JSON, OUT_MD
+    OUT_JSON, OUT_MD = out_paths(RESCORE)  # before any call: a refused live run spends nothing
+    if RESCORE:
+        llm_extract._post = _no_call
     rows = [score_one(sid) for sid in IDS]
-    if cache_only(rows):  # B-363: a cache re-score never overwrites a live run's score or its retry log
-        OUT_JSON, OUT_MD = (_OUT.with_name(_OUT.name + "-cache-rescore").with_suffix(x) for x in (".json", ".md"))
     head, dirty = commit()
     counted = {field: {"hit": 0, "hit (needs review)": 0, "miss": 0, "not_credited": 0, "call_failed": 0, "flagged": 0} for field in FIELDS}
     for row in rows:
@@ -335,7 +348,22 @@ if __name__ == "__main__":
         rows = [{"submission": "A", "status_safety": "false_complete", "status_automation": None}, {"submission": "B", "status_safety": "safe", "status_automation": "not_automated"},
                 {"submission": "C", "status_safety": "safe", "status_automation": "automated"}, {"submission": "D", "status_safety": "call_failed", "status_automation": "call_failed"}]
         assert status_counts(rows) == {"false_complete": 1, "false_complete_ids": ["A"], "gold_complete": 2, "automated": 1, "call_failed": 1}, status_counts(rows)
-        assert cache_only([{"call": "from cache: saved reply used, no call in this run"}]) and not cache_only([{"call": "from cache: x"}, {"call": "called: reply used"}]) and not cache_only([])
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:  # B-363 (@model-risk H1): never the real score files
+            _OUT = Path(tmp) / "SUB-1-2-dev"
+            assert [p.name for p in out_paths(True)] == ["SUB-1-2-dev-cache-rescore.json", "SUB-1-2-dev-cache-rescore.md"] and [p.name for p in out_paths(False)] == ["SUB-1-2-dev.json", "SUB-1-2-dev.md"]
+            (Path(tmp) / "SUB-1-2-dev.json").write_text("{}")
+            try:
+                out_paths(False)
+                raise AssertionError("a live run overwrote a score file")
+            except SystemExit as stop:
+                assert "never overwrites" in str(stop)
+            assert out_paths(True)[0].name == "SUB-1-2-dev-cache-rescore.json", "a re-score still runs beside a live file"
+        try:
+            _no_call({}, {})
+            raise AssertionError("re-score made a call")
+        except SystemExit as stop:
+            assert "no model call" in str(stop)
         held = {"complete": False, "status": "incomplete", "sprinklers": "yes", "fields": [{"field_id": "operations", "value": "apartments, 8 units"}, {"field_id": "tiv_building", "value": "$3,000,000"}]}
         assert route_used(held) == "carrier_c" and route_used({**held, "sprinklers": None}) == "hold" and route_used({**held, "complete": True}) == "carrier_c"
         assert [judge(False, None, False, "not in documents"), judge(False, "x", False, "Not in documents."), judge(False, None, False, "missing, not given"),

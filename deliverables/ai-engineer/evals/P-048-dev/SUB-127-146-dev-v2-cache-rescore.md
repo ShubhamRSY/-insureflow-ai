@@ -2,7 +2,7 @@
 
 - Author: @ai-engineer-assistant
 - 9 of 9 extracted fields scored; claims not read; loss runs = date only.
-- Commit: 2ea37a7d95c83b2d93de869e52d7158bd9b33ffe (last pipeline commit 2ea37a7d95c83b2d93de869e52d7158bd9b33ffe), with uncommitted changes in: deliverables/senior-underwriter/gold-set/SUB-129.md, deliverables/senior-underwriter/gold-set/SUB-131.md, deliverables/senior-underwriter/gold-set/SUB-134.md, deliverables/senior-underwriter/gold-set/SUB-135.md, deliverables/senior-underwriter/gold-set/SUB-136.md, deliverables/senior-underwriter/gold-set/SUB-137.md, deliverables/senior-underwriter/gold-set/SUB-138.md, deliverables/senior-underwriter/gold-set/SUB-139.md, deliverables/senior-underwriter/gold-set/SUB-140.md, deliverables/senior-underwriter/gold-set/SUB-142.md, deliverables/senior-underwriter/gold-set/SUB-143.md, deliverables/senior-underwriter/gold-set/SUB-144.md, deliverables/senior-underwriter/gold-set/SUB-145.md. This is not a score of that commit.
+- Commit: d08dbecbea12fffa9d24a4b5feb99d157445990f (last pipeline commit 2ea37a7d95c83b2d93de869e52d7158bd9b33ffe), with uncommitted changes in: underwriting_pipeline/ai/eval_holdout_v2.py. This is not a score of that commit.
 - Scored with this file unchanged after the gold answers were written. A development re-check is not a hold-out.
 - A null that matches a missing gold line is not_credited. It is not a correct answer.
 - Correctly flagged for human means the documents disagree and the AI stored both sides without picking one. It is not a hit and not a miss.

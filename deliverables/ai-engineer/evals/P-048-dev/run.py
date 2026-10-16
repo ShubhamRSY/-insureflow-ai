@@ -2,7 +2,7 @@
 
 Runs the pipeline's own retries (RUN-RULES.md) through regression_dev --holdout eval_holdout_v2, saves each file's report,
 then reads out operations, silent errors and routes (workbench.match) against gold. Synthetic. Not a production approval.
-Run: HOLDOUT_IDS=127-146 HOLDOUT_OUT=deliverables/ai-engineer/evals/P-048-dev/SUB-127-146-dev-v2 LLM_CACHE_DIR=<temp copy> .venv/bin/python deliverables/ai-engineer/evals/P-048-dev/run.py
+Run: HOLDOUT_IDS=127-146 HOLDOUT_OUT=deliverables/ai-engineer/evals/P-048-dev/SUB-127-146-dev-v2 LLM_CACHE_DIR=<temp copy> LLM_PACE_SECONDS=0 HOLDOUT_RESCORE=1 .venv/bin/python deliverables/ai-engineer/evals/P-048-dev/run.py
      add --readout to read saved reports only (no model call).
 """
 import json

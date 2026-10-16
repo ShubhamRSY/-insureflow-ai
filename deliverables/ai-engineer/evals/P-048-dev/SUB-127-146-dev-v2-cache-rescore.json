@@ -1,20 +1,8 @@
 {
   "label": "9 of 9 extracted fields scored; claims not read; loss runs = date only",
-  "commit": "2ea37a7d95c83b2d93de869e52d7158bd9b33ffe (last pipeline commit 2ea37a7d95c83b2d93de869e52d7158bd9b33ffe)",
+  "commit": "d08dbecbea12fffa9d24a4b5feb99d157445990f (last pipeline commit 2ea37a7d95c83b2d93de869e52d7158bd9b33ffe)",
   "uncommitted": [
-    "deliverables/senior-underwriter/gold-set/SUB-129.md",
-    "deliverables/senior-underwriter/gold-set/SUB-131.md",
-    "deliverables/senior-underwriter/gold-set/SUB-134.md",
-    "deliverables/senior-underwriter/gold-set/SUB-135.md",
-    "deliverables/senior-underwriter/gold-set/SUB-136.md",
-    "deliverables/senior-underwriter/gold-set/SUB-137.md",
-    "deliverables/senior-underwriter/gold-set/SUB-138.md",
-    "deliverables/senior-underwriter/gold-set/SUB-139.md",
-    "deliverables/senior-underwriter/gold-set/SUB-140.md",
-    "deliverables/senior-underwriter/gold-set/SUB-142.md",
-    "deliverables/senior-underwriter/gold-set/SUB-143.md",
-    "deliverables/senior-underwriter/gold-set/SUB-144.md",
-    "deliverables/senior-underwriter/gold-set/SUB-145.md"
+    "underwriting_pipeline/ai/eval_holdout_v2.py"
   ],
   "model": "qwen/qwen3.8-27b",
   "host": "api.groq.com",
