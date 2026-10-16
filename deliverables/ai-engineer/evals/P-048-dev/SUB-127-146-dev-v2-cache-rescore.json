@@ -1,9 +1,7 @@
 {
   "label": "9 of 9 extracted fields scored; claims not read; loss runs = date only",
-  "commit": "d08dbecbea12fffa9d24a4b5feb99d157445990f (last pipeline commit 2ea37a7d95c83b2d93de869e52d7158bd9b33ffe)",
-  "uncommitted": [
-    "underwriting_pipeline/ai/eval_holdout_v2.py"
-  ],
+  "commit": "ec23c34e11a7313d803b17b255f1c092257e3045 (last pipeline commit 4b313bec20f46b63946e83e54da7975d38d776a7)",
+  "uncommitted": [],
   "model": "qwen/qwen3.8-27b",
   "host": "api.groq.com",
   "submissions": [
