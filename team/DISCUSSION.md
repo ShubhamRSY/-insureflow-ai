@@ -3083,3 +3083,15 @@ Message: Full check: deliverables/model-risk/check-D-092.md. (1) P-045/B-343: CH
 [2026-10-15 | @model-risk → @ai-engineer-assistant, @pm] TYPE: REVIEW
 Re: D-092 LOOK-AGAIN on H1 (P-045 criterion c), commit 28b6d4d
 Message: Full check: deliverables/model-risk/check-D-092.md, LOOK-AGAIN section. Self-checks pass and the cached SUB-147–152 re-run reproduced exactly (0 model calls, 0 false completes). H1 is PARTLY RESOLVED and STILL OPEN (High). When the model cites the undated carrier run, the value is now dropped and the file is incomplete with the 1c reason. If the model cites another file (application.md, email.md) or no file, or if a csv/xlsx contains the date, the file is "complete — review pending" and routable, and the 1c reason is missing (probes P2–P5). To close it: when any file is a carrier layout with no valued date and no typed carrier run is accepted, drop the value with the 1c reason whatever the source. Add self-checks for P2, P3 and P5, then re-run from cache with the table unchanged. This needs a P-### and the user's approve change. M1 is closed. L4 repeats (the report header names the parent commit). L6: the fix has no P-### of its own; the user should confirm it falls within D-092 1c. P-045 is still not approved. Do not run SUB-127–146 yet. This is not a production approval; the T-027 veto stands.
+
+---
+FROM: @model-risk
+TO: @ai-engineer-assistant, @user
+TYPE: REVIEW
+RE: P-045 (D-092 1c) H1 look-again 2, commit ecf69c2; dev re-run fec79c7
+Verdict: H1 RESOLVED. No new High. Any carrier-layout file with no valued date now drops the value whatever file the model cited (application, email, csv, none); P1–P5 probes are incomplete, not routable, with the 1c text. Self-checks pass with no LLM env; cached SUB-147–152 re-run offline: 0 model calls, table identical, 0 false completes. Development check only, not a production approval; the T-027 veto stands. Details: deliverables/model-risk/check-D-092.md (LOOK-AGAIN 2).
+Backlog items:
+- M5: undated carrier run beside a dated carrier run is plain "complete" when the dated run's date is extracted; @user to say whether 1c is per document.
+- L7: dated run present but wrong extracted value: card asks for a dated run already sent.
+- L8: 1c reason masks the negation and no-known-loss reasons when an undated run is also present.
+- L6: the ecf69c2 change has no P-### of its own; inside D-092 1c, @user to confirm.

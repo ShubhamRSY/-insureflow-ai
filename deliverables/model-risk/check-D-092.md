@@ -72,3 +72,40 @@
 
 ### Decision
 - P-045 (D-092 item 1): still not approved; H1 open. Do not run the pipeline on SUB-127–146 until it closes. This is a development check, not a production approval. The T-027 veto stands.
+
+## LOOK-AGAIN 2 — H1 (P-045 criterion c), commit ecf69c2; dev re-run fec79c7
+
+- Evidence: `git show HEAD~1 -- underwriting_pipeline/` (ecf69c2), `gate_loss_run`, `carrier_run_check` and the new P2–P5 self-checks, dev-SUB-147-152-D-092-cached.md at HEAD. Author messages not read.
+- Re-run (D-069, scratch copy of HEAD): `prepare.py` self-check with LLM_API_KEY, LLM_BASE_URL, LLM_MODEL unset: "prepare ok"; `workbench.py`: "workbench ok". `dev_p044_147.py` (DEV_TAG=mr-la2) with a copy of cache-D-091, placeholder key, outbound network denied (sandbox-exec): 0 model calls, 6 of 6 from cache, report identical to the committed one from line 4 on; 0 false completes. Repo git status unchanged apart from this file and DISCUSSION.md.
+- Code: after the accepted-run match, any file whose check is `no_date` now drops the value and sets the 1c reason naming that file, before the spreadsheet, letter and cited-source branches. `no_date` needs line 1 to be an exact carrier A/B/C header, so ordinary documents cannot trigger it.
+- Probes (stubbed model reply through `process_submission`; Carrier A layout with "Valued as of" removed unless stated):
+
+| Probe: model value, cited source | Status | Routable | Field |
+|---|---|---|---|
+| C0 control, dated run | complete | yes | 2026-09-30 accepted |
+| P1 2026-01-01, loss-runs.md | incomplete | no | missing, 1c reason (loss-runs.md) |
+| P2 2026-01-01, application.md | incomplete | no | missing, 1c reason |
+| P3 2026-01-01, no source | incomplete | no | missing, 1c reason |
+| P4 2026-08-31 from email "valued as of", email.md | incomplete | no | missing, 1c reason |
+| P5 2026-01-01, an sov.csv also holds that date | incomplete | no | missing, 1c reason (not the spreadsheet reason) |
+| P6 undated A + dated Carrier C run, value = C's date | complete | yes | accepted; nothing about the undated A run |
+| P7 undated A + dated C run, wrong value | incomplete | no | missing, 1c reason |
+| P8 undated A + no-known-loss letter, value from letter | incomplete | no | missing, 1c reason (NKL reason not shown) |
+| P9 undated A + negated C run ("Sample report") | incomplete | no | missing, 1c reason (negation reason not shown) |
+| P10 undated run as a scan (gate only) | — | — | value None, 1c reason (lr.jpg) |
+
+### H1: RESOLVED
+- Every look-again case (P1–P5) is now incomplete, not routable, and the card shows "loss run found but no valued-as-of date; ask the producer for a dated carrier loss run". Self-checks cover P2, P3, P4 and P5 and pass; the end-to-end undated case still passes; the cached dev table is unchanged.
+- No new High.
+
+### Medium / Low (one line each)
+- M5: a submission with an undated carrier run and a second, dated carrier run is plain "complete" when the model returns the dated run's date (P6); the undated run is not mentioned. This meets the closure test I set (no accepted run), but not a per-document reading of (c); the user should say which reading D-092 1c means. Not in the T-102 mix as planned.
+- L7: with a dated run present but a wrong extracted value (P7), the card asks the producer for a dated run they already sent; safe direction, misleading text.
+- L8: the 1c reason masks the more specific negation (P9) and no-known-loss (P8) reasons when an undated run is also present; status is still incomplete.
+- L4: closed (the report header now records ecf69c2, the code that produced it).
+- L6 extended: the ecf69c2 change also has no P-### of its own; it stays inside D-092 1c, and the user should confirm that reading.
+- M2, L1–L3 (D-092 check) unchanged; M2 still applies when no undated run is present.
+
+### Decision
+- P-045 (D-092 item 1): H1 closed; development check passed. Building and running SUB-127–146 may proceed under D-092 item 4.
+- This is a development check, not a production approval. An approved P-045 is not a production approval; the T-027 veto stands.
