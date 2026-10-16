@@ -1,55 +1,34 @@
 # Next session
 
-Written 2026-10-15 by the orchestrator at wrap-up.
+Written 2026-10-15 by the orchestrator at wrap-up. Wrap-up commit: `3b43cf3` on `ai-team`, pushed to `origin/ai-team` (private).
 
-- Last code commit: `19729a6` on `ai-team`. **Not yet pushed.** The wrap-up commit and push were blocked by the session's permission check; see "Before anything else" below.
 - Budget rule 8: demo blockers only (weekly limit resets 2026-10-17).
-- Standing rules: D-065, D-069. The frontend/ files are the user's and are never staged.
+- Standing rules: D-065, D-069. One AI session on this repo (D-090). The frontend/ files are the user's and are never staged.
 - **Run every pipeline command with `.venv/bin/python`.**
 - Model: qwen/qwen3.8-27b (P-039), `LLM_PACE_SECONDS=55`.
-- SUB-087–126 is development data. The next hold-out is SUB-127–146, scored by `eval_holdout_127.py`: commas set aside in addresses (D-088); status safety and status automation reported apart (B-325, D-089). No gold exists yet.
-
-## Before anything else
-
-1. Another session wrote to the repo at 12:15 on 2026-10-15 and was not confirmed here. It added:
-   - an @pm HANDOFF for T-101 at the end of `team/DISCUSSION.md`;
-   - T-101 "LOB expansion plan" in `team/TASKS.md`;
-   - `deliverables/pm/lob-expansion-plan.md`.
-
-   Those files are uncommitted. The user decides whether they stand (decisions only from this session).
-2. The uncommitted wrap-up files from this session:
-   - `team/BACKLOG.md` (B-329 to B-335) and `team/STANDUP.md`;
-   - this session's REVIEW entries at the end of `team/DISCUSSION.md`, mixed with the T-101 block;
-   - `deliverables/model-risk/check-P-042-P-043-B-324.md` (LOOK-AGAIN 2);
-   - `dev-SUB-107-126-D-089-final-qwen-qwen3-8-27b-cached.*`;
-   - screenshot `D-089-P-042-P-043-B-324-resolve-conflict.png`;
-   - this file.
+- SUB-087–126 is development data. The next hold-out is SUB-127–146, scored by `eval_holdout_127.py`: comma-blind addresses; status safety and status automation reported apart (B-325). No gold exists yet.
 
 ## Where we stopped
 
-- **D-089 built in the main session:**
-
-  | Commit | What it holds |
-  |---|---|
-  | `964c159` | P-042, P-043, B-324, B-325 |
-  | `3134328` | P-043 fix 1, plus the D-089 dev run |
-  | `19729a6` | P-043 fix 2 |
-
-  - **P-042:** the address check accepts "City TX" and "City, TX"; every address flag states its reason. @model-risk: passes.
-  - **B-324:** an open conflict blocks every send until the underwriter chooses or enters the value on the card. The choice is logged as a "resolve" row with the run hash; then the file is approved again. @model-risk: passes.
-  - **B-325:** the SUB-127–146 scorer reports status safety and status automation apart; committed before any gold. @model-risk: passes.
-  - **P-043:** @model-risk **REJECT three times; H1 still open** (B-329). Each fix made more texts go to review, but non-carrier sentences still read as carrier loss runs, e.g. "My policy was issued by Northline Mutual.". The code as built is safer than before P-043; it only sends more to review.
-  - @senior-underwriter UI: **APPROVE**, no High.
-- **Dev re-check SUB-107–126** (qwen; the replies were taken uncached and paced at 55 s at `964c159`, then re-scored with no model call on `19729a6`; `dev-SUB-107-126-D-089-final-...-cached.md`):
+- **D-090:**
+  - T-101 kept (user).
+  - **P-044** (replaces P-043; `1c2f02d`): a loss run is accepted automatically only in a recognised carrier A/B/C layout (`simulation/carrier-loss-run-formats.md`), and only its valued-as-of date. Anything else that looks like a loss run needs review: "not a recognised carrier loss run (<file>); check it or ask the producer for the carrier's loss run". P-043's sentence patterns are removed. P-040's letter rule stays.
+  - @model-risk: **APPROVE**, no High (`deliverables/model-risk/check-P-044.md`).
+  - @senior-underwriter UI: **APPROVE**, no High. Screenshot: `D-090-P-044-not-recognised-loss-run.png`.
+- **D-089 still in place:**
+  - P-042: address check with or without the comma, every flag with a reason.
+  - B-324: an open conflict is resolved on the card (logged with the run hash) before any send.
+  - B-325 scorer.
+- **Dev re-check SUB-107–126**, comma-blind 127 rules (cached qwen replies, no model call; `dev-SUB-107-126-D-090-commablind-qwen-qwen3-8-27b-cached.md`):
 
   | Measure | Result |
   |---|---|
   | Status safety | **0 false completes** |
-  | Status automation | 0 of 4 gold-complete files plain "complete" (none of the dev loss runs shows the carrier as issuer, so all go to review) |
-  | Silent error rate | 10.0% under the frozen 107 scorer; 15 of the 18 are comma-only premises differences. With commas set aside: 1.7% (`analysis/silent-errors-D-089.md`) |
-  | Automation rate | 52.8% |
+  | Status automation | **0 of 4**: no dev loss run is in a carrier A/B/C layout, so every one goes to review |
+  | Silent error rate | 1.7% (3/180) |
+  | Automation rate | 61.1% |
 
-  At `964c159`, before the P-043 fixes, status automation was 3 of 4, still with 0 false completes.
+  Fields: named 20, premises 15, effective date 18, operations 17, sales 18, TIV 19, construction 20, year built 17. Loss runs: 10 hits, 0 misses.
 - Self-checks at wrap-up (.venv, no host): all six ok.
 
 ## Approved, not built
@@ -63,28 +42,29 @@ Written 2026-10-15 by the orchestrator at wrap-up.
 
 ## Pending decisions for the user
 
-1. **P-043 approach (B-329).** Text patterns cannot prove who issued a document, and three rounds have not closed @model-risk's H1. Options:
-   - (a) every loss-run date needs review unless the document is a recognised carrier format: safe, and status automation stays near 0 until carriers send structured runs;
-   - (b) keep tightening patterns (more rounds);
-   - (c) accept the current rule with H1 as a known limit, which needs @model-risk to agree.
-2. Confirm or discard the other session's T-101 work.
-3. The P-041 to P-043 trade-off: 0 false completes, but status automation 0 of 4 on dev.
+1. **B-337:** the P-044 accept path has never run on a real file, a PDF, or OCR text. Decide whether @producer adds carrier A/B/C loss runs to a dev file (and as PDF/scan) before the hold-out.
+2. The hold-out SUB-127–146 mix: carrier-format loss runs (typed, PDF, scanned) on the complete files, plus carrier_c and senior_referral routes.
+3. B-336 (skip "_" lines only before the header): a small P-044 follow-up, if wanted.
 
 ## Open vetoes and what resolves each
 
 | Task | Holder | Resolves when |
 |---|---|---|
-| T-027 | @model-risk (production) | P-043 H1 closed; then the SUB-127–146 hold-out (gold first, checked .venv, `smoke_readers.py` first, scored once) with all 9 fields at 9/10 or better and 0 false completes |
+| T-027 | @model-risk (production) | The SUB-127–146 hold-out: gold first, checked .venv, `smoke_readers.py` first, scored once, paced; all 9 fields at 9/10 or better, 0 false completes |
 | T-082 | @responsible-ai (fairness) | As written in its veto message in `team/DISCUSSION.md` |
 
 ## First 3 tasks next session
 
-1. The user commits and pushes the wrap-up files (or allows it), and decides the T-101 files.
-2. The user decides the P-043 approach. Build it, @model-risk checks it, then a cached re-score of SUB-107–126 (no model call) for status safety and automation.
-3. The hold-out SUB-127–146: @producer builds it, with carrier-issued loss-run headers, carrier_c and senior_referral routes; @senior-underwriter writes the gold first; the run is scored once, paced.
+1. User decides B-337. If yes, a cached re-score proves the accept path on a carrier-format dev file, including a PDF and a scan.
+2. Hold-out SUB-127–146:
+   - `smoke_readers.py` first;
+   - @producer builds it, with carrier A/B/C loss runs per `simulation/carrier-loss-run-formats.md`;
+   - @senior-underwriter writes the gold first, complete or incomplete only;
+   - the run is scored once, paced, by `eval_holdout_127.py`.
+3. Backlog Mediums from D-089/D-090 card wording (B-334, B-339).
 
 ## For the AI Engineer
 
-- Pending proposals: none drafted. P-043 needs your decision on the approach (B-329).
-- Latest scores (dev SUB-107–126, qwen, `19729a6`): 0 false completes; status automation 0 of 4; silent error rate 1.7% with commas set aside (10% as scored by the frozen 107 scorer); automation rate 52.8%.
-- Top failure to fix next: decide the P-043 approach. It is the open High, and it blocks status automation.
+- Pending proposals: none. P-044 approved and built (D-090).
+- Latest scores (dev SUB-107–126, comma-blind): 0 false completes, status automation 0 of 4, silent error rate 1.7%, automation rate 61.1%.
+- Top failure to fix next: no file reaches plain "complete", because no dev loss run is in a carrier format. Prove the P-044 accept path on carrier-format files, including PDF and OCR (B-337).
