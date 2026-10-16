@@ -1,0 +1,73 @@
+# Hold-out extraction score — SUB-127 through SUB-146
+
+- Author: @ai-engineer-assistant
+- 9 of 9 extracted fields scored; claims not read; loss runs = date only.
+- Commit: 15265d474721358af35a9476d0046ba3fe64967e.
+- Scored by @model-risk with this file unchanged after the gold answers were written.
+- A null that matches a missing gold line is not_credited. It is not a correct answer.
+- Correctly flagged for human means the documents disagree and the AI stored both sides without picking one. It is not a hit and not a miss.
+- Synthetic. Not a production approval.
+
+## Per-field
+
+| Field | Hit | Hit (needs review) | Miss | Not credited | Correctly flagged for human | Call failed |
+|---|---|---|---|---|---|---|
+| named_insured | 20 | 0 | 0 | 0 | 0 | 0 |
+| premises | 17 | 0 | 3 | 0 | 0 | 0 |
+| effective_date | 17 | 1 | 2 | 0 | 0 | 0 |
+| operations | 12 | 0 | 8 | 0 | 0 | 0 |
+| sales | 17 | 1 | 2 | 0 | 0 | 0 |
+| tiv | 17 | 0 | 3 | 0 | 0 | 0 |
+| construction | 17 | 0 | 3 | 0 | 0 | 0 |
+| year_built | 16 | 0 | 4 | 0 | 0 | 0 |
+| loss_runs | 5 | 0 | 3 | 12 | 0 | 0 |
+| conflict | 16 | 0 | 3 | 0 | 1 | 0 |
+| status | 17 | 1 | 2 | 0 | 0 | 0 |
+
+## Status safety and status automation (B-325)
+
+- False completes (plain "complete" on a gold-incomplete file): **0** (none). Critical: must be 0.
+- Status automation: 4 of 6 gold-complete files shown as plain "complete". "complete — review pending" is safe but not automated.
+- Failed calls, left out of both: 0.
+
+## Per submission
+
+- SUB-127 (typed md app, typed text-layer PDF Carrier A loss run, csv schedule, email): extracted name Cedar Bend Financial Advisors LLC. Misses: operations. Flagged: none. Call: called: reply used.
+- SUB-128 (typed md app, typed md Carrier A no-claims loss run, csv schedule, email): extracted name Prairie Hill Candle & Gift Co LLC. Misses: none. Flagged: none. Call: called: reply used.
+- SUB-129 (scanned JPG app, image-only PDF Carrier A loss run, csv schedule, email contradicting the app on sales): extracted name Brazos Electrical Supply Inc. Misses: construction, premises, loss_runs, conflict. Flagged: none. Call: called: reply used.
+- SUB-130 (typed md app, typed text-layer PDF Carrier B loss run, csv schedule, email): extracted name Harbor Lane Cafe LLC. Misses: none. Flagged: none. Call: called: reply used.
+- SUB-131 (typed md app, JPG scan of Carrier B loss run, csv schedule with a different sq ft, email): extracted name Ruiz & Pope Plumbing Co LLC. Misses: loss_runs. Flagged: conflict. Call: called: reply used.
+- SUB-132 (typed md app, typed md Carrier B loss run, csv schedule, email): extracted name Sweet Tea & Biscuit Co LLC. Misses: operations, status. Flagged: none. Call: called: reply used.
+- SUB-133 (typed md app, rotated JPG scan of Carrier C loss run, csv schedule, email): extracted name Canyon Oaks Apartments LP. Misses: operations, loss_runs, status. Flagged: none. Call: called: reply used.
+- SUB-134 (typed md app, typed text-layer PDF Carrier C loss run, csv schedule, email): extracted name Bayou Glass & Mirror Works LLC. Misses: none. Flagged: none. Call: called: reply used.
+- SUB-135 (typed md app, English owner letter, csv schedule, email): extracted name Lone Oak Thrift & Books LLC. Misses: operations. Flagged: none. Call: called: reply used.
+- SUB-136 (typed md app, Spanish owner letter, csv schedule, email): extracted name Taqueria La Esquina LLC. Misses: operations. Flagged: none. Call: called: reply used.
+- SUB-137 (typed md app, owner-typed note with a copied carrier header, csv schedule, email): extracted name Northline Heating & Air LLC. Misses: none. Flagged: none. Call: called: reply used.
+- SUB-138 (typed md app, producer agency summary (not a carrier run), csv schedule, email): extracted name Pecan Grove Feed & Seed Co LLC. Misses: none. Flagged: none. Call: called: reply used.
+- SUB-139 (typed md app, carrier five-year summary in its own layout, csv schedule, email): extracted name Azalea Court Apartments LLC. Misses: none. Flagged: none. Call: called: reply used.
+- SUB-140 (typed md app, Carrier B layout missing its valuation line, csv 2-location schedule, email): extracted name Smokehouse Row BBQ Co LLC. Misses: year_built, conflict. Flagged: none. Call: called: reply used.
+- SUB-141 (typed md app, csv schedule, email, no loss run): extracted name Ember and Oak Kitchen & Bar LLC. Misses: operations. Flagged: none. Call: called: reply used.
+- SUB-142 (email only): extracted name Alamo Roof & Gutter Pros LLC. Misses: effective_date, sales, construction, year_built, premises, tiv. Flagged: none. Call: called: reply used.
+- SUB-143 (Spanish email only): extracted name Sol y Luna Boutique. Misses: effective_date, operations, sales, construction, year_built, tiv. Flagged: none. Call: called: reply used.
+- SUB-144 (scanned JPG app (2 locations), csv schedule, email, no loss run): extracted name Westgate Pediatric Therapy PLLC. Misses: year_built, premises, tiv, conflict. Flagged: none. Call: called: reply used.
+- SUB-145 (typed md app, 3-location csv schedule, email, no loss run): extracted name Lakeview Gardens Partners LP. Misses: none. Flagged: none. Call: called: reply used.
+- SUB-146 (duplicate: typed md app resent, csv schedule, email, no loss run): extracted name Ember and Oak Kitchen & Bar LLC. Misses: operations. Flagged: none. Call: called: reply used.
+
+## Silent error rate and automation rate (D-084)
+
+silent error: a value is shown, it is wrong, and it is not flagged needs review or in an open conflict; automation: the value is correct and not flagged. An empty field counts as flagged (it shows as missing). Rates are over scored field values; files whose call failed are left out and counted apart (D-084).
+
+Files with a failed call, not in the rates: 0.
+
+| Field | Scored | Silent errors | Silent error rate | Automated | Automation rate |
+|---|---|---|---|---|---|
+| named_insured | 20 | 0 | 0.0 | 20 | 1.0 |
+| premises | 20 | 0 | 0.0 | 17 | 0.85 |
+| effective_date | 20 | 0 | 0.0 | 16 | 0.8 |
+| operations | 20 | 7 | 0.35 | 12 | 0.6 |
+| sales | 20 | 0 | 0.0 | 16 | 0.8 |
+| tiv | 20 | 0 | 0.0 | 16 | 0.8 |
+| construction | 20 | 0 | 0.0 | 15 | 0.75 |
+| year_built | 20 | 0 | 0.0 | 15 | 0.75 |
+| loss_runs | 20 | 0 | 0.0 | 5 | 0.25 |
+| overall | 180 | 7 | 0.039 | 132 | 0.733 |

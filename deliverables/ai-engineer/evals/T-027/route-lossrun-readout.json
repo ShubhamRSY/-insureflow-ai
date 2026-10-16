@@ -1,0 +1,353 @@
+[
+  {
+    "sid": "SUB-127",
+    "status": "complete",
+    "gold_status": "complete",
+    "route": "carrier_a",
+    "route_note": "",
+    "gold_route": "carrier_a",
+    "loss_run_field": {
+      "value": "2026-09-30",
+      "needs_review": false,
+      "reason": null
+    },
+    "gold_loss_run": "2026-09-30 accepted",
+    "per_doc": {
+      "loss-runs.pdf": "accept"
+    },
+    "posts": 1
+  },
+  {
+    "sid": "SUB-128",
+    "status": "complete",
+    "gold_status": "complete",
+    "route": "carrier_a",
+    "route_note": "",
+    "gold_route": "carrier_a",
+    "loss_run_field": {
+      "value": "2026-09-30",
+      "needs_review": false,
+      "reason": null
+    },
+    "gold_loss_run": "2026-09-30 accepted",
+    "per_doc": {
+      "loss-runs.md": "accept"
+    },
+    "posts": 1
+  },
+  {
+    "sid": "SUB-129",
+    "status": "incomplete",
+    "gold_status": "complete \u2014 review pending",
+    "route": "hold",
+    "route_note": "missing information",
+    "gold_route": "hold",
+    "loss_run_field": {
+      "value": null,
+      "needs_review": true,
+      "reason": "loss run found but no valued-as-of date; ask the producer for a dated carrier loss run (loss-runs.pdf)"
+    },
+    "gold_loss_run": "needs review \u2014 loss run from scan/spreadsheet: check it",
+    "per_doc": {
+      "application.jpg": "review: loss run from scan/spreadsheet: check it (application.jpg)",
+      "loss-runs.pdf": "review: loss run from scan/spreadsheet: check it (loss-runs.pdf)"
+    },
+    "posts": 1
+  },
+  {
+    "sid": "SUB-130",
+    "status": "complete",
+    "gold_status": "complete",
+    "route": "carrier_b",
+    "route_note": "3 clean years not checked",
+    "gold_route": "carrier_b",
+    "loss_run_field": {
+      "value": "2026-09-30",
+      "needs_review": false,
+      "reason": null
+    },
+    "gold_loss_run": "2026-09-30 accepted",
+    "per_doc": {
+      "loss-runs.pdf": "accept"
+    },
+    "posts": 1
+  },
+  {
+    "sid": "SUB-131",
+    "status": "incomplete",
+    "gold_status": "complete \u2014 review pending",
+    "route": "hold",
+    "route_note": "missing information",
+    "gold_route": "hold",
+    "loss_run_field": {
+      "value": null,
+      "needs_review": true,
+      "reason": "loss run found but no valued-as-of date; ask the producer for a dated carrier loss run (loss-runs.jpg)"
+    },
+    "gold_loss_run": "needs review \u2014 loss run from scan/spreadsheet: check it",
+    "per_doc": {
+      "loss-runs.jpg": "review: loss run from scan/spreadsheet: check it (loss-runs.jpg)"
+    },
+    "posts": 1
+  },
+  {
+    "sid": "SUB-132",
+    "status": "incomplete",
+    "gold_status": "complete",
+    "route": "hold",
+    "route_note": "missing information",
+    "gold_route": "carrier_b",
+    "loss_run_field": {
+      "value": "2026-09-30",
+      "needs_review": false,
+      "reason": null
+    },
+    "gold_loss_run": "2026-09-30 accepted",
+    "per_doc": {
+      "loss-runs.md": "accept"
+    },
+    "posts": 1
+  },
+  {
+    "sid": "SUB-133",
+    "status": "incomplete",
+    "gold_status": "complete \u2014 review pending",
+    "route": "hold",
+    "route_note": "missing information",
+    "gold_route": "carrier_c",
+    "loss_run_field": {
+      "value": null,
+      "needs_review": true,
+      "reason": "loss run found but no valued-as-of date; ask the producer for a dated carrier loss run (loss-runs.jpg)"
+    },
+    "gold_loss_run": "needs review \u2014 loss run from scan/spreadsheet: check it",
+    "per_doc": {
+      "loss-runs.jpg": "review: loss run from scan/spreadsheet: check it (loss-runs.jpg)"
+    },
+    "posts": 1
+  },
+  {
+    "sid": "SUB-134",
+    "status": "complete",
+    "gold_status": "complete",
+    "route": "no_match",
+    "route_note": "readable class on no carrier list; a restaurant needs generic evidence (restaurant, food service, kitchen, eatery, caf\u00e9, catering or stated cooking equipment), never a cuisine word (D-078)",
+    "gold_route": "carrier_c",
+    "loss_run_field": {
+      "value": "2026-09-30",
+      "needs_review": false,
+      "reason": null
+    },
+    "gold_loss_run": "2026-09-30 accepted",
+    "per_doc": {
+      "loss-runs.pdf": "accept"
+    },
+    "posts": 1
+  },
+  {
+    "sid": "SUB-135",
+    "status": "incomplete",
+    "gold_status": "incomplete",
+    "route": "hold",
+    "route_note": "missing information",
+    "gold_route": "hold",
+    "loss_run_field": {
+      "value": null,
+      "needs_review": true,
+      "reason": null
+    },
+    "gold_loss_run": "missing \u2014 a no-known-loss letter is not a loss run (P-040)",
+    "per_doc": {
+      "loss-runs.md": "review: not a recognised carrier loss run (loss-runs.md); check it or ask the producer for the carrier's loss run"
+    },
+    "posts": 1
+  },
+  {
+    "sid": "SUB-136",
+    "status": "incomplete",
+    "gold_status": "incomplete",
+    "route": "hold",
+    "route_note": "missing information",
+    "gold_route": "hold",
+    "loss_run_field": {
+      "value": null,
+      "needs_review": true,
+      "reason": null
+    },
+    "gold_loss_run": "missing \u2014 a no-known-loss letter is not a loss run (P-040)",
+    "per_doc": {
+      "loss-runs.md": "review: not a recognised carrier loss run (loss-runs.md); check it or ask the producer for the carrier's loss run"
+    },
+    "posts": 1
+  },
+  {
+    "sid": "SUB-137",
+    "status": "incomplete",
+    "gold_status": "incomplete",
+    "route": "hold",
+    "route_note": "missing information",
+    "gold_route": "hold",
+    "loss_run_field": {
+      "value": null,
+      "needs_review": true,
+      "reason": "loss run found but no valued-as-of date; ask the producer for a dated carrier loss run (loss-runs.md)"
+    },
+    "gold_loss_run": "missing \u2014 loss run found but no valued-as-of date; ask the producer for a dated carrier loss run",
+    "per_doc": {
+      "loss-runs.md": "review: loss run found but no valued-as-of date; ask the producer for a dated carrier loss run (loss-runs.md)"
+    },
+    "posts": 1
+  },
+  {
+    "sid": "SUB-138",
+    "status": "incomplete",
+    "gold_status": "incomplete",
+    "route": "hold",
+    "route_note": "missing information",
+    "gold_route": "hold",
+    "loss_run_field": {
+      "value": null,
+      "needs_review": true,
+      "reason": null
+    },
+    "gold_loss_run": "needs review \u2014 not a recognised carrier loss run",
+    "per_doc": {
+      "loss-runs.md": "review: not a recognised carrier loss run (loss-runs.md); check it or ask the producer for the carrier's loss run"
+    },
+    "posts": 1
+  },
+  {
+    "sid": "SUB-139",
+    "status": "incomplete",
+    "gold_status": "incomplete",
+    "route": "hold",
+    "route_note": "missing information",
+    "gold_route": "no_match",
+    "loss_run_field": {
+      "value": null,
+      "needs_review": true,
+      "reason": null
+    },
+    "gold_loss_run": "needs review \u2014 not a recognised carrier loss run",
+    "per_doc": {
+      "loss-runs.md": "review: loss run found but no valued-as-of date; ask the producer for a dated carrier loss run (loss-runs.md)"
+    },
+    "posts": 1
+  },
+  {
+    "sid": "SUB-140",
+    "status": "incomplete",
+    "gold_status": "incomplete",
+    "route": "hold",
+    "route_note": "missing information",
+    "gold_route": "hold",
+    "loss_run_field": {
+      "value": null,
+      "needs_review": true,
+      "reason": "loss run found but no valued-as-of date; ask the producer for a dated carrier loss run (loss-runs.md)"
+    },
+    "gold_loss_run": "missing \u2014 loss run found but no valued-as-of date; ask the producer for a dated carrier loss run",
+    "per_doc": {
+      "loss-runs.md": "review: loss run found but no valued-as-of date; ask the producer for a dated carrier loss run (loss-runs.md)"
+    },
+    "posts": 1
+  },
+  {
+    "sid": "SUB-141",
+    "status": "incomplete",
+    "gold_status": "incomplete",
+    "route": "hold",
+    "route_note": "missing information",
+    "gold_route": "senior_referral",
+    "loss_run_field": {
+      "value": null,
+      "needs_review": true,
+      "reason": null
+    },
+    "gold_loss_run": "missing \u2014 no loss run provided",
+    "per_doc": {},
+    "posts": 1
+  },
+  {
+    "sid": "SUB-142",
+    "status": "incomplete",
+    "gold_status": "incomplete",
+    "route": "hold",
+    "route_note": "missing information",
+    "gold_route": "hold",
+    "loss_run_field": {
+      "value": null,
+      "needs_review": true,
+      "reason": null
+    },
+    "gold_loss_run": "missing \u2014 no loss run provided",
+    "per_doc": {},
+    "posts": 1
+  },
+  {
+    "sid": "SUB-143",
+    "status": "incomplete",
+    "gold_status": "incomplete",
+    "route": "hold",
+    "route_note": "missing information",
+    "gold_route": "hold",
+    "loss_run_field": {
+      "value": null,
+      "needs_review": true,
+      "reason": null
+    },
+    "gold_loss_run": "missing \u2014 no loss run provided",
+    "per_doc": {},
+    "posts": 1
+  },
+  {
+    "sid": "SUB-144",
+    "status": "incomplete",
+    "gold_status": "incomplete",
+    "route": "hold",
+    "route_note": "missing information",
+    "gold_route": "hold",
+    "loss_run_field": {
+      "value": null,
+      "needs_review": true,
+      "reason": null
+    },
+    "gold_loss_run": "missing \u2014 no loss run provided",
+    "per_doc": {
+      "application.jpg": "review: loss run from scan/spreadsheet: check it (application.jpg)"
+    },
+    "posts": 1
+  },
+  {
+    "sid": "SUB-145",
+    "status": "incomplete",
+    "gold_status": "incomplete",
+    "route": "hold",
+    "route_note": "missing information",
+    "gold_route": "hold",
+    "loss_run_field": {
+      "value": null,
+      "needs_review": true,
+      "reason": null
+    },
+    "gold_loss_run": "missing \u2014 no loss run provided",
+    "per_doc": {},
+    "posts": 2
+  },
+  {
+    "sid": "SUB-146",
+    "status": "incomplete",
+    "gold_status": "incomplete",
+    "route": "hold",
+    "route_note": "missing information",
+    "gold_route": "senior_referral",
+    "loss_run_field": {
+      "value": null,
+      "needs_review": true,
+      "reason": null
+    },
+    "gold_loss_run": "missing \u2014 no loss run provided",
+    "per_doc": {},
+    "posts": 1
+  }
+]

@@ -1,0 +1,162 @@
+{
+  "posts": 1,
+  "report": {
+    "complete": true,
+    "missing": [],
+    "request": null,
+    "conflicts": [],
+    "extra": [],
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Harbor Lane Cafe LLC",
+        "source": "application.md",
+        "start": 139,
+        "end": 174,
+        "confidence": 1.0,
+        "model_confidence": 1.0,
+        "ocr_cited_confidence": null,
+        "needs_review": false,
+        "reason": null,
+        "quote": "Named insured: Harbor Lane Cafe LLC"
+      },
+      {
+        "field_id": "premises_address",
+        "value": "5010 Ocean Dr, Corpus Christi, TX 78412",
+        "source": "application.md",
+        "start": 209,
+        "end": 266,
+        "confidence": 1.0,
+        "model_confidence": 1.0,
+        "ocr_cited_confidence": null,
+        "needs_review": false,
+        "reason": null,
+        "quote": "Premises address: 5010 Ocean Dr, Corpus Christi, TX 78412",
+        "address_check": "ok"
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-01-01",
+        "source": "application.md",
+        "start": 267,
+        "end": 293,
+        "confidence": 1.0,
+        "model_confidence": 1.0,
+        "ocr_cited_confidence": null,
+        "needs_review": false,
+        "reason": null,
+        "quote": "Effective date: 2027-01-01"
+      },
+      {
+        "field_id": "operations",
+        "value": "Breakfast and lunch cafe, 64 seats, beer and wine only, no liquor license. Dine-in and takeout.",
+        "source": "application.md",
+        "start": 427,
+        "end": 534,
+        "confidence": 1.0,
+        "model_confidence": 1.0,
+        "ocr_cited_confidence": null,
+        "needs_review": false,
+        "reason": null,
+        "quote": "Operations: Breakfast and lunch cafe, 64 seats, beer and wine only, no liquor license. Dine-in and takeout."
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "1120000",
+        "source": "application.md",
+        "start": 559,
+        "end": 583,
+        "confidence": 1.0,
+        "model_confidence": 1.0,
+        "ocr_cited_confidence": null,
+        "needs_review": false,
+        "reason": null,
+        "quote": "Annual sales: $1,120,000"
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "520000",
+        "source": "application.md",
+        "start": 584,
+        "end": 606,
+        "confidence": 1.0,
+        "model_confidence": 1.0,
+        "ocr_cited_confidence": null,
+        "needs_review": false,
+        "reason": null,
+        "quote": "Building TIV: $520,000"
+      },
+      {
+        "field_id": "construction",
+        "value": "Masonry",
+        "source": "application.md",
+        "start": 666,
+        "end": 687,
+        "confidence": 1.0,
+        "model_confidence": 1.0,
+        "ocr_cited_confidence": null,
+        "needs_review": false,
+        "reason": null,
+        "quote": "Construction: Masonry"
+      },
+      {
+        "field_id": "year_built",
+        "value": "1991",
+        "source": "application.md",
+        "start": 688,
+        "end": 704,
+        "confidence": 1.0,
+        "model_confidence": 1.0,
+        "ocr_cited_confidence": null,
+        "needs_review": false,
+        "reason": null,
+        "quote": "Year built: 1991"
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-09-30",
+        "source": "loss-runs.pdf",
+        "start": 224,
+        "end": 250,
+        "confidence": 1.0,
+        "model_confidence": 1.0,
+        "ocr_cited_confidence": null,
+        "needs_review": false,
+        "reason": null,
+        "quote": "Valuation date: 2026-09-30"
+      }
+    ],
+    "folder": "SUB-130",
+    "sprinklers": "yes",
+    "cooking": {
+      "equipment": {
+        "state": "not_stated",
+        "terms": [],
+        "source": null,
+        "start": null,
+        "end": null,
+        "quote": null
+      },
+      "hood_suppression": {
+        "state": "not_stated",
+        "terms": [],
+        "source": null,
+        "start": null,
+        "end": null,
+        "quote": null
+      }
+    },
+    "needs_human": [],
+    "unread": [],
+    "locations": [],
+    "error": null,
+    "model_version": "qwen/qwen3.8-27b",
+    "prompt_version": "a7413a9c72b0",
+    "ocr_settings": "tesseract psm6; osd turn; deskew +-12; rule lift; x2 lanczos; pdf 200dpi; fill in image mode",
+    "host": "api.groq.com",
+    "temperature": 0,
+    "cache_key": "1dbdeb669970b6aa623ae614838f26c0518807223f065818312aa6d1939ea6af",
+    "status": "complete",
+    "status_reason": null
+  }
+}

@@ -1,0 +1,261 @@
+{
+  "posts": 1,
+  "report": {
+    "complete": false,
+    "missing": [
+      "premises_address",
+      "tiv_building",
+      "year_built",
+      "loss_run_valued_through"
+    ],
+    "request": "Submission SUB-144\nNothing has been declined. Nothing has been bound.\n\nMissing:\n- premises address\n- building limit\n- year built\n- currently valued carrier loss runs (a no-known-loss letter does not count)\n\nThese fields disagree across documents. Both values are stored as data, not only in this email:\n- premises_address\n- tiv_building\n- construction\n- year_built\n",
+    "conflicts": [
+      {
+        "field": "premises_address",
+        "values": [
+          {
+            "value": "2801 N Mays St, Round Rock, TX 78664",
+            "source": "application.jpg",
+            "start": 161,
+            "end": 210,
+            "quote": "2801 N Mays St, Round Rock, TX 78664 (location 1)",
+            "needs_review": false,
+            "reason": null,
+            "confidence": 0.91
+          },
+          {
+            "value": "1250 Cypress Creek Rd, Cedar Park, TX 78613",
+            "source": "application.jpg",
+            "start": 212,
+            "end": 268,
+            "quote": "1250 Cypress Creek Rd, Cedar Park, TX 78613 (location 2)",
+            "needs_review": false,
+            "reason": null,
+            "confidence": 0.95
+          }
+        ],
+        "resolution": "unresolved",
+        "resolved_value": null,
+        "resolved_by": null
+      },
+      {
+        "field": "tiv_building",
+        "values": [
+          {
+            "value": "740000",
+            "source": "application.jpg",
+            "start": 677,
+            "end": 696,
+            "quote": "$740,000 Jocation 1",
+            "needs_review": true,
+            "reason": "Low-confidence scan read \u2014 check against the page",
+            "confidence": 0.67
+          },
+          {
+            "value": "410000",
+            "source": "application.jpg",
+            "start": 698,
+            "end": 717,
+            "quote": "$410,000 location 2",
+            "needs_review": true,
+            "reason": "Low-confidence scan read \u2014 check against the page",
+            "confidence": 0.72
+          }
+        ],
+        "resolution": "unresolved",
+        "resolved_value": null,
+        "resolved_by": null
+      },
+      {
+        "field": "construction",
+        "values": [
+          {
+            "value": "Masonry",
+            "source": "application.jpg",
+            "start": 832,
+            "end": 847,
+            "quote": "Masonry (loc 1)",
+            "needs_review": false,
+            "reason": null,
+            "confidence": 0.9
+          },
+          {
+            "value": "Joisted masonry",
+            "source": "application.jpg",
+            "start": 849,
+            "end": 872,
+            "quote": "Joisted masonry (loc 2)",
+            "needs_review": false,
+            "reason": null,
+            "confidence": 0.9
+          }
+        ],
+        "resolution": "unresolved",
+        "resolved_value": null,
+        "resolved_by": null
+      },
+      {
+        "field": "year_built",
+        "values": [
+          {
+            "value": "2002",
+            "source": "application.jpg",
+            "start": 887,
+            "end": 900,
+            "quote": "2002 (loe LL)",
+            "needs_review": true,
+            "reason": "number or date read from a scan",
+            "confidence": 0.93
+          },
+          {
+            "value": "2015",
+            "source": "application.jpg",
+            "start": 902,
+            "end": 914,
+            "quote": "2015 (Loe 2)",
+            "needs_review": true,
+            "reason": "number or date read from a scan",
+            "confidence": 0.75
+          }
+        ],
+        "resolution": "unresolved",
+        "resolved_value": null,
+        "resolved_by": null
+      }
+    ],
+    "extra": [],
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Westgate Pediatric Therapy PLLC",
+        "source": "application.jpg",
+        "start": 58,
+        "end": 104,
+        "confidence": 0.95,
+        "model_confidence": 1.0,
+        "ocr_cited_confidence": 0.95,
+        "needs_review": false,
+        "reason": null,
+        "quote": "Named insured: Westgate Pediatric Therapy PLLC"
+      },
+      {
+        "field_id": "premises_address",
+        "value": null,
+        "start": null,
+        "end": null,
+        "source": null,
+        "confidence": 0.0,
+        "needs_review": true
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-03-15",
+        "source": "application.jpg",
+        "start": 270,
+        "end": 296,
+        "confidence": 0.96,
+        "model_confidence": 1.0,
+        "ocr_cited_confidence": 0.96,
+        "needs_review": true,
+        "reason": "number or date read from a scan",
+        "quote": "Effective date: 2027-03-15"
+      },
+      {
+        "field_id": "operations",
+        "value": "outpatient pediatric physical and speech therapy",
+        "source": "application.jpg",
+        "start": 452,
+        "end": 513,
+        "confidence": 0.95,
+        "model_confidence": 1.0,
+        "ocr_cited_confidence": 0.95,
+        "needs_review": false,
+        "reason": null,
+        "quote": "Operations: outpatient pediatric physical and speech therapy."
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "1850000",
+        "source": "application.jpg",
+        "start": 603,
+        "end": 661,
+        "confidence": 0.84,
+        "model_confidence": 1.0,
+        "ocr_cited_confidence": 0.84,
+        "needs_review": true,
+        "reason": "number or date read from a scan",
+        "quote": "Annual sales (gross fees, prior year): $1,850,000 combined"
+      },
+      {
+        "field_id": "tiv_building",
+        "value": null,
+        "start": null,
+        "end": null,
+        "source": null,
+        "confidence": 0.0,
+        "needs_review": true
+      },
+      {
+        "field_id": "construction",
+        "value": "Joisted masonry",
+        "source": "application.jpg",
+        "start": 849,
+        "end": 864,
+        "confidence": 0.9,
+        "needs_review": false,
+        "reason": null,
+        "quote": "Joisted masonry"
+      },
+      {
+        "field_id": "year_built",
+        "value": null,
+        "start": null,
+        "end": null,
+        "source": null,
+        "confidence": 0.0,
+        "needs_review": true
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "start": null,
+        "end": null,
+        "source": null,
+        "confidence": 0.0,
+        "needs_review": true
+      }
+    ],
+    "folder": "SUB-144",
+    "sprinklers": "yes",
+    "cooking": {
+      "equipment": {
+        "state": "not_stated",
+        "terms": [],
+        "source": null,
+        "start": null,
+        "end": null,
+        "quote": null
+      },
+      "hood_suppression": {
+        "state": "not_stated",
+        "terms": [],
+        "source": null,
+        "start": null,
+        "end": null,
+        "quote": null
+      }
+    },
+    "needs_human": [],
+    "unread": [],
+    "locations": [],
+    "error": null,
+    "model_version": "qwen/qwen3.8-27b",
+    "prompt_version": "a7413a9c72b0",
+    "ocr_settings": "tesseract psm6; osd turn; deskew +-12; rule lift; x2 lanczos; pdf 200dpi; fill in image mode",
+    "host": "api.groq.com",
+    "temperature": 0,
+    "cache_key": "8e69c6f56caa9929e596747db8bf041d8ca149cb3a472263b2d774716ffa51fd",
+    "status": "incomplete",
+    "status_reason": null
+  }
+}

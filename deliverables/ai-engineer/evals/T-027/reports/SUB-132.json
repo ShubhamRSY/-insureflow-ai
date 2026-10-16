@@ -1,0 +1,164 @@
+{
+  "posts": 1,
+  "report": {
+    "complete": false,
+    "missing": [],
+    "request": "Submission SUB-132\nNothing has been declined. Nothing has been bound.\n\nAlso send:\n- liquor sales\n",
+    "conflicts": [],
+    "extra": [
+      "liquor sales"
+    ],
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Sweet Tea & Biscuit Co LLC",
+        "source": "application.md",
+        "start": 139,
+        "end": 180,
+        "confidence": 1.0,
+        "model_confidence": 1.0,
+        "ocr_cited_confidence": null,
+        "needs_review": false,
+        "reason": null,
+        "quote": "Named insured: Sweet Tea & Biscuit Co LLC"
+      },
+      {
+        "field_id": "premises_address",
+        "value": "1407 Broadway St, San Antonio, TX 78215",
+        "source": "application.md",
+        "start": 215,
+        "end": 272,
+        "confidence": 1.0,
+        "model_confidence": 1.0,
+        "ocr_cited_confidence": null,
+        "needs_review": false,
+        "reason": null,
+        "quote": "Premises address: 1407 Broadway St, San Antonio, TX 78215",
+        "address_check": "ok"
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-03-01",
+        "source": "application.md",
+        "start": 273,
+        "end": 299,
+        "confidence": 1.0,
+        "model_confidence": 1.0,
+        "ocr_cited_confidence": null,
+        "needs_review": false,
+        "reason": null,
+        "quote": "Effective date: 2027-03-01"
+      },
+      {
+        "field_id": "operations",
+        "value": "Southern breakfast and lunch restaurant",
+        "source": "application.md",
+        "start": 432,
+        "end": 535,
+        "confidence": 1.0,
+        "model_confidence": 1.0,
+        "ocr_cited_confidence": null,
+        "needs_review": false,
+        "reason": null,
+        "quote": "Operations: Southern breakfast and lunch restaurant, 90 seats, beer and wine only, dine-in and takeout."
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "1380000",
+        "source": "application.md",
+        "start": 560,
+        "end": 584,
+        "confidence": 1.0,
+        "model_confidence": 1.0,
+        "ocr_cited_confidence": null,
+        "needs_review": false,
+        "reason": null,
+        "quote": "Annual sales: $1,380,000"
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "680000",
+        "source": "application.md",
+        "start": 585,
+        "end": 607,
+        "confidence": 1.0,
+        "model_confidence": 1.0,
+        "ocr_cited_confidence": null,
+        "needs_review": false,
+        "reason": null,
+        "quote": "Building TIV: $680,000"
+      },
+      {
+        "field_id": "construction",
+        "value": "Joisted masonry",
+        "source": "application.md",
+        "start": 667,
+        "end": 696,
+        "confidence": 1.0,
+        "model_confidence": 1.0,
+        "ocr_cited_confidence": null,
+        "needs_review": false,
+        "reason": null,
+        "quote": "Construction: Joisted masonry"
+      },
+      {
+        "field_id": "year_built",
+        "value": "1952",
+        "source": "application.md",
+        "start": 697,
+        "end": 713,
+        "confidence": 1.0,
+        "model_confidence": 1.0,
+        "ocr_cited_confidence": null,
+        "needs_review": false,
+        "reason": null,
+        "quote": "Year built: 1952"
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-09-30",
+        "source": "loss-runs.md",
+        "start": 230,
+        "end": 256,
+        "confidence": 1.0,
+        "model_confidence": 1.0,
+        "ocr_cited_confidence": null,
+        "needs_review": false,
+        "reason": null,
+        "quote": "Valuation date: 2026-09-30"
+      }
+    ],
+    "folder": "SUB-132",
+    "sprinklers": "yes",
+    "cooking": {
+      "equipment": {
+        "state": "not_stated",
+        "terms": [],
+        "source": null,
+        "start": null,
+        "end": null,
+        "quote": null
+      },
+      "hood_suppression": {
+        "state": "not_stated",
+        "terms": [],
+        "source": null,
+        "start": null,
+        "end": null,
+        "quote": null
+      }
+    },
+    "needs_human": [],
+    "unread": [],
+    "locations": [],
+    "error": null,
+    "model_version": "qwen/qwen3.8-27b",
+    "prompt_version": "a7413a9c72b0",
+    "ocr_settings": "tesseract psm6; osd turn; deskew +-12; rule lift; x2 lanczos; pdf 200dpi; fill in image mode",
+    "host": "api.groq.com",
+    "temperature": 0,
+    "cache_key": "f52717a8c96793f6d30b9ca90e9e5aa572bbefbe5f8f59b7255375fee4364d7c",
+    "status": "incomplete",
+    "status_reason": null
+  }
+}
