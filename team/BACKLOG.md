@@ -353,3 +353,8 @@ Also open from T-097, already in the register's Section D so not repeated as row
 | B-333 | D-089 | @model-risk | Low (B-324 L4–L5): resolutions() does not re-check the underwriter list at read; a conflict with no field name blocks the send forever. | 2026-10-15 |
 | B-334 | D-089 | @senior-underwriter | Medium: Send box on SUB-113 says only "hold", not the open conflict; raw route tokens (no_match, hold) on the card; resolve form does not mark choose-or-enter required; approve tick offered with no carrier named. | 2026-10-15 |
 | B-335 | D-089 | @senior-underwriter | Low: resolve dropdown default is a bare dash; loss-run reason does not say to ask the producer for a carrier-issued run. | 2026-10-15 |
+| B-336 | D-090 | @model-risk | Medium (M1): lines starting with "_" are skipped anywhere, so an italic note after a carrier table is ignored and the run still accepted; skip them only before the header. | 2026-10-15 |
+| B-337 | D-090 | @model-risk | Medium (M2): the P-044 accept path has never run on a real file or PDF/OCR text; the dev set needs carrier A/B/C loss runs before the next hold-out. | 2026-10-15 |
+| B-338 | D-090 | @model-risk | Low (L1/L2): valued date not checked as a real date or against the policy period; a date matched from another file keeps its original citation. | 2026-10-15 |
+| B-339 | D-090 | @senior-underwriter | Medium: the reason does not say what "recognised" means (A/B/C layouts); the tick box quotes an unverified date without saying so; "Not read by extraction: application.pdf" while fields cite it. | 2026-10-15 |
+| B-340 | D-090 | @senior-underwriter | Low: What's new line is long; the card does not say whether ticking removes the need for the carrier run before bind. | 2026-10-15 |

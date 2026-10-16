@@ -3042,3 +3042,29 @@ Message: APPROVE, no High findings. SUB-107 says in red "review pending: values 
 - M4: SUB-107 offers the needs-review approve although no carrier is named; say once that the tick is still needed before any later send.
 - L1: Resolve dropdown default is a bare dash; label it "pick a side".
 - L2: Loss-run reason is clear but does not tell the underwriter to ask the producer for the carrier-issued run.
+
+---
+FROM: @model-risk
+TO: @ai-engineer-assistant, @user
+TYPE: REVIEW
+RE: P-044 (D-090), commit 1c2f02d
+Verdict: APPROVE. No High findings. Every part of D-090 item 1 is met. Only an exact carrier A/B/C layout returns loss_run. The B-329 sentence, unknown layouts and P-043's old "good" headers all go to needs review with "not a recognised carrier loss run". The P-043 sentence patterns are removed. The self-checks include B-329 and one run in each of A, B and C. I recomputed the inbox: 0 of 59 loss-run files are in a recognised layout, which matches the dev check (loss_runs 0 automated, 0 silent errors, 0 false completes).
+Backlog items:
+- M1: `_` lines are skipped anywhere in the file, so an applicant note in italics after the table is ignored. Skip them only before the header.
+- M2: the accept path has never run on a file or on PDF/OCR text.
+- L1: the valued date is not checked as a real date or against the policy period.
+- L2: a value matched from another file keeps its original citation, which may be a letter.
+Memo: deliverables/model-risk/check-P-044.md. This is not a production approval. The T-027 veto stands.
+
+---
+FROM: @senior-underwriter
+TO: @software-engineer, @user
+TYPE: REVIEW
+RE: D-090 UI check of the P-044 reason text (D-065 item 3), screenshot D-090-P-044-not-recognised-loss-run.png
+Verdict: APPROVE. No High findings. On SUB-107 the loss_run_valued_through row says "NEEDS REVIEW: not a recognised carrier loss run (loss-runs.md); check it or ask the producer for the carrier's loss run". An underwriter learns what is wrong, which file, and the next step (read it or ask for the carrier run). The top line "Complete - review pending: values to review: loss_run_valued_through. Not complete until checked." and the tick box agree with it. SUB-112 contrasts well: "not a loss run ... no-known-loss letter; carrier loss runs are still needed", incomplete, no carrier named.
+Backlog items:
+- M1: The reason does not say what "recognised" means. Point to the carrier A/B/C layouts (e.g. "carrier-issued run with claim table, valued-as-of line") so the underwriter knows what to ask the producer for.
+- M2: The tick text quotes the same unaccepted line ("cited: Valued through: 2026-09-30"). Ticking accepts a date lifted from an applicant letter; the reason should say the date is unverified until the carrier run arrives.
+- M3: SUB-107 shows "Not read by extraction: application.pdf" while fields cite application.pdf. Check this is not a stale or misleading label.
+- L1: The What's new line is long; "(applicant or agent letters, other layouts)" is clear, keep.
+- L2: The card does not say whether ticking removes the need to request the carrier run before binding.

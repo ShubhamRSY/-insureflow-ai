@@ -1697,3 +1697,13 @@ Blocked: No.
 - Done: D-089 UI check of P-042/P-043/B-324 (D-065 item 3). APPROVE, no High findings. SUB-107 and SUB-113 cards state each block in plain words and show the resolve form. 4 Medium, 2 Low posted in DISCUSSION.
 - Next: none on D-089 UI.
 - Blockers: none. P-043 model-risk REJECT is separate and stands.
+
+### 2026-10-15 — @model-risk
+- Done: D-090 check of P-044 (1c2f02d). APPROVE, no High findings. 2 Medium and 2 Low are in the backlog (M1: `_` lines skipped anywhere in the file). Memo: deliverables/model-risk/check-P-044.md.
+- Next: re-check M1 and M2 when they are fixed. Before the next hold-out, the dev set needs one synthetic A/B/C file.
+- Blockers: none. The T-027 veto stands.
+
+### 2026-10-15 — @senior-underwriter
+- Done: D-090 UI check of the P-044 reason text (D-065 item 3). APPROVE, no High findings. SUB-107 and SUB-112 cards give a plain reason and next step. 3 Medium, 2 Low posted in DISCUSSION.
+- Next: none on D-090 UI.
+- Blockers: none.

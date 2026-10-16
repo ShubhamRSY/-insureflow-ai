@@ -8,6 +8,7 @@ Run: LLM_CACHE_DIR=<empty dir> DEV_TAG=D-083 .venv/bin/python deliverables/ai-en
 """
 import json
 import os
+import re
 import sys
 import time
 from pathlib import Path
@@ -15,7 +16,10 @@ from pathlib import Path
 os.environ.setdefault("LLM_MAX_WAIT", "1800")
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "underwriting_pipeline" / "ai"))
-import eval_holdout_107 as scorer  # noqa: E402
+import importlib  # noqa: E402
+
+scorer = importlib.import_module(os.environ.get("DEV_SCORER") or "eval_holdout_107")  # D-090 item 2: DEV_SCORER=eval_holdout_127 for the comma-blind rules
+scorer.IDS = [f"SUB-{n:03d}" for n in range(107, 127)]  # the dev set, whichever scorer's rules
 import llm_extract  # noqa: E402
 import prepare  # noqa: E402
 import regression_dev  # noqa: E402
@@ -85,8 +89,8 @@ data["status_split"] = {"false_complete": len(false_c), "false_complete_ids": fa
                         "statuses": {r["submission"]: r.get("system_status") for r in data["submissions"]}}
 scorer.OUT_JSON.write_text(json.dumps(data, indent=2) + "\n")
 split = data["status_split"]
-md = scorer.OUT_MD.read_text().replace("# Hold-out extraction score — SUB-107 through SUB-126",
-                                       f"# DEVELOPMENT CHECK — SUB-107 through SUB-126 ({TAG}), not a hold-out score", 1)
+md = re.sub(r"# Hold-out extraction score — SUB-1\d\d through SUB-1\d\d", "# Hold-out extraction score — SUB-107 through SUB-126", scorer.OUT_MD.read_text()).replace("# Hold-out extraction score — SUB-107 through SUB-126",
+                                       f"# DEVELOPMENT CHECK — SUB-107 through SUB-126 ({TAG}, rules of {scorer.__name__}), not a hold-out score", 1)
 md = md.replace("- Scored by @model-risk with this file unchanged after the gold answers were written.",
                 "- Development data since D-088: the gold was seen while the code changed. Not a hold-out.", 1)
 md += ("\n## Status safety and status automation (D-089 item 6, B-325 rule; computed here, the frozen scorer is unchanged)\n\n"
