@@ -18,7 +18,7 @@ import llm_extract  # noqa: E402
 import prepare  # noqa: E402
 import regression_dev  # noqa: E402
 
-IDS = [f"SUB-{n}" for n in range(147, 153)]
+IDS = [f"SUB-{n}" for n in range(147, int(os.environ.get("DEV_LAST") or 152) + 1)]  # D-093: DEV_LAST=153 adds the P-046 file
 GOLD = ROOT / "deliverables" / "senior-underwriter" / "gold-set"
 OUT = ROOT / "deliverables" / "ai-engineer" / "evals" / f"dev-SUB-147-152-{os.environ.get('DEV_TAG') or 'D-091'}"  # D-092: a tagged re-run never overwrites D-091
 
