@@ -1707,3 +1707,8 @@ Blocked: No.
 - Done: D-090 UI check of the P-044 reason text (D-065 item 3). APPROVE, no High findings. SUB-107 and SUB-112 cards give a plain reason and next step. 3 Medium, 2 Low posted in DISCUSSION.
 - Next: none on D-090 UI.
 - Blockers: none.
+
+### 2026-10-15 — @senior-underwriter
+- Done: D-091 gold for dev files SUB-147 to SUB-152, written by hand before any extraction. Accept: 147 (A pdf), 148 (B scan), 149 (C) = 2026-09-30, complete. Review: 150 (applicant letter), 151 (B, no valuation date), 152 (unknown layout) = not a recognised carrier loss run, complete - review pending.
+- Next: none from me; the run is the next step.
+- Blockers: none. Note for @model-risk: 150 to 152 have Status incomplete (no usable carrier-verified loss run) while the pipeline is expected at complete - review pending (B-325).

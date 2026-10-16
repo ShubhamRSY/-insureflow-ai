@@ -1012,3 +1012,14 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: built in the main session (budget rule 3). Orchestrator's reading: P-040's letter rule (no-known-loss letters dropped, the field stays missing) stays; P-044 replaces only P-043's issuer test. Item 2 scores the dev set with eval_holdout_127's rules (no SUB-127 gold exists; the 127 scorer file is not edited).
 - Status: ACCEPTED
 - Amends: D-089 P-043 (replaced); B-329 closed by this decision. Not a production approval; T-027 veto stands. No send is authorized.
+
+## D-091 — B-337: prove the P-044 accept path on dev files SUB-147–152; SUB-127–146 mix planned first; carrier-format risk logged
+- Date / Owner: 2026-10-15 / @user
+- Context: D-090 dev re-check: 0 of 4 complete because no dev loss run is in a carrier layout; @model-risk M2 (B-337).
+- Options considered: none. The user's words.
+- Decision: In the user's words. "B-337 decision: yes, dev set only (never SUB-127–146). 1. @producer: create dev files SUB-147–152 (synthetic): accept cases: carrier A loss run (typed PDF), carrier B (greyscale scan), carrier C (xlsx or typed text); reject cases: applicant letter copying the carrier A header, carrier B loss run with no valued-as-of date, unknown carrier layout. Each has a gold file written first: expected loss-run date or "needs review" with reason, and expected status. 2. Run the pipeline on SUB-147–152 with qwen, paced. Report per file: accepted or review, reason, status, and whether any file reaches plain "complete" with 0 false completes. 3. Before any hold-out files exist, write the SUB-127–146 plan into team/TASKS.md: how many files have carrier-format loss runs vs non-carrier vs none, and which formats (PDF/scan/xlsx). @model-risk approves the mix. Do not create SUB-127–146 yet. 4. Log in RISKS.md: carrier layouts are synthetic and a copied header could pass; production needs each real carrier's format and a source check. @model-risk check, High only."
+- Rationale: The user typed this in this Claude Code session on 2026-10-15.
+- Dissent: none
+- Follow-up tasks: @producer builds SUB-147–152; @senior-underwriter writes their gold first (gold is the senior underwriter's job under the protocol); the run is a development check (process_submission only, temp cache, no drafts or outboxes written); plan and risk entry written in the main session; one @model-risk check.
+- Status: ACCEPTED
+- Amends: none. B-337 closed by this decision. Not a production approval; T-027 veto stands.
