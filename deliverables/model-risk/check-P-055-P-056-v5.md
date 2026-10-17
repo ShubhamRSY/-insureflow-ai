@@ -105,3 +105,18 @@ Backlog (one line each):
 - v5 L4: "Live music: no live music" and "No: live music" still hit "live music". Contrived; gold reviewer to watch.
 
 This is a scorer check, not a production approval. The T-027 veto and the P-056 scope question for @user are unchanged.
+
+## Third look-again, D-104 (2026-10-17): P-056 M1 and v5 H3, High only
+
+- Read: `git diff -- llm_extract.py` (uncommitted: `_RANGE`, its use in `_quote_dates`, six new self-check lines), the D-104 section of `p-056-as-built.md`, `ops_items_hit` in `eval_holdout_v5.py` (committed in fd93be4). Ran `--self-check` for `llm_extract.py`, v5 and v4: all ok. `git diff HEAD -- eval_holdout_v4.py` is empty: v4 still frozen. Probes in memory only (old `llm_extract.py` at fd93be4^, HEAD and the working tree side by side), no model call, nothing written but this section and the two team logs.
+
+| Item | Verdict |
+|---|---|
+| A. P-056 M1, range regression | **CLOSED.** "3/15/2026-3/15/2027", "03/15/2026-03/15/2027", "3/15/26 – 3/15/27", "3/15/26-3/15/27", "15.03.2026-15.03.2027", "13/3/2026-13/3/2027", a trailing period or comma, and a three-date chain all read both dates again, matching the pre-P-056 parser where it read them. The P-056 (a) guard holds ("Ref 123/1/27" none; "Ref 12/1/2026-3/1/27/5" only the first date, flagged). A range given as a date *value* still does not parse (two days), which is safe. Five range forms are in the self-check |
+| B. scorer v5 H3 | **CLOSED.** Rule 1 is built as written (line 153: the rest of the run's own clause is non-empty and only no/none/n/0). The six probes are self-check misses and "Beer and wine only, no liquor" is a self-check hit for "beer and wine only; no liquor". Extra probes also miss: "Live music - No.", "Live music—no", "Live music / no", "Live music - N", "Live music - n/a", "Live music - NO". Positives still hit. v5 can be used for new gold once the other gold rules are met |
+
+No new High. Backlog (one line each):
+- P-056 L5: an all-hyphen range "3-15-2026-3-15-2027" and a half range "3/15/2026-3/15" still read no date (the old parser read them). Safe direction: the field is left for review. None in `simulation/inbox`.
+- v5 M2: "Live music - none at all" and "Live music not" still hit "live music" (a wrong answer credited, but a free-text form no document holds today). Gold reviewer to watch; next scorer version, not v5 after gold exists.
+
+This is a check of the fix and the scorer, not a production approval. The T-027 veto stands.

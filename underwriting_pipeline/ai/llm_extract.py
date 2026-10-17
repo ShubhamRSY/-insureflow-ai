@@ -311,6 +311,7 @@ SOFT_FIELDS = ("operations", "construction")
 _NUM = re.compile(r"(?<![\d.,])\d[\d,]*(?:\.\d+)?(?:\s?(?:mm|[kmb])\b)?", re.I)
 _DATE_SHAPE = re.compile(r"\d{4}-\d{2}-\d{2}|\d{1,2}/\d{1,2}/\d{2,4}")
 _DATES = re.compile(r"\d{4}-\d{2}-\d{2}|(?<![\d/.-])\d{1,2}[/.-]\d{1,2}[/.-](?:\d{4}|\d{2})(?![\d/.-]\d)|[A-Za-z]{3,9}\.?\s+\d{1,2}(?:st|nd|rd|th)?,?\s+\d{4}|\d{1,2}(?:st|nd|rd|th)?\s+[A-Za-z]{3,9}\.?,?\s+\d{4}")
+_RANGE = re.compile(r"(\d{1,2}([/.])\d{1,2}\2\d{2,4})\s*[-–—]\s*(?=\d{1,2}([/.])\d{1,2}\3\d{2,4}(?!\d))")  # P-056 M1: "3/15/2026-3/15/2027"
 REASON_DATE_ORDER = "date read month first (US order): check the month and day"  # P-056 (a)
 REASON_QUOTE = "quote not found in {}"
 REASON_VALUE = "value not inside the cited text"
@@ -349,7 +350,7 @@ def _quote_dates(quote: str, unsure: set | None = None) -> set:
     import datetime
 
     found = set()
-    for match in _DATES.finditer(quote):
+    for match in _DATES.finditer(_RANGE.sub(r"\1 ", quote)):  # a policy-period range is two dates
         raw = match.group(0)
         try:
             if re.fullmatch(r"\d{4}-\d{2}-\d{2}", raw):
@@ -1468,6 +1469,13 @@ if __name__ == "__main__":
         assert row["value"] == "2027-03-01" and row["reason"] == REASON_DATE_ORDER, (value, row)
     assert not one("effective_date", "2027-03-13", "Eff 3/13/27", "Eff 3/13/27")["needs_review"], "a date read one way only is not flagged"
     assert one("effective_date", "2027-03-01", "Ref 123/1/27", "Ref 123/1/27")["value"] is None, "digits before the day: not a date"
+    import datetime
+
+    for period in ("3/15/2026-3/15/2027", "03/15/2026-03/15/2027", "3/15/26 – 3/15/27", "3/15/26-3/15/27", "3/15/2026 - 3/15/2027"):  # P-056 M1
+        quote = f"Policy period: {period}"
+        assert one("effective_date", "2026-03-15", quote, quote)["value"] == "2026-03-15", period
+        assert _quote_dates(period) == {datetime.date(2026, 3, 15), datetime.date(2027, 3, 15)}, period
+    assert _quote_dates("Ref 12/1/2026-3/1/27/5") == {datetime.date(2026, 12, 1)}, "a range does not open a longer digit chain"
     # P-056 (b): one low word flags the field; a low average still drops it
     ocr = [["Operations:", 0.9], ["Restaurant,", 0.9], ["dine-in", 0.85], ["and", 0.9], ["takeout", 0.29]]
     row = one("operations", "Restaurant, dine-in and takeout", "Operations: Restaurant, dine-in and takeout", "Operations: Restaurant, dine-in and takeout", conf=0.85, scan=0.56, words=ocr)

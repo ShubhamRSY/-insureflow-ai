@@ -50,3 +50,8 @@ Review flags on values across SUB-127–153 after the change: 1 operations-missi
 - **Code review (D-097):** a scan reason no longer hides the date-order or reword reason ("number or date read from a scan; date read month first (US order)..."); `location_sides` needs a "(loc 1)", so loc 2 is never promoted to the premises.
 - **v5 H2:** see `eval_holdout_v5.py` change 9: an item's words must appear together and in order.
 - Dev counts re-run after these changes: identical to the table above (SUB-127–146 and 147–153).
+
+## D-104 (2026-10-17)
+
+- **(b) clarification, inside P-056, no new P-###:** numbers and dates keep the drop test on the lowest score of their own words, and a date scores every word of its quote. This is stricter than the (b) text, so @user ruled it a clarification within P-056 (b).
+- **M1 regression fixed inside P-056:** a policy-period range joined by a hyphen or dash ("3/15/2026-3/15/2027", "03/15/2026-03/15/2027", "3/15/26-3/15/27") reads as two dates again. `_RANGE` in `llm_extract.py` turns the dash between two slash or dot dates into a space before `_DATES` runs; the P-056 (a) look-arounds are unchanged. Self-checks: the five range forms, including "3/15/26 – 3/15/27", and "Ref 12/1/2026-3/1/27/5" (only the first date). No file in `simulation/inbox` has a joined range, so no dev count can change; no re-score run.

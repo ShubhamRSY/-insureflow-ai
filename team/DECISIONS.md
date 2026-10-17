@@ -1156,3 +1156,14 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: P-055 revision 2 (not built; email-only stays in scope because it is not in the user's list); P-056 built in the main session (budget rule 3), as-built `deliverables/ai-engineer/p-056-as-built.md`; (a) also reads an ambiguous day/month month first with a review flag (P-016 D2 had refused such dates); scorer v5 `eval_holdout_v5.py` and the checklist section of `operations-gold-rule.md`; B-397; `.claude/commands/wrap-up.md` item 2; @model-risk check.
 - Status: ACCEPTED
 - Amends: D-020 (one exception: next hold-out 20 + 12); P-016 D2 (ambiguous dates read month first, flagged); D-094/D-097 scoring (v5 for new gold, v4 frozen). Not a production approval; T-027 veto stands.
+
+## D-104 — P-055 wording (M1–M3, email-only out of scope); P-056 (b) clarification; P-056 range regression fix; @model-risk look-again on v5 H3
+- Date / Owner: 2026-10-17 / @user
+- Context: team/NEXT-SESSION.md after D-103 (pending decisions 1–4); `deliverables/model-risk/check-P-055-P-056-v5.md`.
+- Options considered: none. The user's words.
+: In the user's words (pasted). "1. P-055 wording: Non-English: a document is non-English when its common non-English words outnumber its common English words; names and addresses don't count; when unsure → manual intake. Application not identifiable (incl. email-only files) → whole file to manual intake. A file matching several criteria counts under each for detection testing, once in totals; the card lists every reason. Update the proposal, then show me the final text for "approve change P-055". 2. P-056 (b): record as a clarification within P-056 (stricter only), no new P-###. 3. Fix the policy-period range regression ("3/15/2026-3/15/2027" and "3/15/26 – 3/15/27") inside P-056; self-checks. 4. @model-risk look-again on scorer v5's "Live music - no" fix. @model-risk check items 3 and 4, High only. /wrap-up and push ai-team only."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-17 (D-032).
+- Dissent: none
+- Follow-up tasks: P-055 revision 3 (email-only files now out of scope, criterion 4; @model-risk L1 added, stricter only); not approved, not built. P-056 (b) narrowing recorded in `p-056-as-built.md`. Range fix `_RANGE` in `llm_extract.py` with self-checks. @model-risk look-again on items 3 and 4.
+- Status: ACCEPTED
+- Amends: D-103 (email-only files were in scope; now out). Not a production approval; T-027 veto stands.
