@@ -1785,3 +1785,6 @@ Blocked: No.
 - 2026-10-17 @model-risk: D-104 third look-again (check-P-055-P-056-v5.md). P-056 M1 range regression CLOSED; scorer v5 H3 CLOSED; v4 frozen; no new High; backlog P-056 L5, v5 M2. Not a production approval; T-027 veto stands.
 
 - 2026-10-17 @ai-engineer-assistant: T-104a built (P-055 rev 3, D-105): scope-v1 detector, manual_intake status, card, refusals, self-checks, inventory C-4, p-055-as-built.md. 0 model calls. T-104a IN_REVIEW.
+
+
+- 2026-10-17 @senior-underwriter: T-104 gold second rewrite (D-107; replaces my earlier entry): documents changed in SUB-175, 177, 179, 182, 184, 185, 186, 187, 203 re-read and gold updated; other 23 folders diffed, unchanged. 20 in scope, 12 out (criterion 1: 4, 2: 5, 3: 4, 4: 2; two-criteria 3). In-scope status: complete 7, complete review pending 2 (174, 175), incomplete 11. Routes: carrier_a 2 (179, 184), senior_referral 15, no_match 3. Open calls in T-104-gold-summary.md. Nothing run. Not committed.

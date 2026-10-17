@@ -1,0 +1,3 @@
+source,loc,address,city,zip,bldg_tiv,construction,year_built,sq_ft,sprinklers,cooking
+FICTIONAL,1,2210 Rellis Pkwy,Bryan,77807,520000,Non-combustible,2001,18000,Yes,
+FICTIONAL,2,611 E 29th St,College Station,77840,275000,Joisted Masonry,1986,6400,Yes,

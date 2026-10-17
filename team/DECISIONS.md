@@ -1178,3 +1178,25 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: T-104a detector build (@ai-engineer-assistant); @model-risk check; @senior-underwriter UI check; T-104 hold-out files (@producer) and gold (@senior-underwriter), not run.
 - Status: ACCEPTED
 - Amends: P-055 revision 3 (L1 accepted; criterion 4 now has at least 2 hold-out files). Not a production approval; T-027 veto stands.
+
+## D-106 — Merges from the user's other terminal adopted (PR #9, PR #10)
+- Date / Owner: 2026-10-17 / @user
+- Context: ai-team gained 048b29d, 9693913 (PR #10 feat/senior-test-and-frontend-roles), d3e7fc9 and 3e39917 (PR #9 feat/dev-testing-environments), made by the user in another terminal and pushed to origin/ai-team.
+- Options considered: none. The user's words.
+- Decision: In the user's words, typed in this session: "there has been changes in between i did on other terminal adapt that and continue". Adopted: roles @frontend-engineer and @senior-test-engineer (agents, .cursor rules, protocol rights table and roster, CLAUDE.md budget rule 4: sonnet); docker-compose.dev/testing.yml and .env.dev/.testing.example (placeholders only, checked).
+- Rationale: The user typed this in this Claude Code session on 2026-10-17 (D-045/D-054: decisions from another tool count once the user confirms them here).
+- Dissent: none
+- Follow-up tasks: none now. B-388 (the two roles) closed by this adoption. underwriting_pipeline/ is unchanged since the T-104a freeze 1cf001f (checked by git diff), so the freeze holds.
+- Status: ACCEPTED
+- Amends: D-099 item on 5ceeef8 (the roles were not accepted then; accepted now via PR #10). Not a production approval; T-027 veto stands.
+
+## D-107 — T-104: rebuild in-scope loss runs in carrier formats; replace SUB-199
+- Date / Owner: 2026-10-17 / @user
+- Context: @senior-underwriter T-104 gold summary: no typed loss run in a Carrier A/B/C layout, so all 20 in-scope files are gold-incomplete (no carrier_a, no false-complete test); SUB-199 scope unclear (locations only in the email).
+- Options considered: rebuild then freeze; freeze as is; stop. SUB-199: replace with a clear C2 file; out of scope; in scope.
+- Decision: The user chose "Rebuild then freeze" and "Replace with a clear C2 file" in this session. The email-only-locations case goes to the backlog as a P-055 wording question.
+- Rationale: The user's answers in this Claude Code session on 2026-10-17. Nothing has been run on T-104, so the set is still clean.
+- Dissent: none
+- Follow-up tasks: @producer rebuilds in-scope loss runs and SUB-199; @senior-underwriter rewrites the affected gold; freeze, commit, record the hash.
+- Status: ACCEPTED
+- Amends: none. Not a production approval; T-027 veto stands.

@@ -1619,7 +1619,7 @@ D-004 (user, 2026-10-09): Sanger & Altgelt agency pipeline. Eight steps. No auto
 - Output: code in underwriting_pipeline/, deliverables/ai-engineer/p-055-as-built.md
 
 ### T-104 — Hold-out (P-055): 20 in scope + 12 out of scope, gold only
-- Owner: @producer (files), @senior-underwriter (gold) · Status: BLOCKED on T-104a review (no High) and code freeze · Decision: D-105
+- Owner: @producer (files), @senior-underwriter (gold) · Status: GOLD FROZEN, NOT RUN (code 1cf001f) · Decision: D-105, D-107
 - Acceptance criteria:
   - [ ] Mix per P-055 "Next hold-out": 20 in scope with at least 6 boundary cases; 12 out of scope with at least 4 per criterion 1–3, at least 3 two-criteria files, a near-pass form per criterion, and at least 2 email-only / application-not-identified files (criterion 4).
   - [ ] Gold from documents and written rules only, scope label in every gold file, D-102 conventions ("not in documents"; hold is a status, never a route), operations checklist for scorer v5.
