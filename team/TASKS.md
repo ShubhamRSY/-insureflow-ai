@@ -1607,3 +1607,20 @@ D-004 (user, 2026-10-09): Sanger & Altgelt agency pipeline. Eight steps. No auto
   - [ ] Gold is written from the documents only by @senior-underwriter (not by anyone who changed the code), committed and frozen before any extraction. smoke_readers.py passes first. .venv python, paced, scorer v2, run and scored once on a frozen commit (T-027 path: all 9 fields 9/10 or better, 0 false completes). Live and cache outputs kept apart (B-363).
 - Output: simulation/inbox/SUB-154 … SUB-173, deliverables/senior-underwriter/gold-set/SUB-154.md … SUB-173.md
 - Notes: D-095 item 3. Plan only. 2026-10-16, @model-risk: APPROVED WITH CONDITIONS (deliverables/model-risk/check-P-048.md): (1) file 8 states its commodities are not hazardous; (2) file 11 states a TIV; (3) one non-carrier run is a JPG scan of an applicant note under a copied carrier header (probe M1; which non-carrier slot it replaces is settled with @model-risk before any file is built); (4) build only after P-048 H1 is closed. Not built; the user decides when.
+
+### T-104a — P-055 out-of-scope detector and manual-intake card
+- Owner: @ai-engineer-assistant · Status: IN_REVIEW · Decision: D-105 (approve change P-055 rev 3)
+- Acceptance criteria:
+  - [ ] Deterministic detector, no model call, versioned and entered in deliverables/model-risk/model-inventory.md (Tier 2) before use.
+  - [ ] Criteria 1–4 exactly as in deliverables/pm/proposal-P-055.md; fail closed (error, unsure language count, unknown text layer, no identifiable application → manual intake).
+  - [ ] An out-of-scope file is manual intake as a whole file: no field shown complete, no status complete / complete — review pending, no carrier, provisional or suggested route, no automated missing-info draft, send blocked with the reason. extraction_failed keeps precedence (D-021).
+  - [ ] Workbench card lists every matched reason in plain language; send refusal shows the reason (D-065); What's new line; screenshot under deliverables/software-engineer/screenshots/ (temp copy, D-069).
+  - [ ] Self-checks on dev files incl. SUB-142/143 (email-only, Spanish), a SUB-170-style scanned application, a SUB-172-style multi-location file, and in-scope boundary cases (scanned loss run + typed application, Spanish email beside English application, one-row schedule, mailing address). pyright on changed files.
+- Output: code in underwriting_pipeline/, deliverables/ai-engineer/p-055-as-built.md
+
+### T-104 — Hold-out (P-055): 20 in scope + 12 out of scope, gold only
+- Owner: @producer (files), @senior-underwriter (gold) · Status: BLOCKED on T-104a review (no High) and code freeze · Decision: D-105
+- Acceptance criteria:
+  - [ ] Mix per P-055 "Next hold-out": 20 in scope with at least 6 boundary cases; 12 out of scope with at least 4 per criterion 1–3, at least 3 two-criteria files, a near-pass form per criterion, and at least 2 email-only / application-not-identified files (criterion 4).
+  - [ ] Gold from documents and written rules only, scope label in every gold file, D-102 conventions ("not in documents"; hold is a status, never a route), operations checklist for scorer v5.
+  - [ ] Gold frozen and committed, hash recorded. The pipeline is not run on T-104.

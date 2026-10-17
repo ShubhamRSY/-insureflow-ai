@@ -73,7 +73,7 @@ def confirm_problem(report: dict) -> str:
     from workbench import PROHIBITED, VACANT, _has, _ops, match
 
     if report.get("status") in prepare.REFUSED_STATUSES:
-        return f"this file's status is {report.get('status')}"
+        return f"this file's status is {prepare.status_refusal(report)}"
     route = match(report)["route"]
     if route != "senior_referral":
         return f"the carrier match is {route}; a market confirm is only for a senior referral"
@@ -253,6 +253,8 @@ def build_package(submission: str, carrier_override: str = "", override_reason: 
     """
     submission = (submission or "").strip()
     report = reviewed(submission)
+    if report.get("status") == prepare.MANUAL_INTAKE:  # P-055: no package for a manual-intake file, whatever was edited into it
+        raise ValueError(f"no package: this file's status is {prepare.status_refusal(report)}")
     empty = [r["field_id"] for r in report["fields"] if not (r.get("value") or "").strip()]
     if empty:
         raise ValueError(f"required field empty: {', '.join(empty)}")
@@ -363,6 +365,8 @@ def agency_problem(target) -> str:
         return "extraction failed on this file"
     if status == "all_values_rejected":
         return "every value on this file was rejected"
+    if status == prepare.MANUAL_INTAKE:
+        return f"this file is {prepare.status_refusal(report)}: outside the pilot scope, a person reads it"
     if report.get("needs_human"):
         return "an unread page is still on the file"
     if conflict_problem(report):
@@ -436,7 +440,7 @@ def send_to_carrier(
     report = prepare.read_saved_run(submission)  # G2: no file, hash differs, or unknown status -> refuse
     status = report.get("status")
     if status in prepare.REFUSED_STATUSES:
-        raise ValueError(f"this file's status is {status}; it cannot be sent, for any actor including the user")
+        raise ValueError(f"this file's status is {prepare.status_refusal(report)}; it cannot be sent, for any actor including the user")
     problem = prepare.manifest_problem(submission)  # P-020 (D-062): the input documents are the ones extracted, every actor
     if problem:
         raise ValueError(problem)
@@ -556,6 +560,27 @@ if __name__ == "__main__":
                         pass
                 assert agency_problem(sub), f"agency_problem must refuse {status}"
                 assert agency_problem(prepare.read_saved_run(sub)), "and must refuse from the saved run dict"
+
+            # P-055 (D-105): a manual-intake file is refused for every actor with its reasons, even if every field was filled in by hand.
+            save(ext, "SUB-103", prepare.MANUAL_INTAKE, complete=True, fields=office, sprinklers="no")
+            raw_mi = json.loads((ext / "SUB-103.json").read_text())
+            raw_mi["scope"] = prepare.scope.detect([{"name": "application.jpg", "text": "", "needs_human": True}])
+            raw_mi["saved_hash"] = prepare.hash_payload(raw_mi)
+            (ext / "SUB-103.json").write_text(json.dumps(raw_mi))
+            for actor in ("user", "@account-manager", "ai-engineer-assistant"):
+                try:
+                    send_to_carrier("SUB-103", actor, dest_dir, reason="ready", user_line=LINE("SUB-103"))
+                    raise SystemExit(f"manual intake must be refused for {actor}")
+                except ValueError as exc:
+                    assert "manual intake (scanned application" in str(exc), exc
+            assert "manual intake (scanned application" in agency_problem("SUB-103")
+            assert "manual intake" in confirm_problem(reviewed("SUB-103"))
+            try:
+                build_package("SUB-103")
+                raise SystemExit("no package for a manual-intake file")
+            except ValueError as exc:
+                assert "manual intake" in str(exc), exc
+            assert not list(dest_dir.iterdir()), "nothing was sent"
 
             # T-071 (2): nothing saved, a changed hash, and an unknown status all refuse.
             try:

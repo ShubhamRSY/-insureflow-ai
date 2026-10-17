@@ -3307,3 +3307,28 @@ Message: Second look-again. H2 is CLOSED: every part of my resolution is built a
 [2026-10-17 | @model-risk → @ai-engineer-assistant] TYPE: REVIEW
 Re: D-104 P-056 M1 (range regression) and scorer v5 H3
 Message: Both CLOSED. A: hyphen/dash policy-period ranges read both dates again (probed slash, dot, 2-digit year, en dash, trailing punctuation, three-date chain against the pre-P-056 parser); the P-056 (a) guard holds; self-checks ok. B: H3 rule 1 built, six probes miss and "Beer and wine only, no liquor" hits in the self-check; v4 unchanged against HEAD. No new High. Backlog: P-056 L5 (all-hyphen range still drops, safe direction), v5 M2 ("none at all", "Live music not" still credited). Not a production approval; T-027 veto stands. Details: deliverables/model-risk/check-P-055-P-056-v5.md, "Third look-again".
+
+---
+[2026-10-17 | @ai-engineer-assistant → @model-risk, @senior-underwriter] TYPE: REVIEW REQUEST
+T-104a (D-105, approve change P-055 rev 3) built. Detector `scope-v1` (ai/scope.py, no model call), wired in prepare.process_submission; status manual_intake is refused everywhere REFUSED_STATUSES applies; workbench card lists every reason. Dev SUB-127-153 out of scope: 129, 140, 142, 143, 144, 145. Self-checks pass (scope, prepare, package, workbench, points, llm_extract, intake, sources). As built: deliverables/ai-engineer/p-055-as-built.md. Inventory C-4. Needs: @model-risk check (High only), @senior-underwriter UI check of the card. Not a production approval.
+
+---
+[2026-10-17 | @model-risk → @ai-engineer-assistant, @pm] TYPE: OBJECTION
+Re: T-104a
+Message: BLOCK (do not freeze code for T-104). Not a production approval; C-4 `scope-v1` stays not approved, T-027 veto stands. Self-checks pass, pyright adds no new errors, no real file written, manual-intake blocking/card OK. H1: criterion 2 leaks. A csv/xlsx/schedule with 3+ application labels becomes "the application" and its rows are never counted; temp copy of SUB-172 with "(loc n)" removed and headers `Year Built`/`Operations` → in scope. `Location #2:`, numbered location lists, `Location 2 -` also pass. Resolve: always count address rows in schedule/csv/xlsx (and csv/xlsx applications), widen the location-list forms, flip the self-check that asserts the leak, add these probes. H2: a readable OCR page with a neutral name (`IMG_0412.jpg`, `page2.pdf`) beside a typed application → in scope. Resolve: any OCR document not named email/loss run/schedule/reply is scanned_application or unidentified_scan; add probes, keep SUB-159 in scope. Medium/Low in deliverables/model-risk/check-T-104a.md.
+Needs response by: before the T-104a code freeze
+
+---
+[2026-10-17 | @model-risk → @ai-engineer-assistant, @pm] TYPE: REVIEW
+Re: T-104a
+Message: Look-again on scope-v2: APPROVE WITH CHANGES. H1 is closed: every csv, xlsx and schedule file is counted for address rows, so the SUB-172 schedule-only variant with renamed headers → multiple_locations, and `Location #2`, numbered lists, `Location 2 -` and `Second location` are caught. H2 is closed: neutral-named OCR pages → scanned_application, and the scanned loss run stays in scope. The self-checks pass, pyright has no new errors and no real file was written. No new High, so the code may be frozen for T-104 (D-105 step 3). Not a production approval: C-4 stays not approved and the T-027 veto stands. Backlog M: `Location No. 2`, `Building 2`, two addresses on one premises line, and a "second store at" sentence still pass. A street-match count on premises lines is recommended before the freeze. Backlog M: `Additional premises: N/A` → false manual intake. Details are in deliverables/model-risk/check-T-104a.md.
+
+---
+[2026-10-17 | @senior-underwriter → @ai-engineer-assistant, @software-engineer, @pm] TYPE: REVIEW
+Re: T-104a (D-105) UI check of the Manual intake card
+Message: APPROVE WITH CHANGES. Screenshot, code and a sandbox render of SUB-143, SUB-170, SUB-129 (0 calls, temp copy). Card meets P-055 rev 3: whole file, nothing filled in, no route, no draft, send/edit/approve refused with a plain reason, every reason listed, What's new line present. H1: the lower block still says "Not read: none" and "Needs human read: none" on a manual-intake card (SUB-129 lists two unread files just above), which reads as "all clear" against the banner; replace both with "whole file: not read (manual intake)" and add a self-check. Medium/Low (next step and owner, AM holding note, vague "application not identified", decline-stat handling, jargon) in deliverables/senior-underwriter/ui-check-T-104a.md. Not a production approval.
+
+---
+[2026-10-17 | @senior-underwriter → @ai-engineer-assistant, @software-engineer, @pm] TYPE: REVIEW
+Re: T-104a UI look-again
+Message: APPROVE. H1 is closed: on SUB-129, SUB-143 and SUB-170 (sandbox, 0 calls) and in the refreshed screenshot the three read-status lines say "whole file: not read (manual intake)"; no "none" is left. No new High. Backlog Low: the label repeats ("Not read: whole file: not read") and "Not read by extraction" no longer names the unread files. Earlier Medium/Low unchanged. Details: deliverables/senior-underwriter/ui-check-T-104a.md. Not a production approval.

@@ -1167,3 +1167,14 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: P-055 revision 3 (email-only files now out of scope, criterion 4; @model-risk L1 added, stricter only); not approved, not built. P-056 (b) narrowing recorded in `p-056-as-built.md`. Range fix `_RANGE` in `llm_extract.py` with self-checks. @model-risk look-again on items 3 and 4.
 - Status: ACCEPTED
 - Amends: D-103 (email-only files were in scope; now out). Not a production approval; T-027 veto stands.
+
+## D-105 — approve change P-055 (revision 3); build the detector; T-104 hold-out (20 + 12) gold
+- Date / Owner: 2026-10-17 / @user
+- Context: team/NEXT-SESSION.md after D-104 (pending decision 1); `deliverables/pm/proposal-P-055.md` revision 3.
+- Options considered: none. The user's words.
+- Decision: In the user's words (pasted). "approve change P-055 (revision 3), with: automated missing-info drafts count as leakage (accepted); the 12 out-of-scope files include at least 2 email-only / application-not-identified files, so criterion 4 is tested. 1. Build the P-055 detector: fail-closed, card shows every reason, out-of-scope files go to manual intake as a whole file (no auto-fill shown as complete, no carrier route, no automated missing-info draft). Self-checks on dev files, including SUB-142/143 (email-only, Spanish), SUB-170-style scanned application, SUB-172-style multi-location. Run pyright on changed files before review. 2. @model-risk check, High only. @senior-underwriter UI check of the manual-intake card. 3. Only if no High remains: freeze code, record the hash in NEXT-SESSION.md. Then build T-104: 20 in-scope + 12 out-of-scope per P-055. @producer builds files; @senior-underwriter writes gold from documents and written rules only, using D-102 conventions ("not in documents"; hold is a status) and the operations checklist for scorer v5. Freeze gold, commit, record the hash. Do not run the pipeline on T-104. /wrap-up and push ai-team only."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-17 (D-032). Contains `approve change P-055`.
+- Dissent: none
+- Follow-up tasks: T-104a detector build (@ai-engineer-assistant); @model-risk check; @senior-underwriter UI check; T-104 hold-out files (@producer) and gold (@senior-underwriter), not run.
+- Status: ACCEPTED
+- Amends: P-055 revision 3 (L1 accepted; criterion 4 now has at least 2 hold-out files). Not a production approval; T-027 veto stands.

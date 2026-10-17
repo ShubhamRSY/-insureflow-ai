@@ -41,6 +41,7 @@ BANNER = ""  # set by serve(); the sandbox screenshots label the page with it
 MESSAGES: dict[str, tuple[bool, str]] = {}  # submission -> (ok, plain-words result of the last action); shown once
 # D-065 item 5: one line per user-visible feature: date, task or proposal, decision number, what an underwriter sees.
 WHATS_NEW = (
+    ("2026-10-17", "T-104a", "D-105", "Manual intake: a file with a scanned application, several locations, non-English documents (Spanish) or no identifiable application (email-only files) is a whole-file manual intake. The card lists every reason (\"Manual intake: scanned application\"); no field is filled in, no carrier route is shown, no missing-info draft is made, and the send, approve and edit are refused with the same reason. Files with several locations now go here whole instead of being read with other-location rows (earlier location notes apply to in-scope files only)."),
     ("2026-10-16", "P-056", "D-103", "Dates with a 2-digit year are read (\"3/1/27\" is 2027-03-01); a date that could be day or month first is read month first and marked NEEDS REVIEW: \"date read month first (US order)\". One low-confidence word on a scan marks the field for review instead of emptying it. A quote that joins two lines with \" ... \" is found. A trailing period is not a reword. Values labelled (loc 1), (loc 2) in one application are locations, not a conflict: the card shows location 1 and says \"values differ by location: ...\". The operations check reads the whole cited document."),
     ("2026-10-16", "P-052", "D-098", "A senior underwriter (marked senior on the underwriter list) can confirm the market on a senior-referral card: pick the carrier and write a reason. The card shows who confirmed and why. The send still needs an approve on this run and the typed line. Never offered on a held file, a file with a prohibited word (bar, pub, lounge), or a vacant, unoccupied or no-utilities file (AG:51)."),
     ("2026-10-16", "P-054", "D-100", "Carrier A direct now needs every other word to be a non-occupancy word (and, LLC, suite, floor...); shop, store, gift, home and trade words go to senior referral. More vacancy words (desocupado, vacante, power disconnected...) block the market confirm. A carrier excluded by any note on the file, including a producer remark such as \"declined by Carrier A\", is not offered, and the card says where the note is."),
@@ -124,6 +125,7 @@ REFERRAL = (
     (VACANT, "vacant, unoccupied or no utilities: renovation with signed GC contract is a referral, true vacancy is prohibited; a person decides (R14; AG:40, AG:51)"),
 )
 NOT_READ = "Not read — extraction failed"  # D-079 (B-295)
+MI_NOT_READ = "whole file: not read (manual intake)"  # P-055 (T-104a UI H1)
 BAR_WORDS = ("bar", "bars", "tavern", "taverns", "nightclub", "nightclubs", "pub", "pubs", "lounge", "lounges")  # D-079
 
 # P-051 (a): the Carrier A allow-list, one group per written guide line. Only a file whose one operation is on it routes to Carrier A.
@@ -198,7 +200,7 @@ PROVISIONAL_TIV = "provisional — TIV needed to confirm"  # P-050 (D-096): a cl
 
 
 def match(report: dict) -> dict:
-    """route: carrier_a/b/c, no_match, hold or senior_referral. overridable only for no_match (D-057). Never declines.
+    """route: carrier_a/b/c, no_match, hold, senior_referral or manual_intake (P-055: out of pilot scope; no carrier, provisional or suggested route). overridable only for no_match (D-057). Never declines.
     P-048 (c): routing always runs. A held file also carries "provisional" (the route it would take once the hold clears, or None when
     the class, TIV or sprinkler answer it needs is missing) and its label. route stays "hold", so every send gate stays shut."""
     m = _match(report, gated=True)
@@ -216,6 +218,9 @@ def _match(report: dict, gated: bool) -> dict:
 
     def out(route, note="", suggested="", overridable=False):
         return {"route": route, "note": note, "suggested": suggested, "overridable": overridable}
+
+    if report.get("status") == prepare.MANUAL_INTAKE:  # P-055 (D-105): no carrier, provisional or suggested route; not a hold either
+        return out("manual_intake", prepare.status_refusal(report))
 
     food = bool(ops) and (_has(ops, CLASSES["b"]) or ((report.get("cooking") or {}).get("equipment") or {}).get("state") == "yes")
     barred = bool(ops) and _has(ops, BAR_WORDS)
@@ -495,6 +500,13 @@ def record_decision(payload: dict, log_path: Path) -> dict:
     if field_id or new_value:  # D-056 (B-139): an edit that changes a field stores the field and its new value
         if field_id not in prepare.FIELDS or not new_value:
             raise ValueError(f"an edit of a field needs field_id (one of {', '.join(prepare.FIELDS)}) and a new value")
+    if action == "edit":  # P-055: a manual-intake file is read by a person; nothing is filled in by an edit
+        try:
+            mi_run = prepare.read_saved_run((payload.get("submission") or "").strip())
+        except ValueError:
+            mi_run = {}
+        if mi_run.get("status") == prepare.MANUAL_INTAKE:
+            raise ValueError(f"this file's status is {prepare.status_refusal(mi_run)}; an edit is refused for it")
     if action == "approve":
         submission = (payload.get("submission") or "").strip()
         # T-071: read the file's status from the last saved run itself. An approve is refused on either
@@ -502,7 +514,7 @@ def record_decision(payload: dict, log_path: Path) -> dict:
         saved = prepare.read_saved_run(submission)
         status = saved["status"]
         if status in prepare.REFUSED_STATUSES:
-            raise ValueError(f"this file's status is {status}; an approve is refused for it")
+            raise ValueError(f"this file's status is {prepare.status_refusal(saved)}; an approve is refused for it")
         # D-039: every value flagged needs-review is listed at approve; each must be acknowledged, and is logged.
         shown = (payload.get("run_hash") or "").strip()  # the run the card showed; the log stores the run read now (P-026)
         if shown and shown != saved["saved_hash"]:
@@ -692,7 +704,7 @@ def confirm_html(item: dict, report: dict) -> str:
 def _no_send_reason(item: dict, report: dict, refused: bool) -> str:
     """B-232: plain words for why this card has no send form; empty when a send can be offered."""
     if refused:
-        return f"this file's status is {report.get('status')}; it cannot be sent"
+        return f"this file's status is {prepare.status_refusal(report)}; it cannot be sent"
     if item.get("manifest"):
         return f"documents changed since extraction ({item['manifest']})"
     if report.get("status") == prepare.REVIEW_PENDING and package.conflict_problem(report):  # B-324 (D-089)
@@ -741,6 +753,19 @@ def _send_html(item: dict, report: dict, refused: bool, manifest: str) -> str:
 
 def _short(h: str) -> str:
     return (h or "")[:8]
+
+
+def manual_intake_html(report: dict) -> str:
+    """P-055 (D-105, D-065): the Manual intake card. Every matched reason, in plain words, and what the file does not get."""
+    if report.get("status") != prepare.MANUAL_INTAKE:
+        return ""
+    reasons = prepare.scope.reasons_text(report.get("scope")) or ["Manual intake: outside the pilot scope"]
+    return (
+        '<div class="msg bad" role="alert"><b>Manual intake</b> — a person reads this whole file. Why:<ul>'
+        + "".join(f"<li>{html.escape(r)}</li>" for r in reasons)
+        + "</ul>No field is filled in, no carrier route is shown, no missing-info draft is made, and the send is refused: "
+        f"{html.escape(prepare.status_refusal(report))}. (scope check {html.escape(str((report.get('scope') or {}).get('version') or 'not recorded'))})</div>"
+    )
 
 
 def history_html(sub: str, current: str, marks: list[dict] | None = None) -> str:
@@ -899,15 +924,18 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
             if row["field_id"] == "premises_address":
                 address_check = row.get("address_check") or "—"
         extraction = "ok"
-        if report.get("status") == "extraction_failed":
+        manual = report.get("status") == prepare.MANUAL_INTAKE
+        if manual:
+            extraction = "MANUAL INTAKE — the file was not read for values. No field was filled in. This is not a missing-data file. Sends are blocked."
+        elif report.get("status") == "extraction_failed":
             extraction = f"FAILED — {report['error']}. No field was read. This is not a missing-data file. Sends are blocked."
         elif report.get("status") == "all_values_rejected":
             reason = report.get("status_reason") or "every value was rejected by the gate"
             extraction = f"REJECTED — {reason}. No field was accepted. This is not a missing-data file. Sends are blocked."
         unread = report.get("unread") or []
         failed = report.get("status") == "extraction_failed"
-        none_ = NOT_READ if failed else "none"  # D-080 (B-297): a failed card never says "none"
-        unread_html = f"<p>Not read: {none_}</p>" if not unread else "<p>Not read:</p><ul>" + "".join(
+        none_ = NOT_READ if failed else MI_NOT_READ if manual else "none"  # D-080 (B-297): a failed card never says "none"; nor does a manual-intake card (T-104a UI H1)
+        unread_html = f"<p>Not read: {none_}</p>" if not unread or manual else "<p>Not read:</p><ul>" + "".join(
             "<li>{}, {}: {}</li>".format(
                 html.escape(u["file"]),
                 "whole file" if u.get("page") is None else f"page {u['page']}",
@@ -924,8 +952,9 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
             + (f'<span class="bad">FAILED — {html.escape(manifest)}. A send will be refused.</span>' if manifest else "ok")
             + "</p>",
             review_pending_html(report),
+            manual_intake_html(report),
             f"<p>Files: {html.escape(', '.join(item['files']) or 'none')}</p>",
-            f"<p>Not read by extraction: {html.escape(', '.join(item['ignored']) or none_)}</p>",
+            f"<p>Not read by extraction: {html.escape(none_ if manual else ', '.join(item['ignored']) or none_)}</p>",
         ]
         lines += score_html(item, report)
         if not refused:
@@ -940,10 +969,11 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
         lines += [
             f"<p>Extraction: {html.escape(extraction)}</p>",
             unread_html,
-            f"<p>Needs human read: {html.escape(', '.join(report.get('needs_human') or []) or none_)}</p>",
+            f"<p>Needs human read: {html.escape(none_ if manual else ', '.join(report.get('needs_human') or []) or none_)}</p>",
             f"<p>Address check: {html.escape(address_check)}</p>",
             f"<p>Locations: {html.escape('; '.join(('primary ' if row.get('primary') else 'other ') + row['address'] for row in report['locations']) or 'one premises') if report.get('locations') is not None else 'not stored in the saved run'}</p>",
             "<h3>Extracted fields</h3>",
+            "<p>Nothing filled in: a person reads the file.</p>" if manual else
             f"<table><tr><th>Field</th><th>Value</th><th>Confidence</th><th>Source</th><th>Cited text</th><th>Review note</th></tr>{''.join(field_rows)}</table>",
             f"<h3>Conflicts</h3>{conflict_html}",
             quotes.html_for(item["id"]),
@@ -952,7 +982,7 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
             missing = report["missing"] + report.get("extra", [])
             lines += ["<h3>Missing</h3>", f"<p>{html.escape(', '.join(missing) or 'none')}</p>"]
         # T-071: on a refused card there is no approve option. Edit and decline stay so a person decides.
-        options = "<option>edit</option><option>decline</option>" if refused else "<option>approve</option><option>edit</option><option>decline</option>"
+        options = "<option>decline</option>" if manual else "<option>edit</option><option>decline</option>" if refused else "<option>approve</option><option>edit</option><option>decline</option>"
         acks = "".join(
             '<label><input type="checkbox" name="ack" value="{0}"> I checked {0}: {1} (cited: {2})</label><br>'.format(
                 html.escape(row["field_id"]), html.escape(row["value"]), html.escape(row.get("quote") or "—")
@@ -984,7 +1014,7 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
         )
         sid = html.escape(item["id"])
         draft = PENDING / f"{item['id']}.md"
-        if draft.is_file():
+        if draft.is_file() and not manual:  # P-055: a manual-intake file has no automated missing-info draft
             lines.append(
                 f"<h3>Missing-info draft for the producer (not sent)</h3><pre>{html.escape(draft.read_text())}</pre>"
                 f'<form method="post" action="/approve-draft"><input type="hidden" name="submission" value="{sid}">'
@@ -1198,6 +1228,19 @@ if __name__ == "__main__":
                     check,
                 )
                 assert correction_counts(check) == {"approve": 2, "edit": 3, "decline": 2}, correction_counts(check)
+                save(ext, "SUB-013", prepare.MANUAL_INTAKE)  # P-055: an approve is refused on a manual-intake file, with its reason
+                try:
+                    record_decision({"underwriter_id": "UW-001", "action": "approve", "submission": "SUB-013", "reason": "self-check"}, check)
+                    raise SystemExit("an approve on manual_intake should fail")
+                except ValueError as exc:
+                    assert "manual intake" in str(exc), exc
+                try:
+                    record_decision({"underwriter_id": "UW-001", "action": "edit", "submission": "SUB-013", "reason": "x", "field_id": "year_built", "new_value": "1990"}, check)
+                    raise SystemExit("an edit on manual_intake should fail")
+                except ValueError as exc:
+                    assert "manual intake" in str(exc) and "edit is refused" in str(exc), exc
+                record_decision({"underwriter_id": "UW-001", "action": "decline", "submission": "SUB-013", "reason": "a person decided"}, check)  # decline stays
+                assert correction_counts(check)["decline"] == 3
 
                 # D-055: seq rises by one per entry; an unlisted id or an AI role cannot log.
                 seqs = [json.loads(line)["seq"] for line in check.read_text().splitlines()]
@@ -1275,6 +1318,32 @@ if __name__ == "__main__":
                 assert "Loss history: not scored" in page and "Cooking: not scored" in page
             assert "<option>edit</option>" in page and "<option>decline</option>" in page
         assert "REJECTED" in render([card("all_values_rejected", status_reason=prepare.REJECT_REASON)], None)
+        # P-055 (D-105, D-065): a manual-intake card lists every reason, shows no route, no draft, no approve, and the send refusal says why.
+        mi = card(prepare.MANUAL_INTAKE)
+        mi["report"].update(scope=prepare.scope.detect([{"name": "application.jpg", "text": "", "needs_human": True}, {"name": "schedule.csv", "text": "loc,address\n1,1 A St\n2,2 B St"}]),
+                            fields=[{"field_id": "operations", "value": None}], sprinklers=None)
+        want_reasons = ["Manual intake: scanned application", "Manual intake: multiple locations"]
+        assert all(t in [r["text"] for r in mi["report"]["scope"]["reasons"]] for t in want_reasons)
+        m = match(mi["report"])
+        assert m["route"] == "manual_intake" and "provisional" not in m and m["suggested"] == "" and "hold" not in m["route"], m
+        mi.update(route=m["route"], note=m["note"], suggested=m["suggested"], score=points.score_run(mi["report"]))
+        real_pending, tmp_pending = PENDING, Path(tempfile.mkdtemp(prefix="wb-pending-"))
+        (tmp_pending / f"{mi['id']}.md").write_text("Please send the following. Nothing has been declined.")
+        PENDING = tmp_pending
+        try:
+            mi_page = render([mi], {"approve": 0, "edit": 0, "decline": 0}).split("<article", 1)[1]
+        finally:
+            PENDING = real_pending
+            shutil.rmtree(tmp_pending)
+        for label in ("Not read", "Not read by extraction", "Needs human read"):  # T-104a UI H1: never "none" under the manual-intake banner
+            assert f"<p>{label}: {MI_NOT_READ}</p>" in mi_page and f"<p>{label}: none</p>" not in mi_page, label
+        assert "Manual intake</b>" in mi_page and all(f"<li>{t}</li>" in mi_page for t in want_reasons), mi_page[:900]
+        assert "<option>edit</option>" not in mi_page and "<th>Cited text</th>" not in mi_page and "Nothing filled in: a person reads the file." in mi_page
+        assert "<option>approve</option>" not in mi_page and "Carrier match:" not in mi_page and "Provisional route" not in mi_page and "Suggested market" not in mi_page
+        assert "Missing-info draft" not in mi_page and "approve-draft" not in mi_page and "<h3>Missing</h3>" not in mi_page
+        assert html.escape(f"No send: this file's status is {prepare.status_refusal(mi['report'])}; it cannot be sent.") in mi_page and "scanned application; multiple locations" in mi_page, mi_page[-1500:]
+        assert "Cooking: not read (manual intake)" in mi_page and "no cooking equipment stated" not in mi_page and "Hood and suppression: not stated" not in mi_page
+        assert "MANUAL INTAKE" in mi_page and prepare.status_refusal(mi["report"]) in mi_page
         # P-041 (D-088): review pending says what is pending, keeps approve with the tick, and routes as complete did.
         rp = card(prepare.REVIEW_PENDING, fields=[{"field_id": "operations", "value": "accounting office"},
                                                   {"field_id": "sales_or_payroll", "value": "2100000", "needs_review": True, "reason": "check against the email"}])

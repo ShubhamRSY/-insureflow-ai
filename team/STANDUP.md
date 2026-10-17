@@ -1783,3 +1783,5 @@ Blocked: No.
 
 [2026-10-16 | @model-risk] D-103 second look-again, scorer v5: H2 CLOSED (clause split, negator before, "Label: no" next clause, probes all built and passing; v4 frozen). New High H3: a no/none in the same clause right after the item ("Live music - no", "(no)", "? No") is still a hit. One-condition fix in check-P-055-P-056-v5.md. No gold with v5 until H3 closes.
 - 2026-10-17 @model-risk: D-104 third look-again (check-P-055-P-056-v5.md). P-056 M1 range regression CLOSED; scorer v5 H3 CLOSED; v4 frozen; no new High; backlog P-056 L5, v5 M2. Not a production approval; T-027 veto stands.
+
+- 2026-10-17 @ai-engineer-assistant: T-104a built (P-055 rev 3, D-105): scope-v1 detector, manual_intake status, card, refusals, self-checks, inventory C-4, p-055-as-built.md. 0 model calls. T-104a IN_REVIEW.

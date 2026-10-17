@@ -18,6 +18,7 @@ import unicodedata
 from pathlib import Path
 
 import llm_extract
+import scope
 import sources
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -26,12 +27,13 @@ EXTRACT_DIR = ROOT / "deliverables" / "data-engineer" / "extractions"
 HASH_ALGORITHM = "sha256"
 INBOX_DIR = ROOT / "simulation" / "inbox"
 # P-010 part 1: these two statuses are refused for every actor, including the user. There is no override.
-REFUSED_STATUSES = ("extraction_failed", "all_values_rejected")
+MANUAL_INTAKE = "manual_intake"  # P-055 (D-105): the detector put the whole file out of pilot scope; a person reads it. Refused like the two below.
+REFUSED_STATUSES = ("extraction_failed", "all_values_rejected", MANUAL_INTAKE)
 REJECT_REASON = "the model answered but every value was rejected by the gate"
 # G2 (D-029): the reader accepts only this closed set. A missing, empty, or unknown status is refused, not allowed.
 # P-041 (D-088): every field present, but a value needs review or a conflict is open. Not "complete".
 REVIEW_PENDING = "complete — review pending"
-STATUSES = ("complete", REVIEW_PENDING, "incomplete", "extraction_failed", "all_values_rejected")
+STATUSES = ("complete", REVIEW_PENDING, "incomplete", "extraction_failed", "all_values_rejected", MANUAL_INTAKE)
 
 FIELDS = (
     "named_insured",
@@ -967,6 +969,9 @@ def _flag_scan_differs(row: dict, differ: list[dict]) -> None:
 def process_submission(folder: Path) -> dict:
     docs = sources.read_folder(folder)
     texts = {doc["name"]: doc["text"] for doc in docs}
+    scope_result = scope.detect(docs)  # P-055 (D-105): never raises; an error is manual intake
+    if not scope_result["in_scope"]:
+        return _manual_intake(folder, docs, scope_result)  # the whole file: no model call, no value, no route, no draft
     merged = {
         field: {
             "field_id": field,
@@ -1098,6 +1103,7 @@ def process_submission(folder: Path) -> dict:
     report["locations"] = locations
     report["error"] = error
     report.update(_run_metadata())
+    report["scope"] = scope_result
     report["cache_key"] = key  # P-028 (D-075)
     report["retries"] = llm_extract.ATTEMPTS[attempts_before:]  # D-094 item 5: each failed attempt and retry of this file's call; [] when none
     # D-024: an answered reply the gate rejected is not a failed call, and it gets no request and no draft.
@@ -1124,6 +1130,27 @@ def process_submission(folder: Path) -> dict:
             text += "\nAlso send:\n" + "\n".join(f"- {item}" for item in extra) + "\n"
         report["request"] = text
     return report
+
+
+def _manual_intake(folder: Path, docs: list[dict], scope_result: dict) -> dict:
+    """P-055: the report of an out-of-scope file. Every field empty, nothing complete, no request, no model call (the documents are not read for values)."""
+    rows = [{"field_id": f, "value": None, "start": None, "end": None, "source": None, "confidence": 0.0, "needs_review": True} for f in FIELDS]
+    report = completeness(rows)
+    report.update(
+        conflicts=[], extra=[], fields=rows, folder=folder.name, sprinklers=None, cooking=None, locations=[], error=None, cache_key=None, retries=[],
+        needs_human=[d["name"] for d in docs if d.get("needs_human")], unread=unread_rows(docs, []), scope=scope_result,
+        status=MANUAL_INTAKE, status_reason="; ".join(scope.reasons_text(scope_result)), complete=False, request=None,
+    )
+    report.update(_run_metadata())
+    return report
+
+
+def status_refusal(saved: dict) -> str:
+    """The status as a plain phrase for a refusal message; a manual-intake file names its reasons (P-055)."""
+    if saved.get("status") == MANUAL_INTAKE:
+        why = [t.removeprefix("Manual intake: ") for t in scope.reasons_text(saved.get("scope"))]
+        return "manual intake (" + ("; ".join(why) or "out of pilot scope") + ")"
+    return str(saved.get("status"))
 
 
 def _run_metadata() -> dict:
@@ -1244,6 +1271,7 @@ def _saved_payload(report: dict) -> dict:
         "host": report.get("host"),
         "temperature": report.get("temperature"),
         "cache_key": report.get("cache_key"),  # P-028 (D-075): the extraction cache key, under saved_hash
+        "scope": report.get("scope"),  # P-055 (D-105): detector version, in_scope, every reason; None in a run saved before P-055
         "fields": fields,
     }
 
@@ -1264,7 +1292,7 @@ def write_drafts(inbox: Path, draft_dir: Path, conflict_dir: Path) -> list[dict]
         refused = report.get("status") in REFUSED_STATUSES
         dest = draft_dir / f"{folder.name}.md"
         side = conflict_dir / f"{folder.name}.json"
-        if report["request"]:
+        if report["request"] and not refused:  # P-055: a manual-intake file gets no automated missing-info draft
             dest.write_text(report["request"])
         elif refused and dest.exists():
             # D1: a failed call or an all-rejected answer removes the old draft. Nothing is sent to the producer.
@@ -1274,6 +1302,8 @@ def write_drafts(inbox: Path, draft_dir: Path, conflict_dir: Path) -> list[dict]
             side.write_text(
                 json.dumps({"submission": folder.name, "conflicts": conflicts_out}, indent=2) + "\n"
             )
+        elif report.get("status") == MANUAL_INTAKE:
+            side.unlink(missing_ok=True)  # P-055: no conflict file for a manual-intake file; the disk agrees with the card
         elif refused:
             # D1: the conflict file is kept as it is for the human.
             pass
@@ -1313,7 +1343,7 @@ def approve(
     current = read_saved_run(draft.stem)  # G2: the file's current status, read and hash-checked here
     status = current.get("status")
     if status in REFUSED_STATUSES:
-        raise ValueError(f"this file's status is {status}; it cannot be approved or sent, for any actor")
+        raise ValueError(f"this file's status is {status_refusal(current)}; it cannot be approved or sent, for any actor")
     name = (actor or "").strip().lstrip("@").lower().replace(" ", "-")
     if name not in {"user", "account-manager"}:
         raise ValueError("only the user or the account manager may approve; no AI role can send")
@@ -1391,6 +1421,7 @@ def _save_run(directory: Path, submission: str, status: str, error: str | None =
 
 
 if __name__ == "__main__":
+    real_detect = scope.detect
     if len(sys.argv) == 5 and sys.argv[1] == "--approve":
         approve(Path(sys.argv[2]), sys.argv[3], Path(sys.argv[4]))
         print("approved", sys.argv[2])
@@ -1404,6 +1435,9 @@ if __name__ == "__main__":
                 "; ".join(item["field"] for item in report["conflicts"]),
             )
     else:
+        # The checks below test extraction rules on short stub files. The real detector runs on every one (33 of 57 stay in scope);
+        # the 24 stubs with no application file or a terse one are let through. Scope (P-055) is checked at the end.
+        scope.detect = lambda docs: real_detect(docs) if real_detect(docs)["in_scope"] else {"version": "test", "in_scope": True, "reasons": []}
         text = "\n".join(
             [
                 "named_insured: Example LLC",
@@ -2265,4 +2299,65 @@ if __name__ == "__main__":
     assert rep_["status"] == REVIEW_PENDING and not ready_to_route(rep_) and rep_["request"], "an open conflict: review pending, held, producer asked"
     rep_ = run_case({**on_run, "year_built": {"value": None}}, {"loss-runs.md": run_107})
     assert rep_["status"] == "incomplete", "a missing field is incomplete, not review pending"
+    # P-055 (D-105): an out-of-scope file is manual intake as a whole file. Temp dirs only; the model call raises if it is ever made.
+    scope.detect = real_detect
+    APP55 = ("Named insured: Example Roofing LLC\nPremises address: 100 Main St, Austin, TX 78701\nEffective date: 2027-01-01\nYears in business: 9\n"
+             "Operations: General office work for the business, no public visits, and the staff are all on site.\nConstruction: masonry\n")
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp_path = Path(tmp)
+        inbox55 = tmp_path / "inbox"
+        for name, files in (
+            ("SUB-601", {"email.md": "Hola, quiero una cotizacion para la tienda y el seguro de mi negocio. Gracias."}),  # email-only, Spanish
+            ("SUB-602", {"application.md": APP55, "schedule.csv": "loc,address\n1,100 Main St\n2,200 Oak Ave\n"}),  # two premises
+            ("SUB-603", {"application.md": APP55, "email.md": "Subject: quote\n\nPlease quote this for the business and send it to the producer."}),  # in scope
+        ):
+            (inbox55 / name).mkdir(parents=True)
+            for fname, body in files.items():
+                (inbox55 / name / fname).write_text(body)
+        calls55 = []
+        real_llm = llm_extract.llm_extract
+
+        def stub55(docs):
+            calls55.append([d["name"] for d in docs])
+            return {"fields": [{"field_id": "named_insured", "value": "Example Roofing LLC", "source": "application.md", "quote": "Example Roofing LLC", "confidence": 0.95, "needs_review": False, "reason": None}], "conflicts": [], "not_sent": []}
+
+        llm_extract.llm_extract = stub55
+        try:
+            pending = tmp_path / "pending"
+            pending.mkdir()
+            (pending / "SUB-601.md").write_text("old draft")  # a stale automated draft from an earlier run
+            (tmp_path / "conflicts").mkdir()
+            (tmp_path / "conflicts" / "SUB-602.json").write_text('{"conflicts": []}')  # a stale conflict file from an earlier run
+            reps = {r["folder"]: r for r in write_drafts(inbox55, pending, tmp_path / "conflicts")}
+        finally:
+            llm_extract.llm_extract = real_llm
+        assert calls55 == [["application.md", "email.md"]], ("only the in-scope file reaches the model", calls55)
+        for sub, code in (("SUB-601", "not_identified"), ("SUB-602", "multiple_locations")):
+            r = reps[sub]
+            assert r["status"] == MANUAL_INTAKE and r["complete"] is False and r["request"] is None, (sub, r["status"])
+            assert all(f["value"] is None for f in r["fields"]) and code in [x["code"] for x in r["scope"]["reasons"]], sub
+            assert not (pending / f"{sub}.md").exists(), "no automated missing-info draft, and a stale one is removed"
+            saved55 = read_saved_run(sub, tmp_path / "extractions")
+            assert saved55["status"] == MANUAL_INTAKE and saved55["scope"]["version"] == scope.VERSION and not saved55["complete"]
+            assert current_status(sub, tmp_path / "extractions") == MANUAL_INTAKE and not manifest_problem(sub, tmp_path / "extractions", inbox55)
+            assert status_refusal(saved55).startswith("manual intake (") and status_refusal(saved55) != "manual intake (out of pilot scope)", status_refusal(saved55)
+        assert not (tmp_path / "conflicts" / "SUB-602.json").exists(), "a manual-intake file keeps no conflict file"
+        assert reps["SUB-603"]["status"] != MANUAL_INTAKE and reps["SUB-603"]["scope"]["in_scope"] and [r["value"] for r in reps["SUB-603"]["fields"]][0] == "Example Roofing LLC"
+        assert (pending / "SUB-603.md").exists(), "an in-scope file keeps its missing-info draft"
+        (pending / "SUB-601.md").write_text("Nothing has been declined")
+        real_dir = globals()["EXTRACT_DIR"]
+        globals()["EXTRACT_DIR"] = tmp_path / "extractions"
+        try:
+            approve(pending / "SUB-601.md", "user", tmp_path / "to-producer")
+            raise SystemExit("an approve of a manual-intake file must be refused")
+        except ValueError as exc:
+            assert "manual intake" in str(exc) and "not identified" in str(exc), exc
+        finally:
+            globals()["EXTRACT_DIR"] = real_dir
+        # extraction_failed keeps precedence for an in-scope file whose call raises (D-021); nothing changes for it
+        llm_extract.llm_extract = _raiser(RuntimeError("boom"))
+        try:
+            assert process_submission(inbox55 / "SUB-603")["status"] == "extraction_failed"
+        finally:
+            llm_extract.llm_extract = real_llm
     print("prepare ok")
