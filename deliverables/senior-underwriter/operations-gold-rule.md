@@ -35,3 +35,11 @@ Gold writes exactly: `not in documents`. An empty extraction then counts as corr
 ## Format
 One line, comma-separated, most rating-relevant first: type, alcohol, seats/units, cooking, hours, other details.
 Example: "Full-service restaurant and bar, full liquor license, 180 seats, live music Friday and Saturday".
+
+## Operations checklist (D-103 item 3, scorer v5): all new gold
+Applies to gold written from 2026-10-16 on. Published gold and scores are never rewritten. Scorer v5 (`eval_holdout_v5.py`) is committed before any gold that uses this.
+1. Keep the one-line `- Operations:` (for the reader). Add one more line: `- Operations items: item; item; ...`.
+2. List each item from the tables above (required items and the closed list of other details) that the documents state, one per `;`. Nothing else: no connectors ("under"), no business words the documents do not use ("taqueria", "apartment building" when the document says "residential apartments").
+3. Write each item in the documents' own words, short: "restaurant", "no alcohol", "48 seats", "2 fryers", "Type I hood", "UL 300", "live music Thursday to Sunday", "16 units".
+4. Scorer v5 credits operations when every item's words appear together and in order in the answer ("no" and "I" count; and/of/the/a/an/with are skipped). An item the answer leaves out, or whose words are scattered, is a miss. Write each item as the documents order the words ("2 fryers", not "fryers, 2"). An item never holds a comma, period, colon or semicolon: the scorer reads the answer clause by clause. A "no"/"not" right before the item's words in the answer makes it a miss, so write a stated absence as its own item ("no alcohol").
+5. No operations stated: `- Operations: not in documents` and no items line.

@@ -653,9 +653,11 @@ def _set_cited(merged: dict, field: str, value: str, source: str, start: int, en
     confidence, flag, reason = 0.95, False, None
     quote = texts[source][start:end] if texts and source in texts else None
     if scans and source in scans:
-        confidence = min(confidence, llm_extract.cited_ocr_score(quote or value, value, scans[source]))
-        if confidence < llm_extract.SCAN_FLOOR:
+        exact = field in llm_extract.NUMBER_FIELDS + llm_extract.DATE_FIELDS  # check H1: numbers and dates are not averaged
+        floor = (llm_extract.cited_ocr_score if exact else llm_extract.cited_ocr_floor)(quote or value, value, scans[source])
+        if min(confidence, floor) < llm_extract.SCAN_FLOOR:  # P-056 (b)
             return
+        confidence = min(confidence, llm_extract.cited_ocr_score(quote or value, value, scans[source]))
         if field == "loss_run_valued_through":  # S2
             flag, reason = True, llm_extract.REASON_SCAN
         if confidence < llm_extract.MIN_CONFIDENCE:  # P-025
@@ -866,7 +868,8 @@ def ops_missing(value: str, source: str) -> list[str]:
 
 
 def check_operations(merged: dict, texts: dict) -> None:
-    """P-047 (b): the cited source line names a rule item the answer lacks -> needs review, below the confidence line, with the items."""
+    """P-047 (b), P-056 (f): the cited document names a rule item anywhere that the answer lacks -> needs review, below the confidence
+    line, with the items. The labeled lines (context) are still what carrier match reads."""
     row = merged["operations"]
     text = texts.get(row.get("source") or "")
     if not row.get("value") or not text or row.get("start") is None:
@@ -875,7 +878,7 @@ def check_operations(merged: dict, texts: dict) -> None:
     context = ops_lines(text, cited)
     if context:
         row["context"] = context  # P-047 (c): carrier match and the D-079 referral read it too
-    missing = ops_missing(row["value"], f"{cited}\n{context}")
+    missing = ops_missing(row["value"], text)  # P-056 (f): the whole cited document, not only the cited line and labeled lines
     if missing:
         reason = OPS_MISSING.format(", ".join(missing))
         row["reason"] = f"{row['reason']}; {reason}" if row.get("reason") else reason
@@ -1610,6 +1613,9 @@ if __name__ == "__main__":
         probe = {"operations": {**row, "value": "Mexican restaurant, 70 seats", "end": 40}}
         check_operations(probe, {"a.md": text})
         assert probe["operations"]["reason"] == "operations may be missing: liquor, bar, frying or open flame", probe["operations"]["reason"]
+        whole = {"operations": {**row, "value": "Mexican restaurant, 70 seats", "end": 40}}
+        check_operations(whole, {"a.md": "Operations: Mexican restaurant, 70 seats.\nSales: $900,000\nRemarks: live music on Fridays.\n"})
+        assert whole["operations"]["reason"] == "operations may be missing: live music or entertainment", "P-056 (f): an unlabeled line elsewhere in the document is read"
         forms = "Bar / liquor: Full bar, last call 1am\nCooking / hood / suppression: two fryers\nLiquor sales: 8 percent\nSeating capacity: 60 seats\nPatio: yes\nSecurity: door staff Fri-Sat\nHazardous materials: propane\nAnnual sales: $1\nStories: 2\nBarbecue pit: no\n"
         assert ops_lines(forms).splitlines() == forms.splitlines()[:7], ops_lines(forms)
         assert ops_missing("restaurant", ops_lines(forms)) == ["liquor", "bar", "hours", "frying or open flame", "patio", "security staff", "hazardous materials", "60 seats"], ops_missing("restaurant", ops_lines(forms))
