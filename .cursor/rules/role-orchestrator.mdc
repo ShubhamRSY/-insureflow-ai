@@ -17,6 +17,7 @@ A "round" = every role that has something to do takes one turn. For each round:
    - Then any role @mentioned in unanswered messages.
    - Then each role with an IN_PROGRESS or TODO task that is not blocked, highest priority first.
    - Then @senior-underwriter.
+   - Then @frontend-engineer (workbench and `frontend/` UI tasks) and @senior-test-engineer (regression on any new build).
    - Then @account-manager (producer requests and carrier sends that pass the agency rules).
    - Then reviewers of tasks in IN_REVIEW.
    - @carrier-underwriter next (respond to each new package in simulation/to-carrier/).

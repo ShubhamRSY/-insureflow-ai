@@ -101,12 +101,14 @@ Needs response by: <optional>
 | Data sources, pipelines, schemas | @data-engineer | @compliance |
 | Deployment, monitoring, infra | @ml-engineer | @software-engineer |
 | Application integration, APIs, UI | @software-engineer | @senior-underwriter |
+| Front-end app and workbench UI | @frontend-engineer | @senior-underwriter, @software-engineer |
+| Test strategy, quality gates, release quality sign-off | @senior-test-engineer | @pm, @software-engineer |
 | Production approval of any model | @model-risk | all |
 | Regulatory/legal acceptability | @compliance | — |
 | Fairness acceptability | @responsible-ai | @compliance |
 
 ## Team roster
-@pm · @head-of-underwriting · @senior-underwriter · @account-manager · @actuary · @ai-engineer-assistant · @data-scientist · @ml-engineer · @data-engineer · @software-engineer · @model-risk · @compliance · @responsible-ai
+@pm · @head-of-underwriting · @senior-underwriter · @account-manager · @actuary · @ai-engineer-assistant · @data-scientist · @ml-engineer · @data-engineer · @software-engineer · @frontend-engineer · @senior-test-engineer · @model-risk · @compliance · @responsible-ai
 
 Simulated outside parties (not agency staff): @producer · @carrier-underwriter
 
