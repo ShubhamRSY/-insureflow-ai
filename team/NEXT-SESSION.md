@@ -1,20 +1,19 @@
 # Next session
 
-Written 2026-10-16 by the orchestrator at wrap-up. Wrap-up commit: `fd93be4` on `ai-team`, pushed to `origin/ai-team` (private).
+Written 2026-10-17 by the orchestrator at wrap-up. Wrap-up commit: `630a6a0` on `ai-team`, pushed to `origin/ai-team` (private).
 
-- Budget rule 8: demo blockers only (the weekly limit resets 2026-10-17).
+- Budget rule 8: demo blockers only.
 - Standing rules: D-065, D-069, the CLAUDE.md "Plugins" section (D-097). One AI session on this repo (D-090). The frontend/ files and `.claude/settings*.json` belong to the user and are never staged.
-- **Work in the permanent worktree `/Users/disastershubz/INSURANCE FLOW AI/insureflow-ai-team` (branch `ai-team`, D-101).** The main folder `-insureflow-ai-1` stays on `feat/gcp-infrastructure` with the user's uncommitted work: never touch it. Check `git branch --show-current` says `ai-team` before work.
-- **Run every pipeline command with `.venv/bin/python`.** Re-scores: `HOLDOUT_RESCORE=1`, a temp cache copy in `LLM_CACHE_DIR`, `LLM_PACE_SECONDS=0`, `HOLDOUT_OUT` in a temp folder. **The ai-team worktree's cache holds only the T-103 replies.** The dev SUB-127–146 replies are in the main folder's `underwriting_pipeline/cache/extractions` (copy them, read-only). SUB-147–153 have no reply under the current prompt anywhere. This session's 7 live calls went to a temp cache only and are gone.
+- **Work in the permanent worktree `/Users/disastershubz/INSURANCE FLOW AI/insureflow-ai-team` (branch `ai-team`, D-101).** The main folder `-insureflow-ai-1` stays on `feat/gcp-infrastructure` with the user's uncommitted work: never touch it. Its `team/NEXT-SESSION.md` is stale; read this one.
+- **Run every pipeline command with `.venv/bin/python`.** Re-scores: `HOLDOUT_RESCORE=1`, a temp cache copy in `LLM_CACHE_DIR`, `LLM_PACE_SECONDS=0`, `HOLDOUT_OUT` in a temp folder. The dev SUB-127–146 replies are in the main folder's `underwriting_pipeline/cache/extractions` (copy them, read-only). `intake.py` self-check runs with no argument.
+- pyright is not installed in the worktree (D-097 diagnostics could not run this session).
 
-## Where we stopped (D-103)
+## Where we stopped (D-104)
 
-- **P-056 built** (`fd93be4`; as-built `deliverables/ai-engineer/p-056-as-built.md`): (a) 2-digit years; an ambiguous day/month is read month first and flagged "date read month first (US order)"; (b) scan floor uses the average of the cited words for text fields, while numbers and dates keep their lowest digit group (@model-risk H1 closed); (c) " ... " quote joins; (d) trailing-period reword; (e) "(loc N)" values from one application become locations, not a conflict (loc 1 required); (f) the operations check reads the whole cited document. What's new line, screenshot `D-103-P-056-values-differ-by-location.png`.
-- **Dev before/after** (v4, same replies; `evals/P-056-dev/`): SUB-127–146 premises 17→18, effective_date 18→19, conflict 16→17, status 18→17 (SUB-134 now flagged for "light manufacturing"), automation 4→3 of 6, 0 false completes, 0 unsafe, route 16/20 (old dev gold, B-392 M4). SUB-147–153: no change.
-- **Scorer v5** (`eval_holdout_v5.py`; v4 frozen) plus the checklist section of `operations-gold-rule.md`: a "- Operations items:" line; an item is a hit when its words appear together, in order, in one clause, with no negation before or after. @model-risk H2 closed. **H3 ("Live music - no") fix is built with 7 probes, but the @model-risk look-again on H3 has not run. Score no gold with v5 until H3 closes.**
-- **P-055 revision 2** (`deliverables/pm/proposal-P-055.md`): the user's scope answers, the ceiling of 2 in 20, the 20 + 12 hold-out, and H1/H2 applied. @model-risk: **APPROVE WITH CHANGES** (M1–M3 below). Not approved, not built.
-- B-397: the stronger-model test is deferred.
-- Wrap-up checklist (`.claude/commands/wrap-up.md` item 2): the orchestrator writes labelled standups for a role that took a turn and wrote none.
+- **P-055 revision 3** (`deliverables/pm/proposal-P-055.md`): the user's wording for @model-risk M1–M3. Non-English = common non-English words outnumber common English words, names and addresses not counted, unsure → manual intake. New criterion 4: application not identifiable (including email-only files) → manual intake; email-only files are no longer in scope (amends D-103). A file matching several criteria counts under each for detection, once in totals; the card lists every reason. @model-risk L1 also added (an automated missing-info draft counts as a leak; stricter only). **Not approved, not built.**
+- **P-056 (b):** the narrowing (numbers and dates keep the lowest-word drop test; a date scores every quote word) recorded as a clarification within P-056, no new P-###.
+- **P-056 M1 fixed** (`630a6a0`): `_RANGE` in `llm_extract.py`; "3/15/2026-3/15/2027", "03/15/2026-03/15/2027", "3/15/26-3/15/27", "3/15/26 – 3/15/27" read two dates; self-checks added. No inbox file has a joined range, so no dev count changed and no re-score was run. No What's new line (P-056's line covers it).
+- **@model-risk third look-again:** P-056 M1 CLOSED; scorer v5 H3 CLOSED; no new High. Scorer v5 can now be used for new gold. Backlog: P-056 L5 (all-hyphen "3-15-2026-3-15-2027" and half ranges read no date: goes to review); v5 M2 ("Live music - none at all", "Live music not" still hit).
 - Self-checks at wrap-up: llm_extract, prepare, intake, package, workbench, points all ok.
 
 ## Approved, not built
@@ -28,27 +27,27 @@ Written 2026-10-16 by the orchestrator at wrap-up. Wrap-up commit: `fd93be4` on 
 
 ## Pending decisions for the user
 
-1. **P-055:** settle @model-risk M1–M3 in the text first. M1: a measurable rule for "substantial non-English" (the text says "mostly"). M2: what the detector does when it cannot tell which document is the application. M3: whether a file that matches two criteria counts under both. Also confirm: **email-only files stay in scope** (they were not in your D-103 list; draft 1 had them out). Then `approve change P-055` or not.
-2. **P-056 (b) scope:** is the narrowing (numbers and dates are not averaged; dates score every quote word) inside your approval, or does it need its own P-###? @model-risk closed H1 but leaves this to you.
-3. **P-056 (a):** confirm that ambiguous dates are read month first and flagged. This replaces P-016 D2, which refused them; the 2-digit fix alone would not have read "3/1/27".
-4. Backlog from the check (`deliverables/model-risk/check-P-055-P-056-v5.md`): P-056 M1 policy-period ranges like "3/15/2026-3/15/2027" no longer parse (regression, no current file has one); M2 the location label is not tied to the field's own line; M3 multi-location applications no longer stop on a premises conflict until P-055 is built.
+1. **P-055 revision 3:** type `approve change P-055`, or not. Also confirm the @model-risk L1 addition, and whether the 12 out-of-scope hold-out files should include email-only / unidentifiable-application files (the text keeps 4+ per criteria 1–3 and treats criterion 4 as fail-closed).
+2. **P-056 (a):** confirm that ambiguous dates are read month first and flagged (replaces P-016 D2; @model-risk L1).
+3. Backlog from the D-103 check still open: P-056 M2 (location label not tied to the field's own line); M3 (multi-location files route on loc 1 until P-055 is built).
 
 ## Open vetoes and what resolves each
 
 | Task | Holder | Resolves when |
 |---|---|---|
-| T-027 | @model-risk (production) | Approved P-### fixes (P-056 now built), then a new frozen hold-out (under P-055 if approved: 20 in scope + 12 out of scope, gold first with scope labels and an operations checklist, scorer v5 once H3 closes), smoke first, .venv, paced, run and scored once: all 9 fields at 9/10, 0 false completes, 0 unsafe, route ≥18/20, plus the P-055 detection measures. |
-| Scorer v5 | @model-risk (OBJECTION H3) | Look-again on the built H3 fix (clause rest only no/none/n/0 = miss; 7 probes in the self-check). |
+| T-027 | @model-risk (production) | A new frozen hold-out (under P-055 if approved: 20 in scope + 12 out of scope, gold first with scope labels and an operations checklist, scorer v5), smoke first, .venv, paced, run and scored once: all 9 fields at 9/10, 0 false completes, 0 unsafe, route ≥18/20, plus the P-055 detection measures. |
 | T-082 | @responsible-ai (fairness) | As written in its veto message in team/DISCUSSION.md. |
+
+Scorer v5 H3 objection: closed (D-104).
 
 ## First 3 tasks next session
 
-1. Check the worktree and branch (`ai-team`). @model-risk look-again on v5 H3 only.
-2. User decisions 1–3. If P-055 is approved: build the detector (Tier 2 inventory entry, fail closed), the workbench "Manual intake" card and the blocked send (D-065), with self-checks.
-3. @senior-underwriter plans the next hold-out gold (20 + 12, scope labels, operations checklist) under the D-102/D-103 rules; build it only when the user says so.
+1. Check the worktree and branch (`ai-team`). User decision on P-055 revision 3.
+2. If P-055 is approved: build the detector (Tier 2 inventory entry with a version id, deterministic, fail closed), the workbench "Manual intake" card listing every reason and the blocked send (D-065), with self-checks; @model-risk check, High only.
+3. @senior-underwriter plans the next hold-out gold (20 + 12, scope labels, operations checklist, v5) under the D-102/D-103/D-104 rules; build it only when the user says so.
 
 ## For the AI Engineer
 
-- Pending: P-055 (revision 2, @model-risk APPROVE WITH CHANGES, M1–M3); P-056 (b) scope ruling; v5 H3 look-again.
-- Latest scores (dev, v4, `fd93be4`): SUB-127–146 premises 18, effective_date 19, operations 19, status 17, 0 false completes, 0 unsafe, route 16/20 (old gold). T-103 stays as published: route 16/20, operations 7/20, T-027 KEEP.
-- Top failure to fix next: out-of-scope files (scanned application, multi-location, non-English) need the P-055 detector before the next hold-out.
+- Pending: P-055 revision 3 (awaiting `approve change P-055`).
+- Latest scores (dev, v4, `fd93be4`, unchanged by D-104): SUB-127–146 premises 18, effective_date 19, operations 19, status 17, 0 false completes, 0 unsafe, route 16/20 (old gold). T-103 stays as published: route 16/20, operations 7/20, T-027 KEEP.
+- Top failure to fix next: out-of-scope files (scanned application, multi-location, non-English, no identifiable application) need the P-055 detector before the next hold-out.
