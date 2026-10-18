@@ -1,0 +1,88 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "application.md",
+    "email.md"
+  ],
+  "usage": {
+    "queue_time": 0.097575981,
+    "prompt_tokens": 773,
+    "prompt_time": 0.112006424,
+    "completion_tokens": 1107,
+    "completion_time": 2.292341793,
+    "total_tokens": 1880,
+    "total_time": 2.404348217,
+    "completion_tokens_details": {
+      "reasoning_tokens": 748
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Taquer\u00eda Luna Verde LLC",
+        "source": "application.md",
+        "quote": "**Asegurado nombre legal:** Taquer\u00eda Luna Verde LLC",
+        "confidence": 1
+      },
+      {
+        "field_id": "premises_address",
+        "value": "6842 Buckner Rd, Dallas, TX 75227",
+        "source": "application.md",
+        "quote": "**Direccion del predio:** 6842 Buckner Rd, Dallas, TX 75227",
+        "confidence": 1
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-02-01",
+        "source": "application.md",
+        "quote": "**Fecha efectiva:** 2027-02-01",
+        "confidence": 1
+      },
+      {
+        "field_id": "operations",
+        "value": "Restaurant of tacos, breakfast and dinner, full service",
+        "source": "application.md",
+        "quote": "**Operaciones:** Restaurante de tacos, desayuno y cena, servicio completo",
+        "confidence": 1
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "$890,000",
+        "source": "application.md",
+        "quote": "**Ventas anuales:** $890,000",
+        "confidence": 1
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "$410,000",
+        "source": "application.md",
+        "quote": "**Valor edificio (TIV):** $410,000",
+        "confidence": 1
+      },
+      {
+        "field_id": "construction",
+        "value": "masonry",
+        "source": "application.md",
+        "quote": "**Construccion:** Mamposteria",
+        "confidence": 1
+      },
+      {
+        "field_id": "year_built",
+        "value": "1994",
+        "source": "application.md",
+        "quote": "**Ano de construccion:** 1994",
+        "confidence": 1
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "source": null,
+        "quote": null,
+        "confidence": 0
+      }
+    ],
+    "conflicts": []
+  }
+}

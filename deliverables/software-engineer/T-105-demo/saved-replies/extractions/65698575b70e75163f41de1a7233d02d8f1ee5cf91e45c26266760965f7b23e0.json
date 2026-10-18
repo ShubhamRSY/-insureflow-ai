@@ -1,0 +1,87 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "email.md"
+  ],
+  "usage": {
+    "queue_time": 0.230274783,
+    "prompt_tokens": 581,
+    "prompt_time": 0.050124444,
+    "completion_tokens": 705,
+    "completion_time": 1.462604234,
+    "total_tokens": 1286,
+    "total_time": 1.512728678,
+    "completion_tokens_details": {
+      "reasoning_tokens": 475
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Kettle and Spur Lounge LLC",
+        "source": "email.md",
+        "quote": "Kettle and Spur Lounge LLC",
+        "confidence": 1
+      },
+      {
+        "field_id": "premises_address",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "March 1 2027",
+        "source": "email.md",
+        "quote": "eff March 1 2027",
+        "confidence": 1
+      },
+      {
+        "field_id": "operations",
+        "value": "cocktail bar",
+        "source": "email.md",
+        "quote": "cocktail bar",
+        "confidence": 1
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "construction",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "year_built",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      }
+    ],
+    "conflicts": []
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "prompt_version": "b025802c0dfa",
+  "files": [
+    "application.pdf",
+    "email.md"
+  ],
+  "usage": {
+    "queue_time": 0.097128475,
+    "prompt_tokens": 726,
+    "prompt_time": 0.0581654,
+    "completion_tokens": 754,
+    "completion_time": 1.483524213,
+    "total_tokens": 1480,
+    "total_time": 1.541689613
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Perez Bench Office LLC",
+        "source": "application.pdf",
+        "quote": "Named insured: Perez Bench Office LLC",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": null,
+        "source": null,
+        "quote": null,
+        "confidence": 0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2026-12-01",
+        "source": "application.pdf",
+        "quote": "Effective date: 2026-12-01",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "accounting office",
+        "source": "application.pdf",
+        "quote": "Description of operations: accounting office",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": 510000,
+        "source": "application.pdf",
+        "quote": "Sales or payroll: 510000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": 800000,
+        "source": "application.pdf",
+        "quote": "Building TIV: 800000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "masonry",
+        "source": "application.pdf",
+        "quote": "Construction: masonry",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": 1988,
+        "source": "application.pdf",
+        "quote": "Year built: 1988",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-05-01",
+        "source": "application.pdf",
+        "quote": "Valued through: 2026-05-01",
+        "confidence": 1.0
+      }
+    ],
+    "conflicts": [
+      {
+        "field": "premises_address",
+        "values": [
+          {
+            "value": "51 Perez St, San Antonio, TX 78210",
+            "source": "application.pdf",
+            "quote": "Premises address: 51 Perez St, San Antonio, TX 78210",
+            "confidence": 1.0
+          },
+          {
+            "value": "15 Perez St, San Antonio, TX 78210",
+            "source": "email.md",
+            "quote": "The location I have in my notes is 15 Perez St, San Antonio, TX 78210.",
+            "confidence": 1.0
+          }
+        ]
+      }
+    ]
+  }
+}

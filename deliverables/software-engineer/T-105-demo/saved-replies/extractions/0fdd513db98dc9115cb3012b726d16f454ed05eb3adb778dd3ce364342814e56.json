@@ -1,0 +1,106 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "application.pdf",
+    "email.md"
+  ],
+  "usage": {
+    "queue_time": 0.183441677,
+    "prompt_tokens": 736,
+    "prompt_time": 0.036539245,
+    "completion_tokens": 1393,
+    "completion_time": 2.889449768,
+    "total_tokens": 2129,
+    "total_time": 2.925989013,
+    "completion_tokens_details": {
+      "reasoning_tokens": 983
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Redbud Engineering Consulting LLC",
+        "source": "application.pdf",
+        "quote": "Named insured (legal name) Redbud Engineering Consulting LLC",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": "5205 Story Rd, Irving, TX 75038",
+        "source": "application.pdf",
+        "quote": "Premises address 5205 Story Rd, Irving, TX 75038",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-04-01",
+        "source": "application.pdf",
+        "quote": "Effective date 2027-04-01",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "Engineering and environmental consulting, office based, some field visits",
+        "source": "application.pdf",
+        "quote": "Operations Engineering and environmental consulting, office based, some field visits",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": null,
+        "source": null,
+        "quote": null,
+        "confidence": 0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "540000",
+        "source": "application.pdf",
+        "quote": "Building TIV $540,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "Non-combustible",
+        "source": "application.pdf",
+        "quote": "Construction Non-combustible",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": "2003",
+        "source": "application.pdf",
+        "quote": "Year built 2003",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "source": null,
+        "quote": null,
+        "confidence": 0
+      }
+    ],
+    "conflicts": [
+      {
+        "field": "sales_or_payroll",
+        "values": [
+          {
+            "value": "1520000",
+            "source": "application.pdf",
+            "quote": "Annual sales $1,520,000",
+            "confidence": 1.0
+          },
+          {
+            "value": "1200000",
+            "source": "email.md",
+            "quote": "Revenue last year was about 1.2M",
+            "confidence": 1.0
+          }
+        ]
+      }
+    ]
+  }
+}

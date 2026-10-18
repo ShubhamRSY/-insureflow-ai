@@ -1,0 +1,88 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "email.md",
+    "schedule.xlsx"
+  ],
+  "usage": {
+    "queue_time": 0.183305339,
+    "prompt_tokens": 626,
+    "prompt_time": 0.091792532,
+    "completion_tokens": 789,
+    "completion_time": 1.6395175979999999,
+    "total_tokens": 1415,
+    "total_time": 1.73131013,
+    "completion_tokens_details": {
+      "reasoning_tokens": 504
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Broadway Gifts LLC",
+        "source": "email.md",
+        "quote": "Broadway Gifts LLC",
+        "confidence": 1
+      },
+      {
+        "field_id": "premises_address",
+        "value": "300 Broadway St, San Antonio, TX 78205",
+        "source": "email.md",
+        "quote": "300 Broadway St, San Antonio, TX 78205",
+        "confidence": 1
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-01-01",
+        "source": "email.md",
+        "quote": "Effective date 2027-01-01",
+        "confidence": 1
+      },
+      {
+        "field_id": "operations",
+        "value": "dry retail",
+        "source": "email.md",
+        "quote": "dry retail",
+        "confidence": 1
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "470000",
+        "source": "email.md",
+        "quote": "Sales 470000",
+        "confidence": 1
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "340000",
+        "source": "schedule.xlsx",
+        "quote": "340000",
+        "confidence": 1
+      },
+      {
+        "field_id": "construction",
+        "value": "masonry",
+        "source": "schedule.xlsx",
+        "quote": "masonry",
+        "confidence": 1
+      },
+      {
+        "field_id": "year_built",
+        "value": "1971",
+        "source": "schedule.xlsx",
+        "quote": "1971",
+        "confidence": 1
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "source": null,
+        "quote": null,
+        "confidence": 0
+      }
+    ],
+    "conflicts": []
+  }
+}

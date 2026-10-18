@@ -1,0 +1,110 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "application.pdf",
+    "email.md",
+    "schedule.csv"
+  ],
+  "usage": {
+    "queue_time": 0.221943847,
+    "prompt_tokens": 772,
+    "prompt_time": 0.093447772,
+    "completion_tokens": 1596,
+    "completion_time": 3.337617672,
+    "total_tokens": 2368,
+    "total_time": 3.431065444,
+    "prompt_tokens_details": {
+      "cached_tokens": 512
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 1210
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Lone Oak Signworks LLC",
+        "source": "application.pdf",
+        "quote": "Named insured (legal name) Lone Oak Signworks LLC",
+        "confidence": 1
+      },
+      {
+        "field_id": "premises_address",
+        "value": null,
+        "source": null,
+        "quote": null,
+        "confidence": 0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-05-01",
+        "source": "application.pdf",
+        "quote": "Effective date 2027-05-01",
+        "confidence": 1
+      },
+      {
+        "field_id": "operations",
+        "value": "Sign fabrication and installation",
+        "source": "application.pdf",
+        "quote": "Operations Sign fabrication and installation",
+        "confidence": 1
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "Annual sales $1,050,000",
+        "source": "application.pdf",
+        "quote": "Annual sales $1,050,000",
+        "confidence": 1
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "$480,000",
+        "source": "application.pdf",
+        "quote": "Building TIV $480,000",
+        "confidence": 1
+      },
+      {
+        "field_id": "construction",
+        "value": "Metal",
+        "source": "application.pdf",
+        "quote": "Construction Metal",
+        "confidence": 1
+      },
+      {
+        "field_id": "year_built",
+        "value": "1989",
+        "source": "application.pdf",
+        "quote": "Year built 1989",
+        "confidence": 1
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "source": null,
+        "quote": null,
+        "confidence": 0
+      }
+    ],
+    "conflicts": [
+      {
+        "field": "premises_address",
+        "values": [
+          {
+            "value": "5510 Old Pecan Trl, San Antonio, TX 78233",
+            "source": "application.pdf",
+            "quote": "Premises address 5510 Old Pecan Trl, San Antonio, TX 78233",
+            "confidence": 1
+          },
+          {
+            "value": "5510 Old Pecan Trl",
+            "source": "schedule.csv",
+            "quote": "5510 Old Pecan Trl",
+            "confidence": 1
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,87 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "scan.jpg"
+  ],
+  "usage": {
+    "queue_time": 0.155490074,
+    "prompt_tokens": 608,
+    "prompt_time": 0.155959676,
+    "completion_tokens": 798,
+    "completion_time": 1.6644128459999998,
+    "total_tokens": 1406,
+    "total_time": 1.820372522,
+    "completion_tokens_details": {
+      "reasoning_tokens": 462
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Rigsby Watch LLC",
+        "source": "scan.jpg",
+        "quote": "Named insured: Rigsby Watch LLC",
+        "confidence": 1
+      },
+      {
+        "field_id": "premises_address",
+        "value": "L200 Rigsby Ave, San Antonio, TX #8210",
+        "source": "scan.jpg",
+        "quote": "Premises: L200 Rigsby Ave, San Antonio, TX #8210",
+        "confidence": 1
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2O2H-01-O1",
+        "source": "scan.jpg",
+        "quote": "Effective date: 2O2H-01-O1",
+        "confidence": 1
+      },
+      {
+        "field_id": "operations",
+        "value": "dry retail watch repair",
+        "source": "scan.jpg",
+        "quote": "Operations: dry retail watch repair",
+        "confidence": 1
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "165000",
+        "source": "scan.jpg",
+        "quote": "Sales: 165000",
+        "confidence": 1
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "95000",
+        "source": "scan.jpg",
+        "quote": "Building Tiv: 95000",
+        "confidence": 1
+      },
+      {
+        "field_id": "construction",
+        "value": "masonry",
+        "source": "scan.jpg",
+        "quote": "Construction: masonry",
+        "confidence": 1
+      },
+      {
+        "field_id": "year_built",
+        "value": "1942",
+        "source": "scan.jpg",
+        "quote": "Year built: 1942",
+        "confidence": 1
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-08-08",
+        "source": "scan.jpg",
+        "quote": "Valued through: 2026-08-08",
+        "confidence": 1
+      }
+    ],
+    "conflicts": []
+  }
+}

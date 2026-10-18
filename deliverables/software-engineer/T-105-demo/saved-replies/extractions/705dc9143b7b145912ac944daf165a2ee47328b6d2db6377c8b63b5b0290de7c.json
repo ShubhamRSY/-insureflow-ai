@@ -1,0 +1,109 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "email.md",
+    "schedule.xlsx"
+  ],
+  "usage": {
+    "queue_time": 0.222073213,
+    "prompt_tokens": 683,
+    "prompt_time": 0.053961022,
+    "completion_tokens": 824,
+    "completion_time": 1.889409858,
+    "total_tokens": 1507,
+    "total_time": 1.94337088,
+    "prompt_tokens_details": {
+      "cached_tokens": 256
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 472
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "De Zavala Wholesale LLC.",
+        "source": "email.md",
+        "quote": "De Zavala Wholesale LLC.",
+        "confidence": 1
+      },
+      {
+        "field_id": "premises_address",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-01-01",
+        "source": "email.md",
+        "quote": "Effective date 2027-01-01",
+        "confidence": 1
+      },
+      {
+        "field_id": "operations",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "1750000",
+        "source": "email.md",
+        "quote": "Sales 1750000",
+        "confidence": 1
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "900000",
+        "source": "email.md",
+        "quote": "Total building TIV 900000",
+        "confidence": 1
+      },
+      {
+        "field_id": "construction",
+        "value": "masonry",
+        "source": "email.md",
+        "quote": "Construction masonry",
+        "confidence": 1
+      },
+      {
+        "field_id": "year_built",
+        "value": "1993",
+        "source": "email.md",
+        "quote": "Year built 1993",
+        "confidence": 1
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      }
+    ],
+    "conflicts": [
+      {
+        "field": "premises_address",
+        "values": [
+          {
+            "value": "10 De Zavala Rd, San Antonio, TX 78249",
+            "source": "email.md",
+            "quote": "10 De Zavala Rd, San Antonio, TX 78249",
+            "confidence": 1
+          },
+          {
+            "value": "80 Prue Rd, San Antonio, TX 78240",
+            "source": "email.md",
+            "quote": "80 Prue Rd, San Antonio, TX 78240",
+            "confidence": 1
+          }
+        ]
+      }
+    ]
+  }
+}

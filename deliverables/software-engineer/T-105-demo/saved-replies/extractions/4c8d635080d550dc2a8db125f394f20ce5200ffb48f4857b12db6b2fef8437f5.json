@@ -1,0 +1,107 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "application.pdf",
+    "email.md",
+    "loss-runs.pdf"
+  ],
+  "usage": {
+    "queue_time": 0.199386208,
+    "prompt_tokens": 895,
+    "prompt_time": 0.042394034,
+    "completion_tokens": 1460,
+    "completion_time": 3.059509341,
+    "total_tokens": 2355,
+    "total_time": 3.101903375,
+    "completion_tokens_details": {
+      "reasoning_tokens": 1000
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Kettle & Spur Lounge LLC",
+        "source": "application.pdf",
+        "quote": "Kettle & Spur Lounge LLC",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": "1190 Magnolia Ave, Fort Worth, TX 76104",
+        "source": "application.pdf",
+        "quote": "1190 Magnolia Ave, Fort Worth, TX 76104",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-03-01",
+        "source": "application.pdf",
+        "quote": "2027-03-01",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "$720,000",
+        "source": "application.pdf",
+        "quote": "Annual sales $720,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "$260,000",
+        "source": "application.pdf",
+        "quote": "Building TIV $260,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "Brick veneer on wood frame",
+        "source": "application.pdf",
+        "quote": "Brick veneer on wood frame",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": "1928",
+        "source": "application.pdf",
+        "quote": "1928",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-10-01",
+        "source": "loss-runs.pdf",
+        "quote": "2026-10-01",
+        "confidence": 1.0
+      }
+    ],
+    "conflicts": [
+      {
+        "field": "operations",
+        "values": [
+          {
+            "value": "Cocktail bar, beer and wine, live music Fri-Sat, closes 2 AM",
+            "source": "application.pdf",
+            "quote": "Cocktail bar, beer and wine, live music Fri-Sat, closes 2 AM",
+            "confidence": 1.0
+          },
+          {
+            "value": "cocktail bar in Fort Worth, eff March 1 2027. Mostly drinks, we do a little food. Live music weekends.",
+            "source": "email.md",
+            "quote": "cocktail bar in Fort Worth, eff March 1 2027. Mostly drinks, we do a little food. Live music weekends.",
+            "confidence": 1.0
+          }
+        ]
+      }
+    ]
+  }
+}

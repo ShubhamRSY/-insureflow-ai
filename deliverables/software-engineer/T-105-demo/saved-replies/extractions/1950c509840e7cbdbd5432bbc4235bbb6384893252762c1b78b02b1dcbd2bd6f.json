@@ -1,0 +1,87 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "email.md"
+  ],
+  "usage": {
+    "queue_time": 0.066003382,
+    "prompt_tokens": 640,
+    "prompt_time": 0.03519943,
+    "completion_tokens": 690,
+    "completion_time": 1.458040702,
+    "total_tokens": 1330,
+    "total_time": 1.493240132,
+    "completion_tokens_details": {
+      "reasoning_tokens": 394
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Pine Hollow Accounting PLLC",
+        "source": "email.md",
+        "quote": "Pine Hollow Accounting PLLC",
+        "confidence": 0.95
+      },
+      {
+        "field_id": "premises_address",
+        "value": "2740 Legacy Hollow Dr, Plano TX 75024",
+        "source": "email.md",
+        "quote": "2740 Legacy Hollow Dr, Plano TX 75024",
+        "confidence": 0.95
+      },
+      {
+        "field_id": "effective_date",
+        "value": "04/01/2027",
+        "source": "email.md",
+        "quote": "04/01/2027",
+        "confidence": 0.95
+      },
+      {
+        "field_id": "operations",
+        "value": "CPA office",
+        "source": "email.md",
+        "quote": "CPA office",
+        "confidence": 0.95
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "580k",
+        "source": "email.md",
+        "quote": "580k",
+        "confidence": 0.9
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "620k",
+        "source": "email.md",
+        "quote": "620k",
+        "confidence": 0.9
+      },
+      {
+        "field_id": "construction",
+        "value": "masonry",
+        "source": "email.md",
+        "quote": "masonry",
+        "confidence": 0.9
+      },
+      {
+        "field_id": "year_built",
+        "value": "2007",
+        "source": "email.md",
+        "quote": "2007",
+        "confidence": 0.95
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      }
+    ],
+    "conflicts": []
+  }
+}

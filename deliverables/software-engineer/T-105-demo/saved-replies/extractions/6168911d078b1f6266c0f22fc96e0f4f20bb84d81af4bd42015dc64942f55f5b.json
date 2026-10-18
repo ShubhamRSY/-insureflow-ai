@@ -1,0 +1,90 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "solicitud.md"
+  ],
+  "usage": {
+    "queue_time": 0.170670265,
+    "prompt_tokens": 621,
+    "prompt_time": 1.708643558,
+    "completion_tokens": 763,
+    "completion_time": 2.5567872769999997,
+    "total_tokens": 1384,
+    "total_time": 4.265430835,
+    "prompt_tokens_details": {
+      "cached_tokens": 256
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 426
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Club del Rio LLC",
+        "source": "solicitud.md",
+        "quote": "Club del Rio LLC",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": "12 King William St, San Antonio, TX 78204",
+        "source": "solicitud.md",
+        "quote": "12 King William St, San Antonio, TX 78204",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-01-01",
+        "source": "solicitud.md",
+        "quote": "2027-01-01",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "bar and nightclub",
+        "source": "solicitud.md",
+        "quote": "bar y club nocturno",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "1200000",
+        "source": "solicitud.md",
+        "quote": "1200000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "950000",
+        "source": "solicitud.md",
+        "quote": "950000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "masonry",
+        "source": "solicitud.md",
+        "quote": "mamposteria",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": "1932",
+        "source": "solicitud.md",
+        "quote": "1932",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-06-15",
+        "source": "solicitud.md",
+        "quote": "2026-06-15",
+        "confidence": 1.0
+      }
+    ],
+    "conflicts": []
+  }
+}

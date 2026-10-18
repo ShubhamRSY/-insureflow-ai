@@ -1,0 +1,88 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "email.md",
+    "solicitud.md"
+  ],
+  "usage": {
+    "queue_time": 0.141119614,
+    "prompt_tokens": 645,
+    "prompt_time": 0.02491297,
+    "completion_tokens": 845,
+    "completion_time": 1.74571432,
+    "total_tokens": 1490,
+    "total_time": 1.77062729,
+    "completion_tokens_details": {
+      "reasoning_tokens": 483
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Contadores Del Nogal LLC",
+        "source": "solicitud.md",
+        "quote": "Asegurado: Contadores Del Nogal LLC",
+        "confidence": 1
+      },
+      {
+        "field_id": "premises_address",
+        "value": "120 Nogal St, San Antonio, TX 78212",
+        "source": "solicitud.md",
+        "quote": "Direccion del local: 120 Nogal St, San Antonio, TX 78212",
+        "confidence": 1
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2026-12-01",
+        "source": "solicitud.md",
+        "quote": "Fecha efectiva: 2026-12-01",
+        "confidence": 1
+      },
+      {
+        "field_id": "operations",
+        "value": "accounting office",
+        "source": "solicitud.md",
+        "quote": "Operaciones: oficina de contabilidad",
+        "confidence": 1
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "720000",
+        "source": "solicitud.md",
+        "quote": "Ventas anuales: 720000",
+        "confidence": 1
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "1100000",
+        "source": "solicitud.md",
+        "quote": "Valor del edificio: 1100000",
+        "confidence": 1
+      },
+      {
+        "field_id": "construction",
+        "value": "masonry",
+        "source": "solicitud.md",
+        "quote": "Construccion: mamposteria",
+        "confidence": 1
+      },
+      {
+        "field_id": "year_built",
+        "value": "2001",
+        "source": "solicitud.md",
+        "quote": "Ano de construccion: 2001",
+        "confidence": 1
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-06-30",
+        "source": "solicitud.md",
+        "quote": "Valuado al: 2026-06-30",
+        "confidence": 1
+      }
+    ],
+    "conflicts": []
+  }
+}

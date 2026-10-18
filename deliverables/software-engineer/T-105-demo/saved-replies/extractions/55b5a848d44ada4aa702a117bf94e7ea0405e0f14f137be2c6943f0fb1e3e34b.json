@@ -1,0 +1,109 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "application.pdf",
+    "email.md"
+  ],
+  "usage": {
+    "queue_time": 0.131032529,
+    "prompt_tokens": 647,
+    "prompt_time": 0.016520684,
+    "completion_tokens": 1053,
+    "completion_time": 2.46272341,
+    "total_tokens": 1700,
+    "total_time": 2.4792440940000002,
+    "prompt_tokens_details": {
+      "cached_tokens": 256
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 672
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Cesar Chavez Tax LLC",
+        "source": "application.pdf",
+        "quote": "Cesar Chavez Tax LLC",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-01-01",
+        "source": "application.pdf",
+        "quote": "2027-01-01",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "accounting office",
+        "source": "application.pdf",
+        "quote": "accounting office",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "390000",
+        "source": "application.pdf",
+        "quote": "390000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "450000",
+        "source": "application.pdf",
+        "quote": "450000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "masonry",
+        "source": "application.pdf",
+        "quote": "masonry",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": "2004",
+        "source": "application.pdf",
+        "quote": "2004",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-09-10",
+        "source": "application.pdf",
+        "quote": "2026-09-10",
+        "confidence": 1.0
+      }
+    ],
+    "conflicts": [
+      {
+        "field": "premises_address",
+        "values": [
+          {
+            "value": "1400 Cesar Chavez Blvd, San Antonio, TX 78207",
+            "source": "application.pdf",
+            "quote": "1400 Cesar Chavez Blvd, San Antonio, TX 78207",
+            "confidence": 1.0
+          },
+          {
+            "value": "410 Cesar Chavez Blvd, San Antonio, TX 78207",
+            "source": "email.md",
+            "quote": "410 Cesar Chavez Blvd, San Antonio, TX 78207",
+            "confidence": 1.0
+          }
+        ]
+      }
+    ]
+  }
+}

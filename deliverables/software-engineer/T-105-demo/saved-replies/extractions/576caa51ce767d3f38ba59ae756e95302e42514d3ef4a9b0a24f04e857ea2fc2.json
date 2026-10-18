@@ -1,0 +1,87 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "prompt_version": "b025802c0dfa",
+  "files": [
+    "application.md",
+    "email.md",
+    "loss-runs.jpg",
+    "schedule.csv"
+  ],
+  "usage": {
+    "queue_time": 0.066202809,
+    "prompt_tokens": 1333,
+    "prompt_time": 0.091511096,
+    "completion_tokens": 849,
+    "completion_time": 1.629760602,
+    "total_tokens": 2182,
+    "total_time": 1.721271698
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Hollis and Vane Kitchen LLC",
+        "source": "application.md",
+        "quote": "Named insured: Hollis and Vane Kitchen LLC",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": "1100 Travis St, Houston, TX 77002",
+        "source": "application.md",
+        "quote": "Premises address: 1100 Travis St, Houston, TX 77002",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-01-01",
+        "source": "application.md",
+        "quote": "Effective date: 2027-01-01",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "full-service restaurant, lunch and dinner, 140 seats, beer and wine only, no liquor license, weekend brunch, gas char-broiler (36 in), two gas fryers (50 lb each), flat-top griddle, 6-burner range, 2-deck convection oven, Type I hood over all cooking lines with UL 300 wet chemical suppression",
+        "source": "application.md",
+        "quote": "Operations: full-service restaurant, lunch and dinner, 140 seats, beer and wine only, no liquor license. Weekend brunch.\nNumber of employees: 34\nAnnual sales: $1,480,000\nBuilding TIV: $615,000\nBusiness personal property: $210,000\nSquare footage: 4,800\nConstruction: Joisted masonry\nYear built: 1994\nStories: 2\nSprinklers: Yes\nCooking operations: gas char-broiler (36 in), two gas fryers (50 lb each), flat-top griddle, 6-burner range, 2-deck convection oven. Type I hood over all cooking lines with UL 300 wet chemical suppression.",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "1480000",
+        "source": "application.md",
+        "quote": "Annual sales: $1,480,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "615000",
+        "source": "application.md",
+        "quote": "Building TIV: $615,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "Joisted masonry",
+        "source": "application.md",
+        "quote": "Construction: Joisted masonry",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": "1994",
+        "source": "application.md",
+        "quote": "Year built: 1994",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "source": null,
+        "quote": null,
+        "confidence": 0
+      }
+    ],
+    "conflicts": []
+  }
+}

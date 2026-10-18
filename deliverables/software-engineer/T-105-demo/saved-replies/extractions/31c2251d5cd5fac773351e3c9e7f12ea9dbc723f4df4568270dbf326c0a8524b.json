@@ -1,0 +1,84 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "prompt_version": "a7413a9c72b0",
+  "files": [
+    "email.md"
+  ],
+  "usage": {
+    "queue_time": 0.083029802,
+    "prompt_tokens": 587,
+    "prompt_time": 0.040273725,
+    "completion_tokens": 552,
+    "completion_time": 1.11735373,
+    "total_tokens": 1139,
+    "total_time": 1.157627455
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Brazos Cabinets",
+        "source": "email.md",
+        "quote": "Brazos Cabinets renewal",
+        "confidence": 0.95
+      },
+      {
+        "field_id": "premises_address",
+        "value": "3418 Bosque Industrial, Waco",
+        "source": "email.md",
+        "quote": "Cabinet shop in Waco, 3418 Bosque Industrial",
+        "confidence": 0.95
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-08-01",
+        "source": "email.md",
+        "quote": "Brazos Cabinets renewal - 8/1/27",
+        "confidence": 0.9
+      },
+      {
+        "field_id": "operations",
+        "value": "Cabinet shop",
+        "source": "email.md",
+        "quote": "Cabinet shop in Waco",
+        "confidence": 0.95
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "1100000",
+        "source": "email.md",
+        "quote": "Sales around 1.1M",
+        "confidence": 0.9
+      },
+      {
+        "field_id": "tiv_building",
+        "value": null,
+        "source": null,
+        "quote": null,
+        "confidence": 0
+      },
+      {
+        "field_id": "construction",
+        "value": "Steel frame",
+        "source": "email.md",
+        "quote": "Steel frame built 89",
+        "confidence": 0.95
+      },
+      {
+        "field_id": "year_built",
+        "value": "1989",
+        "source": "email.md",
+        "quote": "Steel frame built 89",
+        "confidence": 0.9
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "source": null,
+        "quote": null,
+        "confidence": 0
+      }
+    ],
+    "conflicts": []
+  }
+}

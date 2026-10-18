@@ -1,0 +1,91 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "email.md",
+    "schedule.xlsx"
+  ],
+  "usage": {
+    "queue_time": 0.141383268,
+    "prompt_tokens": 613,
+    "prompt_time": 0.021255122,
+    "completion_tokens": 847,
+    "completion_time": 1.96640406,
+    "total_tokens": 1460,
+    "total_time": 1.987659182,
+    "prompt_tokens_details": {
+      "cached_tokens": 256
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 553
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Rigsby Paper LLC",
+        "source": "email.md",
+        "quote": "Rigsby Paper LLC",
+        "confidence": 1
+      },
+      {
+        "field_id": "premises_address",
+        "value": "1500 Rigsby Ave, San Antonio, TX 78210",
+        "source": "schedule.xlsx",
+        "quote": "1500 Rigsby Ave, San Antonio, TX 78210",
+        "confidence": 1
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-01-01",
+        "source": "email.md",
+        "quote": "2027-01-01",
+        "confidence": 1
+      },
+      {
+        "field_id": "operations",
+        "value": "Light wholesale",
+        "source": "email.md",
+        "quote": "Light wholesale",
+        "confidence": 1
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "990000",
+        "source": "email.md",
+        "quote": "990000",
+        "confidence": 1
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "610000",
+        "source": "schedule.xlsx",
+        "quote": "610000",
+        "confidence": 1
+      },
+      {
+        "field_id": "construction",
+        "value": "masonry",
+        "source": "schedule.xlsx",
+        "quote": "masonry",
+        "confidence": 1
+      },
+      {
+        "field_id": "year_built",
+        "value": "1992",
+        "source": "schedule.xlsx",
+        "quote": "1992",
+        "confidence": 1
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "source": "email.md",
+        "quote": "No loss runs in this email.",
+        "confidence": 1
+      }
+    ],
+    "conflicts": []
+  }
+}

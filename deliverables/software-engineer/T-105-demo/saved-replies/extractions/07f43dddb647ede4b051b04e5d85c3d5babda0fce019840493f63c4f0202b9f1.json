@@ -1,0 +1,122 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "prompt_version": "a7413a9c72b0",
+  "files": [
+    "application.pdf",
+    "email.md",
+    "loss-runs.md",
+    "schedule.csv"
+  ],
+  "usage": {
+    "queue_time": 0.065443088,
+    "prompt_tokens": 1040,
+    "prompt_time": 0.076012447,
+    "completion_tokens": 903,
+    "completion_time": 1.7583513769999999,
+    "total_tokens": 1943,
+    "total_time": 1.834363824
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Pastor Norte Taqueria LLC",
+        "source": "application.pdf",
+        "quote": "Named insured: Pastor Norte Taqueria LLC",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": null,
+        "source": null,
+        "quote": null,
+        "confidence": 0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-02-15",
+        "source": "application.pdf",
+        "quote": "Effective date: 2027-02-15",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "Taqueria, counter service. Tortillas made on site. Al pastor trompo.",
+        "source": "application.pdf",
+        "quote": "Operations: Taqueria, counter service. Tortillas made on site. Al pastor trompo.",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": null,
+        "source": null,
+        "quote": null,
+        "confidence": 0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "480000",
+        "source": "application.pdf",
+        "quote": "Building TIV: $480,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "Joisted masonry",
+        "source": "application.pdf",
+        "quote": "Construction: Joisted masonry",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": "1983",
+        "source": "application.pdf",
+        "quote": "Year built: 1983",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-09-30",
+        "source": "loss-runs.md",
+        "quote": "Valued through: 2026-09-30",
+        "confidence": 1.0
+      }
+    ],
+    "conflicts": [
+      {
+        "field": "premises_address",
+        "values": [
+          {
+            "value": "4410 Blanco Rd, San Antonio TX 78216",
+            "source": "application.pdf",
+            "quote": "Premises address: 4410 Blanco Rd, San Antonio TX 78216",
+            "confidence": 1.0
+          },
+          {
+            "value": "4140 Blanco Rd, San Antonio TX 78216",
+            "source": "schedule.csv",
+            "quote": "4140 Blanco Rd\tSan Antonio\t78216",
+            "confidence": 1.0
+          }
+        ]
+      },
+      {
+        "field": "sales_or_payroll",
+        "values": [
+          {
+            "value": "890000",
+            "source": "application.pdf",
+            "quote": "Annual sales / revenue: $890,000",
+            "confidence": 1.0
+          },
+          {
+            "value": "1090000",
+            "source": "email.md",
+            "quote": "Sales were 1.09M last year",
+            "confidence": 1.0
+          }
+        ]
+      }
+    ]
+  }
+}

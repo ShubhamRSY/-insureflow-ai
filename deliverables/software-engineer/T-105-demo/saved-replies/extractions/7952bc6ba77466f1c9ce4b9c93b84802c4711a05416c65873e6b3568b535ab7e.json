@@ -1,0 +1,87 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "prompt_version": "a7413a9c72b0",
+  "files": [
+    "application.md",
+    "email.md",
+    "loss-runs.md",
+    "schedule.csv"
+  ],
+  "usage": {
+    "queue_time": 0.024364487,
+    "prompt_tokens": 1081,
+    "prompt_time": 0.09008186,
+    "completion_tokens": 651,
+    "completion_time": 1.348835974,
+    "total_tokens": 1732,
+    "total_time": 1.438917834
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Pecan Grove Feed & Seed Co LLC",
+        "source": "application.md",
+        "quote": "Named insured: Pecan Grove Feed & Seed Co LLC",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": "1600 S Fillmore St, Amarillo, TX 79101",
+        "source": "application.md",
+        "quote": "Premises address: 1600 S Fillmore St, Amarillo, TX 79101",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-04-01",
+        "source": "application.md",
+        "quote": "Effective date: 2027-04-01",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "Wholesale and retail of animal feed, seed and fertilizer bags. Warehouse with loading dock and a small trade counter.",
+        "source": "application.md",
+        "quote": "Operations: Wholesale and retail of animal feed, seed and fertilizer bags. Warehouse with loading dock and a small trade counter.",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "3200000",
+        "source": "application.md",
+        "quote": "Annual sales: $3,200,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "1850000",
+        "source": "application.md",
+        "quote": "Building TIV: $1,850,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "Concrete block (CMU)",
+        "source": "application.md",
+        "quote": "Construction: Concrete block (CMU)",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": "1968",
+        "source": "application.md",
+        "quote": "Year built: 1968",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "source": null,
+        "quote": null,
+        "confidence": 0
+      }
+    ],
+    "conflicts": []
+  }
+}

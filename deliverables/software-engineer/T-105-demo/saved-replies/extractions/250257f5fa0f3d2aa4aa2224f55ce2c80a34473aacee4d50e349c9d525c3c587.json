@@ -1,0 +1,90 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "email.md"
+  ],
+  "usage": {
+    "queue_time": 0.095680942,
+    "prompt_tokens": 565,
+    "prompt_time": 0.017299808,
+    "completion_tokens": 794,
+    "completion_time": 1.9038452129999999,
+    "total_tokens": 1359,
+    "total_time": 1.921145021,
+    "prompt_tokens_details": {
+      "cached_tokens": 256
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 559
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Border Cold Storage Distributors LLC",
+        "source": "email.md",
+        "quote": "Border Cold Storage Distributors LLC",
+        "confidence": 0.95
+      },
+      {
+        "field_id": "premises_address",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "1/1/2027",
+        "source": "email.md",
+        "quote": "1/1/2027",
+        "confidence": 0.95
+      },
+      {
+        "field_id": "operations",
+        "value": "Frozen food wholesale",
+        "source": "email.md",
+        "quote": "Frozen food wholesale",
+        "confidence": 0.95
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "construction",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "year_built",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      }
+    ],
+    "conflicts": []
+  }
+}

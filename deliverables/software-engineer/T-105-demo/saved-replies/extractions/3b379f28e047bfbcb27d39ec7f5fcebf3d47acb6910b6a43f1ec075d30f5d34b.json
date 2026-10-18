@@ -1,0 +1,126 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "email.md",
+    "schedule.xlsx"
+  ],
+  "usage": {
+    "queue_time": 0.16919645,
+    "prompt_tokens": 680,
+    "prompt_time": 0.023514273,
+    "completion_tokens": 967,
+    "completion_time": 2.028715673,
+    "total_tokens": 1647,
+    "total_time": 2.052229946,
+    "prompt_tokens_details": {
+      "cached_tokens": 256
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 573
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Babcock Wholesale LLC.",
+        "source": "email.md",
+        "quote": "Babcock Wholesale LLC.",
+        "confidence": 1
+      },
+      {
+        "field_id": "premises_address",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-01-01",
+        "source": "email.md",
+        "quote": "Effective date 2027-01-01",
+        "confidence": 1
+      },
+      {
+        "field_id": "operations",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "2100000",
+        "source": "email.md",
+        "quote": "Sales 2100000",
+        "confidence": 1
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "1200000",
+        "source": "email.md",
+        "quote": "Total building TIV 1200000",
+        "confidence": 1
+      },
+      {
+        "field_id": "construction",
+        "value": "masonry",
+        "source": "schedule.xlsx",
+        "quote": "masonry",
+        "confidence": 1
+      },
+      {
+        "field_id": "year_built",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      }
+    ],
+    "conflicts": [
+      {
+        "field": "premises_address",
+        "values": [
+          {
+            "value": "100 Babcock Rd, San Antonio, TX 78201",
+            "source": "email.md",
+            "quote": "100 Babcock Rd, San Antonio, TX 78201",
+            "confidence": 1
+          },
+          {
+            "value": "50 Callaghan Rd, San Antonio, TX 78228",
+            "source": "email.md",
+            "quote": "50 Callaghan Rd, San Antonio, TX 78228",
+            "confidence": 1
+          }
+        ]
+      },
+      {
+        "field": "year_built",
+        "values": [
+          {
+            "value": "1991",
+            "source": "schedule.xlsx",
+            "quote": "1991",
+            "confidence": 1
+          },
+          {
+            "value": "1984",
+            "source": "schedule.xlsx",
+            "quote": "1984",
+            "confidence": 1
+          }
+        ]
+      }
+    ]
+  }
+}

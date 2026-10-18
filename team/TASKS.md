@@ -1630,3 +1630,12 @@ D-004 (user, 2026-10-09): Sanger & Altgelt agency pipeline. Eight steps. No auto
 - Acceptance criteria:
   - [ ] Scorer v6 = v5 plus the P-055 measures: leakage 0 (any out-of-scope file shown complete, routed, or given an automated missing-info draft), detection recall 100% per criterion and overall, in-scope files wrongly sent to manual intake ≤ 2 of 20; v5 field scores and the route gate (0 unsafe, ≥ 18/20) on in-scope files. Built from the gold format only; no T-104 file or gold read. v4/v5 unchanged. Self-checks on dev data.
   - [ ] Detector catches numbered locations/buildings/premises ("Location No. 2", "Loc #2", "Building 2", "Bldg 2", "Premises 2", ...), version bumped; self-checks on dev; pyright on changed files.
+
+### T-105 — Manager demo prep (no pipeline code changes)
+- Owner: @senior-underwriter (files), @software-engineer (workbench + screenshots), @pm (guide, summary), @senior-test-engineer (rehearsal) · Status: DONE (rehearsal READY WITH FIXES; guide setup fixed by the orchestrator with run-demo.sh, re-run clean, 0 live calls, D-069 clean) · Decision: D-110
+- Acceptance criteria:
+  - [ ] 3 demo files from dev data, none from a hold-out: (a) messy in-scope file that reaches a carrier quote, (b) out-of-scope file sent to manual intake with a plain reason, (c) senior-referral file confirmed by a senior (P-052). Each runs cleanly on frozen code 6e7cfa2, 0 live calls where saved replies exist.
+  - [ ] Workbench shows each cleanly; Playwright screenshots of each step in deliverables/software-engineer/screenshots/demo/, made on a temp copy (D-069). No pipeline code changes; problems are reported, not fixed.
+  - [ ] deliverables/pm/demo-guide.md: 10-minute script for a non-technical manager, the 3 files listed, honest T-104 scores, cost per file and estimated time saved per submission with stated assumptions.
+  - [ ] deliverables/pm/where-we-are.md: one page; what works, the 2 open gaps (operations details, routing rules), what production still needs (T-027 veto, SSO B-190, concurrent writes B-191, real carrier formats R-030), next steps.
+  - [ ] Rehearsal: the guide dry-run step by step on a temp copy; everything that breaks is listed.

@@ -1,0 +1,86 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "prompt_version": "a7413a9c72b0",
+  "files": [
+    "application.md",
+    "email.md",
+    "schedule.csv"
+  ],
+  "usage": {
+    "queue_time": 0.022375839,
+    "prompt_tokens": 1121,
+    "prompt_time": 0.076886354,
+    "completion_tokens": 658,
+    "completion_time": 1.306605825,
+    "total_tokens": 1779,
+    "total_time": 1.383492179
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Lakeview Gardens Partners LP",
+        "source": "application.md",
+        "quote": "Named insured: Lakeview Gardens Partners LP",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": "3300 Lakeview Dr, Amarillo, TX 79106",
+        "source": "application.md",
+        "quote": "Premises address: 3300 Lakeview Dr, Amarillo, TX 79106",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-05-01",
+        "source": "application.md",
+        "quote": "Effective date: 2027-05-01",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "Residential apartments, 40 units in three two-story buildings, long-term leases, 94 percent occupied. Pools closed for season.",
+        "source": "application.md",
+        "quote": "Operations: Residential apartments, 40 units in three two-story buildings, long-term leases, 94 percent occupied. Pools closed for season.",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": 780000,
+        "source": "application.md",
+        "quote": "Annual sales: $780,000 (gross annual rents)",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": 6800000,
+        "source": "application.md",
+        "quote": "Building TIV: $6,800,000 (three buildings)",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "Joisted masonry",
+        "source": "application.md",
+        "quote": "Construction: Joisted masonry",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": 1994,
+        "source": "application.md",
+        "quote": "Year built: 1994",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "source": null,
+        "quote": null,
+        "confidence": 0
+      }
+    ],
+    "conflicts": []
+  }
+}

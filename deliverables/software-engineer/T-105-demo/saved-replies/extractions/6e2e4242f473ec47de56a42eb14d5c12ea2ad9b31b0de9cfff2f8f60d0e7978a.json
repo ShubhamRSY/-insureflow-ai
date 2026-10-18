@@ -1,0 +1,87 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "prompt_version": "a7413a9c72b0",
+  "files": [
+    "application.pdf",
+    "email.md",
+    "loss-runs.md",
+    "schedule.csv"
+  ],
+  "usage": {
+    "queue_time": 0.065705304,
+    "prompt_tokens": 1070,
+    "prompt_time": 0.078129321,
+    "completion_tokens": 671,
+    "completion_time": 1.279602984,
+    "total_tokens": 1741,
+    "total_time": 1.3577323049999999
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Casa Mesquite Cantina LLC",
+        "source": "application.pdf",
+        "quote": "Named insured: Casa Mesquite Cantina LLC",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": "2210 Mesquite Bend Rd, San Antonio TX 78201",
+        "source": "application.pdf",
+        "quote": "Premises address: 2210 Mesquite Bend Rd, San Antonio TX 78201",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-01-15",
+        "source": "application.pdf",
+        "quote": "Effective date: 2027-01-15",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "Full-service Tex-Mex restaurant, dine-in and takeout. Beer and wine only, no liquor license.",
+        "source": "application.pdf",
+        "quote": "Full-service Tex-Mex restaurant, dine-in and takeout. Beer and wine only, no\nliquor license.",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "1250000",
+        "source": "application.pdf",
+        "quote": "Annual sales / revenue: $1,250,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "520000",
+        "source": "application.pdf",
+        "quote": "Building TIV: $520,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "Joisted masonry",
+        "source": "application.pdf",
+        "quote": "Construction: Joisted masonry",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": "1979",
+        "source": "application.pdf",
+        "quote": "Year built: 1979",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-09-30",
+        "source": "loss-runs.md",
+        "quote": "Valued through: 2026-09-30",
+        "confidence": 1.0
+      }
+    ],
+    "conflicts": []
+  }
+}

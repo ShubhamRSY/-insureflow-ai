@@ -1,0 +1,90 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "scan.jpg"
+  ],
+  "usage": {
+    "queue_time": 0.142476531,
+    "prompt_tokens": 602,
+    "prompt_time": 0.020376565,
+    "completion_tokens": 620,
+    "completion_time": 1.430624065,
+    "total_tokens": 1222,
+    "total_time": 1.45100063,
+    "prompt_tokens_details": {
+      "cached_tokens": 256
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 319
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Pleasanton Road Office LLC",
+        "source": "scan.jpg",
+        "quote": "Pleasanton Road Office LLC",
+        "confidence": 1
+      },
+      {
+        "field_id": "premises_address",
+        "value": "100 Pleasanton RA, San Antonio, TX #8221",
+        "source": "scan.jpg",
+        "quote": "100 Pleasanton RA, San Antonio, TX #8221",
+        "confidence": 1
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2O2F-01-01",
+        "source": "scan.jpg",
+        "quote": "2O2F-01-01",
+        "confidence": 1
+      },
+      {
+        "field_id": "operations",
+        "value": "accounting office",
+        "source": "scan.jpg",
+        "quote": "accounting office",
+        "confidence": 1
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "25000",
+        "source": "scan.jpg",
+        "quote": "25000",
+        "confidence": 1
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "310000",
+        "source": "scan.jpg",
+        "quote": "310000",
+        "confidence": 1
+      },
+      {
+        "field_id": "construction",
+        "value": "frame",
+        "source": "scan.jpg",
+        "quote": "frame",
+        "confidence": 1
+      },
+      {
+        "field_id": "year_built",
+        "value": "1979",
+        "source": "scan.jpg",
+        "quote": "1979",
+        "confidence": 1
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-01-15",
+        "source": "scan.jpg",
+        "quote": "2026-01-15",
+        "confidence": 1
+      }
+    ],
+    "conflicts": []
+  }
+}

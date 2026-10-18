@@ -1,0 +1,87 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "application.pdf"
+  ],
+  "usage": {
+    "queue_time": 0.169850732,
+    "prompt_tokens": 608,
+    "prompt_time": 0.028432879,
+    "completion_tokens": 690,
+    "completion_time": 1.443232109,
+    "total_tokens": 1298,
+    "total_time": 1.4716649880000001,
+    "completion_tokens_details": {
+      "reasoning_tokens": 359
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Woodlawn Tax Office LLC",
+        "source": "application.pdf",
+        "quote": "Named insured: Woodlawn Tax Office LLC",
+        "confidence": 1
+      },
+      {
+        "field_id": "premises_address",
+        "value": "200 Woodlawn Ave, San Antonio, TX 78201",
+        "source": "application.pdf",
+        "quote": "Premises: 200 Woodlawn Ave, San Antonio, TX 78201",
+        "confidence": 1
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-01-01",
+        "source": "application.pdf",
+        "quote": "Effective date: 2027-01-01",
+        "confidence": 1
+      },
+      {
+        "field_id": "operations",
+        "value": "accounting office",
+        "source": "application.pdf",
+        "quote": "Operations: accounting office",
+        "confidence": 1
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "410000",
+        "source": "application.pdf",
+        "quote": "Sales: 410000",
+        "confidence": 1
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "530000",
+        "source": "application.pdf",
+        "quote": "Building TIV: 530000",
+        "confidence": 1
+      },
+      {
+        "field_id": "construction",
+        "value": "masonry",
+        "source": "application.pdf",
+        "quote": "Construction: masonry",
+        "confidence": 1
+      },
+      {
+        "field_id": "year_built",
+        "value": "2005",
+        "source": "application.pdf",
+        "quote": "Year built: 2005",
+        "confidence": 1
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-03-02",
+        "source": "application.pdf",
+        "quote": "Valued through: 2026-03-02",
+        "confidence": 1
+      }
+    ],
+    "conflicts": []
+  }
+}

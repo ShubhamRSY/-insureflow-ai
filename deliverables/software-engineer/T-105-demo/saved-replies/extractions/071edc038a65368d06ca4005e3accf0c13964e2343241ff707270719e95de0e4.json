@@ -1,0 +1,92 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "application.pdf",
+    "loss-runs-page-1.md",
+    "loss-runs-page-2.md"
+  ],
+  "usage": {
+    "queue_time": 0.143806207,
+    "prompt_tokens": 733,
+    "prompt_time": 0.010318089,
+    "completion_tokens": 897,
+    "completion_time": 2.040854531,
+    "total_tokens": 1630,
+    "total_time": 2.05117262,
+    "prompt_tokens_details": {
+      "cached_tokens": 512
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 555
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Vance Jackson Clinic Office LLC",
+        "source": "application.pdf",
+        "quote": "Named insured: Vance Jackson Clinic Office LLC",
+        "confidence": 1
+      },
+      {
+        "field_id": "premises_address",
+        "value": "2200 Vance Jackson Rd, San Antonio, TX 78213",
+        "source": "application.pdf",
+        "quote": "Premises: 2200 Vance Jackson Rd, San Antonio, TX 78213",
+        "confidence": 1
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-01-01",
+        "source": "application.pdf",
+        "quote": "Effective date: 2027-01-01",
+        "confidence": 1
+      },
+      {
+        "field_id": "operations",
+        "value": "medical office",
+        "source": "application.pdf",
+        "quote": "Operations: medical office",
+        "confidence": 1
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "890000",
+        "source": "application.pdf",
+        "quote": "Sales: 890000",
+        "confidence": 1
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "1500000",
+        "source": "application.pdf",
+        "quote": "Building TIV: 1500000",
+        "confidence": 1
+      },
+      {
+        "field_id": "construction",
+        "value": "joisted masonry",
+        "source": "application.pdf",
+        "quote": "Construction: joisted masonry",
+        "confidence": 1
+      },
+      {
+        "field_id": "year_built",
+        "value": "1966",
+        "source": "application.pdf",
+        "quote": "Year built: 1966",
+        "confidence": 1
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-10-01",
+        "source": "loss-runs-page-1.md",
+        "quote": "Valued through: 2026-10-01",
+        "confidence": 1
+      }
+    ],
+    "conflicts": []
+  }
+}

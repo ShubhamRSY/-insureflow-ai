@@ -1,0 +1,86 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "prompt_version": "b025802c0dfa",
+  "files": [
+    "application.md",
+    "email.md",
+    "schedule.csv"
+  ],
+  "usage": {
+    "queue_time": 0.05001048,
+    "prompt_tokens": 1127,
+    "prompt_time": 0.097612602,
+    "completion_tokens": 791,
+    "completion_time": 1.5891410590000001,
+    "total_tokens": 1918,
+    "total_time": 1.686753661
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Ember and Oak Kitchen & Bar LLC",
+        "source": "application.md",
+        "quote": "Named insured: Ember and Oak Kitchen & Bar LLC",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": "3400 Coit Rd, Plano, TX 75075",
+        "source": "application.md",
+        "quote": "Premises address: 3400 Coit Rd, Plano, TX 75075",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-02-01",
+        "source": "application.md",
+        "quote": "Effective date: 2027-02-01",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "Full-service restaurant and bar, 180 seats, full liquor license, live music Friday and Saturday until 1 am, dinner and weekend brunch, wood-fired oven, charbroiler, two fryers, 8-burner range",
+        "source": "application.md",
+        "quote": "Operations: Full-service restaurant and bar, 180 seats, full liquor license (TABC mixed beverage permit), live music Friday and Saturday until 1 am. Dinner and weekend brunch.\nNumber of employees: 46\nAnnual sales: $2,400,000\nBuilding TIV: $1,250,000\nBusiness personal property: $380,000\nSquare footage: 6,200\nConstruction: Masonry\nYear built: 2006\nStories: 1\nSprinklers: Yes\nCooking operations: Wood-fired oven, charbroiler, two fryers, 8-burner range.",
+        "confidence": 0.95
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "2400000",
+        "source": "application.md",
+        "quote": "Annual sales: $2,400,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "1250000",
+        "source": "application.md",
+        "quote": "Building TIV: $1,250,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "Masonry",
+        "source": "application.md",
+        "quote": "Construction: Masonry",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": "2006",
+        "source": "application.md",
+        "quote": "Year built: 2006",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "source": null,
+        "quote": null,
+        "confidence": 0
+      }
+    ],
+    "conflicts": []
+  }
+}

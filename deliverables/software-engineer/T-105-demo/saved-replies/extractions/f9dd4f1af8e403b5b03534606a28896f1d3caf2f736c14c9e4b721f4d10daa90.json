@@ -1,0 +1,87 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "email.md"
+  ],
+  "usage": {
+    "queue_time": 0.169244029,
+    "prompt_tokens": 614,
+    "prompt_time": 0.027263198,
+    "completion_tokens": 1362,
+    "completion_time": 2.82044168,
+    "total_tokens": 1976,
+    "total_time": 2.847704878,
+    "completion_tokens_details": {
+      "reasoning_tokens": 1054
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Nogal Street Pupusas LLC",
+        "source": "email.md",
+        "quote": "Nogal Street Pupusas LLC",
+        "confidence": 1
+      },
+      {
+        "field_id": "premises_address",
+        "value": "55 Nogal St, San Antonio, TX 78202",
+        "source": "email.md",
+        "quote": "55 Nogal St, San Antonio, TX 78202",
+        "confidence": 1
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-01-01",
+        "source": "email.md",
+        "quote": "Effective date 2027-01-01",
+        "confidence": 1
+      },
+      {
+        "field_id": "operations",
+        "value": "cook pupusas restaurant",
+        "source": "email.md",
+        "quote": "They cook pupusas.",
+        "confidence": 0.85
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "540000",
+        "source": "email.md",
+        "quote": "Sales about 540000.",
+        "confidence": 1
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "420000",
+        "source": "email.md",
+        "quote": "Building around 420000.",
+        "confidence": 1
+      },
+      {
+        "field_id": "construction",
+        "value": "joisted masonry",
+        "source": "email.md",
+        "quote": "Joisted masonry",
+        "confidence": 1
+      },
+      {
+        "field_id": "year_built",
+        "value": "1978",
+        "source": "email.md",
+        "quote": "built 1978",
+        "confidence": 1
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "source": "email.md",
+        "quote": "No loss runs.",
+        "confidence": 1
+      }
+    ],
+    "conflicts": []
+  }
+}

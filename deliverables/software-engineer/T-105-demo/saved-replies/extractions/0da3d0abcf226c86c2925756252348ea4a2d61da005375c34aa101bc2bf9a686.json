@@ -1,0 +1,87 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "prompt_version": "b025802c0dfa",
+  "files": [
+    "application.md",
+    "email.md",
+    "loss-runs.md",
+    "schedule.csv"
+  ],
+  "usage": {
+    "queue_time": 0.065700467,
+    "prompt_tokens": 1192,
+    "prompt_time": 0.084283242,
+    "completion_tokens": 768,
+    "completion_time": 1.50693195,
+    "total_tokens": 1960,
+    "total_time": 1.591215192
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Mesquite Court Apartments LP",
+        "source": "application.md",
+        "quote": "Named insured: Mesquite Court Apartments LP",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": "3350 Mesquite Dr, Abilene, TX 79605",
+        "source": "application.md",
+        "quote": "Premises address: 3350 Mesquite Dr, Abilene, TX 79605",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-07-01",
+        "source": "application.md",
+        "quote": "Effective date: 2027-07-01",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "Residential apartments, 24 units in three two-story buildings, long-term leases. Occupancy 90 percent. No cooking operations (tenant electric ranges only).",
+        "source": "application.md",
+        "quote": "Operations: Residential apartments, 24 units in three two-story buildings, long-term leases. Occupancy 90 percent.\nNumber of employees: 2\nAnnual sales: $402,000 (gross annual rents)\nBuilding TIV: $1,640,000\nBusiness personal property: $30,000\nSquare footage: 21,600\nConstruction: Wood frame with masonry veneer\nYear built: 1985\nStories: 2\nSprinklers: \nCooking operations: None (tenant electric ranges only)",
+        "confidence": 0.95
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "402000",
+        "source": "application.md",
+        "quote": "Annual sales: $402,000 (gross annual rents)",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "1640000",
+        "source": "application.md",
+        "quote": "Building TIV: $1,640,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "Wood frame with masonry veneer",
+        "source": "application.md",
+        "quote": "Construction: Wood frame with masonry veneer",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": "1985",
+        "source": "application.md",
+        "quote": "Year built: 1985",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "source": null,
+        "quote": null,
+        "confidence": 0
+      }
+    ],
+    "conflicts": []
+  }
+}

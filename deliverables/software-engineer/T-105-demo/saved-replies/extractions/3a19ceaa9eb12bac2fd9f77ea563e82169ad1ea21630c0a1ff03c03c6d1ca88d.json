@@ -1,0 +1,87 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "prompt_version": "b025802c0dfa",
+  "files": [
+    "application.md",
+    "email.md",
+    "loss-runs.md",
+    "schedule.csv"
+  ],
+  "usage": {
+    "queue_time": 0.201602963,
+    "prompt_tokens": 1228,
+    "prompt_time": 0.106284507,
+    "completion_tokens": 679,
+    "completion_time": 1.424196593,
+    "total_tokens": 1907,
+    "total_time": 1.5304811
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Taqueria La Esquina LLC",
+        "source": "application.md",
+        "quote": "Named insured: Taqueria La Esquina LLC",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": "1810 San Bernardo Ave, Laredo, TX 78040",
+        "source": "application.md",
+        "quote": "Premises address: 1810 San Bernardo Ave, Laredo, TX 78040",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-02-01",
+        "source": "application.md",
+        "quote": "Effective date: 2027-02-01",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "Mexican restaurant, 70 seats, beer and wine only, no bar, dine-in and takeout, comal and flat-top, two deep fryers, 6-burner range",
+        "source": "application.md",
+        "quote": "Operations: Mexican restaurant, 70 seats, beer and wine only, no bar. Dine-in and takeout.\nCooking operations: Comal and flat-top, two deep fryers, 6-burner range.",
+        "confidence": 0.95
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "940000",
+        "source": "application.md",
+        "quote": "Annual sales: $940,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "510000",
+        "source": "application.md",
+        "quote": "Building TIV: $510,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "Masonry",
+        "source": "application.md",
+        "quote": "Construction: Masonry",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": "1985",
+        "source": "application.md",
+        "quote": "Year built: 1985",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "source": null,
+        "quote": null,
+        "confidence": 0
+      }
+    ],
+    "conflicts": []
+  }
+}

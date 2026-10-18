@@ -1,0 +1,88 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "application.pdf",
+    "email.md"
+  ],
+  "usage": {
+    "queue_time": 0.140289889,
+    "prompt_tokens": 627,
+    "prompt_time": 0.031362523,
+    "completion_tokens": 755,
+    "completion_time": 1.5728954179999999,
+    "total_tokens": 1382,
+    "total_time": 1.604257941,
+    "completion_tokens_details": {
+      "reasoning_tokens": 462
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Olmos Cabinets LLC",
+        "source": "application.pdf",
+        "quote": "Olmos Cabinets LLC",
+        "confidence": 1
+      },
+      {
+        "field_id": "premises_address",
+        "value": "900 Olmos Dr, San Antonio, TX 78212",
+        "source": "application.pdf",
+        "quote": "900 Olmos Dr, San Antonio, TX 78212",
+        "confidence": 1
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-01-01",
+        "source": "application.pdf",
+        "quote": "2027-01-01",
+        "confidence": 1
+      },
+      {
+        "field_id": "operations",
+        "value": "light cabinet contractor",
+        "source": "application.pdf",
+        "quote": "light cabinet contractor",
+        "confidence": 1
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "610000",
+        "source": "application.pdf",
+        "quote": "610000",
+        "confidence": 1
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "0",
+        "source": "application.pdf",
+        "quote": "0",
+        "confidence": 1
+      },
+      {
+        "field_id": "construction",
+        "value": "masonry",
+        "source": "application.pdf",
+        "quote": "masonry",
+        "confidence": 1
+      },
+      {
+        "field_id": "year_built",
+        "value": "2006",
+        "source": "application.pdf",
+        "quote": "2006",
+        "confidence": 1
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-07-20",
+        "source": "application.pdf",
+        "quote": "2026-07-20",
+        "confidence": 1
+      }
+    ],
+    "conflicts": []
+  }
+}

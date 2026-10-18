@@ -1,0 +1,106 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "application.md",
+    "resubmission.md"
+  ],
+  "usage": {
+    "queue_time": 0.131967421,
+    "prompt_tokens": 708,
+    "prompt_time": 0.031417771,
+    "completion_tokens": 952,
+    "completion_time": 1.989894176,
+    "total_tokens": 1660,
+    "total_time": 2.021311947,
+    "completion_tokens_details": {
+      "reasoning_tokens": 580
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "St Cloud Gifts LLC",
+        "source": "application.md",
+        "quote": "Named insured: St Cloud Gifts LLC",
+        "confidence": 1
+      },
+      {
+        "field_id": "premises_address",
+        "value": "30 St Cloud St, San Antonio, TX 78228",
+        "source": "application.md",
+        "quote": "Premises: 30 St Cloud St, San Antonio, TX 78228",
+        "confidence": 1
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-01-01",
+        "source": "application.md",
+        "quote": "Effective date: 2027-01-01",
+        "confidence": 1
+      },
+      {
+        "field_id": "operations",
+        "value": "dry retail",
+        "source": "application.md",
+        "quote": "Operations: dry retail",
+        "confidence": 1
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "160000",
+        "source": "application.md",
+        "quote": "Building TIV: 160000",
+        "confidence": 1
+      },
+      {
+        "field_id": "construction",
+        "value": "masonry",
+        "source": "application.md",
+        "quote": "Construction: masonry",
+        "confidence": 1
+      },
+      {
+        "field_id": "year_built",
+        "value": "1977",
+        "source": "application.md",
+        "quote": "Year built: 1977",
+        "confidence": 1
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-04-04",
+        "source": "application.md",
+        "quote": "Valued through: 2026-04-04",
+        "confidence": 1
+      }
+    ],
+    "conflicts": [
+      {
+        "field": "sales_or_payroll",
+        "values": [
+          {
+            "value": "360000",
+            "source": "application.md",
+            "quote": "Sales: 360000",
+            "confidence": 1
+          },
+          {
+            "value": "190000",
+            "source": "resubmission.md",
+            "quote": "Sales: 190000",
+            "confidence": 1
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "email.md",
+    "loss-runs.md",
+    "schedule.csv"
+  ],
+  "usage": {
+    "queue_time": 0.221687876,
+    "prompt_tokens": 741,
+    "prompt_time": 0.033348883,
+    "completion_tokens": 1166,
+    "completion_time": 2.415865877,
+    "total_tokens": 1907,
+    "total_time": 2.44921476,
+    "completion_tokens_details": {
+      "reasoning_tokens": 837
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Blue Heron Kitchen LLC",
+        "source": "loss-runs.md",
+        "quote": "Named insured: Blue Heron Kitchen LLC",
+        "confidence": 1
+      },
+      {
+        "field_id": "premises_address",
+        "value": "3307 Ridgeview Ln",
+        "source": "schedule.csv",
+        "quote": "3307 Ridgeview Ln",
+        "confidence": 1
+      },
+      {
+        "field_id": "effective_date",
+        "value": "03/01/2027",
+        "source": "email.md",
+        "quote": "Eff now 03/01/2027",
+        "confidence": 1
+      },
+      {
+        "field_id": "operations",
+        "value": "fryers x2, charbroiler, flat-top, range",
+        "source": "schedule.csv",
+        "quote": "fryers x2, charbroiler, flat-top, range",
+        "confidence": 1
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "1.24M",
+        "source": "email.md",
+        "quote": "up to 1.24M",
+        "confidence": 1
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "350000",
+        "source": "schedule.csv",
+        "quote": "350000",
+        "confidence": 1
+      },
+      {
+        "field_id": "construction",
+        "value": "Joisted masonry",
+        "source": "schedule.csv",
+        "quote": "Joisted masonry",
+        "confidence": 1
+      },
+      {
+        "field_id": "year_built",
+        "value": "1988",
+        "source": "schedule.csv",
+        "quote": "1988",
+        "confidence": 1
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-10-05",
+        "source": "loss-runs.md",
+        "quote": "Valued through: 2026-10-05",
+        "confidence": 1
+      }
+    ],
+    "conflicts": []
+  }
+}

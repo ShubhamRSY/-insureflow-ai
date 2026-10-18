@@ -1,0 +1,110 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "application.pdf",
+    "carrier-loss-runs.md",
+    "loss-runs.md"
+  ],
+  "usage": {
+    "queue_time": 0.077577086,
+    "prompt_tokens": 674,
+    "prompt_time": 0.007599794,
+    "completion_tokens": 1450,
+    "completion_time": 3.137256044,
+    "total_tokens": 2124,
+    "total_time": 3.144855838,
+    "prompt_tokens_details": {
+      "cached_tokens": 512
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 1085
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Elmira Electric LLC",
+        "source": "application.pdf",
+        "quote": "Elmira Electric LLC",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": "500 Elmira St, San Antonio, TX 78212",
+        "source": "application.pdf",
+        "quote": "500 Elmira St, San Antonio, TX 78212",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-01-01",
+        "source": "application.pdf",
+        "quote": "2027-01-01",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "light electrical contractor",
+        "source": "application.pdf",
+        "quote": "light electrical contractor",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "305000",
+        "source": "application.pdf",
+        "quote": "305000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "0",
+        "source": "application.pdf",
+        "quote": "0",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "masonry",
+        "source": "application.pdf",
+        "quote": "masonry",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": "2015",
+        "source": "application.pdf",
+        "quote": "2015",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      }
+    ],
+    "conflicts": [
+      {
+        "field": "loss_run_valued_through",
+        "values": [
+          {
+            "value": "2026-02-02",
+            "source": "carrier-loss-runs.md",
+            "quote": "2026-02-02",
+            "confidence": 1.0
+          },
+          {
+            "value": null,
+            "source": "loss-runs.md",
+            "quote": "no known loss letter",
+            "confidence": 1.0
+          }
+        ]
+      }
+    ]
+  }
+}

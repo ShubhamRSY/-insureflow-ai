@@ -1222,3 +1222,14 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: run record, score files, as-is mismatches, @model-risk T-027 memo, backlog, labelled standups.
 - Status: ACCEPTED
 - Amends: none. Not a production approval until @model-risk's memo; T-027 veto stands until then.
+
+## D-110 — Manager demo prep (T-105)
+- Date / Owner: 2026-10-18 / @user
+- Context: team/NEXT-SESSION.md after D-109 (T-104 run, T-027 KEEP).
+- Options considered: none. The user's words.
+- Decision: In the user's words (pasted). "Demo prep for my manager (non-technical, ~10 minutes). No pipeline code changes. 1. @pm writes deliverables/pm/demo-guide.md: a 10-minute script. One messy in-scope submission from inbox to carrier quote; one out-of-scope file safely sent to manual intake; one senior-referral file confirmed by a senior; honest scores from the T-104 run; cost per file and estimated time saved per submission (state assumptions). 2. @senior-underwriter picks 3 demo files from dev data (not hold-out) and checks each runs cleanly on the frozen code. List them in the guide. 3. @software-engineer: make sure the workbench shows these 3 cleanly; Playwright screenshots of each step in deliverables/software-engineer/screenshots/demo/. 4. @pm writes a one-page "Where we are" summary: what works, the 2 open gaps (operations details, routing rules), what production still needs (T-027 veto, SSO B-190, concurrent writes B-191, real carrier formats R-030), and the next steps. 5. Rehearsal: dry-run the guide step by step and list anything that breaks. /wrap-up and push ai-team only."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-18 (D-032).
+- Dissent: none
+- Follow-up tasks: T-105.
+- Status: ACCEPTED
+- Amends: none. No pipeline code changes; frozen code 6e7cfa2 stays frozen. Not a production approval; T-027 veto stands.

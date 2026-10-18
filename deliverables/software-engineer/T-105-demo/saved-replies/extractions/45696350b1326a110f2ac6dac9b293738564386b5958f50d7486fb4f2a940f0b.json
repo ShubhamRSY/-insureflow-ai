@@ -1,0 +1,109 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "email-1.md",
+    "email-2.md"
+  ],
+  "usage": {
+    "queue_time": 0.220688259,
+    "prompt_tokens": 629,
+    "prompt_time": 0.02049112,
+    "completion_tokens": 1230,
+    "completion_time": 2.9792900380000003,
+    "total_tokens": 1859,
+    "total_time": 2.9997811580000002,
+    "prompt_tokens_details": {
+      "cached_tokens": 256
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 861
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Poplar Retail LLC",
+        "source": "email-1.md",
+        "quote": "Poplar Retail LLC",
+        "confidence": 1
+      },
+      {
+        "field_id": "premises_address",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-01-01",
+        "source": "email-1.md",
+        "quote": "Effective date 2027-01-01",
+        "confidence": 1
+      },
+      {
+        "field_id": "operations",
+        "value": "Dry retail",
+        "source": "email-1.md",
+        "quote": "Dry retail",
+        "confidence": 1
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "300000",
+        "source": "email-1.md",
+        "quote": "Sales 300000",
+        "confidence": 1
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "250000",
+        "source": "email-1.md",
+        "quote": "Building TIV 250000",
+        "confidence": 1
+      },
+      {
+        "field_id": "construction",
+        "value": "Masonry",
+        "source": "email-1.md",
+        "quote": "Masonry",
+        "confidence": 1
+      },
+      {
+        "field_id": "year_built",
+        "value": "1950",
+        "source": "email-1.md",
+        "quote": "Built 1950",
+        "confidence": 1
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      }
+    ],
+    "conflicts": [
+      {
+        "field": "premises_address",
+        "values": [
+          {
+            "value": "9 Poplar St, San Antonio, TX 78202",
+            "source": "email-1.md",
+            "quote": "9 Poplar St, San Antonio, TX 78202",
+            "confidence": 1
+          },
+          {
+            "value": "90 Poplar St, San Antonio, TX 78202",
+            "source": "email-2.md",
+            "quote": "90 Poplar St, San Antonio, TX 78202",
+            "confidence": 1
+          }
+        ]
+      }
+    ]
+  }
+}

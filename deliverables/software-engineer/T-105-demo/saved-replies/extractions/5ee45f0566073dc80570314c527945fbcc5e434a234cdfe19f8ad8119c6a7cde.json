@@ -1,0 +1,87 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "scan.jpg"
+  ],
+  "usage": {
+    "queue_time": 0.076840855,
+    "prompt_tokens": 602,
+    "prompt_time": 0.027871511,
+    "completion_tokens": 1162,
+    "completion_time": 2.401269257,
+    "total_tokens": 1764,
+    "total_time": 2.429140768,
+    "completion_tokens_details": {
+      "reasoning_tokens": 849
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Tortilleria Sol LLC",
+        "source": "scan.jpg",
+        "quote": "Asegurado: Tortilleria Sol LLC",
+        "confidence": 1
+      },
+      {
+        "field_id": "premises_address",
+        "value": "2 Saltillo St, San Antonio, TX",
+        "source": "scan.jpg",
+        "quote": "Local: 2 Saltillo St, San Antonio, TX",
+        "confidence": 1
+      },
+      {
+        "field_id": "effective_date",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "operations",
+        "value": "tortilla restaurant",
+        "source": "scan.jpg",
+        "quote": "Operaciones: tortilleria",
+        "confidence": 1
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "390000",
+        "source": "scan.jpg",
+        "quote": "ventas: 390000",
+        "confidence": 1
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "220000",
+        "source": "scan.jpg",
+        "quote": "Valor del edificio: 220000",
+        "confidence": 1
+      },
+      {
+        "field_id": "construction",
+        "value": "masonry",
+        "source": "scan.jpg",
+        "quote": "Construcetow: mancposteria",
+        "confidence": 0.7
+      },
+      {
+        "field_id": "year_built",
+        "value": "1952",
+        "source": "scan.jpg",
+        "quote": "Ano: 1952",
+        "confidence": 1
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-03-09",
+        "source": "scan.jpg",
+        "quote": "Valuado hasta: 2026-03-09",
+        "confidence": 1
+      }
+    ],
+    "conflicts": []
+  }
+}

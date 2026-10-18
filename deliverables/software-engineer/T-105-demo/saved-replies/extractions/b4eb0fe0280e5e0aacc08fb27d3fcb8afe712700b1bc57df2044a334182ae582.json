@@ -1,0 +1,88 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "email.md",
+    "schedule.xlsx"
+  ],
+  "usage": {
+    "queue_time": 0.220138532,
+    "prompt_tokens": 613,
+    "prompt_time": 0.024199801,
+    "completion_tokens": 900,
+    "completion_time": 1.855105296,
+    "total_tokens": 1513,
+    "total_time": 1.879305097,
+    "completion_tokens_details": {
+      "reasoning_tokens": 623
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Zarzamora Paper Supply LLC",
+        "source": "email.md",
+        "quote": "Zarzamora Paper Supply LLC",
+        "confidence": 1
+      },
+      {
+        "field_id": "premises_address",
+        "value": "2200 Zarzamora St, San Antonio, TX 78207",
+        "source": "schedule.xlsx",
+        "quote": "2200 Zarzamora St, San Antonio, TX 78207",
+        "confidence": 1
+      },
+      {
+        "field_id": "effective_date",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "operations",
+        "value": "light wholesale",
+        "source": "email.md",
+        "quote": "light wholesale",
+        "confidence": 1
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "2100000",
+        "source": "schedule.xlsx",
+        "quote": "2100000",
+        "confidence": 1
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "1250000",
+        "source": "schedule.xlsx",
+        "quote": "1250000",
+        "confidence": 1
+      },
+      {
+        "field_id": "construction",
+        "value": "masonry",
+        "source": "schedule.xlsx",
+        "quote": "masonry",
+        "confidence": 1
+      },
+      {
+        "field_id": "year_built",
+        "value": "1984",
+        "source": "schedule.xlsx",
+        "quote": "1984",
+        "confidence": 1
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      }
+    ],
+    "conflicts": []
+  }
+}

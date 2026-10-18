@@ -1,0 +1,91 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "email.md",
+    "scan.png"
+  ],
+  "usage": {
+    "queue_time": 0.217914469,
+    "prompt_tokens": 629,
+    "prompt_time": 0.006672322,
+    "completion_tokens": 1108,
+    "completion_time": 3.6289757270000003,
+    "total_tokens": 1737,
+    "total_time": 3.6356480490000003,
+    "prompt_tokens_details": {
+      "cached_tokens": 512
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 775
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "South Flores Stationery LLC",
+        "source": "scan.png",
+        "quote": "Named insured: South Flores Stationery LLC",
+        "confidence": 1
+      },
+      {
+        "field_id": "premises_address",
+        "value": "90 S Flores St, San Antonio, TX 78204",
+        "source": "scan.png",
+        "quote": "Premises address: 90 S Flores St, San Antonio, TX 78204",
+        "confidence": 1
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-01-01",
+        "source": "scan.png",
+        "quote": "Effective date: 2027-01-01",
+        "confidence": 1
+      },
+      {
+        "field_id": "operations",
+        "value": "dry retail stationery",
+        "source": "scan.png",
+        "quote": "Description of operations: dry retail stationery",
+        "confidence": 1
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "320000",
+        "source": "scan.png",
+        "quote": "Sales or payroll: 320000",
+        "confidence": 1
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "400000",
+        "source": "scan.png",
+        "quote": "Building TIV: 400000",
+        "confidence": 1
+      },
+      {
+        "field_id": "construction",
+        "value": "masonry",
+        "source": "scan.png",
+        "quote": "Construction: masonry",
+        "confidence": 1
+      },
+      {
+        "field_id": "year_built",
+        "value": "1972",
+        "source": "scan.png",
+        "quote": "Year built: 1972",
+        "confidence": 1
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-02-01",
+        "source": "scan.png",
+        "quote": "Valued through: 2026-02-01",
+        "confidence": 1
+      }
+    ],
+    "conflicts": []
+  }
+}

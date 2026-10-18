@@ -1,0 +1,106 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "email.md",
+    "loss-runs.md"
+  ],
+  "usage": {
+    "queue_time": 0.109235463,
+    "prompt_tokens": 718,
+    "prompt_time": 0.029492242,
+    "completion_tokens": 1149,
+    "completion_time": 2.3843773280000002,
+    "total_tokens": 1867,
+    "total_time": 2.41386957,
+    "completion_tokens_details": {
+      "reasoning_tokens": 845
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Cottonwood Court Apartments LLC",
+        "source": "email.md",
+        "quote": "Cottonwood Court Apartments LLC",
+        "confidence": 1
+      },
+      {
+        "field_id": "premises_address",
+        "value": "Arlington",
+        "source": "email.md",
+        "quote": "Arlington",
+        "confidence": 1
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2/1/2027",
+        "source": "email.md",
+        "quote": "Eff 2/1/2027",
+        "confidence": 1
+      },
+      {
+        "field_id": "operations",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "construction",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "year_built",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-08-15",
+        "source": "loss-runs.md",
+        "quote": "Valued through: 2026-08-15",
+        "confidence": 1
+      }
+    ],
+    "conflicts": [
+      {
+        "field": "year_built",
+        "values": [
+          {
+            "value": "1972",
+            "source": "email.md",
+            "quote": "1972",
+            "confidence": 0.5
+          },
+          {
+            "value": "1968",
+            "source": "email.md",
+            "quote": "1968",
+            "confidence": 0.5
+          }
+        ]
+      }
+    ]
+  }
+}

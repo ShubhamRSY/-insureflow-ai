@@ -1,0 +1,87 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "prompt_version": "a7413a9c72b0",
+  "files": [
+    "application.pdf",
+    "email.md",
+    "loss-runs.md",
+    "schedule.csv"
+  ],
+  "usage": {
+    "queue_time": 0.912544142,
+    "prompt_tokens": 1001,
+    "prompt_time": 0.090113933,
+    "completion_tokens": 619,
+    "completion_time": 1.305777412,
+    "total_tokens": 1620,
+    "total_time": 1.395891345
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Bayfront Villas LP",
+        "source": "application.pdf",
+        "quote": "Named insured: Bayfront Villas LP",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": "1180 Harbor Vista Dr, Corpus Christi TX 78404",
+        "source": "application.pdf",
+        "quote": "Premises address: 1180 Harbor Vista Dr, Corpus Christi TX 78404",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-06-01",
+        "source": "application.pdf",
+        "quote": "Effective date: 2027-06-01",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "Apartments",
+        "source": "application.pdf",
+        "quote": "Operations: Apartments, 24 units across 2 floors. Wood frame, no short-term rentals.",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "1040000",
+        "source": "application.pdf",
+        "quote": "Annual sales / revenue: $1,040,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "5100000",
+        "source": "application.pdf",
+        "quote": "Building TIV: $5,100,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "Wood frame, stucco",
+        "source": "application.pdf",
+        "quote": "Construction: Wood frame, stucco",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": "1975",
+        "source": "application.pdf",
+        "quote": "Year built: 1975",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "source": null,
+        "quote": null,
+        "confidence": 0
+      }
+    ],
+    "conflicts": []
+  }
+}

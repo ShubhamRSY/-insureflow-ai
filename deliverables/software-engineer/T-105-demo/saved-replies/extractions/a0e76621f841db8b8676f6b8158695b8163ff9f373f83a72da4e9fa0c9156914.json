@@ -1,0 +1,87 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "prompt_version": "b025802c0dfa",
+  "files": [
+    "application.md",
+    "email.md",
+    "loss-runs.jpg",
+    "schedule.csv"
+  ],
+  "usage": {
+    "queue_time": 0.249315675,
+    "prompt_tokens": 1259,
+    "prompt_time": 0.110412629,
+    "completion_tokens": 669,
+    "completion_time": 1.403836286,
+    "total_tokens": 1928,
+    "total_time": 1.514248915
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Pinecrest Office Holdings LLC",
+        "source": "application.md",
+        "quote": "Named insured: Pinecrest Office Holdings LLC",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": "1200 Westheimer Rd, Houston, TX 77024",
+        "source": "application.md",
+        "quote": "Premises address: 1200 Westheimer Rd, Houston, TX 77024",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-04-01",
+        "source": "application.md",
+        "quote": "Effective date: 2027-04-01",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "Owner-occupied two-story office building. Insured occupies first floor for its own office, two tenants on second floor, office use only. No retail, no food.",
+        "source": "application.md",
+        "quote": "Owner-occupied two-story office building. Insured occupies first floor for its own office, two tenants on second floor, office use only. No retail, no food.",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "1250000",
+        "source": "application.md",
+        "quote": "Annual sales: $1,250,000 (gross rents)",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "5850000",
+        "source": "application.md",
+        "quote": "Building TIV: $5,850,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "Masonry non-combustible",
+        "source": "application.md",
+        "quote": "Construction: Masonry non-combustible",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": "1992",
+        "source": "application.md",
+        "quote": "Year built: 1992",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "source": null,
+        "quote": null,
+        "confidence": 0
+      }
+    ],
+    "conflicts": []
+  }
+}

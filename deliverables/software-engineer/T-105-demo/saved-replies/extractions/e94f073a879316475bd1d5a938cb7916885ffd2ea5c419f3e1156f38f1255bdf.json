@@ -1,0 +1,127 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "application.pdf",
+    "email.md",
+    "loss-runs.md"
+  ],
+  "usage": {
+    "queue_time": 0.232286926,
+    "prompt_tokens": 851,
+    "prompt_time": 0.030099689,
+    "completion_tokens": 2465,
+    "completion_time": 5.781600067,
+    "total_tokens": 3316,
+    "total_time": 5.811699756,
+    "prompt_tokens_details": {
+      "cached_tokens": 256
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 2031
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Cottonwood Court Apartments LLC",
+        "source": "application.pdf",
+        "quote": "Cottonwood Court Apartments LLC",
+        "confidence": 1
+      },
+      {
+        "field_id": "premises_address",
+        "value": "1420 Cottonwood Ct, Arlington, TX 76013",
+        "source": "application.pdf",
+        "quote": "1420 Cottonwood Ct, Arlington, TX 76013",
+        "confidence": 1
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-02-01",
+        "source": "application.pdf",
+        "quote": "Effective date 2027-02-01",
+        "confidence": 1
+      },
+      {
+        "field_id": "operations",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "$246,000",
+        "source": "application.pdf",
+        "quote": "Gross rents $246,000",
+        "confidence": 1
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "$1,020,000",
+        "source": "application.pdf",
+        "quote": "Building TIV $1,020,000",
+        "confidence": 1
+      },
+      {
+        "field_id": "construction",
+        "value": "Masonry veneer on frame",
+        "source": "application.pdf",
+        "quote": "Construction Masonry veneer on frame",
+        "confidence": 1
+      },
+      {
+        "field_id": "year_built",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-08-15",
+        "source": "loss-runs.md",
+        "quote": "Valued through: 2026-08-15",
+        "confidence": 1
+      }
+    ],
+    "conflicts": [
+      {
+        "field": "operations",
+        "values": [
+          {
+            "value": "Residential apartments, 8 units in 2 buildings",
+            "source": "application.pdf",
+            "quote": "Operations Residential apartments, 8 units in 2 buildings",
+            "confidence": 1
+          },
+          {
+            "value": "9th unit",
+            "source": "email.md",
+            "quote": "9th unit",
+            "confidence": 1
+          }
+        ]
+      },
+      {
+        "field": "year_built",
+        "values": [
+          {
+            "value": "1968",
+            "source": "application.pdf",
+            "quote": "Year built 1968",
+            "confidence": 1
+          },
+          {
+            "value": "1972",
+            "source": "email.md",
+            "quote": "1972",
+            "confidence": 1
+          }
+        ]
+      }
+    ]
+  }
+}

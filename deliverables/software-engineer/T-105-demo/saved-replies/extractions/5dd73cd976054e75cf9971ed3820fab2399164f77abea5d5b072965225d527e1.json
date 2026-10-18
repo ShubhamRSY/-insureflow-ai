@@ -1,0 +1,87 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "prompt_version": "b025802c0dfa",
+  "files": [
+    "application.md",
+    "email.md",
+    "loss-runs.md",
+    "schedule.csv"
+  ],
+  "usage": {
+    "queue_time": 0.083175607,
+    "prompt_tokens": 1236,
+    "prompt_time": 0.099397268,
+    "completion_tokens": 645,
+    "completion_time": 1.275185281,
+    "total_tokens": 1881,
+    "total_time": 1.3745825489999999
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Tucker Ridge Hardware Supply LLC",
+        "source": "application.md",
+        "quote": "Named insured: Tucker Ridge Hardware Supply LLC",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": "715 Franklin Ave, Waco, TX 76701",
+        "source": "application.md",
+        "quote": "Premises address: 715 Franklin Ave, Waco, TX 76701",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-01-15",
+        "source": "application.md",
+        "quote": "Effective date: 2027-01-15",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "light wholesale of hardware and janitorial supplies to contractors. Warehouse with a small counter for trade customers. No manufacturing, no repackaging.",
+        "source": "application.md",
+        "quote": "Operations: light wholesale of hardware and janitorial supplies to contractors. Warehouse with a small counter for trade customers. No manufacturing, no repackaging.",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "2350000",
+        "source": "application.md",
+        "quote": "Annual sales: $2,350,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "870000",
+        "source": "application.md",
+        "quote": "Building TIV: $870,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "Tilt-up concrete",
+        "source": "application.md",
+        "quote": "Construction: Tilt-up concrete",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": "1987",
+        "source": "application.md",
+        "quote": "Year built: 1987",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "source": null,
+        "quote": null,
+        "confidence": 0
+      }
+    ],
+    "conflicts": []
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "prompt_version": "a7413a9c72b0",
+  "files": [
+    "application.pdf",
+    "email.md",
+    "schedule.csv"
+  ],
+  "usage": {
+    "queue_time": 0.09695123,
+    "prompt_tokens": 942,
+    "prompt_time": 0.081230283,
+    "completion_tokens": 800,
+    "completion_time": 1.654204701,
+    "total_tokens": 1742,
+    "total_time": 1.7354349839999998
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Llano Dry Goods Wholesale LLC",
+        "source": "application.pdf",
+        "quote": "Named insured: Llano Dry Goods Wholesale LLC",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": "4420 Bellfort Industrial Row, Houston TX 77051",
+        "source": "application.pdf",
+        "quote": "Premises address: 4420 Bellfort Industrial Row, Houston TX 77051",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-04-01",
+        "source": "application.pdf",
+        "quote": "Effective date: 2027-04-01",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "Wholesale distributor of paper goods, dried beans, rice and cleaning supplies to grocers. Electric forklifts, no retail counter.",
+        "source": "application.pdf",
+        "quote": "Operations: Wholesale distributor of paper goods, dried beans, rice and cleaning\nsupplies to grocers. Electric forklifts, no retail counter.",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": 3600000,
+        "source": "application.pdf",
+        "quote": "Annual sales / revenue: $3,600,000",
+        "confidence": 0.7
+      },
+      {
+        "field_id": "tiv_building",
+        "value": 3150000,
+        "source": "application.pdf",
+        "quote": "Building TIV: $3,150,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "Metal frame, insulated panel",
+        "source": "application.pdf",
+        "quote": "Construction: Metal frame, insulated panel",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": 2011,
+        "source": "application.pdf",
+        "quote": "Year built: 2011",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "source": null,
+        "quote": null,
+        "confidence": 0
+      }
+    ],
+    "conflicts": [
+      {
+        "field": "sales_or_payroll",
+        "values": [
+          {
+            "value": 3600000,
+            "source": "application.pdf",
+            "quote": "Annual sales / revenue: $3,600,000",
+            "confidence": 0.7
+          },
+          {
+            "value": 3100000,
+            "source": "email.md",
+            "quote": "Sales were 3.1M last year",
+            "confidence": 0.7
+          }
+        ]
+      }
+    ]
+  }
+}

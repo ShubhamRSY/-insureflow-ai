@@ -1,0 +1,90 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "scan.png"
+  ],
+  "usage": {
+    "queue_time": 0.221977916,
+    "prompt_tokens": 599,
+    "prompt_time": 0.022086505,
+    "completion_tokens": 796,
+    "completion_time": 1.846110371,
+    "total_tokens": 1395,
+    "total_time": 1.8681968759999998,
+    "prompt_tokens_details": {
+      "cached_tokens": 256
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 487
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Colima Court LLC",
+        "source": "scan.png",
+        "quote": "Named insured: Colima Court LLC",
+        "confidence": 1
+      },
+      {
+        "field_id": "premises_address",
+        "value": "25 Colima St, San Antonio, TX 78207",
+        "source": "scan.png",
+        "quote": "Premises: 25 Colima St, San Antonio, TX 78207",
+        "confidence": 1
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-01-01",
+        "source": "scan.png",
+        "quote": "Effective date: 2027-01-01",
+        "confidence": 1
+      },
+      {
+        "field_id": "operations",
+        "value": "8 unit apartments",
+        "source": "scan.png",
+        "quote": "Operations: 8 unit apartments",
+        "confidence": 1
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "210000",
+        "source": "scan.png",
+        "quote": "Sales: 210000",
+        "confidence": 1
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "1250000",
+        "source": "scan.png",
+        "quote": "Building TIV: 1250000",
+        "confidence": 1
+      },
+      {
+        "field_id": "construction",
+        "value": "masonry",
+        "source": "scan.png",
+        "quote": "Construction: masonry",
+        "confidence": 1
+      },
+      {
+        "field_id": "year_built",
+        "value": "1958",
+        "source": "scan.png",
+        "quote": "year built: 1958",
+        "confidence": 1
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      }
+    ],
+    "conflicts": []
+  }
+}

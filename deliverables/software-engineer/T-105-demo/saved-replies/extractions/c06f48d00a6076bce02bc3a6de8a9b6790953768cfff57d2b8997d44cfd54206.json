@@ -1,0 +1,109 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "loss-runs-resubmission.md",
+    "loss-runs.md"
+  ],
+  "usage": {
+    "queue_time": 0.168834614,
+    "prompt_tokens": 722,
+    "prompt_time": 0.020801133,
+    "completion_tokens": 919,
+    "completion_time": 2.184521529,
+    "total_tokens": 1641,
+    "total_time": 2.205322662,
+    "prompt_tokens_details": {
+      "cached_tokens": 256
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 547
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Bandera Law Office LLC",
+        "source": "loss-runs.md",
+        "quote": "Bandera Law Office LLC",
+        "confidence": 1
+      },
+      {
+        "field_id": "premises_address",
+        "value": "12 Bandera Rd, San Antonio, TX 78228",
+        "source": "loss-runs.md",
+        "quote": "12 Bandera Rd, San Antonio, TX 78228",
+        "confidence": 1
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-01-01",
+        "source": "loss-runs.md",
+        "quote": "2027-01-01",
+        "confidence": 1
+      },
+      {
+        "field_id": "operations",
+        "value": "law office",
+        "source": "loss-runs.md",
+        "quote": "law office",
+        "confidence": 1
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "510000",
+        "source": "loss-runs.md",
+        "quote": "510000",
+        "confidence": 1
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "430000",
+        "source": "loss-runs.md",
+        "quote": "430000",
+        "confidence": 1
+      },
+      {
+        "field_id": "construction",
+        "value": "masonry",
+        "source": "loss-runs.md",
+        "quote": "masonry",
+        "confidence": 1
+      },
+      {
+        "field_id": "year_built",
+        "value": "1996",
+        "source": "loss-runs.md",
+        "quote": "1996",
+        "confidence": 1
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      }
+    ],
+    "conflicts": [
+      {
+        "field": "loss_run_valued_through",
+        "values": [
+          {
+            "value": "2026-08-08",
+            "source": "loss-runs-resubmission.md",
+            "quote": "2026-08-08",
+            "confidence": 1
+          },
+          {
+            "value": "2026-05-05",
+            "source": "loss-runs.md",
+            "quote": "2026-05-05",
+            "confidence": 1
+          }
+        ]
+      }
+    ]
+  }
+}

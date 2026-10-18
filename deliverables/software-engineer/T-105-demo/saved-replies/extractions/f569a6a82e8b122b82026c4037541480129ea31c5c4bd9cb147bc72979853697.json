@@ -1,0 +1,89 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "application.md",
+    "email.md",
+    "loss-runs.md"
+  ],
+  "usage": {
+    "queue_time": 0.078309182,
+    "prompt_tokens": 915,
+    "prompt_time": 0.043996579,
+    "completion_tokens": 1119,
+    "completion_time": 2.325855117,
+    "total_tokens": 2034,
+    "total_time": 2.369851696,
+    "completion_tokens_details": {
+      "reasoning_tokens": 760
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Ironwood Residential Partners LLC",
+        "source": "application.md",
+        "quote": "Ironwood Residential Partners LLC",
+        "confidence": 1
+      },
+      {
+        "field_id": "premises_address",
+        "value": "2215 Bayou Crest Dr, Houston, TX 77063",
+        "source": "application.md",
+        "quote": "2215 Bayou Crest Dr, Houston, TX 77063",
+        "confidence": 1
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-01-01",
+        "source": "application.md",
+        "quote": "2027-01-01",
+        "confidence": 1
+      },
+      {
+        "field_id": "operations",
+        "value": "Residential apartments, 26 units total across 3 buildings",
+        "source": "application.md",
+        "quote": "Residential apartments, 26 units total across 3 buildings",
+        "confidence": 1
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "Gross rents $1,020,000",
+        "source": "application.md",
+        "quote": "Gross rents $1,020,000",
+        "confidence": 1
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "$4,330,000 total",
+        "source": "application.md",
+        "quote": "$4,330,000 total",
+        "confidence": 1
+      },
+      {
+        "field_id": "construction",
+        "value": "Mixed, see schedule",
+        "source": "application.md",
+        "quote": "Mixed, see schedule",
+        "confidence": 1
+      },
+      {
+        "field_id": "year_built",
+        "value": "1974 / 1985 / 1991",
+        "source": "application.md",
+        "quote": "1974 / 1985 / 1991",
+        "confidence": 1
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-08-31",
+        "source": "loss-runs.md",
+        "quote": "2026-08-31",
+        "confidence": 1
+      }
+    ],
+    "conflicts": []
+  }
+}

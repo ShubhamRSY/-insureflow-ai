@@ -1,0 +1,86 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "prompt_version": "a7413a9c72b0",
+  "files": [
+    "application.pdf",
+    "email.md",
+    "loss-runs.md"
+  ],
+  "usage": {
+    "queue_time": 0.418388504,
+    "prompt_tokens": 982,
+    "prompt_time": 0.080154428,
+    "completion_tokens": 685,
+    "completion_time": 1.322898294,
+    "total_tokens": 1667,
+    "total_time": 1.403052722
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Hernandez Plumbing & Drain LLC",
+        "source": "application.pdf",
+        "quote": "Asegurado: Hernandez Plumbing & Drain LLC",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": "1450 Hemphill St, Fort Worth TX 76104",
+        "source": "application.pdf",
+        "quote": "Direccion del local: 1450 Hemphill St, Fort Worth TX 76104",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-03-15",
+        "source": "application.pdf",
+        "quote": "Fecha efectiva: 2027-03-15",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "Residential and light commercial plumbing, repairs and drains. Work at client site, no work at height.",
+        "source": "application.pdf",
+        "quote": "Operaciones: Plomeria residencial y comercial liviana, reparaciones y drenajes. Trabajo en\nsitio del cliente, sin trabajo en altura.",
+        "confidence": 0.95
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "680000",
+        "source": "application.pdf",
+        "quote": "Ventas anuales: $680,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "310000",
+        "source": "application.pdf",
+        "quote": "TIV edificio: $310,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "Masonry veneer over frame",
+        "source": "application.pdf",
+        "quote": "Construccion: Masonry veneer over frame",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": "1962",
+        "source": "application.pdf",
+        "quote": "Ano de construccion: 1962",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-09-30",
+        "source": "loss-runs.md",
+        "quote": "Valued through: 2026-09-30",
+        "confidence": 1.0
+      }
+    ],
+    "conflicts": []
+  }
+}

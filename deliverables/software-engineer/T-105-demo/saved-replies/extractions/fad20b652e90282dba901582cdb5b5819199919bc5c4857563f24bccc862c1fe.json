@@ -1,0 +1,106 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "loss-runs-resubmission.md",
+    "loss-runs.md"
+  ],
+  "usage": {
+    "queue_time": 0.231379449,
+    "prompt_tokens": 715,
+    "prompt_time": 0.032011528,
+    "completion_tokens": 1455,
+    "completion_time": 3.052082576,
+    "total_tokens": 2170,
+    "total_time": 3.084094104,
+    "completion_tokens_details": {
+      "reasoning_tokens": 1025
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Main Avenue Law Office LLC",
+        "source": "loss-runs-resubmission.md",
+        "quote": "Named insured: Main Avenue Law Office LLC",
+        "confidence": 1
+      },
+      {
+        "field_id": "premises_address",
+        "value": "40 Main Ave, San Antonio, TX 78212",
+        "source": "loss-runs-resubmission.md",
+        "quote": "Premises: 40 Main Ave, San Antonio, TX 78212",
+        "confidence": 1
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-01-01",
+        "source": "loss-runs-resubmission.md",
+        "quote": "Effective date: 2027-01-01",
+        "confidence": 1
+      },
+      {
+        "field_id": "operations",
+        "value": "law office",
+        "source": "loss-runs-resubmission.md",
+        "quote": "Operations: law office",
+        "confidence": 1
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "470000",
+        "source": "loss-runs-resubmission.md",
+        "quote": "Sales: 470000",
+        "confidence": 1
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "390000",
+        "source": "loss-runs-resubmission.md",
+        "quote": "Building TIV: 390000",
+        "confidence": 1
+      },
+      {
+        "field_id": "construction",
+        "value": "masonry",
+        "source": "loss-runs-resubmission.md",
+        "quote": "Construction: masonry",
+        "confidence": 1
+      },
+      {
+        "field_id": "year_built",
+        "value": "1985",
+        "source": "loss-runs-resubmission.md",
+        "quote": "Year built: 1985",
+        "confidence": 1
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      }
+    ],
+    "conflicts": [
+      {
+        "field": "loss_run_valued_through",
+        "values": [
+          {
+            "value": "2026-09-19",
+            "source": "loss-runs-resubmission.md",
+            "quote": "Valued through: 2026-09-19",
+            "confidence": 1
+          },
+          {
+            "value": "2026-01-11",
+            "source": "loss-runs.md",
+            "quote": "Valued through: 2026-01-11",
+            "confidence": 1
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,87 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "scan.jpg"
+  ],
+  "usage": {
+    "queue_time": 0.230225961,
+    "prompt_tokens": 603,
+    "prompt_time": 0.072785249,
+    "completion_tokens": 785,
+    "completion_time": 1.638349611,
+    "total_tokens": 1388,
+    "total_time": 1.71113486,
+    "completion_tokens_details": {
+      "reasoning_tokens": 465
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "West Avenue Painting LLC",
+        "source": "scan.jpg",
+        "quote": "Named insured: West Avenue Painting LLC",
+        "confidence": 1
+      },
+      {
+        "field_id": "premises_address",
+        "value": "FOO West Ave, Saw Antonio, TX F212",
+        "source": "scan.jpg",
+        "quote": "Premises: FOO West Ave, Saw Antonio, TX F212",
+        "confidence": 1
+      },
+      {
+        "field_id": "effective_date",
+        "value": "A2F-O1-O1",
+        "source": "scan.jpg",
+        "quote": "Effective date: A2F-O1-O1",
+        "confidence": 1
+      },
+      {
+        "field_id": "operations",
+        "value": "light painting contractor",
+        "source": "scan.jpg",
+        "quote": "Operations: light painting contractor",
+        "confidence": 1
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "205000",
+        "source": "scan.jpg",
+        "quote": "Sales: 205000",
+        "confidence": 1
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "O",
+        "source": "scan.jpg",
+        "quote": "Building Tiv: O",
+        "confidence": 1
+      },
+      {
+        "field_id": "construction",
+        "value": "masonry",
+        "source": "scan.jpg",
+        "quote": "Construction: masonry",
+        "confidence": 1
+      },
+      {
+        "field_id": "year_built",
+        "value": "2011",
+        "source": "scan.jpg",
+        "quote": "Year built: 2011",
+        "confidence": 1
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-06-16",
+        "source": "scan.jpg",
+        "quote": "Valued through: 2026-06-16",
+        "confidence": 1
+      }
+    ],
+    "conflicts": []
+  }
+}

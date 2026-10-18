@@ -1,0 +1,87 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "prompt_version": "b025802c0dfa",
+  "files": [
+    "application.md",
+    "email.md",
+    "loss-runs.md",
+    "schedule.csv"
+  ],
+  "usage": {
+    "queue_time": 0.031904459,
+    "prompt_tokens": 1215,
+    "prompt_time": 0.109318108,
+    "completion_tokens": 693,
+    "completion_time": 1.4812523309999999,
+    "total_tokens": 1908,
+    "total_time": 1.590570439
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Gulf Shore Roofing LLC",
+        "source": "application.md",
+        "quote": "Named insured: Gulf Shore Roofing LLC",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": "2715 Leopard St, Corpus Christi, TX 78404",
+        "source": "application.md",
+        "quote": "Premises address: 2715 Leopard St, Corpus Christi, TX 78404",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-01-01",
+        "source": "application.md",
+        "quote": "Effective date: 2027-01-01",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "Roofing contractor, residential and commercial re-roofing and repair. Shop and yard on premises, materials stored outside under tarps, torch-down work on some jobs.",
+        "source": "application.md",
+        "quote": "Roofing contractor, residential and commercial re-roofing and repair. Shop and yard on premises, materials stored outside under tarps, torch-down work on some jobs.",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "2180000",
+        "source": "application.md",
+        "quote": "Annual sales: $2,180,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "240000",
+        "source": "application.md",
+        "quote": "Building TIV: $240,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "Metal frame, metal siding",
+        "source": "application.md",
+        "quote": "Construction: Metal frame, metal siding",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": "2008",
+        "source": "application.md",
+        "quote": "Year built: 2008",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-09-30",
+        "source": "loss-runs.md",
+        "quote": "Valued as of: 2026-09-30",
+        "confidence": 1.0
+      }
+    ],
+    "conflicts": []
+  }
+}

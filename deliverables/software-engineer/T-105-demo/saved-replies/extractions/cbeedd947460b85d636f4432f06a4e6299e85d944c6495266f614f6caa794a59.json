@@ -1,0 +1,90 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "email.md"
+  ],
+  "usage": {
+    "queue_time": 0.091781785,
+    "prompt_tokens": 575,
+    "prompt_time": 0.005361424,
+    "completion_tokens": 861,
+    "completion_time": 2.149802939,
+    "total_tokens": 1436,
+    "total_time": 2.155164363,
+    "prompt_tokens_details": {
+      "cached_tokens": 512
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 614
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Sakura Ridge Grill and Sushi LLC",
+        "source": "email.md",
+        "quote": "Sakura Ridge Grill and Sushi LLC",
+        "confidence": 1
+      },
+      {
+        "field_id": "premises_address",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2/1/2027",
+        "source": "email.md",
+        "quote": "eff 2/1/2027",
+        "confidence": 1
+      },
+      {
+        "field_id": "operations",
+        "value": "Hibachi tables and sushi bar, full bar",
+        "source": "email.md",
+        "quote": "Hibachi tables and sushi bar, full bar",
+        "confidence": 1
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "construction",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "year_built",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      }
+    ],
+    "conflicts": []
+  }
+}

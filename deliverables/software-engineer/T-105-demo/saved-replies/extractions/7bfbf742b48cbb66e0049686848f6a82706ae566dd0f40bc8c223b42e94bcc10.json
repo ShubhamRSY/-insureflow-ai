@@ -1,0 +1,139 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "prompt_version": "a7413a9c72b0",
+  "files": [
+    "application.md",
+    "email.md",
+    "loss-runs.md",
+    "schedule.csv"
+  ],
+  "usage": {
+    "queue_time": 0.021958319,
+    "prompt_tokens": 1352,
+    "prompt_time": 0.092682436,
+    "completion_tokens": 1233,
+    "completion_time": 2.410049024,
+    "total_tokens": 2585,
+    "total_time": 2.50273146
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Smokehouse Row BBQ Co LLC",
+        "source": "application.md",
+        "quote": "Named insured: Smokehouse Row BBQ Co LLC",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": null,
+        "source": null,
+        "quote": null,
+        "confidence": 0.0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-06-01",
+        "source": "application.md",
+        "quote": "Effective date: 2027-06-01",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "Barbecue restaurants, two locations, dine-in and takeout. Location 1 80 seats, location 2 60 seats. Beer and wine, no liquor license.",
+        "source": "application.md",
+        "quote": "Operations: Barbecue restaurants, two locations, dine-in and takeout. Location 1 80 seats, location 2 60 seats. Beer and wine, no liquor license.",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": 2640000,
+        "source": "application.md",
+        "quote": "Annual sales: $2,640,000 (combined)",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": 1230000,
+        "source": "application.md",
+        "quote": "Building TIV: $690,000 loc 1 / $540,000 loc 2 (total $1,230,000)",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": null,
+        "source": null,
+        "quote": null,
+        "confidence": 0.0
+      },
+      {
+        "field_id": "year_built",
+        "value": null,
+        "source": null,
+        "quote": null,
+        "confidence": 0.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "source": null,
+        "quote": null,
+        "confidence": 0.0
+      }
+    ],
+    "conflicts": [
+      {
+        "field": "premises_address",
+        "values": [
+          {
+            "value": "2300 Rosedale St, Fort Worth, TX 76105",
+            "source": "application.md",
+            "quote": "Premises address: 2300 Rosedale St, Fort Worth, TX 76105",
+            "confidence": 1.0
+          },
+          {
+            "value": "2300 Rosedale St, Fort Worth, TX 76105; 6100 Camp Bowie Blvd, Fort Worth, TX 76116",
+            "source": "schedule.csv",
+            "quote": "FICTIONAL\t1\t2300 Rosedale St\tFort Worth\t76105\t690000\tJoisted masonry\t1987\t6300\tYes\t2 smokers, fryers, flat-top, Type I hood UL 300\nFICTIONAL\t2\t6100 Camp Bowie Blvd\tFort Worth\t76116\t540000\tMasonry\t1999\t4900\tNo\t2 smokers, fryers, flat-top, Type I hood UL 300",
+            "confidence": 1.0
+          }
+        ]
+      },
+      {
+        "field": "construction",
+        "values": [
+          {
+            "value": "Joisted masonry",
+            "source": "application.md",
+            "quote": "Construction: Joisted masonry (loc 1), masonry (loc 2)",
+            "confidence": 1.0
+          },
+          {
+            "value": "Masonry",
+            "source": "application.md",
+            "quote": "Construction: Joisted masonry (loc 1), masonry (loc 2)",
+            "confidence": 1.0
+          }
+        ]
+      },
+      {
+        "field": "year_built",
+        "values": [
+          {
+            "value": "1987",
+            "source": "application.md",
+            "quote": "Year built: 1987 (loc 1), 1999 (loc 2)",
+            "confidence": 1.0
+          },
+          {
+            "value": "1999",
+            "source": "application.md",
+            "quote": "Year built: 1987 (loc 1), 1999 (loc 2)",
+            "confidence": 1.0
+          }
+        ]
+      }
+    ]
+  }
+}

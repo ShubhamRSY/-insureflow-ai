@@ -1,0 +1,87 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "scan.png"
+  ],
+  "usage": {
+    "queue_time": 0.223016219,
+    "prompt_tokens": 599,
+    "prompt_time": 0.03300979,
+    "completion_tokens": 1072,
+    "completion_time": 2.234258647,
+    "total_tokens": 1671,
+    "total_time": 2.2672684370000002,
+    "completion_tokens_details": {
+      "reasoning_tokens": 759
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Labor Street Flats LLc",
+        "source": "scan.png",
+        "quote": "Named insured: Labor Street Flats LLc",
+        "confidence": 1
+      },
+      {
+        "field_id": "premises_address",
+        "value": "300 Labor St, San Antonio, TX 78210",
+        "source": "scan.png",
+        "quote": "Premises: 300 Labor St, San Antonio, TX 78210",
+        "confidence": 1
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-01-01",
+        "source": "scan.png",
+        "quote": "Effective date: 2027-01-01",
+        "confidence": 1
+      },
+      {
+        "field_id": "operations",
+        "value": "6 unit apartments",
+        "source": "scan.png",
+        "quote": "Operations: 6 unit apartments",
+        "confidence": 1
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "260000",
+        "source": "scan.png",
+        "quote": "Sales: 260000",
+        "confidence": 1
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "1400000",
+        "source": "scan.png",
+        "quote": "Building TIV: 1400000",
+        "confidence": 1
+      },
+      {
+        "field_id": "construction",
+        "value": "masonry",
+        "source": "scan.png",
+        "quote": "Construction: masonry",
+        "confidence": 1
+      },
+      {
+        "field_id": "year_built",
+        "value": "1955",
+        "source": "scan.png",
+        "quote": "Year built: 1955",
+        "confidence": 1
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "source": null,
+        "quote": null,
+        "confidence": 0
+      }
+    ],
+    "conflicts": []
+  }
+}

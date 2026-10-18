@@ -1,0 +1,91 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "application.pdf",
+    "email.md"
+  ],
+  "usage": {
+    "queue_time": 0.099984775,
+    "prompt_tokens": 625,
+    "prompt_time": 0.018133896,
+    "completion_tokens": 785,
+    "completion_time": 1.7507007620000001,
+    "total_tokens": 1410,
+    "total_time": 1.7688346579999998,
+    "prompt_tokens_details": {
+      "cached_tokens": 256
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 492
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Alamo Ledger Office LLC",
+        "source": "application.pdf",
+        "quote": "Alamo Ledger Office LLC",
+        "confidence": 1
+      },
+      {
+        "field_id": "premises_address",
+        "value": "500 Broadway, San Antonio, TX 78205",
+        "source": "application.pdf",
+        "quote": "500 Broadway, San Antonio, TX 78205",
+        "confidence": 1
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-01-01",
+        "source": "application.pdf",
+        "quote": "2027-01-01",
+        "confidence": 1
+      },
+      {
+        "field_id": "operations",
+        "value": "accounting office",
+        "source": "application.pdf",
+        "quote": "accounting office",
+        "confidence": 1
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "550000",
+        "source": "application.pdf",
+        "quote": "550000",
+        "confidence": 1
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "750000",
+        "source": "application.pdf",
+        "quote": "750000",
+        "confidence": 1
+      },
+      {
+        "field_id": "construction",
+        "value": "masonry",
+        "source": "application.pdf",
+        "quote": "masonry",
+        "confidence": 1
+      },
+      {
+        "field_id": "year_built",
+        "value": "2008",
+        "source": "application.pdf",
+        "quote": "2008",
+        "confidence": 1
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-03-15",
+        "source": "application.pdf",
+        "quote": "2026-03-15",
+        "confidence": 1
+      }
+    ],
+    "conflicts": []
+  }
+}

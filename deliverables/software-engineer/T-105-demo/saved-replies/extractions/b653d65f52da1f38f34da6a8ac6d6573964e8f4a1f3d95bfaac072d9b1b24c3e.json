@@ -1,0 +1,91 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "application.pdf",
+    "attachment.md"
+  ],
+  "usage": {
+    "queue_time": 0.172872209,
+    "prompt_tokens": 640,
+    "prompt_time": 0.018619586,
+    "completion_tokens": 1049,
+    "completion_time": 2.234771652,
+    "total_tokens": 1689,
+    "total_time": 2.253391238,
+    "prompt_tokens_details": {
+      "cached_tokens": 256
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 754
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Hackberry Accounting LLC",
+        "source": "application.pdf",
+        "quote": "Hackberry Accounting LLC",
+        "confidence": 1
+      },
+      {
+        "field_id": "premises_address",
+        "value": "15 Hackberry St, San Antonio, TX 78202",
+        "source": "application.pdf",
+        "quote": "15 Hackberry St, San Antonio, TX 78202",
+        "confidence": 1
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-01-01",
+        "source": "application.pdf",
+        "quote": "2027-01-01",
+        "confidence": 1
+      },
+      {
+        "field_id": "operations",
+        "value": "accounting office",
+        "source": "attachment.md",
+        "quote": "accounting office",
+        "confidence": 1
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "640000",
+        "source": "attachment.md",
+        "quote": "640000",
+        "confidence": 1
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "700000",
+        "source": "attachment.md",
+        "quote": "700000",
+        "confidence": 1
+      },
+      {
+        "field_id": "construction",
+        "value": "masonry",
+        "source": "attachment.md",
+        "quote": "masonry",
+        "confidence": 1
+      },
+      {
+        "field_id": "year_built",
+        "value": "2002",
+        "source": "attachment.md",
+        "quote": "2002",
+        "confidence": 1
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-06-06",
+        "source": "attachment.md",
+        "quote": "2026-06-06",
+        "confidence": 1
+      }
+    ],
+    "conflicts": []
+  }
+}

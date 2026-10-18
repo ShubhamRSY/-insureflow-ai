@@ -1,0 +1,93 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "application.md",
+    "carrier-loss-runs.md",
+    "email.md",
+    "kitchen.md",
+    "loss-runs.md",
+    "reply.md",
+    "schedule.csv"
+  ],
+  "usage": {
+    "queue_time": 0.221351066,
+    "prompt_tokens": 1063,
+    "prompt_time": 0.045342911,
+    "completion_tokens": 1206,
+    "completion_time": 2.5055803709999998,
+    "total_tokens": 2269,
+    "total_time": 2.550923282,
+    "completion_tokens_details": {
+      "reasoning_tokens": 839
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Rio Patio Tacos LLC",
+        "source": "application.md",
+        "quote": "Named insured: Rio Patio Tacos LLC",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": "902 E Grayson St, San Antonio, TX 78208",
+        "source": "application.md",
+        "quote": "Premises address: 902 E Grayson St, San Antonio, TX 78208",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2026-11-15",
+        "source": "application.md",
+        "quote": "Effective date: 2026-11-15",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "restaurant, tacos, some fryer",
+        "source": "application.md",
+        "quote": "Description of operations: restaurant, tacos, some fryer",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "1200000",
+        "source": "reply.md",
+        "quote": "Sales or payroll: 1200000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "800000",
+        "source": "application.md",
+        "quote": "Building TIV: 800000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "joisted masonry",
+        "source": "application.md",
+        "quote": "Construction: joisted masonry",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": "1986",
+        "source": "reply.md",
+        "quote": "Year built: 1986",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-09-01",
+        "source": "carrier-loss-runs.md",
+        "quote": "Valued through: 2026-09-01",
+        "confidence": 1.0
+      }
+    ],
+    "conflicts": []
+  }
+}

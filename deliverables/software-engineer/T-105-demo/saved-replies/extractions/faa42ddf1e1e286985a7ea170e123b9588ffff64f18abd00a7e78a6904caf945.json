@@ -1,0 +1,147 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "application.md",
+    "email.md",
+    "loss-runs.md"
+  ],
+  "usage": {
+    "queue_time": 0.221562756,
+    "prompt_tokens": 941,
+    "prompt_time": 0.055515088,
+    "completion_tokens": 2004,
+    "completion_time": 4.17069142,
+    "total_tokens": 2945,
+    "total_time": 4.226206508,
+    "completion_tokens_details": {
+      "reasoning_tokens": 1450
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "premises_address",
+        "value": "4102 Mesquite Bend Rd, Lubbock, TX 79424 (shop and yard)",
+        "source": "application.md",
+        "quote": "4102 Mesquite Bend Rd, Lubbock, TX 79424 (shop and yard)",
+        "confidence": 1
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-03-01",
+        "source": "application.md",
+        "quote": "2027-03-01",
+        "confidence": 1
+      },
+      {
+        "field_id": "operations",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "$240,000",
+        "source": "application.md",
+        "quote": "Building TIV: $240,000",
+        "confidence": 1
+      },
+      {
+        "field_id": "construction",
+        "value": "Frame",
+        "source": "application.md",
+        "quote": "Construction: Frame",
+        "confidence": 1
+      },
+      {
+        "field_id": "year_built",
+        "value": "2001",
+        "source": "application.md",
+        "quote": "Year built: 2001",
+        "confidence": 1
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-09-15",
+        "source": "loss-runs.md",
+        "quote": "Valued through: 2026-09-15",
+        "confidence": 1
+      }
+    ],
+    "conflicts": [
+      {
+        "field": "named_insured",
+        "values": [
+          {
+            "value": "Caprock Tile & Stone Inc",
+            "source": "application.md",
+            "quote": "Caprock Tile & Stone Inc",
+            "confidence": 1
+          },
+          {
+            "value": "Caprock Tile and Stone Inc",
+            "source": "email.md",
+            "quote": "Caprock Tile and Stone Inc",
+            "confidence": 1
+          }
+        ]
+      },
+      {
+        "field": "operations",
+        "values": [
+          {
+            "value": "Tile, stone and marble installation, residential and light commercial, subcontract labor used",
+            "source": "application.md",
+            "quote": "Tile, stone and marble installation, residential and light commercial, subcontract labor used",
+            "confidence": 1
+          },
+          {
+            "value": "Tile and stone install, we do residential and some light commercial",
+            "source": "email.md",
+            "quote": "Tile and stone install, we do residential and some light commercial",
+            "confidence": 1
+          }
+        ]
+      },
+      {
+        "field": "sales_or_payroll",
+        "values": [
+          {
+            "value": "$1,450,000",
+            "source": "application.md",
+            "quote": "Annual sales: $1,450,000",
+            "confidence": 1
+          },
+          {
+            "value": "$680,000",
+            "source": "application.md",
+            "quote": "Annual payroll: $680,000",
+            "confidence": 1
+          },
+          {
+            "value": "$1.45M",
+            "source": "email.md",
+            "quote": "Sales around 1.45M",
+            "confidence": 1
+          }
+        ]
+      }
+    ]
+  }
+}

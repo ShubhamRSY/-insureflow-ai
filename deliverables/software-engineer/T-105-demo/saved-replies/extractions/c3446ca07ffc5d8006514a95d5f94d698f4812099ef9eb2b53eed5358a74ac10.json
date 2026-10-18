@@ -1,0 +1,87 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "scan.jpg"
+  ],
+  "usage": {
+    "queue_time": 0.170361532,
+    "prompt_tokens": 607,
+    "prompt_time": 0.026919585,
+    "completion_tokens": 879,
+    "completion_time": 1.816815863,
+    "total_tokens": 1486,
+    "total_time": 1.8437354479999999,
+    "completion_tokens_details": {
+      "reasoning_tokens": 545
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Wurzbach Painting LLC",
+        "source": "scan.jpg",
+        "quote": "Named insured: Wurzbach Painting LLC",
+        "confidence": 1
+      },
+      {
+        "field_id": "premises_address",
+        "value": "400 Wurzbach RA, San Antontlo, TX 8216",
+        "source": "scan.jpg",
+        "quote": "Premises: 400 Wurzbach RA, San Antontlo, TX 8216",
+        "confidence": 1
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2O2F-O1-01",
+        "source": "scan.jpg",
+        "quote": "Effective date: 2O2F-O1-01",
+        "confidence": 1
+      },
+      {
+        "field_id": "operations",
+        "value": "light painting contractor",
+        "source": "scan.jpg",
+        "quote": "Operations: light painting contractor",
+        "confidence": 1
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "190000",
+        "source": "scan.jpg",
+        "quote": "Sales: 190000",
+        "confidence": 1
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "O",
+        "source": "scan.jpg",
+        "quote": "Building Tv: O",
+        "confidence": 1
+      },
+      {
+        "field_id": "construction",
+        "value": "masonry",
+        "source": "scan.jpg",
+        "quote": "Construction: masonry",
+        "confidence": 1
+      },
+      {
+        "field_id": "year_built",
+        "value": "2009",
+        "source": "scan.jpg",
+        "quote": "Year built: 2009",
+        "confidence": 1
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-07-21",
+        "source": "scan.jpg",
+        "quote": "Valued through: 2026-07-21",
+        "confidence": 1
+      }
+    ],
+    "conflicts": []
+  }
+}

@@ -1,0 +1,87 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "solicitud.md"
+  ],
+  "usage": {
+    "queue_time": 0.144416968,
+    "prompt_tokens": 620,
+    "prompt_time": 0.029334023,
+    "completion_tokens": 1088,
+    "completion_time": 2.249652284,
+    "total_tokens": 1708,
+    "total_time": 2.278986307,
+    "completion_tokens_details": {
+      "reasoning_tokens": 712
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Estudio Salinas LLC",
+        "source": "solicitud.md",
+        "quote": "Asegurado: Estudio Salinas LLC",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": "77 Soledad St, San Antonio, TX 78205",
+        "source": "solicitud.md",
+        "quote": "Direccion del local: 77 Soledad St, San Antonio, TX 78205",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-01-01",
+        "source": "solicitud.md",
+        "quote": "Fecha efectiva: 2027-01-01",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "accounting office",
+        "source": "solicitud.md",
+        "quote": "Operaciones: oficina de contabilidad",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "690000",
+        "source": "solicitud.md",
+        "quote": "Ventas anuales: 690000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "880000",
+        "source": "solicitud.md",
+        "quote": "Valor del edificio: 880000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "masonry",
+        "source": "solicitud.md",
+        "quote": "Construccion: mamposteria",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": "2001",
+        "source": "solicitud.md",
+        "quote": "Ano de construccion: 2001",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-02-18",
+        "source": "solicitud.md",
+        "quote": "Valuado al: 2026-02-18",
+        "confidence": 1.0
+      }
+    ],
+    "conflicts": []
+  }
+}

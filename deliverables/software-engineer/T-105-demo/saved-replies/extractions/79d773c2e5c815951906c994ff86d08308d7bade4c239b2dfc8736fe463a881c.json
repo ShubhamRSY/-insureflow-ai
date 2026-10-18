@@ -1,0 +1,87 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "email.md"
+  ],
+  "usage": {
+    "queue_time": 0.189969173,
+    "prompt_tokens": 586,
+    "prompt_time": 0.026806512,
+    "completion_tokens": 859,
+    "completion_time": 1.8122862610000001,
+    "total_tokens": 1445,
+    "total_time": 1.839092773,
+    "completion_tokens_details": {
+      "reasoning_tokens": 622
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Harvest Crumb Bakery LLC",
+        "source": "email.md",
+        "quote": "Harvest Crumb Bakery LLC",
+        "confidence": 1
+      },
+      {
+        "field_id": "premises_address",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-03-15",
+        "source": "email.md",
+        "quote": "2027-03-15",
+        "confidence": 1
+      },
+      {
+        "field_id": "operations",
+        "value": "Bakery",
+        "source": "email.md",
+        "quote": "Harvest Crumb Bakery LLC",
+        "confidence": 0.8
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "640k",
+        "source": "email.md",
+        "quote": "640k",
+        "confidence": 1
+      },
+      {
+        "field_id": "tiv_building",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "construction",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "year_built",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      }
+    ],
+    "conflicts": []
+  }
+}

@@ -1,0 +1,88 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "email.md",
+    "scan.pdf"
+  ],
+  "usage": {
+    "queue_time": 0.171996453,
+    "prompt_tokens": 630,
+    "prompt_time": 0.029522997,
+    "completion_tokens": 716,
+    "completion_time": 1.488334605,
+    "total_tokens": 1346,
+    "total_time": 1.5178576019999999,
+    "completion_tokens_details": {
+      "reasoning_tokens": 379
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Frio Street Dry Goods LLC",
+        "source": "scan.pdf",
+        "quote": "Named insured: Frio Street Dry Goods LLC",
+        "confidence": 1
+      },
+      {
+        "field_id": "premises_address",
+        "value": "88 Frio City Rd, San Antonio, TX 78207",
+        "source": "scan.pdf",
+        "quote": "Premises address: 88 Frio City Rd, San Antonio, TX 78207",
+        "confidence": 1
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2026-12-01",
+        "source": "scan.pdf",
+        "quote": "Effective date: 2026-12-01",
+        "confidence": 1
+      },
+      {
+        "field_id": "operations",
+        "value": "dry retail gifts",
+        "source": "scan.pdf",
+        "quote": "Description of operations: dry retail gifts",
+        "confidence": 1
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "410000",
+        "source": "scan.pdf",
+        "quote": "Sales or payroll: 410000",
+        "confidence": 1
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "700000",
+        "source": "scan.pdf",
+        "quote": "Building TIV: 700000",
+        "confidence": 1
+      },
+      {
+        "field_id": "construction",
+        "value": "masonry",
+        "source": "scan.pdf",
+        "quote": "Construction: masonry",
+        "confidence": 1
+      },
+      {
+        "field_id": "year_built",
+        "value": "1991",
+        "source": "scan.pdf",
+        "quote": "Year built: 1991",
+        "confidence": 1
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-07-15",
+        "source": "scan.pdf",
+        "quote": "Valued through: 2026-07-15",
+        "confidence": 1
+      }
+    ],
+    "conflicts": []
+  }
+}

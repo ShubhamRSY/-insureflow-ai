@@ -1,0 +1,85 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "prompt_version": "b025802c0dfa",
+  "files": [
+    "email.md",
+    "scan.pdf"
+  ],
+  "usage": {
+    "queue_time": 0.031940197,
+    "prompt_tokens": 713,
+    "prompt_time": 0.06155986,
+    "completion_tokens": 602,
+    "completion_time": 1.294043073,
+    "total_tokens": 1315,
+    "total_time": 1.3556029330000001
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Nogales Court Flats LLC",
+        "source": "scan.pdf",
+        "quote": "Named insured: Nogales Court Flats LLC",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": "640 Nogales St, San Antonio, TX 78204",
+        "source": "scan.pdf",
+        "quote": "Premises address: 640 Nogales St, San Antonio, TX 78204",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2026-12-01",
+        "source": "scan.pdf",
+        "quote": "Effective date: 2026-12-01",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "6 unit apartments",
+        "source": "scan.pdf",
+        "quote": "Description of operations: 6 unit apartments",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "240000",
+        "source": "scan.pdf",
+        "quote": "Sales or payroll: 240000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "1800000",
+        "source": "scan.pdf",
+        "quote": "Building TIV: 1800000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "joisted masonry",
+        "source": "scan.pdf",
+        "quote": "Construction: joisted masonry",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": "1968",
+        "source": "scan.pdf",
+        "quote": "Year built: 1968",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "source": null,
+        "quote": null,
+        "confidence": 0
+      }
+    ],
+    "conflicts": []
+  }
+}

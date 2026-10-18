@@ -1,0 +1,91 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "application.pdf",
+    "attachment.md"
+  ],
+  "usage": {
+    "queue_time": 0.076702608,
+    "prompt_tokens": 621,
+    "prompt_time": 0.361382958,
+    "completion_tokens": 1408,
+    "completion_time": 3.018988706,
+    "total_tokens": 2029,
+    "total_time": 3.380371664,
+    "prompt_tokens_details": {
+      "cached_tokens": 256
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 1092
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Eleanor Avenue Accounting LLC",
+        "source": "application.pdf",
+        "quote": "Named insured: Eleanor Avenue Accounting LLC",
+        "confidence": 1
+      },
+      {
+        "field_id": "premises_address",
+        "value": "14 Eleanor Ave, San Antonio, TX 78212",
+        "source": "application.pdf",
+        "quote": "Premises: 14 Eleanor Ave, San Antonio, TX 78212",
+        "confidence": 1
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-01-01",
+        "source": "application.pdf",
+        "quote": "Effective date: 2027-01-01",
+        "confidence": 1
+      },
+      {
+        "field_id": "operations",
+        "value": "Accounting office",
+        "source": "attachment.md",
+        "quote": "Accounting office",
+        "confidence": 1
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "580000",
+        "source": "attachment.md",
+        "quote": "Sales 580000",
+        "confidence": 1
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "620000",
+        "source": "attachment.md",
+        "quote": "Building TIV 620000",
+        "confidence": 1
+      },
+      {
+        "field_id": "construction",
+        "value": "Masonry",
+        "source": "attachment.md",
+        "quote": "Masonry",
+        "confidence": 1
+      },
+      {
+        "field_id": "year_built",
+        "value": "2007",
+        "source": "attachment.md",
+        "quote": "Year built 2007",
+        "confidence": 1
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-05-05",
+        "source": "attachment.md",
+        "quote": "Valued through 2026-05-05",
+        "confidence": 1
+      }
+    ],
+    "conflicts": []
+  }
+}

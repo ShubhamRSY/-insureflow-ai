@@ -1,0 +1,87 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "prompt_version": "b025802c0dfa",
+  "files": [
+    "application.md",
+    "email.md",
+    "loss-runs.md",
+    "schedule.csv"
+  ],
+  "usage": {
+    "queue_time": 0.1436563,
+    "prompt_tokens": 1269,
+    "prompt_time": 0.105965319,
+    "completion_tokens": 673,
+    "completion_time": 1.477583669,
+    "total_tokens": 1942,
+    "total_time": 1.583548988
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Blue Mesa Outfitters LLC",
+        "source": "application.md",
+        "quote": "Named insured: Blue Mesa Outfitters LLC",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": "2201 Henderson St, Fort Worth, TX 76102",
+        "source": "application.md",
+        "quote": "Premises address: 2201 Henderson St, Fort Worth, TX 76102",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-06-01",
+        "source": "application.md",
+        "quote": "Effective date: 2027-06-01",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "retail store selling outdoor gear and apparel. Sales floor and one storage room. No firearms or ammunition sold.",
+        "source": "application.md",
+        "quote": "Operations: retail store selling outdoor gear and apparel. Sales floor and one storage room. No firearms or ammunition sold.",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "1920000",
+        "source": "application.md",
+        "quote": "Annual sales: $1,920,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "720000",
+        "source": "application.md",
+        "quote": "Building TIV: $720,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "Masonry non-combustible",
+        "source": "application.md",
+        "quote": "Construction: Masonry non-combustible",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": "1972",
+        "source": "application.md",
+        "quote": "Year built: 1972",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-09-30",
+        "source": "loss-runs.md",
+        "quote": "Losses valued through: 2026-09-30",
+        "confidence": 1.0
+      }
+    ],
+    "conflicts": []
+  }
+}

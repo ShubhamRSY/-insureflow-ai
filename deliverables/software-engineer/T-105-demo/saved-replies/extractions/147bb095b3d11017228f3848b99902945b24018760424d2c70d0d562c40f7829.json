@@ -1,0 +1,87 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "prompt_version": "b025802c0dfa",
+  "files": [
+    "application.md",
+    "email.md",
+    "loss-runs.md",
+    "schedule.csv"
+  ],
+  "usage": {
+    "queue_time": 0.411377062,
+    "prompt_tokens": 1340,
+    "prompt_time": 0.120471136,
+    "completion_tokens": 802,
+    "completion_time": 1.660816687,
+    "total_tokens": 2142,
+    "total_time": 1.781287823
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Sweet Tea & Biscuit Co LLC",
+        "source": "application.md",
+        "quote": "Named insured: Sweet Tea & Biscuit Co LLC",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": "1407 Broadway St, San Antonio, TX 78215",
+        "source": "application.md",
+        "quote": "Premises address: 1407 Broadway St, San Antonio, TX 78215",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-03-01",
+        "source": "application.md",
+        "quote": "Effective date: 2027-03-01",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "Southern breakfast and lunch restaurant, 90 seats, beer and wine only, dine-in and takeout, two fryers, flat-top, 8-burner range, two convection ovens",
+        "source": "application.md",
+        "quote": "Operations: Southern breakfast and lunch restaurant, 90 seats, beer and wine only, dine-in and takeout.\nNumber of employees: 22\nAnnual sales: $1,380,000\nBuilding TIV: $680,000\nBusiness personal property: $190,000\nSquare footage: 3,900\nConstruction: Joisted masonry\nYear built: 1952\nStories: 1\nSprinklers: Yes\nCooking operations: Two fryers, flat-top, 8-burner range, two convection ovens.",
+        "confidence": 0.95
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "1380000",
+        "source": "application.md",
+        "quote": "Annual sales: $1,380,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "680000",
+        "source": "application.md",
+        "quote": "Building TIV: $680,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "Joisted masonry",
+        "source": "application.md",
+        "quote": "Construction: Joisted masonry",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": "1952",
+        "source": "application.md",
+        "quote": "Year built: 1952",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-09-30",
+        "source": "loss-runs.md",
+        "quote": "Valuation date: 2026-09-30",
+        "confidence": 1.0
+      }
+    ],
+    "conflicts": []
+  }
+}

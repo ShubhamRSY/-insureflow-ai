@@ -1,0 +1,180 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "application.md",
+    "email.md",
+    "loss-runs.md",
+    "schedule.xlsx"
+  ],
+  "usage": {
+    "queue_time": 0.221808445,
+    "prompt_tokens": 1075,
+    "prompt_time": 0.025512211,
+    "completion_tokens": 1981,
+    "completion_time": 4.578016456,
+    "total_tokens": 3056,
+    "total_time": 4.603528667,
+    "prompt_tokens_details": {
+      "cached_tokens": 512
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 1408
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Mesquite Home and Gift Co LLC",
+        "source": "application.md",
+        "quote": "Mesquite Home and Gift Co LLC",
+        "confidence": 1
+      },
+      {
+        "field_id": "premises_address",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-01-01",
+        "source": "application.md",
+        "quote": "Effective date: 2027-01-01",
+        "confidence": 1
+      },
+      {
+        "field_id": "operations",
+        "value": "Retail home decor and gifts, 3 stores",
+        "source": "application.md",
+        "quote": "Operations: Retail home decor and gifts, 3 stores",
+        "confidence": 1
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "$1,510,000",
+        "source": "application.md",
+        "quote": "Building TIV: $1,510,000 total building",
+        "confidence": 1
+      },
+      {
+        "field_id": "construction",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "year_built",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-09-30",
+        "source": "loss-runs.md",
+        "quote": "Valued through: 2026-09-30",
+        "confidence": 1
+      }
+    ],
+    "conflicts": [
+      {
+        "field": "premises_address",
+        "values": [
+          {
+            "value": "2201 Troup Hwy",
+            "source": "schedule.xlsx",
+            "quote": "2201 Troup Hwy",
+            "confidence": 1
+          },
+          {
+            "value": "1420 E Marshall Ave",
+            "source": "schedule.xlsx",
+            "quote": "1420 E Marshall Ave",
+            "confidence": 1
+          },
+          {
+            "value": "901 State Line Ave",
+            "source": "schedule.xlsx",
+            "quote": "901 State Line Ave",
+            "confidence": 1
+          }
+        ]
+      },
+      {
+        "field": "sales_or_payroll",
+        "values": [
+          {
+            "value": "$2,350,000",
+            "source": "application.md",
+            "quote": "Annual sales: $2,350,000",
+            "confidence": 1
+          },
+          {
+            "value": "$510,000",
+            "source": "application.md",
+            "quote": "Annual payroll: $510,000",
+            "confidence": 1
+          }
+        ]
+      },
+      {
+        "field": "construction",
+        "values": [
+          {
+            "value": "Masonry",
+            "source": "schedule.xlsx",
+            "quote": "Masonry",
+            "confidence": 1
+          },
+          {
+            "value": "Masonry",
+            "source": "schedule.xlsx",
+            "quote": "Masonry",
+            "confidence": 1
+          },
+          {
+            "value": "Frame",
+            "source": "schedule.xlsx",
+            "quote": "Frame",
+            "confidence": 1
+          }
+        ]
+      },
+      {
+        "field": "year_built",
+        "values": [
+          {
+            "value": "1996",
+            "source": "schedule.xlsx",
+            "quote": "1996",
+            "confidence": 1
+          },
+          {
+            "value": "1982",
+            "source": "schedule.xlsx",
+            "quote": "1982",
+            "confidence": 1
+          },
+          {
+            "value": "1970",
+            "source": "schedule.xlsx",
+            "quote": "1970",
+            "confidence": 1
+          }
+        ]
+      }
+    ]
+  }
+}

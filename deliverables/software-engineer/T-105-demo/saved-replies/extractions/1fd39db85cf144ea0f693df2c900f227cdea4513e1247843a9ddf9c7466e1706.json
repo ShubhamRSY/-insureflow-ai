@@ -1,0 +1,87 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "prompt_version": "b025802c0dfa",
+  "files": [
+    "application.md",
+    "email.md",
+    "loss-runs.pdf",
+    "schedule.csv"
+  ],
+  "usage": {
+    "queue_time": 0.088476541,
+    "prompt_tokens": 1207,
+    "prompt_time": 0.083554361,
+    "completion_tokens": 666,
+    "completion_time": 1.301331285,
+    "total_tokens": 1873,
+    "total_time": 1.384885646
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Bayou Glass & Mirror Works LLC",
+        "source": "application.md",
+        "quote": "Named insured: Bayou Glass & Mirror Works LLC",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": "2145 Pine St, Beaumont, TX 77701",
+        "source": "application.md",
+        "quote": "Premises address: 2145 Pine St, Beaumont, TX 77701",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-05-01",
+        "source": "application.md",
+        "quote": "Effective date: 2027-05-01",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "Glass cutting, tempering and framing for commercial storefronts. Shop and small showroom, no chemicals beyond cleaning supplies.",
+        "source": "application.md",
+        "quote": "Operations: Glass cutting, tempering and framing for commercial storefronts. Shop and small showroom, no chemicals beyond cleaning supplies.",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "1950000",
+        "source": "application.md",
+        "quote": "Annual sales: $1,950,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "890000",
+        "source": "application.md",
+        "quote": "Building TIV: $890,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "Masonry",
+        "source": "application.md",
+        "quote": "Construction: Masonry",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": "1972",
+        "source": "application.md",
+        "quote": "Year built: 1972",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-09-30",
+        "source": "loss-runs.pdf",
+        "quote": "Valued: 2026-09-30",
+        "confidence": 1.0
+      }
+    ],
+    "conflicts": []
+  }
+}

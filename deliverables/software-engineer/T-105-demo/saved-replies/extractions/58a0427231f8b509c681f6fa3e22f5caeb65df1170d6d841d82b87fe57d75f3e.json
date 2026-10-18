@@ -1,0 +1,87 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "prompt_version": "b025802c0dfa",
+  "files": [
+    "application.md",
+    "email.md",
+    "loss-runs.md",
+    "schedule.csv"
+  ],
+  "usage": {
+    "queue_time": 0.00468877,
+    "prompt_tokens": 1169,
+    "prompt_time": 0.097558047,
+    "completion_tokens": 661,
+    "completion_time": 1.417043978,
+    "total_tokens": 1830,
+    "total_time": 1.5146020249999999
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Boom Town Fireworks LLC",
+        "source": "application.md",
+        "quote": "Named insured: Boom Town Fireworks LLC",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": "4415 Hwy 84 E, Waco, TX 76708",
+        "source": "application.md",
+        "quote": "Premises address: 4415 Hwy 84 E, Waco, TX 76708",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-03-15",
+        "source": "application.md",
+        "quote": "Effective date: 2027-03-15",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "Retail sale of consumer fireworks (aerial, ground and cakes), storefront and seasonal tent. Fireworks inventory stored on premises, including in a trailer on the lot.",
+        "source": "application.md",
+        "quote": "Operations: Retail sale of consumer fireworks (aerial, ground and cakes), storefront and seasonal tent. Fireworks inventory stored on premises, including in a trailer on the lot.",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "640000",
+        "source": "application.md",
+        "quote": "Annual sales: $640,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "350000",
+        "source": "application.md",
+        "quote": "Building TIV: $350,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "Metal frame, metal siding",
+        "source": "application.md",
+        "quote": "Construction: Metal frame, metal siding",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": "1995",
+        "source": "application.md",
+        "quote": "Year built: 1995",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "source": null,
+        "quote": null,
+        "confidence": 0
+      }
+    ],
+    "conflicts": []
+  }
+}

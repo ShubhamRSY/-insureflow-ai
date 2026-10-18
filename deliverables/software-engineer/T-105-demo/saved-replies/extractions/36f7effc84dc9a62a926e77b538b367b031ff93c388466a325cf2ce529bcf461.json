@@ -1,0 +1,86 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "prompt_version": "a7413a9c72b0",
+  "files": [
+    "application.pdf",
+    "email.md",
+    "schedule.csv"
+  ],
+  "usage": {
+    "queue_time": 0.09697967,
+    "prompt_tokens": 898,
+    "prompt_time": 0.072129254,
+    "completion_tokens": 639,
+    "completion_time": 1.2816081480000001,
+    "total_tokens": 1537,
+    "total_time": 1.353737402
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Ironwood Physical Therapy PLLC",
+        "source": "application.pdf",
+        "quote": "Named insured: Ironwood Physical Therapy PLLC",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": "1620 Ranch Rd 12, Suite 4, San Marcos TX 78666",
+        "source": "application.pdf",
+        "quote": "Premises address: 1620 Ranch Rd 12, Suite 4, San Marcos TX 78666",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-03-01",
+        "source": "application.pdf",
+        "quote": "Effective date: 2027-03-01",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "Outpatient physical therapy clinic, 3 treatment rooms, gym equipment. No surgery.",
+        "source": "application.pdf",
+        "quote": "Operations: Outpatient physical therapy clinic, 3 treatment rooms, gym equipment. No surgery.",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "1050000",
+        "source": "application.pdf",
+        "quote": "Annual sales / revenue: $1,050,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "410000",
+        "source": "application.pdf",
+        "quote": "Building TIV: $410,000 (tenant improvements)",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "Masonry",
+        "source": "application.pdf",
+        "quote": "Construction: Masonry",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": "2001",
+        "source": "application.pdf",
+        "quote": "Year built: 2001",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "source": null,
+        "quote": null,
+        "confidence": 0
+      }
+    ],
+    "conflicts": []
+  }
+}

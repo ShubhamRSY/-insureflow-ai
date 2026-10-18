@@ -1,0 +1,87 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "prompt_version": "b025802c0dfa",
+  "files": [
+    "application.md",
+    "email.md",
+    "loss-runs.jpg",
+    "schedule.csv"
+  ],
+  "usage": {
+    "queue_time": 0.266363771,
+    "prompt_tokens": 1197,
+    "prompt_time": 0.213793389,
+    "completion_tokens": 745,
+    "completion_time": 2.233536804,
+    "total_tokens": 1942,
+    "total_time": 2.447330193
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Alder Park Apartments LLC",
+        "source": "application.md",
+        "quote": "Named insured: Alder Park Apartments LLC",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": "905 Alder Park Dr, Killeen, TX 76541",
+        "source": "application.md",
+        "quote": "Premises address: 905 Alder Park Dr, Killeen, TX 76541",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-04-01",
+        "source": "application.md",
+        "quote": "Effective date: 2027-04-01",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "Residential apartments, 8 units in two two-story buildings, long-term leases. Occupancy 88 percent. No cooking operations (tenant electric ranges only).",
+        "source": "application.md",
+        "quote": "Operations: Residential apartments, 8 units in two two-story buildings, long-term leases. Occupancy 88 percent.\nNumber of employees: 1\nAnnual sales: $158,000 (gross annual rents)\nBuilding TIV: $860,000\nBusiness personal property: $12,000\nSquare footage: 7,100\nConstruction: Wood frame\nYear built: 1972\nStories: 2\nSprinklers: No\nCooking operations: None (tenant electric ranges only)",
+        "confidence": 0.95
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "158000",
+        "source": "application.md",
+        "quote": "Annual sales: $158,000 (gross annual rents)",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "860000",
+        "source": "application.md",
+        "quote": "Building TIV: $860,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "Wood frame",
+        "source": "application.md",
+        "quote": "Construction: Wood frame",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": "1972",
+        "source": "application.md",
+        "quote": "Year built: 1972",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "source": null,
+        "quote": null,
+        "confidence": 0
+      }
+    ],
+    "conflicts": []
+  }
+}

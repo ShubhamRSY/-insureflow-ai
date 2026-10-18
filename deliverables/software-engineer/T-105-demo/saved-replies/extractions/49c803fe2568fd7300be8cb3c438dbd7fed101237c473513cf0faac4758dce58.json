@@ -1,0 +1,88 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "email.md",
+    "schedule.xlsx"
+  ],
+  "usage": {
+    "queue_time": 0.17139884,
+    "prompt_tokens": 604,
+    "prompt_time": 0.029338844,
+    "completion_tokens": 1165,
+    "completion_time": 2.415665936,
+    "total_tokens": 1769,
+    "total_time": 2.44500478,
+    "completion_tokens_details": {
+      "reasoning_tokens": 896
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Bandera Home Goods LLC",
+        "source": "email.md",
+        "quote": "Bandera Home Goods LLC",
+        "confidence": 1
+      },
+      {
+        "field_id": "premises_address",
+        "value": "1400 Bandera Rd, San Antonio, TX 78228",
+        "source": "schedule.xlsx",
+        "quote": "1400 Bandera Rd, San Antonio, TX 78228",
+        "confidence": 1
+      },
+      {
+        "field_id": "effective_date",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "operations",
+        "value": "dry retail",
+        "source": "email.md",
+        "quote": "dry retail",
+        "confidence": 1
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "500000",
+        "source": "email.md",
+        "quote": "Sales 500000",
+        "confidence": 1
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "600000",
+        "source": "schedule.xlsx",
+        "quote": "600000",
+        "confidence": 1
+      },
+      {
+        "field_id": "construction",
+        "value": "masonry",
+        "source": "schedule.xlsx",
+        "quote": "masonry",
+        "confidence": 1
+      },
+      {
+        "field_id": "year_built",
+        "value": "1996",
+        "source": "schedule.xlsx",
+        "quote": "1996",
+        "confidence": 1
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      }
+    ],
+    "conflicts": []
+  }
+}

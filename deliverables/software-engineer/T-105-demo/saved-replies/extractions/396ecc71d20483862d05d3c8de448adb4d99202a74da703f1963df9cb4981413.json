@@ -1,0 +1,106 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "email-1.md",
+    "email-2.md"
+  ],
+  "usage": {
+    "queue_time": 0.191482418,
+    "prompt_tokens": 648,
+    "prompt_time": 0.030843064,
+    "completion_tokens": 912,
+    "completion_time": 1.917898125,
+    "total_tokens": 1560,
+    "total_time": 1.9487411890000002,
+    "completion_tokens_details": {
+      "reasoning_tokens": 554
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Devine Retail LLC",
+        "source": "email-1.md",
+        "quote": "Devine Retail LLC",
+        "confidence": 1
+      },
+      {
+        "field_id": "premises_address",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-01-01",
+        "source": "email-1.md",
+        "quote": "2027-01-01",
+        "confidence": 1
+      },
+      {
+        "field_id": "operations",
+        "value": "Dry retail",
+        "source": "email-1.md",
+        "quote": "Dry retail",
+        "confidence": 1
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "260000",
+        "source": "email-1.md",
+        "quote": "260000",
+        "confidence": 1
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "190000",
+        "source": "email-1.md",
+        "quote": "190000",
+        "confidence": 1
+      },
+      {
+        "field_id": "construction",
+        "value": "Masonry",
+        "source": "email-1.md",
+        "quote": "Masonry",
+        "confidence": 1
+      },
+      {
+        "field_id": "year_built",
+        "value": "1955",
+        "source": "email-1.md",
+        "quote": "1955",
+        "confidence": 1
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "source": "",
+        "quote": "",
+        "confidence": 0
+      }
+    ],
+    "conflicts": [
+      {
+        "field": "premises_address",
+        "values": [
+          {
+            "value": "6 Devine St, San Antonio, TX 78210",
+            "source": "email-1.md",
+            "quote": "6 Devine St, San Antonio, TX 78210",
+            "confidence": 1
+          },
+          {
+            "value": "60 Devine St, San Antonio, TX 78210",
+            "source": "email-2.md",
+            "quote": "60 Devine St, San Antonio, TX 78210",
+            "confidence": 1
+          }
+        ]
+      }
+    ]
+  }
+}

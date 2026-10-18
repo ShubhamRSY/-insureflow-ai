@@ -1,0 +1,87 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "prompt_version": "b025802c0dfa",
+  "files": [
+    "application.md",
+    "email.md",
+    "loss-runs.md",
+    "schedule.csv"
+  ],
+  "usage": {
+    "queue_time": 0.083015342,
+    "prompt_tokens": 1145,
+    "prompt_time": 0.081781315,
+    "completion_tokens": 634,
+    "completion_time": 1.22830503,
+    "total_tokens": 1779,
+    "total_time": 1.310086345
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Lone Oak Thrift & Books LLC",
+        "source": "application.md",
+        "quote": "Named insured: Lone Oak Thrift & Books LLC",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": "412 W Oak St, Denton, TX 76201",
+        "source": "application.md",
+        "quote": "Premises address: 412 W Oak St, Denton, TX 76201",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-01-15",
+        "source": "application.md",
+        "quote": "Effective date: 2027-01-15",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "Used book and thrift shop, donated goods sorted on site, sales floor and back room. No food, no alcohol.",
+        "source": "application.md",
+        "quote": "Operations: Used book and thrift shop, donated goods sorted on site, sales floor and back room. No food, no alcohol.",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "390000",
+        "source": "application.md",
+        "quote": "Annual sales: $390,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "430000",
+        "source": "application.md",
+        "quote": "Building TIV: $430,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "Frame",
+        "source": "application.md",
+        "quote": "Construction: Frame",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": "1958",
+        "source": "application.md",
+        "quote": "Year built: 1958",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "source": null,
+        "quote": null,
+        "confidence": 0
+      }
+    ],
+    "conflicts": []
+  }
+}

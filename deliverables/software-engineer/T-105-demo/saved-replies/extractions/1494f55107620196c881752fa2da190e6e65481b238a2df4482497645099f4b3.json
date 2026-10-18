@@ -1,0 +1,87 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "prompt_version": "a7413a9c72b0",
+  "files": [
+    "application.pdf",
+    "email.md",
+    "loss-runs.md",
+    "schedule.csv"
+  ],
+  "usage": {
+    "queue_time": 0.115772688,
+    "prompt_tokens": 1123,
+    "prompt_time": 0.083922416,
+    "completion_tokens": 674,
+    "completion_time": 1.35297016,
+    "total_tokens": 1797,
+    "total_time": 1.436892576
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Juniper Ridge Bookkeeping LLC",
+        "source": "application.pdf",
+        "quote": "Named insured: Juniper Ridge Bookkeeping LLC",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": "7710 Shoal Creek Ct, Suite 210, Austin TX 78757",
+        "source": "application.pdf",
+        "quote": "Premises address: 7710 Shoal Creek Ct, Suite 210, Austin TX 78757",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-03-01",
+        "source": "application.pdf",
+        "quote": "Effective date: 2027-03-01",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "Bookkeeping and payroll services for small businesses, no client premises work",
+        "source": "application.pdf",
+        "quote": "Operations: Bookkeeping and payroll services for small businesses, no client premises work",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "1850000",
+        "source": "application.pdf",
+        "quote": "Annual sales / revenue: $1,850,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "240000",
+        "source": "application.pdf",
+        "quote": "Building TIV: $240,000 (tenant improvements)",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "Masonry non-combustible",
+        "source": "application.pdf",
+        "quote": "Construction: Masonry non-combustible",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": "2004",
+        "source": "application.pdf",
+        "quote": "Year built: 2004",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-09-30",
+        "source": "loss-runs.md",
+        "quote": "Valued through: 2026-09-30",
+        "confidence": 1.0
+      }
+    ],
+    "conflicts": []
+  }
+}

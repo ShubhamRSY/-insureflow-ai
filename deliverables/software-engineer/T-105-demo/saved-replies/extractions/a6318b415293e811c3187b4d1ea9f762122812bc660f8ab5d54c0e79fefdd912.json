@@ -1,0 +1,92 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "82be09bd42f7",
+  "files": [
+    "application.pdf",
+    "loss-runs-page-1.md",
+    "loss-runs-page-2.md"
+  ],
+  "usage": {
+    "queue_time": 0.282475248,
+    "prompt_tokens": 722,
+    "prompt_time": 0.011235387,
+    "completion_tokens": 1149,
+    "completion_time": 2.7178033409999998,
+    "total_tokens": 1871,
+    "total_time": 2.729038728,
+    "prompt_tokens_details": {
+      "cached_tokens": 512
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 809
+    }
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Huebner Clinic Office LLC",
+        "source": "application.pdf",
+        "quote": "Named insured: Huebner Clinic Office LLC",
+        "confidence": 1
+      },
+      {
+        "field_id": "premises_address",
+        "value": "500 Huebner Rd, San Antonio, TX 78240",
+        "source": "application.pdf",
+        "quote": "Premises: 500 Huebner Rd, San Antonio, TX 78240",
+        "confidence": 1
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-01-01",
+        "source": "application.pdf",
+        "quote": "Effective date: 2027-01-01",
+        "confidence": 1
+      },
+      {
+        "field_id": "operations",
+        "value": "medical office",
+        "source": "application.pdf",
+        "quote": "Operations: medical office",
+        "confidence": 1
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "760000",
+        "source": "application.pdf",
+        "quote": "Sales: 760000",
+        "confidence": 1
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "1300000",
+        "source": "application.pdf",
+        "quote": "Building TIV: 1300000",
+        "confidence": 1
+      },
+      {
+        "field_id": "construction",
+        "value": "joisted masonry",
+        "source": "application.pdf",
+        "quote": "Construction: joisted masonry",
+        "confidence": 1
+      },
+      {
+        "field_id": "year_built",
+        "value": "1974",
+        "source": "application.pdf",
+        "quote": "Year built: 1974",
+        "confidence": 1
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-12-01",
+        "source": "loss-runs-page-1.md",
+        "quote": "Valued through: 2026-12-01",
+        "confidence": 1
+      }
+    ],
+    "conflicts": []
+  }
+}

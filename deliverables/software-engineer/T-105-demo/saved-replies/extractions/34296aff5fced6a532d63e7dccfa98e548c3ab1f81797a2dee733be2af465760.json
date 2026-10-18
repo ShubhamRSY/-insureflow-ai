@@ -1,0 +1,87 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "prompt_version": "b025802c0dfa",
+  "files": [
+    "application.md",
+    "email.md",
+    "loss-runs.pdf",
+    "schedule.csv"
+  ],
+  "usage": {
+    "queue_time": 0.115724902,
+    "prompt_tokens": 1251,
+    "prompt_time": 0.104262031,
+    "completion_tokens": 723,
+    "completion_time": 1.465112591,
+    "total_tokens": 1974,
+    "total_time": 1.569374622
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Gulf Plains Hardware Wholesale LLC",
+        "source": "application.md",
+        "quote": "Named insured: Gulf Plains Hardware Wholesale LLC",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": "8800 Sam Houston Pkwy E, Houston, TX 77049",
+        "source": "application.md",
+        "quote": "Premises address: 8800 Sam Houston Pkwy E, Houston, TX 77049",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-04-01",
+        "source": "application.md",
+        "quote": "Effective date: 2027-04-01",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "Light wholesale of home goods, kitchenware and small hand tools to retail stores. Goods are not hazardous: no flammable liquids, no aerosols, no pesticides, no batteries. Warehouse with loading dock, no repackaging.",
+        "source": "application.md",
+        "quote": "Light wholesale of home goods, kitchenware and small hand tools to retail stores. Goods are not hazardous: no flammable liquids, no aerosols, no pesticides, no batteries. Warehouse with loading dock, no repackaging.",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "4100000",
+        "source": "application.md",
+        "quote": "Annual sales: $4,100,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "2050000",
+        "source": "application.md",
+        "quote": "Building TIV: $2,050,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "Tilt-up concrete",
+        "source": "application.md",
+        "quote": "Construction: Tilt-up concrete",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": "1998",
+        "source": "application.md",
+        "quote": "Year built: 1998",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-09-35",
+        "source": "loss-runs.pdf",
+        "quote": "Valueg @s of: 2026~09.35",
+        "confidence": 0.9
+      }
+    ],
+    "conflicts": []
+  }
+}

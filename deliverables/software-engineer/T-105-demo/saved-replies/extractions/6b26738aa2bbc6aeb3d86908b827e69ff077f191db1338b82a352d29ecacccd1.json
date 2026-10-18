@@ -1,0 +1,133 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "prompt_version": "b025802c0dfa",
+  "files": [
+    "application.md",
+    "email.md",
+    "schedule.csv"
+  ],
+  "usage": {
+    "queue_time": 0.065888272,
+    "prompt_tokens": 1289,
+    "prompt_time": 0.100068245,
+    "completion_tokens": 1220,
+    "completion_time": 2.585390524,
+    "total_tokens": 2509,
+    "total_time": 2.6854587690000002
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Cypress Pointe Apartments LLC",
+        "source": "application.md",
+        "quote": "Named insured: Cypress Pointe Apartments LLC",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": null,
+        "source": null,
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-06-01",
+        "source": "application.md",
+        "quote": "Effective date: 2027-06-01",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "Residential apartments, 3 properties, 30 units total, long-term leases. Occupancy 95 percent. No cooking operations (tenant electric ranges only). Sprinklers: Yes, NFPA 13 at all 3 locations. 2 stories all locations.",
+        "source": "application.md",
+        "quote": "Operations: Residential apartments, 3 properties, 30 units total, long-term leases. Occupancy 95 percent.\nNumber of employees: 3\nAnnual sales: $612,000 (gross annual rents, combined)\nBuilding TIV: $1,380,000 (combined, see schedule)\nBusiness personal property: $28,000 combined\nSquare footage: 27,500 combined\nConstruction: Wood frame with masonry veneer\nYear built: 2012 (loc 1), 2015 (loc 2), 2017 (loc 3)\nStories: 2 all\nSprinklers: Yes, NFPA 13 at all 3 locations\nCooking operations: None (tenant electric ranges only)",
+        "confidence": 0.95
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": 612000,
+        "source": "application.md",
+        "quote": "Annual sales: $612,000 (gross annual rents, combined)",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": 1380000,
+        "source": "application.md",
+        "quote": "Building TIV: $1,380,000 (combined, see schedule)",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "Wood frame with masonry veneer",
+        "source": "application.md",
+        "quote": "Construction: Wood frame with masonry veneer",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": null,
+        "source": null,
+        "quote": "",
+        "confidence": 0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "source": null,
+        "quote": "",
+        "confidence": 0
+      }
+    ],
+    "conflicts": [
+      {
+        "field": "premises_address",
+        "values": [
+          {
+            "value": "1100 Cypress Pointe Dr, Denton, TX 76205",
+            "source": "application.md",
+            "quote": "1100 Cypress Pointe Dr, Denton, TX 76205 (loc 1)",
+            "confidence": 1.0
+          },
+          {
+            "value": "2450 Trimmier Rd, Killeen, TX 76542",
+            "source": "application.md",
+            "quote": "2450 Trimmier Rd, Killeen, TX 76542 (loc 2)",
+            "confidence": 1.0
+          },
+          {
+            "value": "710 Lake Air Dr, Waco, TX 76710",
+            "source": "application.md",
+            "quote": "710 Lake Air Dr, Waco, TX 76710 (loc 3)",
+            "confidence": 1.0
+          }
+        ]
+      },
+      {
+        "field": "year_built",
+        "values": [
+          {
+            "value": "2012",
+            "source": "application.md",
+            "quote": "2012 (loc 1)",
+            "confidence": 1.0
+          },
+          {
+            "value": "2015",
+            "source": "application.md",
+            "quote": "2015 (loc 2)",
+            "confidence": 1.0
+          },
+          {
+            "value": "2017",
+            "source": "application.md",
+            "quote": "2017 (loc 3)",
+            "confidence": 1.0
+          }
+        ]
+      }
+    ]
+  }
+}

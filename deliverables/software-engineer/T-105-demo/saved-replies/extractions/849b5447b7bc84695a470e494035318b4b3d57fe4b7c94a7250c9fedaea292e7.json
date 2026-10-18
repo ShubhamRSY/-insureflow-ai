@@ -1,0 +1,139 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "prompt_version": "a7413a9c72b0",
+  "files": [
+    "application.pdf",
+    "email.md",
+    "loss-runs.md",
+    "schedule.xlsx"
+  ],
+  "usage": {
+    "queue_time": 0.084285795,
+    "prompt_tokens": 1203,
+    "prompt_time": 0.103984532,
+    "completion_tokens": 1075,
+    "completion_time": 2.298292339,
+    "total_tokens": 2278,
+    "total_time": 2.4022768709999998
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Brisket & Co Group LLC",
+        "source": "application.pdf",
+        "quote": "Named insured: Brisket & Co Group LLC",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": null,
+        "source": null,
+        "quote": null,
+        "confidence": 0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-09-01",
+        "source": "application.pdf",
+        "quote": "Effective date: 2027-09-01",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "Two full-service BBQ restaurants with full bars and live music on weekends.",
+        "source": "application.pdf",
+        "quote": "Two full-service BBQ restaurants with full bars and live music on\nweekends.",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": null,
+        "source": null,
+        "quote": null,
+        "confidence": 0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "1350000",
+        "source": "application.pdf",
+        "quote": "Building TIV: $1,350,000 total",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "Masonry and steel",
+        "source": "application.pdf",
+        "quote": "Construction: Masonry and steel",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": null,
+        "source": null,
+        "quote": null,
+        "confidence": 0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-09-30",
+        "source": "loss-runs.md",
+        "quote": "Valued through: 2026-09-30",
+        "confidence": 1.0
+      }
+    ],
+    "conflicts": [
+      {
+        "field": "premises_address",
+        "values": [
+          {
+            "value": "1401 Legacy Gardens Dr, Plano TX 75024",
+            "source": "application.pdf",
+            "quote": "Premises address: 1401 Legacy Gardens Dr, Plano TX 75024 (Plano); Frisco\nlocation see schedule",
+            "confidence": 0.9
+          },
+          {
+            "value": "1401 Legacy Gardens Dr, Plano TX 75024; 8290 Main St Ste 110, Frisco TX 75034",
+            "source": "schedule.xlsx",
+            "quote": "1401 Legacy Gardens Dr\tPlano\t75024",
+            "confidence": 0.9
+          }
+        ]
+      },
+      {
+        "field": "sales_or_payroll",
+        "values": [
+          {
+            "value": "4100000",
+            "source": "application.pdf",
+            "quote": "Annual sales / revenue: $4,100,000 (both locations)",
+            "confidence": 0.9
+          },
+          {
+            "value": "3600000",
+            "source": "email.md",
+            "quote": "The app says 4.1M but Dana (our acct) says the real number is 3.6 combined",
+            "confidence": 0.9
+          }
+        ]
+      },
+      {
+        "field": "year_built",
+        "values": [
+          {
+            "value": "2003",
+            "source": "application.pdf",
+            "quote": "Year built: 2003 / 2014",
+            "confidence": 0.9
+          },
+          {
+            "value": "2014",
+            "source": "application.pdf",
+            "quote": "Year built: 2003 / 2014",
+            "confidence": 0.9
+          }
+        ]
+      }
+    ]
+  }
+}

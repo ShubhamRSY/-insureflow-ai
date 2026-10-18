@@ -1,0 +1,105 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "prompt_version": "a7413a9c72b0",
+  "files": [
+    "application.jpg",
+    "email.md",
+    "loss-runs.pdf",
+    "schedule.csv"
+  ],
+  "usage": {
+    "queue_time": 0.049953109,
+    "prompt_tokens": 1138,
+    "prompt_time": 0.094978453,
+    "completion_tokens": 844,
+    "completion_time": 1.8440141909999999,
+    "total_tokens": 1982,
+    "total_time": 1.938992644
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Brazos Electrical Supply Inc",
+        "source": "application.jpg",
+        "quote": "Named insured: Brazos Electrical Supply Inc",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": "3115 S 31st St, Temple, TX 76501",
+        "source": "application.jpg",
+        "quote": "Premises address: 3115 S 3lst St, Temple, TX 76501",
+        "confidence": 0.95
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-04-01",
+        "source": "application.jpg",
+        "quote": "Effective date: 2027-04-01",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "Light wholesale of electrical supplies (wire, breakers, conduit, fixtures) to licensed electricians. Counter and warehouse, will-call pickup. No manufacturing.",
+        "source": "application.jpg",
+        "quote": "Operations: Light wholesale of electrical supplies (wire, breakers,\nconduit, fixtures) to licensed electricians. Counter and warehouse,\nwill-call pickup. No manufacturing.",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": 2600000,
+        "source": "application.jpg",
+        "quote": "Annual sales: $2,600,000",
+        "confidence": 0.7
+      },
+      {
+        "field_id": "tiv_building",
+        "value": 2400000,
+        "source": "application.jpg",
+        "quote": "Building TLV: $2,400,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "Tilt-up concrete",
+        "source": "application.jpg",
+        "quote": "Construction: Tilt=<up concrete",
+        "confidence": 0.9
+      },
+      {
+        "field_id": "year_built",
+        "value": 2004,
+        "source": "application.jpg",
+        "quote": "Year built: 2004",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-09-30",
+        "source": "loss-runs.pdf",
+        "quote": "Valued as of: 2026-09-30",
+        "confidence": 1.0
+      }
+    ],
+    "conflicts": [
+      {
+        "field": "sales_or_payroll",
+        "values": [
+          {
+            "value": 2600000,
+            "source": "application.jpg",
+            "quote": "Annual sales: $2,600,000",
+            "confidence": 0.9
+          },
+          {
+            "value": 3100000,
+            "source": "email.md",
+            "quote": "Sales are around 3.1 mil this year (they grew).",
+            "confidence": 0.8
+          }
+        ]
+      }
+    ]
+  }
+}
