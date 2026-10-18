@@ -1200,3 +1200,14 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: @producer rebuilds in-scope loss runs and SUB-199; @senior-underwriter rewrites the affected gold; freeze, commit, record the hash.
 - Status: ACCEPTED
 - Amends: none. Not a production approval; T-027 veto stands.
+
+## D-108 — P-055 fixes confirmed; approve change P-057 (scorer v6); approve change P-058 (numbered locations)
+- Date / Owner: 2026-10-17 / @user
+- Context: team/NEXT-SESSION.md after D-105–D-107 (pending decision 1, B-400, B-398).
+- Options considered: none. The user's words.
+- Decision: In the user's words (pasted). "1. Confirmed: @model-risk's two P-055 fixes are covered by my P-055 approval. 2. approve change P-057 (scorer v6, B-400): adds P-055 measures to v5 — leakage (any out-of-scope file shown complete, routed, or given an automated missing-info draft) must be 0; detection recall per criterion and overall must be 100%; in-scope files wrongly sent to manual intake ≤2 of 20; plus everything in v5 and the route gate (0 unsafe, ≥18/20). Built from the gold format only — do not open T-104 files or gold contents to tune it. Self-checks on dev data. v4/v5 stay frozen. 3. approve change P-058 (B-398): the multi-location detector also catches numbered locations/buildings/premises ("Location No. 2", "Loc #2", "Building 2", "Bldg 2", "Premises 2" etc.). Found on dev; not derived from T-104. Self-checks on dev; pyright on changed files. 4. @model-risk check P-057 and P-058, High only. If no High: re-freeze the code, record the new code hash and the scorer v6 hash in NEXT-SESSION.md, note that T-104 gold 3678c0f is unchanged. 5. Orchestrator writes labelled standups for @model-risk and @producer. /wrap-up and push ai-team only."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-17 (D-032). Contains `approve change P-057` and `approve change P-058`.
+- Dissent: none
+- Follow-up tasks: T-104b (P-057 scorer v6, P-058 detector scope-v3) by @ai-engineer-assistant; @model-risk check; re-freeze; labelled standups.
+- Status: ACCEPTED
+- Amends: D-105 (the @model-risk H1/H2 fixes are within P-055). The T-104 code freeze 1cf001f is replaced by the re-freeze after P-058. T-104 gold 3678c0f unchanged. Not a production approval; T-027 veto stands.

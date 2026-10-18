@@ -9,7 +9,7 @@ import re
 
 import llm_extract
 
-VERSION = "scope-v2"  # model-inventory.md; bump with every rule change
+VERSION = "scope-v3"  # model-inventory.md; bump with every rule change
 IMAGE = {".png", ".jpg", ".jpeg", ".tif", ".tiff"}
 REASONS = {
     "scanned_application": "Manual intake: scanned application",
@@ -47,7 +47,27 @@ LOC_ORDINAL = re.compile(r"(?im)^\W*(?:second|third|fourth|fifth|additional|othe
 LOC_HEADING = re.compile(r"(?im)^\W*(?:locations|premises|properties)\b[^\n]*:\s*$")
 LIST_ITEM = re.compile(r"^\s*(?:\d+[.)]|[-*])\s+\S")
 PREMISES_LINE = re.compile(r"(?im)^\W*premises(?:\s+address)?\s*\d*\s*:\s*(.+?)\s*$")
+# P-058 (D-108): a numbered location, building or premises used as a LABEL: at the start of a line, a list item or a schedule cell
+# ("Location No. 2", "Location #2", "Loc #2", "Loc. 2", "Building 2:", "Bldg 2", "Bldg. #2", "Premises 2", "Location: 2", "Locations 1 and 2",
+# "Bldgs 1-2", "Building 1 of 2"). Never mid-line, so "500 Oak Park Dr, Building 2, Austin" (one premises address) is not a second location.
+# "Premises 12 Main St" (the number starts a street address), "Building 2 stories" and "Number of buildings: 2" are not labels;
+# "Suite 2", "Floor 2", "Unit 2" and "2 buildings" are not in the word list.
+NUMBERED = re.compile(r"(?i)^\s*(?:(?:[-*\u2022]|\d{1,2}[.)])\s+)?(?:locations?|loc|buildings?|bldgs?|premises)\b\.?\s*(?:(?:no|nos|num|number)\b\.?)?\s*:?\s*#?\s*"
+                      r"(\d{1,2}(?!\d)(?:\s*(?:,|and|&|-|–|to|of)\s*(?:(?:locations?|loc|buildings?|bldgs?)\b\.?\s*(?:no\b\.?)?\s*#?\s*)?\d{1,2}(?!\d))*)(?!\s*[-\u2013]?\s*(?:stor|floor|level|unit|year|ft|feet|sq))")
+NOT_A_LOCATION = re.compile(r"(?i)\b(?:mail(?:ing)?\s+(?:address|to)|(?:prior|former|previous)\s+(?:address|location|premises))\b")  # the label, not a substring: "email" and "former bank" are not it
 STREET = re.compile(r"\b\d{1,6}\s+[A-Za-z0-9 .]+?\s(?:st|street|rd|road|ave|avenue|blvd|dr|drive|ln|lane|hwy|way|pkwy|ct|court|pl|place|fwy|trl)\b\.?", re.I)
+
+
+LOSS_TERMS = (r"date of loss", r"claim\s*(?:no|number|#|id)", r"incurred", r"valuation date|valued (?:as of|through|at)", r"paid (?:loss|indemnity)|reserve", r"loss run")
+
+
+def _is_loss_sheet(doc: dict) -> bool:
+    """A csv or xlsx that is a loss run by name or by content (two or more loss-run column terms, and not an application). Only the P-058 numbered-label check skips it; address rows are counted for every sheet exactly as in scope-v2."""
+    name = doc["name"].lower()
+    if not name.endswith((".csv", ".xlsx")):
+        return False
+    text = (doc.get("text") or "").lower()
+    return bool(LOSS_RUN.search(name)) or (sum(bool(re.search(t, text)) for t in LOSS_TERMS) >= 2 and _label_count(doc) < 3)
 
 
 def _is_sheet(doc: dict) -> bool:
@@ -110,11 +130,11 @@ def _addresses(doc: dict) -> list[str]:
         if line.startswith("sheet:"):
             col = None
         elif len(cells) > 1 and any("address" in c.lower() for c in cells) and not any(STREET.search(c) for c in cells):
-            heads = [i for i, c in enumerate(cells) if "address" in c.lower() and not re.search(r"mail|prior|previous|former", c, re.I)]
+            heads = [i for i, c in enumerate(cells) if "address" in c.lower() and not re.search(r"mail|prior|previous|former", c, re.I)]  # scope-v2 header test kept (check-P-057-P-058 H2)
             col = heads[0] if heads else None
         elif col is not None and col < len(cells) and cells[col].strip():
             raw.append(cells[col])
-        elif col is None and not re.search(r"mail|prior|previous|former", line, re.I):
+        elif col is None and not NOT_A_LOCATION.search(line):
             raw += [m.group(0) for m in STREET.finditer(line)]
     for address in raw:
         address = UNIT.sub("", address.strip())
@@ -123,12 +143,31 @@ def _addresses(doc: dict) -> list[str]:
     return found
 
 
+def _numbered(text: str, cells: bool = False) -> bool:
+    """P-058: two or more premises named by number as a label: a number of 2 or more, or two distinct numbers ("Building 1" twice is one place;
+    "Locations 1 and 2", "Bldgs 1-2" and "Building 1 of 2" name two). cells=True reads a schedule one tab-separated cell at a time.
+    A line about a mailing or prior address is skipped; a number that starts a street address ("Premises 12 Main St") is not a label."""
+    found: set[int] = set()
+    for line in text.splitlines():
+        if NOT_A_LOCATION.search(line):
+            continue
+        for piece in line.split("\t") if cells else [line]:
+            m = NUMBERED.match(piece)
+            if not m:
+                continue
+            street = STREET.match(piece[m.start(1):])
+            if street and not re.search(r"\d", street.group(0)[len(m.group(1)):]):  # "12 Main St" is an address; "2 Warehouse 50 Elm St" is a label
+                continue
+            found |= {int(n) for n in re.findall(r"\d+", m.group(1))}
+    return len(found) >= 2 or any(n >= 2 for n in found)
+
+
 def _multi_in_application(app: dict) -> bool:
     """Two or more premises named in the application: "(loc 2)", "Location 2:" and its forms, a numbered or bulleted list under a
     Locations heading, "Second location:", or two distinct premises addresses. A mailing or prior address is not a location."""
     text = app.get("text") or ""
     numbers = {n for rx in LOC_LABELS for n in rx.findall(text)}
-    if len(numbers) >= 2 or any(int(n) >= 2 for n in numbers) or LOC_ORDINAL.search(text):
+    if len(numbers) >= 2 or any(int(n) >= 2 for n in numbers) or LOC_ORDINAL.search(text) or _numbered(text):
         return True
     lines = text.splitlines()
     for i, line in enumerate(lines):
@@ -196,7 +235,8 @@ def _codes(docs: list[dict]) -> list[str]:
     for d in docs:  # every csv, xlsx or schedule file is counted for address rows, even when it also holds application labels
         if _is_sheet(d):
             places += [a for a in _addresses(d) if not any(llm_extract.same_address(a, o) for o in places)]
-    if len(places) >= 2 or any(_multi_in_application(d) for d in apps):
+    numbered = any(_numbered(d.get("text") or "", cells=True) for d in docs if _is_sheet(d) and not _is_loss_sheet(d))  # P-058: "Location 2", "Bldg 2" in a schedule
+    if len(places) >= 2 or numbered or any(_multi_in_application(d) for d in apps):
         add("multiple_locations")
     names = [m for d in docs for m in NAME_VALUE.findall(d.get("text") or "")]
     # The language rule is for the application. With no application to read, the other documents are checked instead (stricter only).
@@ -349,4 +389,38 @@ if __name__ == "__main__":
         assert [r["code"] for r in got["reasons"]] == ["scanned_application"], (name, got)
     assert detect([doc("application.md", APP), doc("page2.pdf", scan_text)])["in_scope"], "a typed pdf is typed"
     assert detect([doc("application.md", APP), doc("reply.md", scan_text)])["in_scope"] and detect([doc("application.md", APP), doc("loss-runs.jpg", scan_text, ocr_words=[["a", 1]])])["in_scope"]
+    # P-058: numbered locations, buildings and premises as labels; dev-style probes (application lines, then a schedule's cells)
+    def multi(extra, name="application.md"):
+        base = APP.replace("Premises address: 100 Main St, Austin, TX 78701\n", "") if extra.startswith("Premises") else APP  # one premises line only
+        return "multiple_locations" in [r["code"] for r in detect([doc(name, base + extra + "\n")])["reasons"]]
+
+    for form in ("Location No. 2: 200 Oak Ave", "Location #2", "Loc #2 is the warehouse", "Loc. 2", "Building 2", "Bldg 2", "Bldg. #2", "Premises 2", "Premises No. 2",
+                 "Building 2: warehouse", "Location No. 2 - yard", "- Bldg 3 (storage)", "2) Building 2", "Locations 1 and 2", "Buildings 1 and 2", "Bldgs 1-2", "Building 1 of 2",
+                 "Location 2 Warehouse 50 Elm St", "Location: 2", "Location 1 and Location 2", "location no 2 - yard", "Location 2: former bank, 50 Elm St", "Loc 2 (email for details)"):
+        assert multi(form), form
+    for form in ("Suite 2", "Floor 2", "Unit 2", "Apt 2", "Number of buildings: 2", "2 buildings", "Building 2 stories", "Building 2-story masonry", "Premises 12 Main St",
+                 "Location 1", "Building 1", "Loc #1 and Loc #1", "Building 1 of 1", "Mailing address: Building 2, PO Box 5", "Prior location 2: 7 Elm St, Waco, TX", "Same as Location 1",
+                 "Locations: 1", "Premises address: 100 Main Street, Ste 2, Austin, TX", "Building 2020", "Premises address: 500 Oak Park Dr, Building 2, Austin, TX",
+                 "Premises: 500 Oak Park Dr, Bldg 2, Austin", "The shop is in Building 2 of the plaza", "Former address: Location 2, 5 Elm", "Mail to: Loc 2, PO Box 4", "Previous location 2: 9 Elm"):
+        assert not multi(form), form
+    sched_cells = "loc\tname\nLocation No. 2\tWarehouse\nLocation 1\tShop"
+    assert [r["code"] for r in detect([doc("application.md", APP), doc("schedule.csv", sched_cells)])["reasons"]] == ["multiple_locations"], "numbered cells in a schedule"
+    assert [r["code"] for r in detect([doc("application.md", APP), doc("schedule.csv", "loc\tname\nBldg 1\tShop\nBldg 2\tYard")])["reasons"]] == ["multiple_locations"]
+    assert detect([doc("application.md", APP), doc("schedule.csv", "loc\tname\nBuilding 1\tShop\nBuilding 1\tShop again")])["in_scope"], "one number twice is one place"
+    assert detect([doc("application.md", APP), doc("schedule.csv", "loc\taddress\n1\t100 Main St\n1\t100 Main Street")])["in_scope"], "a bare loc column is not a numbered entry"
+    assert detect([doc("application.md", APP), doc("email.md", EMAIL + "\nBuilding 2 is the one we want covered.")])["in_scope"], "an email is not read for locations"
+    # loss-run sheets (name or content) skip only the numbered-label check; address rows are counted as in scope-v2 for every sheet
+    lr = "Date of loss\tClaim number\tTotal incurred\nBldg 1\t100\t5\nBldg 2\t200\t6"
+    for name in ("loss-runs.xlsx", "carrier-a.csv", "currently_valued.csv"):
+        assert detect([doc("application.md", APP), doc(name, lr)])["in_scope"], name  # numbered claim rows are not locations
+    sov = "address\tReserve\tIncurred\tClaim number\tValued as of\n100 Main St\t1\t2\tC1\t2026-01-01\n200 Oak Ave\t1\t2\tC2\t2026-01-01"
+    lr_addr = "Date of loss\tClaim number\tTotal incurred\nLocation 1\t12 Oak St\t100\nLocation 2\t99 Elm Ave\t200"
+    for name in ("sov.csv", "schedule.xlsx", "locations.csv", "carrier-a.csv", "loss-runs.xlsx"):
+        assert [r["code"] for r in detect([doc("application.md", APP), doc(name, sov)])["reasons"]] == ["multiple_locations"], name  # as scope-v2
+        assert [r["code"] for r in detect([doc("application.md", APP), doc(name, lr_addr)])["reasons"]] == ["multiple_locations"], name  # as scope-v2: two addresses
+    assert not detect([doc("application.md", APP), doc("schedule.csv", "Location 1\t12 Oak St\nLocation 2\t99 Elm Ave")])["in_scope"], "a real schedule still counts"
+    for head in ("Address (mailing)", "Prior-address", "Address - previous"):  # check-P-057-P-058 H2: the premises column is still found
+        sheet = f"Loc,{head},Premises address\n1,PO Box 9 Waco TX 76701,100 Main St Waco TX 76701\n2,PO Box 9 Waco TX 76701,200 Elm St Waco TX 76702\n"
+        got = [r["code"] for r in detect([{"name": "schedule.csv", "text": sheet}])["reasons"]]
+        assert "multiple_locations" in got, (head, got)
     print("scope ok", VERSION)

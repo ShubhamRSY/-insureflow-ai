@@ -1,0 +1,35 @@
+# P-057 and P-058 as built (T-104b, D-108)
+
+No model call. No T-104 file or gold read. Not a production approval; the T-027 veto stands.
+
+## P-057 — scorer v6 `underwriting_pipeline/ai/eval_holdout_v6.py`
+Copy of v5 (frozen, unchanged) plus the P-055 measures; the notes are at the top of the file.
+- Gold: one line `- Scope: in scope` or `- Scope: out of scope — <criteria>` (1 scanned application, 2 multiple locations, 3 non-English, 4 application not identified; numbers and/or names, `;` `,` `&` `and` between them; a short reason after a dash, full stop or colon). Missing, repeated, unreadable, number/name disagreeing or outside 1-4: the run stops before any file is scored or written (never a guess).
+- `--check-gold` (read-only, `HOLDOUT_IDS`): parses every Scope line, prints ok/fail per file, exit 1 on any fail. `HOLDOUT_GOLD` points at a temp copy of the gold folder (self-checks only).
+- Out-of-scope gold files are not field-scored. Leakage = any field value, complete / complete — review pending, carrier / provisional / suggested route, automated draft (`report["request"]`), or send enabled (status not in `REFUSED_STATUSES`); a route check that fails is a leak. Recall per criterion (a file counts under each) and overall; reason accuracy (reported); false manual intake at most 2.
+- P-055 gate: FAIL on any leak, miss or more than 2 false manual intake; else NOT EVALUABLE if a criterion has no gold file or there is no in-scope file; else PASS. Reason accuracy is reported, not a gate.
+- In-scope files: false manual intake leaves the field/status/route denominators only when the ceiling (2) is met. The route gate keeps v5's rule (0 unsafe, at least 90% of the in-scope files counted: 17 of 18 if two are left out).
+- Wiring: `regression_dev.py --holdout eval_holdout_v6` works unchanged. Same write rules as v5 (`--write` only, refuses to overwrite, `HOLDOUT_RESCORE=1`).
+
+## P-058 — detector `scope-v3`
+Numbered locations, buildings and premises count as multiple locations in the application and in schedule cells: a number of 2 or more, or two distinct numbers. Forms: Location No. 2, Location #2, Loc #2, Loc. 2, Building 2, Bldg 2, Bldg. #2, Premises 2, Premises No. 2.
+- Conservative (precision) choices: the number must stand alone (end, punctuation, of/and/is/at). Not triggered by Suite / Floor / Unit / Apt 2, "2 buildings", "Number of buildings: 2", "Building 2 stories", "Building 2-story", "Premises 12 Main St" (a street number), a one-number repeat, or a line about a mailing / prior address. Emails are not read for it. Known cost: an application whose single address reads "100 Main St, Building 2" goes to manual intake (fails safe; counts toward the 2-of-20 ceiling).
+- Version bumped in `scope.py`, `model-inventory.md` C-4 and `p-055-as-built.md`; one What's new line in the workbench (2026-10-17, T-104b, D-108).
+- Inbox SUB-001 to 173 reasons, scope-v2 vs scope-v3: identical (not_identified 30, non_english 17, scanned_application 31, multiple_locations 13, in scope 95); no file changed.
+
+## Checks run
+- Self-checks ok: scope, prepare, package, workbench, points, llm_extract, intake (no argument), sources, eval_holdout_v6, regression_dev. Pyright on scope.py, eval_holdout_v6.py, workbench.py: no new errors (the same import-resolution error as v5 for `workbench`).
+- v6 on dev, temp cache copy, `HOLDOUT_RESCORE=1`, 0 calls, `HOLDOUT_OUT` in a temp folder: dev gold has no Scope lines, so SUB-127-153 stops cleanly (27 listed, nothing written). With temp gold copies carrying Scope lines from the scope-v3 dev detector (out: 129 [1], 140 [2], 142 [4], 143 [3, 4], 144 [1, 2], 145 [2]): SUB-127-146 (SUB-147-153 have no saved reply in the dev cache; the run stops, 0 calls) gives 6 out / 14 in scope; leaks 0/6; recall 6/6 (criteria 1: 2/2, 2: 3/3, 3: 1/1, 4: 2/2); reason accuracy 6/6; false manual intake 0; P-055 gate PASS. Route accuracy 11/14, FAIL on the T-027 route gate (dev data, not a hold-out). Mislabelling 2 out-of-scope files in scope: false manual 2, ceiling met, PASS; 3: FAIL, files stay in as misses.
+
+## After code review (coordinator findings 1-8)
+- v6 Scope parsing: bold / case / "Scope -" variants read; parentheses dropped first; criteria read only from the list right after "out of scope" (all numbered or all named), and what follows must start like a reason (dash, colon, full stop, comma, "because"). "4 email only, scanned attachment" is criterion 4; "3 non-English (Spanish, some English)" and "2 multiple locations (Loc 1 and Loc 2)" parse; anything else unsure stops with a plain error. `--check-gold` prints each file's parsed scope and criteria, then totals (in/out, per criterion, two-criteria files, criterion-4 files). Probed in the self-check.
+- Leakage fails closed: a field is shown when its value is not None and not "" (0 and False count). The self-check no longer calls main() with a real output path: `_OUT` is a temp folder, restored in finally. Comments now say the 32-file set is the D-103 exception (20 in + 12 out) and the ceiling is 2 of the 20 in-scope files.
+- scope-v3 (same id, nothing used yet): numbered forms count only as a label at the start of a line, list item or schedule cell, never mid-address ("500 Oak Park Dr, Building 2, Austin" stays one premises). Plural / range / ordinal forms added: "Locations 1 and 2", "Buildings 1 and 2", "Bldgs 1-2", "Building 1 of 2", "Location 1 and Location 2", "Location 2 Warehouse 50 Elm St", "Location: 2". "Premises 12 Main St" (number starts a street address) is not a label.
+- Loss-run sheets (csv/xlsx, by name or by two or more loss-run column terms and no application labels) are never read for numbered or address rows.
+- Mailing / prior filter matches the label ("mailing address", "mail to", "prior / former / previous address / location / premises"), not substrings: "Location 2: former bank, 50 Elm St" and "Loc 2 (email for details)" trigger. The same label match replaces the substring test in the schedule address reader.
+- Re-run: inbox SUB-001 to 173 reasons identical to scope-v2 (30 / 17 / 31 / 13, in scope 95, 0 files changed); all self-checks ok; pyright no new errors; dev re-score unchanged (P-055 gate PASS).
+
+## After @model-risk H1 (check-P-057-P-058)
+- The loss-sheet exclusion now applies only to the new numbered-label check. Address rows are counted for every schedule/csv/xlsx exactly as in scope-v2, and `_kind` is v2's again (loss run by name only). Self-checks: an SOV with Reserve / Incurred / Claim number / Valued as of columns and two addresses is multiple_locations; a loss-run sheet whose claim rows only say "Bldg 1" / "Bldg 2" stays in scope; a loss-run sheet with two address rows is multiple_locations, as v2 decides.
+- v6 report prints route hits over all in-scope gold files (none left out) beside the gate figure; gate rule unchanged. Dead GOLD assignment removed from the v6 self-check.
+- Re-run: inbox SUB-001 to 173 identical to scope-v2 (0 files changed); all self-checks ok; pyright on scope.py clean.

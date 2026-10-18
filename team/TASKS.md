@@ -1609,7 +1609,7 @@ D-004 (user, 2026-10-09): Sanger & Altgelt agency pipeline. Eight steps. No auto
 - Notes: D-095 item 3. Plan only. 2026-10-16, @model-risk: APPROVED WITH CONDITIONS (deliverables/model-risk/check-P-048.md): (1) file 8 states its commodities are not hazardous; (2) file 11 states a TIV; (3) one non-carrier run is a JPG scan of an applicant note under a copied carrier header (probe M1; which non-carrier slot it replaces is settled with @model-risk before any file is built); (4) build only after P-048 H1 is closed. Not built; the user decides when.
 
 ### T-104a — P-055 out-of-scope detector and manual-intake card
-- Owner: @ai-engineer-assistant · Status: IN_REVIEW · Decision: D-105 (approve change P-055 rev 3)
+- Owner: @ai-engineer-assistant · Status: DONE · Decision: D-105 (approve change P-055 rev 3)
 - Acceptance criteria:
   - [ ] Deterministic detector, no model call, versioned and entered in deliverables/model-risk/model-inventory.md (Tier 2) before use.
   - [ ] Criteria 1–4 exactly as in deliverables/pm/proposal-P-055.md; fail closed (error, unsure language count, unknown text layer, no identifiable application → manual intake).
@@ -1624,3 +1624,9 @@ D-004 (user, 2026-10-09): Sanger & Altgelt agency pipeline. Eight steps. No auto
   - [ ] Mix per P-055 "Next hold-out": 20 in scope with at least 6 boundary cases; 12 out of scope with at least 4 per criterion 1–3, at least 3 two-criteria files, a near-pass form per criterion, and at least 2 email-only / application-not-identified files (criterion 4).
   - [ ] Gold from documents and written rules only, scope label in every gold file, D-102 conventions ("not in documents"; hold is a status, never a route), operations checklist for scorer v5.
   - [ ] Gold frozen and committed, hash recorded. The pipeline is not run on T-104.
+
+### T-104b — P-057 scorer v6 and P-058 numbered locations
+- Owner: @ai-engineer-assistant · Status: DONE (re-frozen; @model-risk APPROVE, no High) · Decision: D-108
+- Acceptance criteria:
+  - [ ] Scorer v6 = v5 plus the P-055 measures: leakage 0 (any out-of-scope file shown complete, routed, or given an automated missing-info draft), detection recall 100% per criterion and overall, in-scope files wrongly sent to manual intake ≤ 2 of 20; v5 field scores and the route gate (0 unsafe, ≥ 18/20) on in-scope files. Built from the gold format only; no T-104 file or gold read. v4/v5 unchanged. Self-checks on dev data.
+  - [ ] Detector catches numbered locations/buildings/premises ("Location No. 2", "Loc #2", "Building 2", "Bldg 2", "Premises 2", ...), version bumped; self-checks on dev; pyright on changed files.

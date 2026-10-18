@@ -82,11 +82,11 @@
 - **Owner:** @ai-engineer-assistant; code `underwriting_pipeline/ai/scope.py` (called from `prepare.process_submission`).
 - **Purpose:** decide, with deterministic rules and no model call, whether a file is inside the pilot scope. An out-of-scope file is manual intake as a whole file: status `manual_intake`, no value, no route, no missing-info draft, no send.
 - **Tier:** **Tier 2** (a wrong "in scope" lets an out-of-scope file reach the normal review path; the underwriter still decides every file).
-- **Version id:** **`scope-v2`** (2026-10-17, D-105, P-055 rev 3). Any rule change is a change under D-017 and is revalidated.
+- **Version id:** **`scope-v3`** (2026-10-17, D-108, P-058: numbered locations/buildings/premises; scope-v2 was D-105, P-055 rev 3). Any rule change is a change under D-017 and is revalidated.
 - **Status:** **Not approved for production.** Built under D-105; waits for the @model-risk check and the T-104 hold-out.
 - **Known limits:** a searchable PDF with a scanner-made text layer looks typed; language thresholds (5 words, 0.5) were tuned on the inbox incl. T-103 files; only Spanish is counted as non-English. scope-v2 (2026-10-17) closes check-T-104a H1/H2.
 - **Fail closed:** a detector error, an unsure language count, an unknown text layer, or no identifiable application is manual intake.
-- **Score files that belong to it:** **none yet.** Measures (leakage, recall per criterion, reason accuracy, false manual intake, fail closed) are reported apart from the T-027 field scores on T-104.
+- **Score files that belong to it:** **none yet.** Scorer `eval_holdout_v6.py` (P-057, D-108) computes the measures. Measures (leakage, recall per criterion, reason accuracy, false manual intake, fail closed) are reported apart from the T-027 field scores on T-104.
 - **Rule for quoting it:** no number may be quoted until T-104 is scored once.
 
 ---
@@ -118,7 +118,7 @@
 | C-1 | LLM extractor | @ai-engineer-assistant | 2 | `82be09bd42f7` + `openai/gpt-oss-120b` | T-027, T-059 | No |
 | C-2 | Point score | @data-scientist | 2 | none recorded | T-017 (@model-risk, @responsible-ai, @actuary) | No |
 | C-3 | Carrier match | @head-of-underwriting / @software-engineer | 2 | D-041 | none | No |
-| C-4 | Pilot scope detector | @ai-engineer-assistant | 2 | `scope-v2` | none (check pending) | No |
+| C-4 | Pilot scope detector | @ai-engineer-assistant | 2 | `scope-v3` | none (check pending) | No |
 | R-1 | Label-scanner extractor | — | retired | — | T-026 **lifted** | No (retired) |
 
 **No component is approved for production.** This inventory approves nothing.

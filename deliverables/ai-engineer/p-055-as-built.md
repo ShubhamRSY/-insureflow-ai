@@ -1,6 +1,6 @@
 # P-055 as built (T-104a, D-105)
 
-Detector `underwriting_pipeline/ai/scope.py`, version `scope-v2`. No model call. Not a production approval.
+Detector `underwriting_pipeline/ai/scope.py`, version `scope-v3` (P-058, see `p-057-p-058-as-built.md`). No model call. Not a production approval.
 
 ## Rules as built
 - Application = a document named application / solicitud / acord, or an unnamed one with 3 or more application labels. Emails, loss runs, schedules and replies are never the application.
