@@ -95,7 +95,7 @@ _LOG_LOCK = threading.Lock()  # ponytail: one process writes the log; a file loc
 
 
 NEGATED = re.compile(r"(?<!\w)(?:no|not an?|without(?: an?)?|sin|non)[- ]\w+")  # P-047 (c): "no bar" is not a bar
-NEGATED_EQUIP = re.compile(r"(?<!\w)(?:no|not an?|without(?: an?)?|sin|non)[- ](?:[\w-]+ ){0,2}[\w-]+|(?<!\w)(?:[\w-]+ ){0,2}[\w-]+ ?[:=-] ?(?:none|0|n/a|nil|no)(?!\w)|(?<!\w)(?:[\w-]+ ){0,2}[\w-]+ (?:is |are )?(?:not|never) (?:used|in use|present|installed|operated)")  # T-107a review: "no deep fryer", "Fryers: 0", "Oven not used" are not equipment; equipment only, never for bar/class words (M1, D-112: stricter wins)
+NEGATED_EQUIP = re.compile(r"(?<!\w)(?:no|not an?|without(?: an?)?|sin|non)[- ](?:[\w-]{1,30} ){0,2}[\w-]{1,30}|(?<!\w)(?:[\w-]{1,30} ){0,2}[\w-]{1,30} ?[:=-] ?(?:none|0|n/a|nil|no)(?!\w)|(?<!\w)(?:[\w-]{1,30} ){0,2}[\w-]{1,30} (?:is |are )?(?:not|never) (?:used|in use|present|installed|operated)")  # T-107a review: "no deep fryer", "Fryers: 0", "Oven not used" are not equipment; equipment only, never for bar/class words (M1, D-112: stricter wins)
 
 
 def _line(report: dict, key: str) -> str:
