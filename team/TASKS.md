@@ -1672,3 +1672,38 @@ D-004 (user, 2026-10-09): Sanger & Altgelt agency pipeline. Eight steps. No auto
   - [ ] Exit non-zero on any failure with a plain reason per file; must pass before a gold freeze (added to RUN-RULES).
   - [ ] Self-check: passes on a clean temp set; fails on T-104's post-run-date loss runs (read-only, files only, no pipeline run).
 - Output: script under underwriting_pipeline/ai/ or deliverables/senior-test-engineer/, note in deliverables/senior-test-engineer/T-106d-lint.md
+
+### T-107a — P-061 class lines, P-062 nightclub/lounge R1, one prohibited-class table
+- Owner: @ai-engineer-assistant (code), @head-of-underwriting (rules text) · Status: IN_PROGRESS · Decision: D-112 (approve change P-061, P-062)
+- Acceptance criteria:
+  - [ ] P-061: `_match()` reads the application's "Line of business:" and "Cooking operations:" lines (not the insured's name) for R9, R10, R14 and bar/prohibited words; stated cooking equipment in operations or the Cooking operations line is R9 evidence; R17 keeps reading the operations text only.
+  - [ ] P-062: nightclub(s), lounge(s), hookah, adult entertainment, cannabis words stay R1 even with R9 evidence; R2 stays for bar(s), tavern(s), pub(s) beside real restaurant evidence; "pre-packaged snacks only", "snacks only", "snack warmer" are not restaurant evidence.
+  - [ ] carrier-match.md: W1 and W1b merged into one prohibited-class table; where they conflicted the stricter rule wins; each row cites its source (AG line, D-###, P-###).
+  - [ ] Self-checks on dev only, including SUB-174/182/186/201 style cases and "restaurant and lounge" with real cooking; pyright on changed files; code-review on the worktree diff.
+- Output: code in underwriting_pipeline/, deliverables/head-of-underwriting/carrier-match.md, deliverables/ai-engineer/p-061-p-062-as-built.md
+
+### T-107b — B-415 live check: P-059 with P-061/P-062
+- Owner: @ai-engineer-assistant · Status: TODO · Decision: D-112
+- Acceptance criteria:
+  - [ ] 41 live calls (quick 15 = 5 calls, dev SUB-127–173 = 36), qwen, paced 55 s, .venv; temp outputs (D-069).
+  - [ ] Report vs the old saved replies: operations hits, silent errors, routes, false completes, unsafe routes.
+- Output: deliverables/ai-engineer/b-415-live-check.md
+
+### T-107c — Account-manager check passes a senior-confirmed carrier
+- Owner: @software-engineer · Status: TODO · Decision: D-112 (B-412)
+- Acceptance criteria:
+  - [ ] A P-052 senior-confirmed carrier passes the account-manager check without a typed override in the normal demo flow; all other gates unchanged.
+  - [ ] Every refusal shows its real reason on the card; never "not in appetite" for a senior referral.
+  - [ ] Self-check; D-065 (workbench, What's new line, screenshot).
+
+### T-107d — "What's new" shows the latest 5 plus "show all"
+- Owner: @software-engineer · Status: TODO · Decision: D-112 (B-410)
+
+### T-107e — T-104 best-case demo file routed straight to Carrier A
+- Owner: @senior-underwriter (pick), @software-engineer (wire into run-demo.sh) · Status: TODO · Decision: D-112 (B-414)
+
+### T-107f — Time-saved 25–35 min assumptions checked or labelled unmeasured
+- Owner: @senior-underwriter · Status: TODO · Decision: D-112
+
+### T-107g — Second rehearsal with run-demo.sh; demo-guide.md and screenshots updated
+- Owner: @senior-test-engineer (rehearsal), @pm (guide), @software-engineer (screenshots) · Status: TODO · Decision: D-112

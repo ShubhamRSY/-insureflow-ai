@@ -41,6 +41,9 @@ BANNER = ""  # set by serve(); the sandbox screenshots label the page with it
 MESSAGES: dict[str, tuple[bool, str]] = {}  # submission -> (ok, plain-words result of the last action); shown once
 # D-065 item 5: one line per user-visible feature: date, task or proposal, decision number, what an underwriter sees.
 WHATS_NEW = (
+    ("2026-10-18", "T-107a", "D-112", "Carrier match reads the application's Line of business and Cooking operations lines (P-061). A nightclub or lounge beside restaurant evidence, and any bar word beside a non-food operation, is now a prohibited class; a bar, tavern or pub beside real restaurant evidence stays a senior referral (P-062). \"Snacks only\" is not restaurant evidence."),
+    ("2026-10-18", "T-107d", "D-112", "What's new shows the latest 5 entries; \"Show all\" opens the rest."),
+    ("2026-10-18", "T-107c", "D-112", "The account-manager check passes a carrier a senior confirmed on a senior referral (all other gates unchanged), and every card shows that check in words. A send before the senior confirm now says \"a senior referral needs a senior underwriter to confirm the market first\", the same as the card, instead of \"no logged decision\". \"The file is not in appetite\" is no longer shown for a senior referral."),
     ("2026-10-18", "T-106a", "D-111", "The \"operations may be missing\" flag now also reads the Cooking operations, Hood & extinguishing system and Line of business lines: equipment (e.g. snack warmer), \"no gas\", \"None\" under cooking (no cooking) and hood inspection dates are named in the flag when the operations answer leaves them out, so a file no longer shows a clean operations value that drops them."),
     ("2026-10-17", "T-104b", "D-108", "Manual intake now also catches numbered locations: an application or schedule that names \"Location No. 2\", \"Loc #2\", \"Building 2\", \"Bldg 2\" or \"Premises 2\" goes to manual intake with the reason \"multiple locations\"."),
     ("2026-10-17", "T-104a", "D-105", "Manual intake: a file with a scanned application, several locations, non-English documents (Spanish) or no identifiable application (email-only files) is a whole-file manual intake. The card lists every reason (\"Manual intake: scanned application\"); no field is filled in, no carrier route is shown, no missing-info draft is made, and the send, approve and edit are refused with the same reason. Files with several locations now go here whole instead of being read with other-location rows (earlier location notes apply to in-scope files only)."),
@@ -94,6 +97,11 @@ _LOG_LOCK = threading.Lock()  # ponytail: one process writes the log; a file loc
 NEGATED = re.compile(r"(?<!\w)(?:no|not an?|without(?: an?)?|sin|non)[- ]\w+")  # P-047 (c): "no bar" is not a bar
 
 
+def _line(report: dict, key: str) -> str:
+    """P-061 (D-112): the application's Line of business / Cooking operations line (not the insured's name), negated words dropped. "" in a run saved before P-061."""
+    return NEGATED.sub(" ", ((report.get("class_lines") or {}).get(key) or "").lower())
+
+
 def _ops(report: dict) -> str:
     """P-047 (c): the full operations, value and cited text, so a detail the value dropped still routes. Negated words are removed."""
     for row in report["fields"]:
@@ -128,6 +136,10 @@ REFERRAL = (
 )
 NOT_READ = "Not read — extraction failed"  # D-079 (B-295)
 MI_NOT_READ = "whole file: not read (manual intake)"  # P-055 (T-104a UI H1)
+NEVER_SOFT = ("nightclub", "nightclubs", "lounge", "lounges")  # P-062 (D-112): R1 even beside restaurant evidence; bar, tavern, pub stay R2 there
+SNACKS = ("pre-packaged snacks only", "prepackaged snacks only", "pre packaged snacks only", "snacks only", "snack warmer")  # P-062 (b): not restaurant evidence
+EQUIP = ("fryer", "fryers", "deep fryer", "deep fryers", "burner", "burners", "flat-top", "flat top", "griddle", "charbroiler", "char-broiler",
+         "broiler", "oven", "ovens", "smoker", "smokers", "comal", "wok", "freidora", "freidoras", "horno")  # P-061: stated cooking equipment (R9); "snack warmer" and "range" are not here
 BAR_WORDS = ("bar", "bars", "tavern", "taverns", "nightclub", "nightclubs", "pub", "pubs", "lounge", "lounges")  # D-079
 
 # P-051 (a): the Carrier A allow-list, one group per written guide line. Only a file whose one operation is on it routes to Carrier A.
@@ -224,11 +236,15 @@ def _match(report: dict, gated: bool) -> dict:
     if report.get("status") == prepare.MANUAL_INTAKE:  # P-055 (D-105): no carrier, provisional or suggested route; not a hold either
         return out("manual_intake", prepare.status_refusal(report))
 
-    food = bool(ops) and (_has(ops, CLASSES["b"]) or ((report.get("cooking") or {}).get("equipment") or {}).get("state") == "yes")
-    barred = bool(ops) and _has(ops, BAR_WORDS)
-    other_prohibited = bool(ops) and _has(ops, tuple(w for w in PROHIBITED if w not in BAR_WORDS))
-    beside = bool(ops) and _has(ops, tuple(w for k, words in CLASSES.items() if k != "b" for w in words) + OTHER_OPS)  # P-051 (b): another operation
-    if other_prohibited or (barred and not food and not beside):  # W1 before the hold gate, as since D-059 (carrier-match.md lists R5/R6 first: B-378)
+    lob, cook = _line(report, "line_of_business"), _line(report, "cooking_operations")
+    cls = f"{ops} {lob}"  # P-061: class, bar and prohibited words come from the operations and the Line of business line; R17 reads ops only
+    snack = _has(cls, SNACKS)  # P-062 (b): a snack warmer or "snacks only" kitchen is not restaurant evidence
+    word_food = _has(cls, CLASSES["b"]) and not snack
+    equip = _has(f"{ops} {cook}", EQUIP) or ((report.get("cooking") or {}).get("equipment") or {}).get("state") == "yes"  # P-061: equipment in operations or the Cooking operations line
+    food = bool(ops) and (word_food or equip)
+    barred = bool(ops) and _has(cls, BAR_WORDS)
+    other_prohibited = bool(ops) and _has(cls, tuple(w for w in PROHIBITED if w not in BAR_WORDS))
+    if other_prohibited or (barred and not food) or (barred and food and _has(cls, NEVER_SOFT)):  # W1 before the hold gate, as since D-059 (carrier-match.md lists R5/R6 first: B-378); D-112: a bar word beside a non-food operation is R1 too (stricter of W1 and W1b); P-062 (a): nightclub, lounge never softened
         return out("no_match", "prohibited class (R1; AG:45-50)")
     if (gated and not prepare.ready_to_route(report)) or not ops:  # P-041: review pending routes as complete did before
         return out("hold", "open conflict" if ops and report.get("status") == prepare.REVIEW_PENDING else "missing information")
@@ -240,16 +256,14 @@ def _match(report: dict, gated: bool) -> dict:
     over = lambda cap: tiv is not None and tiv > cap
     if barred and food:  # D-079 (B-290): a bar word with restaurant evidence is a person's call, not a rule's
         return out("senior_referral", "possible bar/liquor exposure — confirm liquor sales (R2; AG:46, AG:39)")
-    if barred:  # P-051 (b): a bar, pub or lounge beside another operation is a person's call; never Carrier A, never a market confirm
-        return out("senior_referral", "bar, pub or lounge beside another operation — a second operation, a person decides (R16; AG:46, AG:33)")
     w2 = re.sub(r"(?<!\w)wet[\s-]+chemical(?!\w)", " ", ops) if food else ops  # a kitchen's wet chemical hood is fire suppression, not hazardous goods (as P-047); only with restaurant evidence
     raw = " ".join(f"{r.get('value') or ''} {r.get('quote') or ''} {r.get('context') or ''}" for r in report["fields"] if r["field_id"] == "operations").lower()
     for words, note in REFERRAL:  # W2 (D-097 1d): a referral word always wins over appetite (class) words
         if _has(w2, words) or _has(raw, tuple(w for w in words if w in NO_UTILITIES)):  # raw: _ops drops "no <word>"
             return out("senior_referral", note + (f"; {OUT_TIV}" if over(PILOT_TIV) else ""))
-    hit = [k for k, words in CLASSES.items() if _has(ops, words)]
-    if "b" not in hit and ((report.get("cooking") or {}).get("equipment") or {}).get("state") == "yes":
-        hit.append("b")  # D-078: stated cooking equipment is generic restaurant evidence
+    hit = [k for k, words in CLASSES.items() if _has(cls, words) and not (k == "b" and snack)]
+    if "b" not in hit and equip:
+        hit.append("b")  # D-078, P-061: stated cooking equipment is generic restaurant evidence
     if not hit:
         return out("no_match", "readable class on no carrier list (R8; KO 8); a restaurant needs generic evidence (restaurant, food service, kitchen, eatery, café, catering or stated cooking equipment), never a cuisine word (D-078)", overridable=True)
     spr = report.get("sprinklers")
@@ -275,6 +289,8 @@ def _match(report: dict, gated: bool) -> dict:
     if over(PILOT_TIV):
         return out("senior_referral", OUT_TIV)
     assert kind in ALLOW_A  # P-051 (a): Carrier A only from the allow-list
+    if not _has(ops, ALLOW_A[kind]):  # P-061: a class read only from the Line of business line never routes directly (R17 reads operations)
+        return out("senior_referral", "class read from the line of business only (P-061; AG:29-31); a person decides; suggested market: Carrier A" + CONFIRM, suggested="carrier_a")
     suggest_a = "; suggested market: Carrier A" + CONFIRM
     if kind == "wholesale":  # P-053: wholesale never routes directly; light or not is a person's call (AG:31 "Wholesale: light")
         return out("senior_referral", "wholesale: whether it is light is a person's call (P-053; AG:31)" + suggest_a, suggested="carrier_a")
@@ -711,12 +727,8 @@ def _no_send_reason(item: dict, report: dict, refused: bool) -> str:
         return f"documents changed since extraction ({item['manifest']})"
     if report.get("status") == prepare.REVIEW_PENDING and package.conflict_problem(report):  # B-324 (D-089)
         return package.conflict_problem(report)
-    if item["route"] == "senior_referral" and _carrier(item, report) not in package.CARRIERS:  # P-052
-        try:
-            blocked = package.confirm_problem(package.reviewed(item["id"]))
-        except ValueError as exc:
-            blocked = str(exc)
-        return f"no market can be confirmed on this file ({blocked})" if blocked else "a senior referral needs a senior underwriter to confirm the market first"
+    if item["route"] == "senior_referral" and _carrier(item, report) not in package.CARRIERS:  # P-052; T-107c: one text with the send gate
+        return package.senior_confirm_problem(item["id"], report) or "a senior referral needs a senior underwriter to confirm the market first"
     if _carrier(item, report) not in package.CARRIERS:
         return f"the carrier match is {item['route']}" + (f" ({item['note']})" if item.get("note") else "") + ", so no carrier is named"
     if not prepare.ready_to_route(report):
@@ -725,6 +737,19 @@ def _no_send_reason(item: dict, report: dict, refused: bool) -> str:
 
 
 def _send_html(item: dict, report: dict, refused: bool, manifest: str) -> str:
+    """The send panel plus, T-107c (D-112), the account-manager check result in plain words (the same check send_to_carrier runs)."""
+    try:
+        am = package.agency_problem(item["id"])
+    except Exception as exc:  # the card must still render
+        am = str(exc)
+    line = ('<p class="msg ok">Account-manager check: passes (complete file, no open conflict, no unread page' + (", senior-confirmed carrier" if item["route"] == "senior_referral" else "") + "). The account manager still writes a reason to send.</p>"
+            if not am else f'<p class="bad">Account-manager check: refused, {html.escape(am)}.</p>')
+    if not am and _no_send_reason(item, report, refused):
+        line = ""  # the send panel already gives the reason; do not say "passes" beside it
+    return _send_panel(item, report, refused, manifest) + line
+
+
+def _send_panel(item: dict, report: dict, refused: bool, manifest: str) -> str:
     sid = html.escape(item["id"])
     why = _no_send_reason(item, report, refused)
     if why:
@@ -751,6 +776,10 @@ def _send_html(item: dict, report: dict, refused: bool, manifest: str) -> str:
         f'<button type="submit">{"Resend" if when else "Send"} to {html.escape(carrier)}</button></form>'
         "<p>Goes through the same send gate as every send: saved run, documents unchanged, an approve logged, no failed file. The underwriter decides; nothing is bound.</p>"
     )
+
+
+def whats_new_items(rows) -> str:
+    return "".join(f"<li>{html.escape(d)} · {html.escape(t)} · {html.escape(n)}: {html.escape(w)}</li>" for d, t, n, w in rows)
 
 
 def _short(h: str) -> str:
@@ -1050,7 +1079,7 @@ footer {{ border-top: 1px solid #ccc; margin-top: 2rem; color: #555; }}
 {f'<p class="banner">{html.escape(BANNER)}</p>' if BANNER else ''}
 <h1>Underwriter workbench</h1>
 {''.join(_msg(messages, k) for k in messages if k not in {q["id"] for q in queue})}
-<details open><summary><b>What's new</b></summary><ul>{''.join(f"<li>{html.escape(d)} · {html.escape(t)} · {html.escape(n)}: {html.escape(w)}</li>" for d, t, n, w in WHATS_NEW)}</ul></details>
+<details open><summary><b>What's new</b> (latest {min(5, len(WHATS_NEW))} of {len(WHATS_NEW)})</summary><ul>{whats_new_items(WHATS_NEW[:5])}</ul>{f"<details><summary>Show all {len(WHATS_NEW)}</summary><ul>{whats_new_items(WHATS_NEW[5:])}</ul></details>" if len(WHATS_NEW) > 5 else ""}</details>
 <p>Synthetic queue. A decision is logged only with an id on the underwriter list. Decline and edit need a reason, and so does an approve after a decline. Approve, edit, and decline are saved with that reason. This page shows saved runs only. It never binds. A carrier send needs the typed line and passes the send gate.</p>
 <p>Decisions so far: {counts['approve']} approved, {counts['edit']} edited, {counts['decline']} declined. Corrections: {corrections}.</p>
 {''.join(blocks)}
@@ -1471,18 +1500,44 @@ if __name__ == "__main__":
         assert match(r("pho house", cooking={"equipment": {"state": "yes"}, "hood_suppression": {"state": "not_stated"}}))["note"] == R10, "stated cooking equipment is generic evidence"
         # D-079 (B-290): bar words with restaurant evidence go to a person; without it, as before. (B-293): bakery, coffee shop, deli are food service.
         bar_ref = {"route": "senior_referral", "note": "possible bar/liquor exposure — confirm liquor sales (R2; AG:46, AG:39)", "suggested": "", "overridable": False}
-        for ops in ("sushi bar restaurant", "bar-b-q restaurant", "pub and kitchen", "hotel lounge with catering"):
+        for ops in ("sushi bar restaurant", "bar-b-q restaurant", "pub and kitchen"):
             assert match(r(ops)) == bar_ref, (ops, match(r(ops)))
+        # T-107a (D-112) P-061 / P-062: dev-shaped cases; no hold-out file or gold was opened. cl = the application's two class lines.
+        cl = lambda lob=None, cook=None: {"line_of_business": lob, "cooking_operations": cook}
+        R1 = {"route": "no_match", "note": "prohibited class (R1; AG:45-50)", "suggested": "", "overridable": False}
+        lob_office = "commercial property and general liability, office"
+        m = match(r("Consulting firm", class_lines=cl(lob_office)))  # SUB-174 shape: office only on the line of business
+        assert m["route"] == "senior_referral" and m["suggested"] == "carrier_a" and "P-061" in m["note"], m  # never carrier_a: the class came from the line of business only
+        m = match(r("and", class_lines=cl(lob_office)))
+        assert m["route"] == "senior_referral" and "P-061" in m["note"], "a class read only from the line of business never routes to Carrier A"
+        assert route(r("Consulting firm")) == "no_match", "no line of business: as before"
+        assert route(r("office", class_lines=cl(lob_office))) == "carrier_a", "office on both: unchanged"
+        assert route(r("sub and deli shop", class_lines=cl("commercial property, retail food", "Two fryers, flat-top, 8-burner range"))) == "senior_referral"  # SUB-182 shape
+        assert match(r("sandwich shop", class_lines=cl(None, "Flat-top griddle, 2 fryers, 6-burner range")))["note"] == R10, "cooking equipment on the Cooking operations line is R9 evidence"
+        assert match(r("sandwich shop, convection oven"))["note"] == R10, "cooking equipment in operations is R9 evidence"
+        assert route(r("sandwich shop", class_lines=cl(None, "None (tenant electric ranges only)"))) == "no_match" and route(r("sandwich shop", class_lines=cl(None, "not listed"))) == "no_match", "none is not evidence"
+        assert match(r("Dining venue", class_lines=cl("commercial property and general liability, restaurant and bar", "Two fryers, flat-top")))["note"] == bar_ref["note"], "SUB-186 shape: bar on the line of business, fryers"
+        assert match(r("Nightclub and lounge. Small kitchen, pre-packaged snacks only.", class_lines=cl(None, "Snack warmer"))) == R1, "SUB-201 shape: snacks only is not restaurant evidence"
+        assert match(r("pub, small kitchen, snack warmer")) == R1 and match(r("tavern, kitchen, snacks only")) == R1
+        assert match(r("restaurant and lounge, full kitchen", class_lines=cl(None, "Two fryers, flat-top, 8-burner range"))) == R1, "P-062 (a): a lounge is never softened by real cooking"
+        assert match(r("nightclub with restaurant")) == match(r("hotel lounge with catering")) == R1 and match(r("hookah restaurant")) == R1
+        assert match(r("bar and grill")) == R1, "bar and grill: no restaurant word, as before"
+        assert match(r("restaurant with a bar", class_lines=cl(None, "Two fryers"))) == bar_ref == match(r("pub, restaurant, full kitchen")), "R2 stays for bar, tavern, pub beside real evidence"
+        assert route(r("restaurant", class_lines=cl("restaurant and bar"))) == "senior_referral" and "R2" in match(r("restaurant", class_lines=cl("restaurant and bar")))["note"]
+        assert match(r("Pre-packaged snacks only, no cooking", class_lines=cl("restaurant")))["route"] == "no_match", "snacks only blocks the word evidence"
+        assert route(r("Pizzeria, two fryers, snacks only")) == "senior_referral", "stated equipment still counts"
         assert match(r("bbq restaurant"))["note"] == R10
         for ops in ("sports bar", "tavern", "nightclub"):
             assert match(r(ops)) == {"route": "no_match", "note": "prohibited class (R1; AG:45-50)", "suggested": "", "overridable": False}, ops
         assert {route(r(w)) for w in ("hookah lounge", "recycling yard", "sawmill", "bail bonds office")} == {"no_match"}, "W1 additions; prohibited wins over office"
         assert match(r("pub")) == match(r("nail lounge")) == {"route": "no_match", "note": "prohibited class (R1; AG:45-50)", "suggested": "", "overridable": False}, "P-051 (d): pubs, lounges are W1 (AG:46), never overridable"
-        # P-051: the four @model-risk P-049 H1 phrases never reach Carrier A; each goes to senior_referral.
-        for ops in ("office building with ground-floor pub", "retail store and cocktail lounge", "office building, no utilities", "office, unoccupied",
-                    "office building with ground-floor bar", "office and retail storefront", "retail store with a nail salon", "vacant office building"):
+        # P-051: the four @model-risk P-049 H1 phrases never reach Carrier A. T-107a (D-112): a bar word beside a non-food operation is R1 (stricter of W1 and W1b);
+        # changed from senior_referral R16: "office building with ground-floor pub", "retail store and cocktail lounge", "office building with ground-floor bar".
+        for ops in ("office building with ground-floor pub", "retail store and cocktail lounge", "office building with ground-floor bar", "wholesale tavern", "gym and nightclub"):
+            assert match(r(ops)) == R1, (ops, match(r(ops)))
+        for ops in ("office building, no utilities", "office, unoccupied", "office and retail storefront", "retail store with a nail salon", "vacant office building"):
             assert route(r(ops)) == "senior_referral", (ops, match(r(ops)))
-        assert "R16" in match(r("retail store and cocktail lounge"))["note"] and "AG:51" in match(r("office building, no utilities"))["note"]
+        assert "AG:51" in match(r("office building, no utilities"))["note"]
         assert route({"complete": True, "fields": [{"field_id": "operations", "value": "Office building", "quote": "Operations: office building. No utilities connected."}, {"field_id": "tiv_building", "value": "$1,000,000"}]}) == "senior_referral", "P-051 (c): read before the negation drop"
         for ops in ("Clothing boutique retail store", "clothing store tienda de ropa", "Office, 2nd floor, clients by appointment", "office suite, LLC",
                     "thrift shop", "office building, no food, no alcohol"):
@@ -1680,6 +1735,8 @@ if __name__ == "__main__":
                 card = art(render(load_queue(), None), "SUB-907")
                 assert "Suggested market: <b>carrier_b</b>" in card and 'action="/confirm-market"' in card and "UW-001 Dana Reyes" in card and "UW-002" not in card.split("/confirm-market")[1].split("</form>")[0]
                 assert "No send: a senior referral needs a senior underwriter to confirm the market first" in card  # P-052: the plain reason
+                assert 'class="bad">Account-manager check: refused, a senior referral needs a senior underwriter' in card and "in appetite" not in card.split("Account-manager check")[1]  # T-107c
+                assert "Send refused: a senior referral needs a senior underwriter to confirm the market first" in act("/send", {"submission": "SUB-907", "user_line": "send to carrier SUB-907"})[2]  # T-107c (B-412): the card's order
                 assert not str(package.confirms_path()).startswith(str(ROOT)), "D-069: the confirm log is the sandbox copy"
                 h907 = prepare.read_saved_run("SUB-907")["saved_hash"]
                 assert "Market confirm refused: only a senior" in act("/confirm-market", {"submission": "SUB-907", "underwriter_id": "UW-002", "carrier": "carrier_b", "reason": "x", "run_hash": h907})[2]
@@ -1687,9 +1744,12 @@ if __name__ == "__main__":
                 card = art(render(load_queue(), None), "SUB-907")
                 assert "Market confirmed: <b>carrier_b</b> by UW-001 Dana Reyes" in card and "roofing only, no hot work" in card and 'action="/confirm-market"' not in card
                 assert "Approve first" in card, "P-052: a confirm opens no send gate"
+                assert "Account-manager check: passes" in card and "appetite" not in card.split("Account-manager check")[1], "T-107c: confirmed carrier passes the AM check"
+                pg = render(load_queue(), None)
+                assert pg.count("<details><summary>Show all") == 1 and pg.split("<details><summary>Show all")[0].split("<summary><b>What's new</b>")[1].count("<li>") == 5, "T-107d: latest 5, then show all"
                 stored("SUB-907", "complete", [{**r, "value": "office building with ground-floor pub"} if r["field_id"] == "operations" else r for r in good])
                 card = art(render(load_queue(), None), "SUB-907")
-                assert "No market confirm and no send from this screen: a prohibited word" in card and "No send: no market can be confirmed on this file (a prohibited word" in card
+                assert 'action="/confirm-market"' not in card and "prohibited class (R1; AG:45-50)" in card, "T-107a (D-112): office + pub is now no_match R1, no market confirm offered (was senior_referral R16; the old text asserted here was the prohibited-word refusal)"
                 # @compliance M1 (D-099): the excluded carrier is not offered, the card says why, and a posted confirm for it is refused.
                 stored("SUB-961", "complete", [{**r, "value": "office with a medical clinic"} if r["field_id"] == "operations" else r for r in good])
                 card = art(render(load_queue(), None), "SUB-961")

@@ -373,9 +373,24 @@ def agency_problem(target) -> str:
         return conflict_problem(report)
     if not prepare.ready_to_route(report):  # P-041 (D-088): review pending is gated as complete was
         return "the file is not complete"
+    if _route(report) == "senior_referral":  # T-107c (D-112): a P-052 senior-confirmed carrier passes; every gate above still applies
+        return senior_confirm_problem(submission, report)
     if _route(report) not in {"carrier_a", "carrier_b", "carrier_c"}:
         return "the file is not in appetite"
     return ""
+
+
+def senior_confirm_problem(submission: str, report: dict) -> str:
+    """T-107c: empty unless the file is a senior referral with no valid senior market confirm on this run; then the card's reason (one text)."""
+    if _route(report) != "senior_referral":
+        return ""
+    try:
+        blocked = confirm_problem(reviewed(submission))
+    except ValueError as exc:
+        blocked = str(exc)
+    if blocked:
+        return f"no market can be confirmed on this file ({blocked})"
+    return "" if market_confirmation(submission, report.get("saved_hash") or "") else "a senior referral needs a senior underwriter to confirm the market first"
 
 
 def needs_review_ids(report: dict) -> list[str]:
@@ -442,6 +457,9 @@ def send_to_carrier(
     if status in prepare.REFUSED_STATUSES:
         raise ValueError(f"this file's status is {prepare.status_refusal(report)}; it cannot be sent, for any actor including the user")
     problem = prepare.manifest_problem(submission)  # P-020 (D-062): the input documents are the ones extracted, every actor
+    if problem:
+        raise ValueError(problem)
+    problem = senior_confirm_problem(submission, with_resolutions(report, submission))  # T-107c (B-412): same order as the card, confirm before approve
     if problem:
         raise ValueError(problem)
     problem = _decision_problem(submission, report["saved_hash"])  # D-053 + P-026, every actor
@@ -717,7 +735,7 @@ if __name__ == "__main__":
 
             # P-052 (D-098): only a senior confirms a senior_referral market, with a reason, bound to the run; the send gate still applies.
             save(ext, "SUB-410", "complete", complete=True, fields=full(operations="family restaurant, 60 seats"))
-            save(ext, "SUB-411", "complete", complete=True, fields=full(operations="office building with ground-floor pub"))
+            save(ext, "SUB-411", "complete", complete=True, fields=full(operations="pub and kitchen"))
             save(ext, "SUB-412", "complete", complete=True, fields=full(operations="apartments, 8 units"))  # held: sprinkler answer missing
             assert set(seniors()) == {"UW-001"} and "UW-002" in underwriters()
             for i, ops in enumerate(("office building, no utilities", "office, unoccupied", "fully vacant building", "office, utilities disconnected")):  # compliance H1
@@ -735,21 +753,31 @@ if __name__ == "__main__":
             try:
                 send_to_carrier("SUB-410", "user", dest_dir, user_line=LINE("SUB-410"))
                 raise SystemExit("no confirm: a senior referral names no carrier")
-            except ValueError:
-                pass
+            except ValueError as exc:
+                assert "confirm the market first" in str(exc), exc  # T-107c (B-412): the card's order, not "no logged decision"
+            assert agency_problem("SUB-410") == "a senior referral needs a senior underwriter to confirm the market first"
+            assert "appetite" not in agency_problem("SUB-411") and "no market can be confirmed" in agency_problem("SUB-411"), "pub: no confirm, real reason"
             c = confirm_market("SUB-410", "UW-001", "carrier_b", "3 clean years seen on the loss runs", _current_hash("SUB-410"))
             assert c["run_hash"] == _current_hash("SUB-410") and c["underwriter_name"].startswith("Dana Reyes")
-            for gate in ("no approve", "account-manager", "no line"):
+            assert "confirm the market" not in agency_problem("SUB-410"), "T-107c: confirmed, so the appetite text is gone"
+            for gate in ("no approve", "no line"):
                 try:
-                    if gate == "account-manager":
-                        decide("SUB-410", "approve")
-                    send_to_carrier("SUB-410", "account-manager" if gate == "account-manager" else "user", dest_dir, reason="x", user_line="" if gate == "no line" else LINE("SUB-410"))
+                    send_to_carrier("SUB-410", "user", dest_dir, reason="x", user_line="" if gate == "no line" else LINE("SUB-410"))
                     raise SystemExit(f"{gate}: the normal send gate must still refuse")
-                except ValueError:
-                    pass
+                except ValueError as exc:
+                    assert gate != "no approve" or "no logged decision" in str(exc), exc  # T-107c: confirmed, so approve is the next gate
+                if gate == "no approve":
+                    decide("SUB-410", "approve")
+            am_dir = dest_dir.parent / "am" / "to-carrier"  # T-107c: the account manager passes on the confirmed carrier; own folder so the user send below is the first one there
+            try:
+                send_to_carrier("SUB-410", "account-manager", am_dir)
+                raise SystemExit("the account manager must write a reason")
+            except ValueError as exc:
+                assert "reason" in str(exc), exc
+            assert "Carrier: carrier_b" in send_to_carrier("SUB-410", "account-manager", am_dir, reason="complete, senior confirmed carrier_b").read_text()
             body = send_to_carrier("SUB-410", "user", dest_dir, user_line=LINE("SUB-410")).read_text()
             assert "Carrier: carrier_b" in body and "market confirmed by UW-001" in body and "3 clean years" in body
-            assert agency_problem("SUB-410") == "the file is not in appetite", "the account manager still cannot send a senior referral"
+            assert agency_problem("SUB-410") == "", "T-107c: a senior-confirmed carrier passes the account-manager check"
             assert market_confirmation("SUB-410", _current_hash("SUB-410"))
             with log.open("a") as handle:  # security review: an edit after the confirm voids it, on the same run
                 handle.write(json.dumps({"seq": next(seq), "submission": "SUB-410", "action": "edit", "underwriter_id": "UW-002", "reason": "typo", "field_id": "operations", "new_value": "roofing contractor", "run_hash": _current_hash("SUB-410")}) + "\n")

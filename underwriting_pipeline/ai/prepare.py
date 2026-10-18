@@ -428,6 +428,18 @@ def cooking_facts(texts: dict) -> dict:
     return out
 
 
+CLASS_LINES = {"line_of_business": ("line of business:",), "cooking_operations": ("cooking operations:",)}
+
+
+def class_lines(texts: dict) -> dict:
+    """P-061 (D-112): the text of the application's "Line of business:" and "Cooking operations:" lines (first one found), for carrier match.
+    The insured's name is never read. None when the line is absent."""
+    out = {}
+    for key, labels in CLASS_LINES.items():
+        out[key] = next((row["value"] for text in texts.values() if (row := extract_labeled(text, labels)[0])["value"]), None)
+    return out
+
+
 def carrier_run_date(texts: dict) -> tuple[str, str, int, int] | None:
     """Use the carrier loss-run date when a no-known-loss letter is also in the folder."""
     if not any("no known loss" in text.lower() for text in texts.values()):
@@ -1136,6 +1148,7 @@ def process_submission(folder: Path) -> dict:
     report["folder"] = folder.name
     report["sprinklers"] = "yes" if sprinklers_yes(texts) else "no"
     report["cooking"] = cooking
+    report["class_lines"] = class_lines(texts)  # P-061 (D-112)
     report["needs_human"] = needs_human
     report["unread"] = unread
     report["locations"] = locations
@@ -1302,6 +1315,7 @@ def _saved_payload(report: dict) -> dict:
         "needs_human": report.get("needs_human") or [],
         "unread": report.get("unread") or [],  # P-016 (c): file and page not read, with the reason
         "sprinklers": report.get("sprinklers"),
+        "class_lines": report.get("class_lines"),  # P-061 (D-112): Line of business and Cooking operations lines for carrier match; an older run has none
         "cooking": report.get("cooking"),  # P-015 S3: equipment and hood/suppression facts with their citation; an older run has none = not stated
         "model_version": report.get("model_version"),
         "prompt_version": report.get("prompt_version"),
@@ -1703,6 +1717,7 @@ if __name__ == "__main__":
         assert ops_missing_all("Nightclub and lounge. Small kitchen, pre-packaged snacks only.", t201) == ["snack warmer"] and ops_missing_all("Nightclub and lounge. Small kitchen. Snack warmer", t201) == []
         t204 = "Operations: Pool chemicals, pumps. Forklift x2.\nCooking operations: None. Forklifts electric and LPG.\n"
         assert ops_missing_all("Pool chemicals, pumps. Forklifts electric and LPG.", t204) == ["no cooking"] and "no cooking" not in ops_missing_all("Pool chemicals, pumps. No cooking. Forklifts electric and LPG.", t204)
+        assert class_lines({"a.md": t201 + "Line of business: restaurant and bar\n"}) == {"line_of_business": "restaurant and bar", "cooking_operations": "Snack warmer"} and class_lines({"a.md": "x"}) == {"line_of_business": None, "cooking_operations": None}  # P-061
         t175 = "Line of business: BOP - bakery/cafe, no liquor\nHood & extinguishing system last inspected: 2026-08-12 (semi-annual service)\n"
         assert "hood inspection 2026-08-12" in ops_line_missing("Bakery", t175) and not ops_line_missing("Bakery, no liquor, hood inspected 2026-08-12", t175)
         assert ops_line_missing("x", "Line of business: commercial property, restaurant\n") == [] and ops_line_missing("x", "Cooking operations: not listed\n") == []
