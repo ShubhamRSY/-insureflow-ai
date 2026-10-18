@@ -1211,3 +1211,14 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: T-104b (P-057 scorer v6, P-058 detector scope-v3) by @ai-engineer-assistant; @model-risk check; re-freeze; labelled standups.
 - Status: ACCEPTED
 - Amends: D-105 (the @model-risk H1/H2 fixes are within P-055). The T-104 code freeze 1cf001f is replaced by the re-freeze after P-058. T-104 gold 3678c0f unchanged. Not a production approval; T-027 veto stands.
+
+## D-109 — Official T-104 hold-out run → T-027 gate
+- Date / Owner: 2026-10-17 / @user
+- Context: team/NEXT-SESSION.md after D-108 (code 6e7cfa2, scorer v6 sha256 4bf1cd63…, gold 3678c0f).
+- Options considered: none. The user's words.
+- Decision: In the user's words (pasted). "Official hold-out run, T-104 → T-027 gate. Rules, fixed before running: Code, scorer v6 and gold (3678c0f) must match the hashes in NEXT-SESSION.md exactly; if not, stop and report. No changes during or after the run. .venv python; smoke_readers.py first, stop if any reader fails. qwen, paced (55 s). Confirm no cached replies exist for T-104 files. Retries per RUN-RULES.md, all logged; other failures are "call failed" and counted. Run all 32 files once. Score once with scorer v6 (--write). Report: leakage (must be 0), detection recall per criterion and overall, in-scope files wrongly sent to manual intake, false completes, route gate (unsafe, accuracy), per-field hits vs 9/10 floor for in-scope files, operations checklist results, silent error rate, automation rate, loss-run accept vs review, mismatches as-is, retries, cost per file. @model-risk writes the T-027 memo: lift, keep, or lift with conditions. Fix nothing; log findings as backlog. Orchestrator writes labelled standups. /wrap-up and push ai-team only."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-17 (D-032).
+- Dissent: none
+- Follow-up tasks: run record, score files, as-is mismatches, @model-risk T-027 memo, backlog, labelled standups.
+- Status: ACCEPTED
+- Amends: none. Not a production approval until @model-risk's memo; T-027 veto stands until then.

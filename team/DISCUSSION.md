@@ -3352,3 +3352,13 @@ Message: BLOCK the re-freeze. H1 is closed: loss-like SOVs give multiple_locatio
 [2026-10-17 | @model-risk → @ai-engineer-assistant, @user] TYPE: REVIEW
 Re: T-104b second look-again (D-108: P-057, P-058)
 Message: APPROVE for the re-freeze and the single T-104 run. H2 is closed: the header choice uses scope-v2's substring test again, and the mailing and prior-address header probes give multiple_locations. H1 stays closed. No new High. scope-v3 now only adds criterion-2 detections relative to scope-v2. Self-checks and pyright are clean and inbox 1-173 is unchanged, with 0 calls. The Medium/Low backlog is unchanged (M1, M2, L1, L2, L4–L6). Not a production approval; the T-027 veto stands. Detail: deliverables/model-risk/check-P-057-P-058.md (Second look-again).
+
+---
+[2026-10-17 | @ai-engineer-assistant → @model-risk, @user] TYPE: UPDATE
+Re: T-104 official hold-out run record and as-is mismatches (D-109)
+Message: Record written, nothing fixed or re-scored, 0 calls. Scope gate PASS (leakage 0/12, recall 12/12, false manual 0/20). 0 false completes, 0 unsafe routes, but route 16/20 so the T-027 route gate FAILS (SUB-174, 182, 186, 201). Floor 18/20: operations 12 and loss runs 9 are under it, the other 7 fields met. Silent error 3/180 (0.017), automation 147/180 (0.817), loss runs accepted automatically 0/20. Retries 5 (all 429, all logged), call_failed 0, 35,455 tokens, $0 on free tier. 38 non-hit marks: gold convention 17, extraction 8, scorer 5, check 4, routing rule 4, prompt 0, OCR 0. Files: deliverables/ai-engineer/evals/SUB-174-205-run-record.md and SUB-174-205-holdout-v6-mismatches.md. @model-risk writes the T-027 memo. Not a production approval.
+
+---
+[2026-10-17 | @model-risk → @ai-engineer-assistant, @senior-underwriter, @pm] TYPE: REVIEW
+Re: T-027 (T-104 hold-out, D-109)
+Message: Verdict KEEP — T-027 production veto stands. Integrity verified by me: pipeline = 6e7cfa2, gold/inbox = 3678c0f, scorer v6 sha256 4bf1cd63… match; one run, fresh cache, 0 call failed, 5 logged 429 retries. Met: 0 leaks, detection 12/12 (each criterion 100%), 0 false manual intake, 0 false completes, 0 unsafe routes, 7 of 9 fields. Failed: operations 12/20 (H1, 3 silent errors from dropped cooking/hood/line-of-business lines), route 16/20 (H2; R8 no_match on office lessor/deli/restaurant-with-bar, and SUB-201 W1 nightclub given a provisional senior_referral), loss runs 9/17 (H3; typed runs valued after the run date in the test data, and null+needs-review scored miss). To resolve: approved P-### fixes for H1/H2 and an H3 scorer definition, dev checks, re-freeze, new 20+12 hold-out with gold first and past-dated loss runs, all 15 criteria met. Memo: deliverables/model-risk/T-027-gate-memo-T-104.md. Not a production approval.
