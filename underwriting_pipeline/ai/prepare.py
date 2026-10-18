@@ -831,6 +831,40 @@ OPS_ITEMS = (
 )
 OPS_COUNTS = (("seats", r"(\d[\d,]*)\s+(?:seats|seating|asientos)|seating (?:for|capacity of)\s+(\d[\d,]*)", r"seat"),
               ("units", r"(\d[\d,]*)\s+(?:\w+\s+)?(?:units|unidades|departamentos)", r"unit|apartment"))
+# P-059 (D-111): items the labeled cooking, hood and line-of-business lines state that the word list above cannot name.
+# ponytail: fixed word lists and one clause rule, not a parser; add words when a dev file shows a gap.
+OPS_GAS = (r"no gas|gas[- ]fired|natural gas|gas (?:fryers?|ranges?|ovens?|char\w*|burners?|roasters?|kilns?)|lpg|propane", r"gas|lpg|propane")
+OPS_NO_COOK = (r"cooking(?: operations)?\s*:\s*(?:none|n/?a|nil)\b", r"no (?:commercial )?cooking|no kitchen|not cook\w*|no food|none")
+OPS_EXTRA = (("gas", *OPS_GAS), ("no cooking", *OPS_NO_COOK))
+OPS_LINE = re.compile(r"(?im)^[ \t>*-]*(cooking operations|hood\b[\w &/-]{0,40}|line of business)\s*:\s*(.+)$")
+OPS_SKIP = {"and", "the", "with", "over", "each", "all", "only", "both", "from", "that", "this", "bop", "none", "listed", "unknown"}  # words that name no item
+
+
+def ops_line_missing(value: str, text: str) -> list[str]:
+    """P-059: what a Cooking operations, Hood or Line of business line states that the answer lacks. Cooking: each clause (split on , ; .)
+    needs its words (4+ letters, first 5 letters compared, numbers left out) in the answer. Hood: the inspection date. Line of business:
+    only its "no ..." clauses. "None"/"n/a" under Cooking needs "no cooking" (or none) in the answer."""
+    low_v = value.casefold()
+    stems = {w[:5] for w in re.findall(r"[a-z]{4,}", low_v)}
+    found = []
+    for match in OPS_LINE.finditer(text):
+        label, body = match.group(1).casefold(), re.sub(r"\(.*?\)", "", match.group(2)).casefold()
+        if label.startswith("hood"):
+            dates = re.findall(r"20\d\d-\d\d(?:-\d\d)?", body)
+            found += [f"hood inspection {d}" for d in dates if d not in low_v]
+            continue
+        for clause in re.split(r"[,;.]| - ", body):
+            clause = clause.strip()
+            if not clause or (label.startswith("line") and not clause.startswith("no ")):
+                continue
+            if not label.startswith("line") and re.search(r"\bhood\b|\bul 300\b", clause):
+                continue  # P-059: the hood system is read from the hood line and the operations sentence, not clause by clause
+            words = [w for w in re.findall(r"[a-z]{4,}", clause) if w not in OPS_SKIP]
+            if words and any(w[:5] not in stems for w in words) and clause not in low_v:
+                found.append(clause)
+    return found
+
+
 OPS_MISSING = "operations may be missing: {}"
 # P-047 H1 (@model-risk): labeled lines elsewhere in the cited file that state a rule item are part of the operations source.
 # Any label (up to 40 characters, slashes allowed) that contains a rule-item word: "Bar / liquor:", "Liquor sales:", "Seating capacity:".
@@ -860,13 +894,17 @@ def ops_missing(value: str, source: str) -> list[str]:
     """P-047 (b): rule items the source states that the answer does not carry."""
     low_v, low_s = value.casefold(), source.casefold()
     has = lambda pattern, text: re.search(rf"(?<!\w)(?:{pattern})(?!\w)", text)
-    missing = [label for label, src, ans in OPS_ITEMS if has(src, low_s) and not has(ans, low_v)]
+    missing = [label for label, src, ans in OPS_ITEMS + OPS_EXTRA if has(src, low_s) and not has(ans, low_v)]
     for label, src, ans in OPS_COUNTS:
         for match in re.finditer(src, low_s):
             number = (match.group(1) or match.group(2)).replace(",", "")
             if number not in low_v.replace(",", "") or not re.search(ans, low_v):
                 missing.append(f"{number} {label}")
     return missing
+
+
+def ops_missing_all(value: str, text: str) -> list[str]:
+    return ops_missing(value, text) + ops_line_missing(value, text)
 
 
 def check_operations(merged: dict, texts: dict) -> None:
@@ -880,7 +918,7 @@ def check_operations(merged: dict, texts: dict) -> None:
     context = ops_lines(text, cited)
     if context:
         row["context"] = context  # P-047 (c): carrier match and the D-079 referral read it too
-    missing = ops_missing(row["value"], text)  # P-056 (f): the whole cited document, not only the cited line and labeled lines
+    missing = ops_missing_all(row["value"], text)  # P-059 adds the labeled-line items; P-056 (f): the whole cited document, not only the cited line and labeled lines
     if missing:
         reason = OPS_MISSING.format(", ".join(missing))
         row["reason"] = f"{row['reason']}; {reason}" if row.get("reason") else reason
@@ -1646,17 +1684,28 @@ if __name__ == "__main__":
         text = "Operations: Mexican restaurant, 70 seats.\nSales: $900,000\nLiquor: full bar, 35% of sales\nCooking operations: wood-fired oven, two fryers.\n"
         probe = {"operations": {**row, "value": "Mexican restaurant, 70 seats", "end": 40}}
         check_operations(probe, {"a.md": text})
-        assert probe["operations"]["reason"] == "operations may be missing: liquor, bar, frying or open flame", probe["operations"]["reason"]
+        assert probe["operations"]["reason"] == "operations may be missing: liquor, bar, frying or open flame, wood-fired oven, two fryers"  # P-059: the cooking line clauses, probe["operations"]["reason"]
         whole = {"operations": {**row, "value": "Mexican restaurant, 70 seats", "end": 40}}
         check_operations(whole, {"a.md": "Operations: Mexican restaurant, 70 seats.\nSales: $900,000\nRemarks: live music on Fridays.\n"})
         assert whole["operations"]["reason"] == "operations may be missing: live music or entertainment", "P-056 (f): an unlabeled line elsewhere in the document is read"
         forms = "Bar / liquor: Full bar, last call 1am\nCooking / hood / suppression: two fryers\nLiquor sales: 8 percent\nSeating capacity: 60 seats\nPatio: yes\nSecurity: door staff Fri-Sat\nHazardous materials: propane\nAnnual sales: $1\nStories: 2\nBarbecue pit: no\n"
         assert ops_lines(forms).splitlines() == forms.splitlines()[:7], ops_lines(forms)
-        assert ops_missing("restaurant", ops_lines(forms)) == ["liquor", "bar", "hours", "frying or open flame", "patio", "security staff", "hazardous materials", "60 seats"], ops_missing("restaurant", ops_lines(forms))
+        assert ops_missing("restaurant", ops_lines(forms)) == ["liquor", "bar", "hours", "frying or open flame", "patio", "security staff", "hazardous materials", "gas", "60 seats"], ops_missing("restaurant", ops_lines(forms))
         assert probe["operations"]["context"] == "Liquor: full bar, 35% of sales\nCooking operations: wood-fired oven, two fryers." and "context" in _saved_payload({"fields": [probe["operations"]]})["fields"][0]
         two = {"operations": {**row, "value": "Mexican restaurant, 70 seats, wood-fired oven, two fryers", "end": 40, "spans": [(0, 40), (text.index("Cooking"), len(text) - 1)]}}
         check_operations(two, {"a.md": text})  # P-048 (d): both cited lines are read, the sales line between them is not
         assert two["operations"]["reason"] == "operations may be missing: liquor, bar" and two["operations"]["context"] == "Liquor: full bar, 35% of sales", two["operations"]
+        # P-059 (D-111): items stated only on the cooking, hood and line-of-business lines (cases from the published T-104 mismatch file)
+        t180 = "Operations: Pottery studio and gallery. Two electric kilns (240V), retail sales of finished work.\nCooking operations: Two electric kilns, no gas\n"
+        assert ops_missing_all("Pottery studio and gallery. Two electric kilns (240V), retail sales of finished work.", t180) == ["gas"]
+        assert ops_missing_all("Pottery studio and gallery. Two electric kilns (240V), retail sales of finished work. No gas.", t180) == []
+        t201 = "Operations: Nightclub and lounge. Small kitchen, pre-packaged snacks only.\nCooking operations: Snack warmer\n"
+        assert ops_missing_all("Nightclub and lounge. Small kitchen, pre-packaged snacks only.", t201) == ["snack warmer"] and ops_missing_all("Nightclub and lounge. Small kitchen. Snack warmer", t201) == []
+        t204 = "Operations: Pool chemicals, pumps. Forklift x2.\nCooking operations: None. Forklifts electric and LPG.\n"
+        assert ops_missing_all("Pool chemicals, pumps. Forklifts electric and LPG.", t204) == ["no cooking"] and "no cooking" not in ops_missing_all("Pool chemicals, pumps. No cooking. Forklifts electric and LPG.", t204)
+        t175 = "Line of business: BOP - bakery/cafe, no liquor\nHood & extinguishing system last inspected: 2026-08-12 (semi-annual service)\n"
+        assert "hood inspection 2026-08-12" in ops_line_missing("Bakery", t175) and not ops_line_missing("Bakery, no liquor, hood inspected 2026-08-12", t175)
+        assert ops_line_missing("x", "Line of business: commercial property, restaurant\n") == [] and ops_line_missing("x", "Cooking operations: not listed\n") == []
         assert same_operations(
             "habitational, 8 units, no commercial cooking",
             "Small apartments, 8 units, sprinklers throughout.",

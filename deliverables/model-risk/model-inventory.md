@@ -29,7 +29,8 @@
 - **Owner:** @ai-engineer-assistant (`underwriting_pipeline/ai/llm_extract.py`, `sources.py`, `prepare.py`).
 - **Purpose:** read a submission folder (typed PDF, Excel, email body, scanned image, Spanish) and return structured JSON with a citation and a confidence on each field.
 - **Tier:** **Tier 2** (extraction with citations). Becomes **Tier 1** if a cited value reaches a carrier package with no underwriter confirm.
-- **Version id:** prompt version `82be09bd42f7` (sha256 of the system prompt, first 12 hex) · model `openai/gpt-oss-120b` · temperature `0`. The cache key holds the prompt version, the model name, the host, the temperature, and the file contents (P-014).
+- **Version id:** prompt version `759b3e6bc9b2` (sha256 of the system prompt, first 12 hex; P-059, D-111; was `b025802c0dfa` at the T-104 run, `82be09bd42f7` earlier) · model
+- **P-059 (D-111):** `prepare.py` also checks the labeled Cooking operations, Hood and Line of business lines (`ops_line_missing`, `OPS_EXTRA`). Holdout scorer: `eval_holdout_v7.py` (P-060); v6 frozen. `openai/gpt-oss-120b` · temperature `0`. The cache key holds the prompt version, the model name, the host, the temperature, and the file contents (P-014).
 - **Status:** **Not approved for production.** Failed-call handling: see the T-059 veto below.
 - **Open vetoes:**
   - **T-027 — production veto on extraction (@model-risk), OPEN.** Citation does not prove the value; the scan gate ignores digits; unread content is not flagged; no hold-out score exists for the current prompt and gate. Resolved by P-016 (T-080) (a) no value fallback, value inside the quoted span; (b) gate on the lower of model and OCR confidence, OCR from the cited words; (c) every file and page read or listed as needs human — then the new 20-file hold-out, gold first, committed, scored once (T-091 to T-093). Lifting the veto is @model-risk's call.
@@ -115,7 +116,7 @@
 
 | Id | Component | Owner | Tier | Version id | Open vetoes | In production |
 |---|---|---|---|---|---|---|
-| C-1 | LLM extractor | @ai-engineer-assistant | 2 | `82be09bd42f7` + `openai/gpt-oss-120b` | T-027, T-059 | No |
+| C-1 | LLM extractor | @ai-engineer-assistant | 2 | `759b3e6bc9b2` (P-059, D-111) + `openai/gpt-oss-120b` | T-027, T-059 | No |
 | C-2 | Point score | @data-scientist | 2 | none recorded | T-017 (@model-risk, @responsible-ai, @actuary) | No |
 | C-3 | Carrier match | @head-of-underwriting / @software-engineer | 2 | D-041 | none | No |
 | C-4 | Pilot scope detector | @ai-engineer-assistant | 2 | `scope-v3` | none (check pending) | No |

@@ -1639,3 +1639,36 @@ D-004 (user, 2026-10-09): Sanger & Altgelt agency pipeline. Eight steps. No auto
   - [ ] deliverables/pm/demo-guide.md: 10-minute script for a non-technical manager, the 3 files listed, honest T-104 scores, cost per file and estimated time saved per submission with stated assumptions.
   - [ ] deliverables/pm/where-we-are.md: one page; what works, the 2 open gaps (operations details, routing rules), what production still needs (T-027 veto, SSO B-190, concurrent writes B-191, real carrier formats R-030), next steps.
   - [ ] Rehearsal: the guide dry-run step by step on a temp copy; everything that breaks is listed.
+
+### T-106a — P-059 operations from cooking, hood and line-of-business lines
+- Owner: @ai-engineer-assistant · Status: DONE (@model-risk APPROVE WITH CHANGES, no High; live check M1 owed) · Decision: D-111 (approve change P-059)
+- Acceptance criteria:
+  - [ ] The operations answer keeps items stated on "Cooking operations", "Hood & extinguishing system" and "Line of business" lines (and the "Operations" line), e.g. "no gas", "snack warmer", "no cooking", hood inspection dates, "no liquor".
+  - [ ] The whole-document check flags any operations-rule item (the items the routing/appetite rules read) present in the documents but missing from the answer; flagged means needs review, never a silent value.
+  - [ ] Self-checks on dev files only (no T-104 file or gold opened to tune); pyright on changed files; prompt/extraction version bumped and model-inventory.md updated.
+  - [ ] Written explanation of why the existing check missed the 3 T-104 silent errors (SUB-180, 201, 204), from the code and the published mismatch file only.
+- Output: code in underwriting_pipeline/, deliverables/ai-engineer/p-059-p-060-as-built.md
+
+### T-106b — Routes check of the 4 T-104 route misses (report only)
+- Owner: @head-of-underwriting · Status: DONE (report; P-061, P-062 drafted, not built) · Decision: D-111
+- Acceptance criteria:
+  - [ ] For SUB-174, 182, 186, 201: the pipeline route, the gold route, and what the written rules (carrier-match.md R1–R16, W1, W2, appetite guides) say, rule by rule.
+  - [ ] Each miss classed "code wrong" (→ a proposed P-### fix, not built) or "gold wrong" (→ a gold lesson for future sets).
+  - [ ] Nothing built; T-104 scores not changed.
+- Output: deliverables/head-of-underwriting/T-104-route-check.md
+
+### T-106c — P-060 scorer v7 (loss runs)
+- Owner: @ai-engineer-assistant · Status: DONE (@model-risk APPROVE) · Decision: D-111 (approve change P-060)
+- Acceptance criteria:
+  - [ ] eval_holdout_v7.py = v6 plus: loss runs "correct" when the pipeline matches the gold expectation, including "needs review" when gold expects review; null + needs review where gold expects a date is "not credited", not a miss.
+  - [ ] v6 (and v2–v5) unchanged, sha256 of v6 still 4bf1cd63…; published score files untouched.
+  - [ ] Self-checks on dev data (temp cache copy, 0 calls, HOLDOUT_OUT in a temp folder); pyright on changed files.
+- Output: underwriting_pipeline/ai/eval_holdout_v7.py, section in deliverables/ai-engineer/p-059-p-060-as-built.md
+
+### T-106d — Test-file lint before any hold-out gold freeze
+- Owner: @senior-test-engineer · Status: DONE (@model-risk H1, H2 closed in look-again 2; gate in RUN-RULES) · Decision: D-111
+- Acceptance criteria:
+  - [ ] One script checks a hold-out's files and gold: every loss-run valued date is before the run date; every gold Scope line is valid (same parse as scorer v6/v7); the mix matches the written plan (in/out counts, per-criterion counts, other plan counts given).
+  - [ ] Exit non-zero on any failure with a plain reason per file; must pass before a gold freeze (added to RUN-RULES).
+  - [ ] Self-check: passes on a clean temp set; fails on T-104's post-run-date loss runs (read-only, files only, no pipeline run).
+- Output: script under underwriting_pipeline/ai/ or deliverables/senior-test-engineer/, note in deliverables/senior-test-engineer/T-106d-lint.md

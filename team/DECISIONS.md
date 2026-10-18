@@ -1233,3 +1233,14 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: T-105.
 - Status: ACCEPTED
 - Amends: none. No pipeline code changes; frozen code 6e7cfa2 stays frozen. Not a production approval; T-027 veto stands.
+
+## D-111 — approve change P-059 (operations); routes check; approve change P-060 (scorer v7); test-file lint
+- Date / Owner: 2026-10-18 / @user
+- Context: team/NEXT-SESSION.md after D-110 (pending decisions 1–3); deliverables/model-risk/T-027-gate-memo-T-104.md H1–H3; B-406–B-408.
+- Options considered: none. The user's words.
+- Decision: In the user's words (pasted). "1. approve change P-059 (operations): extraction keeps items from cooking, hood and line-of-business lines; the whole-document check flags any operations-rule item present in the documents but missing from the answer. Self-checks on dev; explain why the check missed the 3 T-104 silent errors. 2. Routes: @head-of-underwriting checks the 4 T-104 route misses against the written rules. Code wrong → P-### fix; gold wrong → record the gold lesson for future sets. Report before building. 3. approve change P-060 (scorer v7): loss runs score "correct" when the pipeline matches the gold expectation, including "needs review" when gold expects review; a null + needs review where gold expects a date is "not credited", not a miss. v6 stays frozen. 4. Test-file lint: before any hold-out gold is frozen, a script checks the files: loss-run valued dates before the run date, every Scope line valid, the mix matches the plan. It must pass before the freeze. @model-risk check, High only. /wrap-up and push ai-team only."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-18 (D-032). Contains `approve change P-059` and `approve change P-060`.
+- Dissent: none
+- Follow-up tasks: T-106a (P-059), T-106b (routes check, report only), T-106c (P-060 scorer v7), T-106d (test-file lint); @model-risk check.
+- Status: ACCEPTED
+- Amends: none. Code freeze 6e7cfa2 is lifted for P-059 only; re-freeze after the @model-risk check. T-104 scores stay as published. Route fixes need their own P-### after the report. Not a production approval; T-027 veto stands.
