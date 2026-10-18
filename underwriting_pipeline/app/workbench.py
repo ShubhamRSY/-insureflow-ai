@@ -95,6 +95,7 @@ _LOG_LOCK = threading.Lock()  # ponytail: one process writes the log; a file loc
 
 
 NEGATED = re.compile(r"(?<!\w)(?:no|not an?|without(?: an?)?|sin|non)[- ]\w+")  # P-047 (c): "no bar" is not a bar
+NEGATED_EQUIP = re.compile(r"(?<!\w)(?:no|not an?|without(?: an?)?|sin|non)[- ](?:[\w-]+ ){0,2}[\w-]+")  # T-107a review: "no deep fryer", "no gas burners" are not equipment; equipment only, never for bar/class words
 
 
 def _line(report: dict, key: str) -> str:
@@ -240,12 +241,15 @@ def _match(report: dict, gated: bool) -> dict:
     cls = f"{ops} {lob}"  # P-061: class, bar and prohibited words come from the operations and the Line of business line; R17 reads ops only
     snack = _has(cls, SNACKS)  # P-062 (b): a snack warmer or "snacks only" kitchen is not restaurant evidence
     word_food = _has(cls, CLASSES["b"]) and not snack
-    equip = _has(f"{ops} {cook}", EQUIP) or ((report.get("cooking") or {}).get("equipment") or {}).get("state") == "yes"  # P-061: equipment in operations or the Cooking operations line
+    raw = " ".join(f"{r.get('value') or ''} {r.get('quote') or ''} {r.get('context') or ''}" for r in report["fields"] if r["field_id"] == "operations").lower()
+    raw_cook = ((report.get("class_lines") or {}).get("cooking_operations") or "").lower()
+    equip = _has(NEGATED_EQUIP.sub(" ", f"{raw} {raw_cook}"), EQUIP) or ((report.get("cooking") or {}).get("equipment") or {}).get("state") == "yes"  # P-061: equipment in operations or the Cooking operations line
     food = bool(ops) and (word_food or equip)
     barred = bool(ops) and _has(cls, BAR_WORDS)
     other_prohibited = bool(ops) and _has(cls, tuple(w for w in PROHIBITED if w not in BAR_WORDS))
     if other_prohibited or (barred and not food) or (barred and food and _has(cls, NEVER_SOFT)):  # W1 before the hold gate, as since D-059 (carrier-match.md lists R5/R6 first: B-378); D-112: a bar word beside a non-food operation is R1 too (stricter of W1 and W1b); P-062 (a): nightclub, lounge never softened
-        return out("no_match", "prohibited class (R1; AG:45-50)")
+        hit = next(w for w in PROHIBITED if _has(cls, (w,)))  # UI check H1: name the word and the line it was read from
+        return out("no_match", f"prohibited class (R1; AG:45-50): \"{hit}\" in {'operations' if _has(ops, (hit,)) else 'the Line of business line (P-061)'}")
     if (gated and not prepare.ready_to_route(report)) or not ops:  # P-041: review pending routes as complete did before
         return out("hold", "open conflict" if ops and report.get("status") == prepare.REVIEW_PENDING else "missing information")
     tiv = _tiv(report)
@@ -257,7 +261,6 @@ def _match(report: dict, gated: bool) -> dict:
     if barred and food:  # D-079 (B-290): a bar word with restaurant evidence is a person's call, not a rule's
         return out("senior_referral", "possible bar/liquor exposure — confirm liquor sales (R2; AG:46, AG:39)")
     w2 = re.sub(r"(?<!\w)wet[\s-]+chemical(?!\w)", " ", ops) if food else ops  # a kitchen's wet chemical hood is fire suppression, not hazardous goods (as P-047); only with restaurant evidence
-    raw = " ".join(f"{r.get('value') or ''} {r.get('quote') or ''} {r.get('context') or ''}" for r in report["fields"] if r["field_id"] == "operations").lower()
     for words, note in REFERRAL:  # W2 (D-097 1d): a referral word always wins over appetite (class) words
         if _has(w2, words) or _has(raw, tuple(w for w in words if w in NO_UTILITIES)):  # raw: _ops drops "no <word>"
             return out("senior_referral", note + (f"; {OUT_TIV}" if over(PILOT_TIV) else ""))
@@ -1504,7 +1507,7 @@ if __name__ == "__main__":
             assert match(r(ops)) == bar_ref, (ops, match(r(ops)))
         # T-107a (D-112) P-061 / P-062: dev-shaped cases; no hold-out file or gold was opened. cl = the application's two class lines.
         cl = lambda lob=None, cook=None: {"line_of_business": lob, "cooking_operations": cook}
-        R1 = {"route": "no_match", "note": "prohibited class (R1; AG:45-50)", "suggested": "", "overridable": False}
+        R1 = lambda m: m["route"] == "no_match" and m["note"].startswith("prohibited class (R1; AG:45-50): ") and not m["overridable"] and not m["suggested"]  # UI check H1: the note names the word
         lob_office = "commercial property and general liability, office"
         m = match(r("Consulting firm", class_lines=cl(lob_office)))  # SUB-174 shape: office only on the line of business
         assert m["route"] == "senior_referral" and m["suggested"] == "carrier_a" and "P-061" in m["note"], m  # never carrier_a: the class came from the line of business only
@@ -1517,24 +1520,28 @@ if __name__ == "__main__":
         assert match(r("sandwich shop, convection oven"))["note"] == R10, "cooking equipment in operations is R9 evidence"
         assert route(r("sandwich shop", class_lines=cl(None, "None (tenant electric ranges only)"))) == "no_match" and route(r("sandwich shop", class_lines=cl(None, "not listed"))) == "no_match", "none is not evidence"
         assert match(r("Dining venue", class_lines=cl("commercial property and general liability, restaurant and bar", "Two fryers, flat-top")))["note"] == bar_ref["note"], "SUB-186 shape: bar on the line of business, fryers"
-        assert match(r("Nightclub and lounge. Small kitchen, pre-packaged snacks only.", class_lines=cl(None, "Snack warmer"))) == R1, "SUB-201 shape: snacks only is not restaurant evidence"
-        assert match(r("pub, small kitchen, snack warmer")) == R1 and match(r("tavern, kitchen, snacks only")) == R1
-        assert match(r("restaurant and lounge, full kitchen", class_lines=cl(None, "Two fryers, flat-top, 8-burner range"))) == R1, "P-062 (a): a lounge is never softened by real cooking"
-        assert match(r("nightclub with restaurant")) == match(r("hotel lounge with catering")) == R1 and match(r("hookah restaurant")) == R1
-        assert match(r("bar and grill")) == R1, "bar and grill: no restaurant word, as before"
+        assert R1(match(r("Nightclub and lounge. Small kitchen, pre-packaged snacks only.", class_lines=cl(None, "Snack warmer")))), "SUB-201 shape: snacks only is not restaurant evidence"
+        assert R1(match(r("pub, small kitchen, snack warmer"))) and R1(match(r("tavern, kitchen, snacks only")))
+        assert R1(match(r("restaurant and lounge, full kitchen", class_lines=cl(None, "Two fryers, flat-top, 8-burner range")))), "P-062 (a): a lounge is never softened by real cooking"
+        assert R1(match(r("nightclub with restaurant"))) and R1(match(r("hotel lounge with catering"))) and R1(match(r("hookah restaurant")))
+        assert R1(match(r("bar and grill"))), "bar and grill: no restaurant word, as before"
         assert match(r("restaurant with a bar", class_lines=cl(None, "Two fryers"))) == bar_ref == match(r("pub, restaurant, full kitchen")), "R2 stays for bar, tavern, pub beside real evidence"
         assert route(r("restaurant", class_lines=cl("restaurant and bar"))) == "senior_referral" and "R2" in match(r("restaurant", class_lines=cl("restaurant and bar")))["note"]
         assert match(r("Pre-packaged snacks only, no cooking", class_lines=cl("restaurant")))["route"] == "no_match", "snacks only blocks the word evidence"
         assert route(r("Pizzeria, two fryers, snacks only")) == "senior_referral", "stated equipment still counts"
         assert match(r("bbq restaurant"))["note"] == R10
         for ops in ("sports bar", "tavern", "nightclub"):
-            assert match(r(ops)) == {"route": "no_match", "note": "prohibited class (R1; AG:45-50)", "suggested": "", "overridable": False}, ops
+            assert R1(match(r(ops))) and f'"{ops.split()[-1]}" in operations' in match(r(ops))["note"], ops
         assert {route(r(w)) for w in ("hookah lounge", "recycling yard", "sawmill", "bail bonds office")} == {"no_match"}, "W1 additions; prohibited wins over office"
-        assert match(r("pub")) == match(r("nail lounge")) == {"route": "no_match", "note": "prohibited class (R1; AG:45-50)", "suggested": "", "overridable": False}, "P-051 (d): pubs, lounges are W1 (AG:46), never overridable"
+        assert R1(match(r("pub"))) and R1(match(r("nail lounge"))), "P-051 (d): pubs, lounges are W1 (AG:46), never overridable"
+        for ops in ("bar, no deep fryer", "tavern, no flat-top griddle"):  # T-107a code review: a negated equipment phrase is not restaurant evidence
+            assert R1(match(r(ops))), ops
+        assert R1(match(r("bar", class_lines=cl(None, "No gas burners"))))
+        assert match(r("leased offices", class_lines=cl("office - nightclub")))["note"].endswith('"nightclub" in the Line of business line (P-061)')
         # P-051: the four @model-risk P-049 H1 phrases never reach Carrier A. T-107a (D-112): a bar word beside a non-food operation is R1 (stricter of W1 and W1b);
         # changed from senior_referral R16: "office building with ground-floor pub", "retail store and cocktail lounge", "office building with ground-floor bar".
         for ops in ("office building with ground-floor pub", "retail store and cocktail lounge", "office building with ground-floor bar", "wholesale tavern", "gym and nightclub"):
-            assert match(r(ops)) == R1, (ops, match(r(ops)))
+            assert R1(match(r(ops))), (ops, match(r(ops)))
         for ops in ("office building, no utilities", "office, unoccupied", "office and retail storefront", "retail store with a nail salon", "vacant office building"):
             assert route(r(ops)) == "senior_referral", (ops, match(r(ops)))
         assert "AG:51" in match(r("office building, no utilities"))["note"]
