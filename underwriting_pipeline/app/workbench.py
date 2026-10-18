@@ -95,12 +95,17 @@ _LOG_LOCK = threading.Lock()  # ponytail: one process writes the log; a file loc
 
 
 NEGATED = re.compile(r"(?<!\w)(?:no|not an?|without(?: an?)?|sin|non)[- ]\w+")  # P-047 (c): "no bar" is not a bar
-NEGATED_EQUIP = re.compile(r"(?<!\w)(?:no|not an?|without(?: an?)?|sin|non)[- ](?:[\w-]+ ){0,2}[\w-]+")  # T-107a review: "no deep fryer", "no gas burners" are not equipment; equipment only, never for bar/class words
+NEGATED_EQUIP = re.compile(r"(?<!\w)(?:no|not an?|without(?: an?)?|sin|non)[- ](?:[\w-]+ ){0,2}[\w-]+|(?<!\w)(?:[\w-]+ ){0,2}[\w-]+ ?[:=-] ?(?:none|0|n/a|nil|no)(?!\w)|(?<!\w)(?:[\w-]+ ){0,2}[\w-]+ (?:is |are )?(?:not|never) (?:used|in use|present|installed|operated)")  # T-107a review: "no deep fryer", "Fryers: 0", "Oven not used" are not equipment; equipment only, never for bar/class words (M1, D-112: stricter wins)
 
 
 def _line(report: dict, key: str) -> str:
     """P-061 (D-112): the application's Line of business / Cooking operations line (not the insured's name), negated words dropped. "" in a run saved before P-061."""
     return NEGATED.sub(" ", ((report.get("class_lines") or {}).get(key) or "").lower())
+
+
+def class_text(report: dict) -> str:
+    """P-061: the one class text, operations plus the Line of business line. _match and package.confirm_problem both read it."""
+    return f"{_ops(report)} {_line(report, 'line_of_business')}"
 
 
 def _ops(report: dict) -> str:
@@ -238,7 +243,7 @@ def _match(report: dict, gated: bool) -> dict:
         return out("manual_intake", prepare.status_refusal(report))
 
     lob, cook = _line(report, "line_of_business"), _line(report, "cooking_operations")
-    cls = f"{ops} {lob}"  # P-061: class, bar and prohibited words come from the operations and the Line of business line; R17 reads ops only
+    cls = class_text(report)  # P-061: class, bar and prohibited words come from the operations and the Line of business line; R17 reads ops only
     snack = _has(cls, SNACKS)  # P-062 (b): a snack warmer or "snacks only" kitchen is not restaurant evidence
     word_food = _has(cls, CLASSES["b"]) and not snack
     raw = " ".join(f"{r.get('value') or ''} {r.get('quote') or ''} {r.get('context') or ''}" for r in report["fields"] if r["field_id"] == "operations").lower()
@@ -1520,6 +1525,9 @@ if __name__ == "__main__":
         assert match(r("sandwich shop, convection oven"))["note"] == R10, "cooking equipment in operations is R9 evidence"
         assert route(r("sandwich shop", class_lines=cl(None, "None (tenant electric ranges only)"))) == "no_match" and route(r("sandwich shop", class_lines=cl(None, "not listed"))) == "no_match", "none is not evidence"
         assert match(r("Dining venue", class_lines=cl("commercial property and general liability, restaurant and bar", "Two fryers, flat-top")))["note"] == bar_ref["note"], "SUB-186 shape: bar on the line of business, fryers"
+        for cook in ("Fryer: none", "Fryers: 0", "Oven not used", "no fryer", "Fryers: n/a"):  # M1 (D-112): a negated appliance is not cooking evidence, so a bar file is never made softer by it
+            assert R1(match(r("pub", class_lines=cl(None, cook)))), cook
+        assert match(r("pub", class_lines=cl(None, "Two fryers, oven not used")))["note"] == bar_ref["note"], "a real fryer still counts"
         assert R1(match(r("Nightclub and lounge. Small kitchen, pre-packaged snacks only.", class_lines=cl(None, "Snack warmer")))), "SUB-201 shape: snacks only is not restaurant evidence"
         assert R1(match(r("pub, small kitchen, snack warmer"))) and R1(match(r("tavern, kitchen, snacks only")))
         assert R1(match(r("restaurant and lounge, full kitchen", class_lines=cl(None, "Two fryers, flat-top, 8-burner range")))), "P-062 (a): a lounge is never softened by real cooking"

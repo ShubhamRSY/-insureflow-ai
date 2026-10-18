@@ -70,15 +70,16 @@ def confirms_path() -> Path:
 
 def confirm_problem(report: dict) -> str:
     """P-052: empty when a senior may confirm a market on this (reviewed) file. Never on a held file or one with a prohibited word."""
-    from workbench import PROHIBITED, VACANT, _has, _ops, match
+    from workbench import PROHIBITED, VACANT, _has, _ops, class_text, match
 
     if report.get("status") in prepare.REFUSED_STATUSES:
         return f"this file's status is {prepare.status_refusal(report)}"
     route = match(report)["route"]
     if route != "senior_referral":
         return f"the carrier match is {route}; a market confirm is only for a senior referral"
-    if _has(_ops(report), PROHIBITED):
-        return "a prohibited word (bar, pub, lounge or another W1 word) is on the file; no market confirm (D-057, D-060)"
+    hit = next((w for w in PROHIBITED if _has(class_text(report), (w,))), "")  # H1 (D-112): same text as the route, operations and the Line of business line
+    if hit or "R2" in match(report)["note"]:  # any bar/liquor R2 referral is never a market confirm
+        return f"a prohibited word (\"{hit or 'bar'}\": bar, pub, lounge or another W1 word) is on the file; no market confirm (D-057, D-060, D-112)"
     raw = " ".join(f"{r.get('value') or ''} {r.get('quote') or ''} {r.get('context') or ''}" for r in report.get("fields") or [] if r.get("field_id") == "operations").lower()
     if _has(_ops(report), VACANT) or _has(raw, VACANT):  # compliance H1: AG:51 prohibits true vacancy and no utilities
         return "vacant, unoccupied or no utilities: the guide prohibits true vacancy and buildings with no utilities (AG:51); a renovation under a signed GC contract (AG:40) needs its own rule; no market confirm"
@@ -511,7 +512,7 @@ if __name__ == "__main__":
     import json
     import tempfile
 
-    def save(ext: Path, submission: str, status: str, complete=False, fields=None, needs_human=None, sprinklers=None, conflicts=None):
+    def save(ext: Path, submission: str, status: str, complete=False, fields=None, needs_human=None, sprinklers=None, conflicts=None, class_lines=None):
         """A saved run shaped like prepare.write_drafts() writes, no model call. The hash is the reader's."""
         payload = {
             "submission": submission,
@@ -522,6 +523,7 @@ if __name__ == "__main__":
             "needs_human": needs_human or [],
             "sprinklers": sprinklers,
             "fields": fields or [],
+            "class_lines": class_lines,
         }
         folder = ext.parent / "inbox" / submission  # P-020: one input document, its manifest in the saved run
         folder.mkdir(parents=True, exist_ok=True)
@@ -741,6 +743,14 @@ if __name__ == "__main__":
             for i, ops in enumerate(("office building, no utilities", "office, unoccupied", "fully vacant building", "office, utilities disconnected")):  # compliance H1
                 save(ext, f"SUB-42{i}", "complete", complete=True, fields=full(operations=ops))
                 assert "AG:51" in confirm_problem(reviewed(f"SUB-42{i}")), ops
+            save(ext, "SUB-440", "complete", complete=True, fields=full(operations="Dining venue"), class_lines={"line_of_business": "restaurant and bar", "cooking_operations": "Two fryers"})  # H1 (D-112): SUB-186 shape
+            assert match_note(reviewed("SUB-440")).find("R2") > 0 and '"bar"' in confirm_problem(reviewed("SUB-440")), "H1: a bar word on the Line of business line refuses the confirm"
+            try:
+                confirm_market("SUB-440", "UW-001", "carrier_b", "x", _current_hash("SUB-440"))
+                raise SystemExit("H1: confirm must be refused")
+            except ValueError as exc:
+                assert '"bar"' in str(exc), exc
+            assert "no market can be confirmed" in agency_problem("SUB-440") and '"bar"' in agency_problem("SUB-440")
             for args in (("SUB-410", "UW-002", "carrier_b", "x"), ("SUB-410", "user", "carrier_b", "x"), ("SUB-410", "UW-001", "carrier_z", "x"),
                          ("SUB-410", "UW-001", "carrier_b", " "), ("SUB-411", "UW-001", "carrier_b", "x"), ("SUB-412", "UW-001", "carrier_c", "x"),
                          ("SUB-401", "UW-001", "carrier_b", "x"), ("SUB-410", "UW-001", "carrier_b", "x", "stale-hash")):
