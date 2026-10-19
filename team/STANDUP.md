@@ -1808,3 +1808,23 @@ Blocked: No.
 - 2026-10-18 @pm (written by orchestrator, D-112): T-107g demo-guide.md: SUB-184 opening best case, no typed override in A5/C4, time saved replaced with the unmeasured-estimate wording, P-061/P-062 dev-only note. Blocker: none.
 - 2026-10-18 orchestrator: code-review on the worktree diff found negated equipment ("bar, no deep fryer") turning R1 into R2, fixed in 940f40b; security review found quadratic regex backtracking in NEGATED_EQUIP, tokens capped (7cfc959); pyright: 0 real errors on changed lines (6 false positives from a shadowed name in the self-check).
 - 2026-10-18 @senior-test-engineer (written by orchestrator, D-112 item 5): T-107g second rehearsal of demo-guide.md with run-demo.sh, 0 live calls, D-069 clean, all 24 screenshots present: READY WITH FIXES. H1 (A2 quoted the old send refusal) and Mediums (expected-output line, What's new count, B-428 not in rough edges) fixed in the guide by the orchestrator. Report T-107g-rehearsal.md. Blocker: none.
+
+### 2026-10-19 — @producer (written by orchestrator; the producer took turns but has no team/ access)
+- Done: T-108 build, 32 files. SUB-206..225 (20 in-scope) and SUB-226..237 (12 out-of-scope) written through `simulation/inbox/build_SUB-206-225.py` and `build_SUB-226-237.py`. Fixed SUB-209/214/223/236 file types and email wording; removed internal rule labels (W1, criterion) from all 20 folders; replaced two xlsx loss runs (SUB-213/221) with typed Carrier A copies. No file shows a rule code or class label.
+- Doing next: nothing until the gold is run (T-108 is not run).
+- Blocked by / need from: nothing.
+
+### 2026-10-19 — @senior-underwriter (written by orchestrator; the reviewer ran without team/ access)
+- Done: T-108 gold, 32 cards (`deliverables/senior-underwriter/gold-set/SUB-206..237.md`) written gold-first from the documents and the written rules; route table `T-108-routes.md` (carrier_a 2, senior_referral 16, no_match 2); summary `T-108-gold-summary.md`. Corrected SUB-209 (sales conflict), SUB-236 (criterion 2 now, typed Spanish PDF), and ran the presentation-only polish pass @model-risk asked for.
+- Doing next: nothing on T-108 until the run; then a UI check (D-065 item 3).
+- Blocked by / need from: @user's acceptance of the scan-transcription deviation (M2/B-430).
+
+### 2026-10-19 — @senior-test-engineer
+- Done: T-108 plan JSON `deliverables/senior-test-engineer/T-108-plan.json` with `undated_loss_runs` (7 ids); lint `lint_holdout.py --run-date 2026-10-19` exit 0 (0 failures, 7 info, 32 files), written up in `T-108-lint.md`.
+- Doing next: nothing on T-108. B-429 (xlsx loss runs unreadable by the lint) is in the backlog.
+- Blocked by / need from: nothing.
+
+### 2026-10-19 — @model-risk
+- Done: independent T-108 build check `deliverables/model-risk/T-108-check.md`. First pass: OBJECTION, H1 (the T-108 board entry did not record the code SHA, prompt and scorer). Re-check after the fix: **APPROVE** — no High findings; the build may be called frozen. M1 (stale summary row) and L1 (duplicate route lines) closed; M2 (tesseract read of scans) open for the user.
+- Doing next: nothing on T-108 until the run; then the production veto (T-027) needs the run scored once with v7.
+- Blocked by / need from: @user on M2.
