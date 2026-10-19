@@ -1,25 +1,48 @@
 # Next session
 
-Written 2026-10-18 by the orchestrator at wrap-up. Wrap-up commit: `8eff864` on `ai-team`, pushed to `origin/ai-team` (private).
+Written 2026-10-19 by the orchestrator at wrap-up. Wrap-up commit: `cd3d905` on `ai-team`, pushed to `origin/ai-team` (private).
 
 - Budget rule 8: demo blockers only.
 - Standing rules: D-065, D-069, the CLAUDE.md "Plugins" section (D-097). One AI session on this repo (D-090). The frontend/ files and `.claude/settings*.json` belong to the user and are never staged.
-- **Work in the permanent worktree `/Users/disastershubz/INSURANCE FLOW AI/insureflow-ai-team` (branch `ai-team`, D-101).** Never touch the main folder `-insureflow-ai-1` (user's uncommitted work); its `team/NEXT-SESSION.md` is stale. The code-review plugin reviews the main folder's diff, not the worktree: review the worktree diff by hand or point the plugin at it.
+- **Work in the permanent worktree `/Users/disastershubz/INSURANCE FLOW AI/insureflow-ai-team` (branch `ai-team`, D-101).** Never touch the main folder `-insureflow-ai-1`; its `team/NEXT-SESSION.md` is stale. The code-review plugin reviews the main folder's diff: review the worktree with a reviewer agent on `git -C <worktree> diff <from> <to>` (done this way in D-112).
 - **Run every pipeline command with `.venv/bin/python`.** Re-scores: `HOLDOUT_RESCORE=1`, a temp cache copy in `LLM_CACHE_DIR`, `LLM_PACE_SECONDS=0`, `HOLDOUT_OUT` in a temp folder. `regression_dev.py` with no argument makes live calls (B-405).
-- pyright: `npx --yes pyright@1.1.390 --pythonpath .venv/bin/python <files>` (23 old errors in llm_extract/prepare, none in changed lines).
+- pyright: `npx --yes pyright@1.1.390 --pythonpath .venv/bin/python <files>` (about 40 old errors in workbench/prepare; the self-check reuses the name `card`, which gives false positives).
+- A subagent hit the session limit mid-task on 2026-10-18; it resumed from its saved state with SendMessage, and no call was repeated.
 
-## Where we stopped (D-111)
+## Where we stopped (D-112)
 
-- **P-059 built** (T-106a): the prompt keeps items from the Cooking operations, Hood and Line of business lines (prompt `759b3e6bc9b2`, was `b025802c0dfa`). The whole-document check (`prepare.py` `ops_line_missing`, `OPS_EXTRA`) flags gas, "no cooking", the cooking clauses and the hood dates missing from the answer. It now flags all 3 T-104 silent errors (SUB-180 gas, SUB-201 snack warmer, SUB-204 no cooking).
-  - Why the old check missed them: it compared word-list items only, and "no gas", appliance words and "None" under cooking were not on the list. Details: `deliverables/ai-engineer/p-059-p-060-as-built.md`.
-  - **No live run yet.** All in-scope dev cached replies are on the old prompt (B-415: quick 15 = 5 calls; dev SUB-127–173 = 36 calls). If the model ignores the new sentence, 33/38 cooking-line dev files would drop to "complete — review pending".
-- **P-060 built** (T-106c): `eval_holdout_v7.py` (sha256 `efe532a0006e21e6…`) = v6 + the loss-run mark. v6 is frozen and unchanged (`4bf1cd63…`).
-- **Routes check** (T-106b, report only): `deliverables/head-of-underwriting/T-104-route-check.md`. SUB-182 and SUB-186 are code wrong; SUB-174's rule is unclear (the line-of-business question); SUB-201 is gold wrong as written (the W1/W1b tables conflict, and "small kitchen" is an R9 word). Drafted, not built: **P-061**, **P-062**.
-- **Lint** (T-106d): `deliverables/senior-test-engineer/lint_holdout.py PLAN.json --run-date YYYY-MM-DD` (`--self-check`: 24 cases). It checks that loss-run valued dates are before the run date, that the Scope lines parse, the plan mix, and `undated_loss_runs`. It is the gold-freeze gate (RUN-RULES). Example plan: `T-104-plan.json`. T-104 fails it, as expected.
-- **@model-risk** (`deliverables/model-risk/check-P-059-P-060-T-106d.md`): P-059 APPROVE WITH CHANGES, no High, code may be re-frozen. v7 APPROVE. Lint BLOCK (H1 dates, H2 undated) → both closed in look-again 2.
-- Reviews not run: @senior-underwriter UI review (the only UI change is a What's new line). The T-106a screenshot is not taken (B-423).
-- Missing standups for today: @ai-engineer-assistant, @head-of-underwriting, @senior-test-engineer, @model-risk (told not to edit team/ while running in parallel).
-- Backlog: B-415 to B-424.
+- **P-061 and P-062 built** (T-107a; `eb2bd84`, `940f40b`, `4682413`, `7cfc959`):
+  - Class, bar and prohibited words are read from operations plus the "Line of business:" line, through one `class_text()` shared by `_match` and `confirm_problem`.
+  - Cooking equipment on operations or the "Cooking operations:" line is R9 evidence. Negated equipment does not count: "no deep fryer", "Fryer: none", "Oven not used".
+  - A class read only from the Line of business never reaches carrier_a.
+  - Nightclub and lounge are always R1. Snacks only is not restaurant evidence.
+- **W1 and W1b are one table** in carrier-match.md. The stricter rule wins and every row is cited:
+  - A bar word beside a non-food operation is now R1 no_match (was R16 senior_referral).
+  - Bar, tavern and pub with real restaurant evidence stay R2, as P-062 names that case.
+  - The R1 note names the word and its line.
+- **T-107c:** a P-052 senior-confirmed carrier passes the account-manager check. R2, held and W1 files never pass, and the card shows the real refusal reason. **T-107d:** What's new shows the latest 5 plus "Show all".
+- **Reviews:**
+  - Code review (High) fixed: negated equipment turned R1 into R2.
+  - Security review fixed: quadratic regex backtracking.
+  - @senior-underwriter UI: APPROVE WITH CHANGES; its High was fixed.
+  - @model-risk: OBJECTION H1 (a bar word on the Line of business allowed a market confirm), then **APPROVE** on look-again at `4682413`.
+- **B-415 live check** (T-107b, `deliverables/ai-engineer/b-415-live-check.md`): 41 calls, 0 failed, 4 retries. Routes on `7cfc959`. 0 unsafe, 0 false completes.
+
+  | SUB-154–173 | Old reply | New reply |
+  |---|---|---|
+  | Operations hits | 7 | 7 |
+  | Routes correct | 13/20 | 13/20 |
+  | Silent errors | 8/180 | 9/180 |
+  | Status automation | 4/8 | 5/8 |
+  | Operations flags | 5/16 files | 1/41 files |
+
+  Dev SUB-127–173 route is 24/47 against dev gold written before P-049, with the 11 no-call files counted as misses. This is not a gate result (B-427).
+- **Demo** (T-107e/f/g):
+  - Opening best case: SUB-184 → Carrier A → account-manager check passes → sent. Backup: SUB-179.
+  - Time saved is labelled an unmeasured estimate: about 10–25 min per in-scope file, about 5–15 over a mix.
+  - run-demo.sh replays on the new replies, 0 live calls, all steps pass, and the screenshots are retaken.
+  - Second rehearsal: READY WITH FIXES. Its High (an old refusal text in step A2) and the Mediums are fixed in the guide.
+- Backlog: B-425 to B-428.
 
 ## Approved, not built
 
@@ -32,27 +55,25 @@ Written 2026-10-18 by the orchestrator at wrap-up. Wrap-up commit: `8eff864` on 
 
 ## Pending decisions for the user
 
-1. **P-061** (drafted by @head-of-underwriting): class words are read from the Line of business and Cooking operations lines (SUB-174, 182, 186). Re-check after P-059's live run first; P-059 may already fix 182 and 186. It also needs @head-of-underwriting's ruling on whether the line of business counts as class text.
-2. **P-062** (drafted): nightclub/lounge is always R1 (no_match, never referable, even while held), and snack-only food is not restaurant evidence (SUB-201; closes the W1-vs-W1b conflict). @model-risk H2 asked for this.
-3. **Live check of P-059** (B-415): allow 5 + 36 calls (qwen, paced 55 s)?
-4. Re-freeze once 1–3 are settled; then a new 20 + 12 hold-out, gold first, lint passing.
-5. Still open: P-056 (a) month-first dates (D-104); B-402 email-only locations wording; detector gaps B-398/B-404.
+1. **Re-freeze** the code at `cd3d905`, or a later commit if B-428 or B-425 are fixed first for the demo.
+2. **Next hold-out** (20 + 12): @senior-underwriter and @producer write the plan JSON under the current rules (P-061/P-062, merged table). The lint must pass before the gold freeze. When to build it?
+3. Still open: P-056 (a) month-first dates (D-104); B-402 email-only locations; detector gaps B-398/B-404; B-416/B-417 (ops check polarity and labels, each needs a P-###).
 
 ## Open vetoes and what resolves each
 
 | Task | Holder | Resolves when |
 |---|---|---|
-| T-027 | @model-risk (production) | H1 (P-059 built, live check owed) and H2 (P-061/P-062 approved and built) checked on dev files; re-freeze; a new 20 + 12 hold-out, gold first, lint passing (loss runs valued before the run date, at least 2 held W1 files, at least 2 office-lessor / deli files); run and scored once with v7, meeting all 15 criteria. |
+| T-027 | @model-risk (production) | H1 operations and H2 routes are now built and checked on dev (P-059 live, P-061/P-062 APPROVE). Remaining: re-freeze; a new 20 + 12 hold-out, gold first, lint passing (loss runs valued before the run date, at least 2 held W1 files, at least 2 office-lessor / deli files); run and scored once with v7, meeting all 15 criteria. |
 | T-082 | @responsible-ai (fairness) | As written in its veto message in team/DISCUSSION.md. |
 
 ## First 3 tasks next session
 
-1. Check the worktree and branch. The user decides on the live P-059 check (B-415) and on P-061/P-062.
-2. If allowed: the live quick 15 + dev SUB-127–173 on the P-059 prompt (report the operations flag rate and status automation), then re-check SUB-182/186 routes; build the approved P-061/P-062 with dev self-checks; @model-risk check, High only.
-3. Re-freeze. @senior-underwriter + @producer write the next hold-out plan as JSON (routes under current rules, `undated_loss_runs` declared, B-424). The lint must pass before the gold freeze.
+1. Check the worktree and branch. The user decides: re-freeze, and whether to fix B-428 ("Not read by extraction" beside values read from that file) before the demo.
+2. Give the manager demo from `deliverables/pm/demo-guide.md` using `run-demo.sh` (0 live calls).
+3. @senior-underwriter + @producer write the next hold-out plan JSON under P-061/P-062; lint before the gold freeze; @model-risk approves the mix.
 
 ## For the AI Engineer
 
-- Pending: P-061 (class words from LOB / cooking lines), P-062 (nightclub always R1); P-059 and P-060 are built.
-- Latest scores (T-104, v6, `6e7cfa2`, as published): P-055 gate PASS; 0 false completes, 0 unsafe; route 16/20; operations 12/20, loss runs 9/20; T-027 KEEP. No new score: P-059 has no live run.
-- Top failure to fix next: confirm P-059 live (operations), then the W1 nightclub provisional route (P-062).
+- Pending proposals: none open. P-059 to P-062 are built and approved by @model-risk (P-061/P-062 on look-again).
+- Latest scores (B-415, dev, saved replies, routes on 7cfc959): 0 unsafe, 0 false completes, 0 call failed; SUB-154–173 operations 7 (unchanged), silent errors 9/180, operations flags 1/41. T-104 hold-out scores stay as published (route 16/20, operations 12/20).
+- Top failure to fix next: route accuracy is unproven on real-shaped files under P-061/P-062 (synthetic checks only, B-427). Build the next hold-out.
