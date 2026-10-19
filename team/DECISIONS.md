@@ -1255,3 +1255,14 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: T-107a (P-061, P-062, W1/W1b merge), T-107b (B-415 live run), T-107c (account-manager check), T-107d (What's new collapse), T-107e (T-104 best-case demo file), T-107f (time-saved check), T-107g (second rehearsal); @model-risk check; @senior-underwriter UI check.
 - Status: ACCEPTED
 - Amends: D-111 (P-061/P-062 approved; B-415 calls allowed: 5 + 36). T-104 is now dev data: its published scores stay as published, and it is no longer hold-out evidence. Not a production approval; T-027 veto stands.
+
+## D-113 — T-108 next hold-out built gold-first and frozen; B-428/B-411 fix; B-427 silent-error analysis; M2 scanned-gold resolution
+- Date / Owner: 2026-10-19 / @user
+- Context: `team/NEXT-SESSION.md` after D-112 (pending decisions 1–3); the user's session answers (full build, task id T-108, commit the code freeze first); `deliverables/ai-engineer/b-427-silent-errors-and-ops-flags.md`; `deliverables/producer/T-108-mix.md`; `deliverables/senior-test-engineer/T-108-lint.md`; `deliverables/senior-underwriter/T-108-gold-summary.md`, `T-108-routes.md`, `T-108-gold-vs-source.md`; `deliverables/model-risk/T-108-check.md`, `T-108-M2-close.md`.
+- Options considered: none. The user's words, carried out by the orchestrator and the roles.
+- Decision: (1) The B-428/B-411 workbench fix is committed as the T-108 code freeze `457f1bf`; the T-108 code under test is that SHA with prompt `759b3e6bc9b2` (P-059) and scorer v7. (2) T-108 is built as 32 submissions SUB-206 to SUB-237 (20 in-scope, 12 out-of-scope covering proposal-P-055 criteria 1-4 at 4/5/4/2, three two-criteria files, two criterion-4-alone), gold first by @senior-underwriter, with the lint passing (exit 0) before the gold freeze. (3) T-108 is **not** run and no score exists (D-020). (4) B-427 is closed as analysis only: the 9 dev silent errors are stale dev gold with no operations-items line, 0 real check gaps, no P-### needed; operations flags 5/16 old -> 0/16 new, 1 of 41 new replies (SUB-134). (5) M2/B-430 (gold for scanned files was read via OCR) is resolved in a separate decision; T-108 gold is not final until that decision is recorded.
+- Rationale: The user typed these instructions in this session on 2026-10-19 (D-032), including the added point (5) and the confirmation "D-113: confirmed as one decision … Status: ACCEPTED by @user, 2026-10-19."
+- Dissent: none
+- Follow-up tasks: T-108 (build done and frozen; run and score later, on the user's word, under D-020). Backlog B-429, B-430, B-431.
+- Status: ACCEPTED
+- Amends: D-112 pending decision 2 (next hold-out: built and frozen). T-104 scores stay as published; T-104 is dev data.

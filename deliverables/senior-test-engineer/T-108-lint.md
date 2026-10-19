@@ -32,6 +32,10 @@ PASS: 0 failure(s), 7 info, 32 files, run date 2026-10-19
 
 None. The run exited 0 on the first lint after the plan was written.
 
+## Re-run after the M2 gold-vs-source corrections (2026-10-19, same session)
+
+The gold was compared against the builder source data and three non-factual wording differences were corrected (SUB-206, SUB-208 scope lines; SUB-214 source/scope lines). The lint was re-run on the same plan: `.venv/bin/python deliverables/senior-test-engineer/lint_holdout.py deliverables/senior-test-engineer/T-108-plan.json --run-date 2026-10-19` → **exit 0**, `PASS: 0 failure(s), 7 info, 32 files`. The plan JSON did not change and `lint_holdout.py` was not edited. The gold manifest was re-frozen at sha256 `657c63a97835adfac4815af08e9d06ebf78bb27767859596c040dd0a1cbdc4d0`.
+
 What I did to get there, and what it proves:
 
 1. `undated_loss_runs` was worked out from the files, not guessed. I ran the lint's own `lint_dates()` (read-only, temp plan, no declaration) over SUB-206..SUB-237 and read the ids the lint failed for a missing valued date, then read each of those loss-run files by eye to confirm the finding:

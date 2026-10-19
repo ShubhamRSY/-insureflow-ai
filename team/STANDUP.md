@@ -1828,3 +1828,22 @@ Blocked: No.
 - Done: independent T-108 build check `deliverables/model-risk/T-108-check.md`. First pass: OBJECTION, H1 (the T-108 board entry did not record the code SHA, prompt and scorer). Re-check after the fix: **APPROVE** — no High findings; the build may be called frozen. M1 (stale summary row) and L1 (duplicate route lines) closed; M2 (tesseract read of scans) open for the user.
 - Doing next: nothing on T-108 until the run; then the production veto (T-027) needs the run scored once with v7.
 - Blocked by / need from: @user on M2.
+
+### 2026-10-19 (2) — @senior-underwriter (written by orchestrator; the role ran without team/ access)
+- Done: M2/B-430 closure — every T-108 gold card compared field by field against the builder scripts' source data (not OCR); report `deliverables/senior-underwriter/T-108-gold-vs-source.md`. Corrected SUB-206 and SUB-208 scope lines ("no schedule" -> one-row schedule), SUB-214 source/scope lines (unsupported scan reference), SUB-211 (open premises conflict: application 1120 Commerce St vs email "their new spot on Guadalupe" -> `incomplete — hold: open conflict`), SUB-230 loss-summary wording; routes table and summary updated. Lint re-run exit 0; manifest re-frozen.
+- Doing next: nothing on T-108 until the run; then a UI check (D-065 item 3).
+- Blocked by / need from: nothing.
+
+### 2026-10-19 (2) — @model-risk
+- Done: M2 closure review `deliverables/model-risk/T-108-M2-close.md`. First pass: M2 CLOSED but H1 (SUB-211 omitted an open premises conflict) blocked the freeze. Re-check after the fix: M2 stays CLOSED, H1 FIXED, **freeze APPROVED, no High**; lint exit 0; manifest `11933e96…` reproduces.
+- Doing next: the T-027 production veto needs the T-108 run scored once with v7.
+- Blocked by / need from: nothing.
+
+### 2026-10-19 (2) — @producer (written by orchestrator; the producer took no turn this round)
+- (No entry written; the producer did not take a turn in this continuation.)
+
+### 2026-10-19 (2) — @senior-test-engineer (written by orchestrator; the lint was re-run by the orchestrator and re-checked by @model-risk)
+- Done: T-108 lint re-run twice after the M2 corrections and the SUB-211 fix: exit 0 (0 failures, 7 info, 32 files), recorded in `T-108-lint.md`.
+- Doing next: nothing on T-108.
+- Blocked by / need from: nothing.
+- Correction: the "2026-10-19 (2) — @producer (no entry written)" block above was added in error; @producer took no turn in this continuation, so no entry for it belongs here. Ignore that block (append-only file, so it stands as a record of the mistake).

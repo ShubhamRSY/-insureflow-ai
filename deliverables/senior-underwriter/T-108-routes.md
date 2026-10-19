@@ -10,7 +10,7 @@
 | SUB-208 | incomplete | senior_referral | carrier_a | R17; AG:29-30 | wholesale distributor words not on Carrier A allow-list (R17); loss run missing |
 | SUB-209 | incomplete | senior_referral | carrier_b | R11; AG:38, AG:62 | concrete flatwork contractor (R11); sales conflict blocks |
 | SUB-210 | complete | senior_referral | carrier_c | R12; AG:37, AG:62 | habitational 14 units, sprinklered (R12) |
-| SUB-211 | complete | senior_referral | carrier_b | R10; AG:39, AG:62; W2d | full-service restaurant with cooking and full bar (R10); liquor noted (W2d) |
+| SUB-211 | incomplete — hold: open conflict | senior_referral | carrier_b | R10; AG:39, AG:62; W2d | full-service restaurant with cooking and full bar (R10); liquor noted (W2d); premises conflict blocks (application 1120 Commerce St vs email "on Guadalupe") |
 | SUB-212 | incomplete | senior_referral | carrier_b | R11; AG:38, AG:62 | interior finish carpentry contractor (R11); loss run not a recognised carrier format |
 | SUB-213 | complete | carrier_a | — | R14; AG:29-31 | office building lessor (AG:29); allow-list only, TIV 1.98M ≤ 5M |
 | SUB-214 | incomplete | senior_referral | carrier_a | R17; AG:29-30 | retail/wholesale words not on Carrier A allow-list (R17); loss run missing; TIV conflict |
