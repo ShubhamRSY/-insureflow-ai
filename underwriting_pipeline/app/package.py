@@ -460,6 +460,9 @@ def send_to_carrier(
     problem = prepare.manifest_problem(submission)  # P-020 (D-062): the input documents are the ones extracted, every actor
     if problem:
         raise ValueError(problem)
+    problem = prepare.scope_problem(submission)  # P-063 (B-432): scope re-checked at send time, independent of status, every actor
+    if problem:
+        raise ValueError(problem)
     problem = senior_confirm_problem(submission, with_resolutions(report, submission))  # T-107c (B-412): same order as the card, confirm before approve
     if problem:
         raise ValueError(problem)
@@ -512,7 +515,10 @@ if __name__ == "__main__":
     import json
     import tempfile
 
-    def save(ext: Path, submission: str, status: str, complete=False, fields=None, needs_human=None, sprinklers=None, conflicts=None, class_lines=None):
+    APP_OK = ("Named insured: Example Roofing LLC\nPremises address: 100 Main St, Austin, TX 78701\nEffective date: 2027-01-01\nYears in business: 9\n"
+              "Operations: General office work for the business, no public visits, and the staff are all on site.\nConstruction: masonry\n")  # in scope (P-063 re-check)
+
+    def save(ext: Path, submission: str, status: str, complete=False, fields=None, needs_human=None, sprinklers=None, conflicts=None, class_lines=None, app=APP_OK):
         """A saved run shaped like prepare.write_drafts() writes, no model call. The hash is the reader's."""
         payload = {
             "submission": submission,
@@ -527,7 +533,7 @@ if __name__ == "__main__":
         }
         folder = ext.parent / "inbox" / submission  # P-020: one input document, its manifest in the saved run
         folder.mkdir(parents=True, exist_ok=True)
-        (folder / "application.md").write_text(f"SYNTHETIC application {submission}\n")
+        (folder / "application.md").write_text(f"SYNTHETIC application {submission}\n{app}")
         payload["input_manifest"] = prepare.folder_manifest(folder)
         payload["hash_algorithm"] = prepare.HASH_ALGORITHM
         payload["saved_hash"] = prepare.hash_payload(payload)
@@ -600,6 +606,17 @@ if __name__ == "__main__":
                 raise SystemExit("no package for a manual-intake file")
             except ValueError as exc:
                 assert "manual intake" in str(exc), exc
+            assert not list(dest_dir.iterdir()), "nothing was sent"
+
+            # P-063 (B-432): a SUB-233-shaped file saved complete (the old detector missed it) is refused at send time for every actor.
+            save(ext, "SUB-104", "complete", complete=True, fields=office, sprinklers="no",
+                 app=APP_OK.replace("100 Main St, Austin, TX 78701", "Loc 1: 3412 S Georgia St, Amarillo, TX 79109; Loc #2: 6901 Bell St, Amarillo, TX 79106"))
+            for actor in ("user", "@account-manager"):
+                try:
+                    send_to_carrier("SUB-104", actor, dest_dir, reason="ready", user_line=LINE("SUB-104"), carrier="carrier_a")
+                    raise SystemExit(f"an out-of-scope file must be refused for {actor}")
+                except ValueError as exc:
+                    assert str(exc).startswith("out of pilot scope at send time (multiple locations"), exc
             assert not list(dest_dir.iterdir()), "nothing was sent"
 
             # T-071 (2): nothing saved, a changed hash, and an unknown status all refuse.

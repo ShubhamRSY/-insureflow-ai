@@ -41,6 +41,10 @@ BANNER = ""  # set by serve(); the sandbox screenshots label the page with it
 MESSAGES: dict[str, tuple[bool, str]] = {}  # submission -> (ok, plain-words result of the last action); shown once
 # D-065 item 5: one line per user-visible feature: date, task or proposal, decision number, what an underwriter sees.
 WHATS_NEW = (
+    ("2026-10-19", "T-109a", "D-116",
+     "Scope check scope-v4 (P-063): a location label anywhere in the application (\"Loc 1 …; Loc #2 …\", \"Location 2\", \"Bldg 2\") "
+     "now means multiple locations, so the file is manual intake. Every send re-checks scope at send time, whatever the status says, "
+     "and an out-of-scope file shows \"No send: out of pilot scope at send time (…)\"."),
     ("2026-10-19", "B-428, B-411", "D-113",
      "\"Not read by extraction\" now lists only files the saved run did not read, taken from its own unread rows, "
      "not from the file name. A PDF, workbook, text file or scan that was read (by a reader or OCR) is no longer "
@@ -375,6 +379,7 @@ def load_queue(only: str | None = None) -> list[dict]:
         if report is not None:
             row.update(
                 manifest=prepare.manifest_problem(folder.name, inbox=INBOX),
+                scope_now=prepare.scope_problem(folder.name, inbox=INBOX),  # P-063: the send gate's own scope re-check
                 route=route(report),
                 note=match(report)["note"],
                 suggested=match(report)["suggested"],
@@ -750,6 +755,8 @@ def _no_send_reason(item: dict, report: dict, refused: bool) -> str:
         return f"this file's status is {prepare.status_refusal(report)}; it cannot be sent"
     if item.get("manifest"):
         return f"documents changed since extraction ({item['manifest']})"
+    if item.get("scope_now"):  # P-063 (B-432): independent of status
+        return item["scope_now"]
     if report.get("status") == prepare.REVIEW_PENDING and package.conflict_problem(report):  # B-324 (D-089)
         return package.conflict_problem(report)
     if item["route"] == "senior_referral" and _carrier(item, report) not in package.CARRIERS:  # P-052; T-107c: one text with the send gate
@@ -1009,11 +1016,16 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
             + "</p>",
             review_pending_html(report),
             manual_intake_html(report),
+            (f'<p class="msg bad" role="alert"><b>Send blocked</b> — {html.escape(item["scope_now"])}. Nothing on this file can be sent. '
+             "Do not chase the missing items. Next step: re-run extraction on this file; the scope check then makes it manual intake, "
+             "and an underwriter reads the whole file by hand.</p>" if item.get("scope_now") and not refused else ""),  # P-063, T-109a UI check H1
             f"<p>Files: {html.escape(', '.join(item['files']) or 'none')}</p>",
             f"<p>Not read by extraction: {html.escape(none_ if manual else ', '.join(item['ignored']) or none_)}</p>",
         ]
         lines += score_html(item, report)
-        if not refused:
+        if item.get("scope_now") and not refused:  # P-063 (T-109a UI check H1): no route or hold wording on an out-of-scope file
+            lines.append("<p>Carrier match: none — out of pilot scope at send time (see the alert above)</p>")
+        elif not refused:
             lines.append(f"<p>Carrier match: {html.escape(item['route'])}{html.escape(' · ' + item['note']) if item.get('note') else ''} · recommendation only</p>")
             if item.get("provisional"):  # P-048 (c) (D-095): routing always runs; the send stays blocked until the hold clears
                 pv = item["provisional"]
@@ -1073,9 +1085,10 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
         if draft.is_file() and not manual:  # P-055: a manual-intake file has no automated missing-info draft
             lines.append(
                 f"<h3>Missing-info draft for the producer (not sent)</h3><pre>{html.escape(draft.read_text())}</pre>"
-                f'<form method="post" action="/approve-draft"><input type="hidden" name="submission" value="{sid}">'
-                '<label>Reason (optional) <input name="reason"></label> '
-                '<button type="submit">Approve and send to producer (user override)</button></form>'
+                + (f'<p class="bad">No send to producer: {html.escape(item["scope_now"])}.</p>' if item.get("scope_now") else  # P-063
+                   f'<form method="post" action="/approve-draft"><input type="hidden" name="submission" value="{sid}">'
+                   '<label>Reason (optional) <input name="reason"></label> '
+                   '<button type="submit">Approve and send to producer (user override)</button></form>')
             )
         if (TO_PRODUCER / f"{item['id']}.md").is_file():
             lines.append("<p>Producer request on file in to-producer.</p>")
@@ -1633,10 +1646,13 @@ if __name__ == "__main__":
             ext, inbox, dlog = tmp / "extractions", tmp / "inbox", tmp / "decisions.jsonl"
             old = (prepare.EXTRACT_DIR, prepare.INBOX_DIR, INBOX, LOG, PENDING, TO_PRODUCER, TO_CARRIER, package.DECISIONS_LOG, package.SENDS_LOG, package.INBOX, llm_extract._post, prepare.process_submission)
 
-            def stored(sub: str, status: str, fields=None, complete=True, conflicts=None) -> None:
+            APP_OK = ("Named insured: Example Roofing LLC\nPremises address: 100 Main St, Austin, TX 78701\nEffective date: 2027-01-01\nYears in business: 9\n"
+                       "Operations: General office work for the business, no public visits, and the staff are all on site.\nConstruction: masonry\n")  # in scope for the P-063 send-time re-check
+
+            def stored(sub: str, status: str, fields=None, complete=True, conflicts=None, app=APP_OK) -> None:
                 folder = inbox / sub
                 folder.mkdir(parents=True, exist_ok=True)
-                (folder / "application.md").write_text(f"SYNTHETIC application {sub}\n")
+                (folder / "application.md").write_text(f"SYNTHETIC application {sub}\n{app}")
                 payload = {"submission": sub, "status": status, "error": None, "complete": complete, "conflicts": conflicts or [], "needs_human": [], "unread": [], "sprinklers": "no", "fields": fields or [],
                            "input_manifest": prepare.folder_manifest(folder), "hash_algorithm": prepare.HASH_ALGORITHM}
                 payload["saved_hash"] = prepare.hash_payload(payload)
@@ -1677,6 +1693,19 @@ if __name__ == "__main__":
                 assert "changed since extraction" in act("/send", {"submission": "SUB-903", "user_line": "send to carrier SUB-903"})[2]
                 assert "Send refused: this file's status is extraction_failed" in act("/send", {"submission": "SUB-910", "user_line": "send to carrier SUB-910"})[2]
                 assert act("/send", {"submission": "../x"})[2].startswith("Send refused: no such submission")
+                # P-063 (B-432): a SUB-233-shaped file saved complete is refused at send time and its card says why, whatever the status
+                stored("SUB-933", "complete", good, app=APP_OK.replace("100 Main St, Austin, TX 78701", "Loc 1: 3412 S Georgia St, Amarillo, TX 79109; Loc #2: 6901 Bell St, Amarillo, TX 79106"))
+                msg933 = act("/send", {"submission": "SUB-933", "user_line": "send to carrier SUB-933"})[2]
+                assert msg933.startswith("Send refused: out of pilot scope at send time (multiple locations, " + prepare.scope.VERSION), msg933
+                card933 = render(load_queue("SUB-933"), None)
+                assert html.escape("No send: out of pilot scope at send time (multiple locations, " + prepare.scope.VERSION) in card933 and 'action="/send"' not in card933, card933[-2000:]
+                (PENDING / "SUB-933.md").parent.mkdir(parents=True, exist_ok=True)
+                (PENDING / "SUB-933.md").write_text("Nothing has been declined")
+                card933 = render(load_queue("SUB-933"), None)
+                assert "<b>Send blocked</b> — out of pilot scope" in card933 and "Next step: re-run extraction" in card933 and "Provisional route: <b>" not in card933 and "· No send until the hold clears" not in card933
+                assert "No send to producer: out of pilot scope at send time" in card933 and 'action="/approve-draft"' not in card933
+                assert act("/approve-draft", {"submission": "SUB-933"})[2].startswith("Request not approved: out of pilot scope at send time"), "the gate refuses too"
+                shutil.rmtree(PENDING)  # later checks make their own
                 pg = render(load_queue(), None, {"SUB-901": (False, "Send refused: x")})
                 assert 'class="msg bad"' in pg and "Send refused: x" in pg and "Approve first" in pg and 'action="/send"' not in pg  # B-249
 

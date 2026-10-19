@@ -12,6 +12,16 @@ PLAN.json (written by hand from the mix .md, before gold exists):
    "routes": {"carrier_a": 5, "senior_referral": 3}}    # optional: gold route counts over in-scope files
 Only keys present are checked.
 
+Scorer test (D-116 item 5, "test the test"), with --scorer NAME (default eval_holdout_v8; the scorer the set will be scored with):
+  (a) a perfect answer built from each gold card is scored by the scorer itself (score_report, no pipeline run, no model call): no mark
+      may be "miss" or "call_failed", and the set's route gate and P-055 gate must PASS with 0 false completes;
+  (b) deliberately wrong answers, each must be caught: one per field on every in-scope file (named insured, premises, effective date,
+      operations, sales, TIV, construction, year built, loss-run date, conflict, status, route -> that mark is "miss"), a leak on every
+      out-of-scope file (answered as in scope, and manual intake with a value shown -> a leak, and the P-055 gate FAILS), and an unsafe
+      route (carrier_a where gold says senior_referral or no_match -> the route gate counts it unsafe and FAILS).
+  A gold line the scorer cannot read (e.g. no "Loss runs valued as of" line for v8) is a FAIL. Freeze is blocked on any failure.
+  The scorer's route is read from the answer (the test patches route_used); leaks_of runs as written.
+
 Loss-run dates: in each loss-run file (loss-run*.{md,csv,txt}; PDF via pdftotext; JPG/scanned PDF via tesseract
 when installed) every date on a "valued / as of / evaluated / run date / date:" line and every table-row date must be
 before the run date. A loss run with no date the lint can read (unreadable scan, or no date) is a FAIL. Month-name dates (Nov 30, 2026) are read.
@@ -188,6 +198,140 @@ def lint_gold_and_mix(ids: list[str], plan: dict) -> list[str]:
     return fails
 
 
+PERFECT_MARKS = {"hit", "flagged", "not_credited"}  # not_credited = the scorer's own "null where gold says missing" (judge v1): not a wrong mark
+WRONG = {  # field_id -> (check name, a wrong value)
+    "named_insured": ("named_insured", "Zzyzx Holdings Wrong LLC"), "premises_address": ("premises", "1 Wrong Rd, Nowhere, TX 00000"),
+    "effective_date": ("effective_date", "2031-07-04"), "operations": ("operations", "Unrelated widget assembly"),
+    "sales_or_payroll": ("sales", "123457"), "tiv_building": ("tiv", "7654321"), "construction": ("construction", "Unobtainium"),
+    "year_built": ("year_built", "1066"), "loss_run_valued_through": ("loss_runs", "2019-01-01"),
+}
+
+
+def _empty(line: str) -> bool:
+    low = (line or "").strip().lower()
+    return low.startswith(("missing", "not in documents", "both", "none")) or not low
+
+
+def perfect_report(scorer, sid: str, gold_text: str) -> dict:
+    """The answer a perfect pipeline gives for this gold card, in the report shape score_report reads."""
+    import prepare  # pyright: ignore[reportMissingImports]
+    gold = scorer.parse_gold(gold_text)
+    sc = scorer.gold_scope(gold_text)
+    if sc["out"]:
+        codes = {v: k for k, v in scorer.CODE_CRITERION.items()}
+        found = {"version": "lint", "in_scope": False, "reasons": [{"code": codes[c], "text": scorer.CRITERIA[c]} for c in sc["criteria"]]}
+        return prepare._manual_intake(INBOX / sid, [], found)
+    conflict = gold.get("conflict", "")
+    has_conflict = not conflict.strip().lower().startswith("none")
+    flagged_topics = {f for f, words in (("effective_date", "effective"), ("sales_or_payroll", "sales"), ("tiv_building", "tiv"), ("operations", "operations"),
+                                         ("construction", "construction"), ("year_built", "year"), ("loss_run_valued_through", "loss")) if has_conflict and words in conflict.lower()}
+    expected = (gold.get("expected loss run") or "").strip().lower()
+    review = expected.startswith(("needs review", "loss run found but no valued-as-of date"))
+    # the truth comes from gold, never from the scorer's rule: the valued-as-of line (D-116); a card without it falls back to the old first-date reading
+    date = re.search(r"20\d\d-\d\d-\d\d", gold.get("loss runs valued as of") or gold.get("loss runs", ""))
+    values = {
+        "named_insured": gold.get("named insured"), "premises_address": None if _empty(gold.get("premises", "")) else gold["premises"],
+        "effective_date": None if _empty(gold.get("effective date", "")) else gold["effective date"],
+        "operations": gold.get("operations items") or gold.get("operations"), "sales_or_payroll": None if _empty(gold.get("sales", "")) else gold["sales"],
+        "tiv_building": None if _empty(gold.get("tiv", "")) else gold["tiv"], "construction": None if _empty(gold.get("construction", "")) else gold["construction"],
+        "year_built": None if _empty(gold.get("year built", "")) else gold["year built"], "loss_run_valued_through": None if review or not date else date.group(0),
+    }
+    fields = [{"field_id": f, "value": None if f in flagged_topics else values[f], "needs_review": f in flagged_topics or (f == "loss_run_valued_through" and review)}
+              for f in prepare.FIELDS]
+    conflicts = [{"field": "lint", "text": line, "resolution": "open"} for line in (conflict if has_conflict else "", gold.get("premises", "") if gold.get("premises", "").lower().startswith("both") else "") if line]
+    complete = gold.get("status", "").lower().startswith("complete")
+    return {"fields": fields, "conflicts": conflicts, "complete": complete, "status": "complete" if complete else "incomplete", "error": None,
+            "request": None, "scope": {"version": "lint", "in_scope": True, "reasons": []}, "_route": scorer.gold_route_of(gold.get("expected carrier route") or "")}
+
+
+def lint_scorer(ids: list[str], scorer_name: str) -> list[str]:
+    """D-116 item 5: (a) perfect answers score clean, (b) every deliberately wrong answer is caught. Read-only; no pipeline run."""
+    import copy
+    import importlib
+    from typing import Any
+    scorer: Any = importlib.import_module(scorer_name)
+    fails: list[str] = []
+    saved = scorer.GOLD, scorer.route_used
+    scorer.GOLD, scorer.route_used = GOLD, lambda report: report.get("_route") or "hold"
+    try:
+        bad = scorer.gold_problems(ids) if hasattr(scorer, "gold_problems") else scorer.gold_scopes(ids)[1]
+        fails += [f"{b.split(':')[0]}/gold: {scorer_name} cannot read it:{b.split(':', 1)[1]}" for b in bad]
+        broken = {b.split(":")[0] for b in bad}
+
+        def score(sid, text, report):
+            try:
+                if hasattr(scorer, "score_report"):
+                    return scorer.score_report(sid, text, report)
+                real = scorer.prepare.process_submission  # a frozen scorer (v7 and older): its own score_one, the pipeline call answered by the report
+                scorer.prepare.process_submission = lambda folder: report
+                try:
+                    return scorer.score_one(sid)
+                finally:
+                    scorer.prepare.process_submission = real
+            except (SystemExit, KeyError, ValueError) as why:  # a gold card the scorer cannot read is a failure, never a crash
+                fails.append(f"{sid}/gold: {scorer_name} stopped: {why!r}")
+                return None
+
+        rows_in, rows_out = [], []
+        for sid in (i for i in ids if i not in broken):
+            text = (GOLD / sid).with_suffix(".md").read_text()
+            perfect = perfect_report(scorer, sid, text)
+            row = score(sid, text, perfect)
+            if row is None:
+                continue
+            if row["scope"] == "out":
+                rows_out.append(row)
+                if row["leaks"] or not row["detected"]:
+                    fails.append(f"{sid}/scorer: the perfect manual-intake answer is marked as a leak or missed ({', '.join(row['leaks']) or 'not detected'})")
+                for label, change in (("answered as in scope", {"status": "incomplete", "request": "draft"}), ("manual intake with a value shown", {})):
+                    wrong = copy.deepcopy(perfect) | change
+                    wrong["fields"][0]["value"] = "Shown Value LLC"
+                    got = score(sid, text, wrong)
+                    if got is not None and not (got["leaks"] and scorer.p055_gate([got], [])["verdict"] == "FAIL"):
+                        fails.append(f"{sid}/scorer: a leak ({label}) is not caught")
+                continue
+            rows_in.append(row)
+            for check, mark in row["checks"].items():
+                if mark not in PERFECT_MARKS:
+                    fails.append(f"{sid}/scorer: the perfect answer is marked {mark} on {check} (gold line not scorable as written)")
+            for field, (check, value) in WRONG.items():
+                wrong = copy.deepcopy(perfect)
+                for r in wrong["fields"]:
+                    if r["field_id"] == field:
+                        r["value"], r["needs_review"] = value, False
+                got = score(sid, text, wrong)
+                if got is not None and got["checks"].get(check) != "miss":
+                    fails.append(f"{sid}/scorer: a wrong {check} ({value!r}) is not caught (marked {got['checks'].get(check)})")
+            for check, change in (("conflict", {"conflicts": [] if perfect["conflicts"] else [{"field": "x", "text": "sales: 1 vs 2", "resolution": "open"}]}),
+                                  ("status", {"complete": not perfect["complete"], "status": "incomplete" if perfect["complete"] else "complete"}),
+                                  ("route", {"_route": "carrier_b" if perfect["_route"] != "carrier_b" else "carrier_a"})):
+                if check not in row["checks"]:
+                    continue
+                got = score(sid, text, copy.deepcopy(perfect) | change)
+                if got is not None and got["checks"].get(check) != "miss":
+                    fails.append(f"{sid}/scorer: a wrong {check} is not caught (marked {got['checks'].get(check)})")
+        gate = scorer.route_gate(rows_in) if rows_in else {"verdict": "NOT EVALUABLE"}
+        p055 = scorer.p055_gate(rows_out, rows_in)
+        if gate["verdict"] != "PASS":
+            fails.append(f"scorer: the perfect answers do not pass the route gate ({gate['verdict']})")
+        if p055["verdict"] != "PASS":
+            fails.append(f"scorer: the perfect answers do not pass the P-055 gate ({p055['verdict']})")
+        if scorer.status_counts(rows_in)["false_complete"]:
+            fails.append("scorer: the perfect answers show a false complete")
+        unsafe = [r for r in rows_in if r.get("gold_route") in scorer.UNSAFE_GOLD]
+        if not unsafe:
+            fails.append("scorer: no in-scope gold file routes to senior_referral or no_match, so an unsafe route cannot be tested on this set")
+        for r in unsafe:
+            text = (GOLD / r["submission"]).with_suffix(".md").read_text()
+            wrong = perfect_report(scorer, r["submission"], text) | {"_route": "carrier_a"}
+            got = score(r["submission"], text, wrong)
+            if got is not None and scorer.route_gate([got])["unsafe"] != 1:
+                fails.append(f"{r['submission']}/scorer: an unsafe route (carrier_a, gold {r['gold_route']}) is not counted unsafe")
+    finally:
+        scorer.GOLD, scorer.route_used = saved
+    return fails
+
+
 def self_check() -> int:
     """Runnable cases for the date rules, the undated declaration, and a clean temp set (no real files touched)."""
     import tempfile
@@ -232,14 +376,45 @@ def self_check() -> int:
         (tp / "gold").mkdir()
         (tp / "inbox" / "SUB-901" / "loss-runs.md").write_text("Valued as of: Sept 1, 2026\n| 2025 | X | P1 | Fire | Mar 2, 2025 | $1 |\n")
         (tp / "inbox" / "SUB-902" / "loss-runs.md").write_text("| 2025 | X | P | No losses | - | $0 |\n")
-        (tp / "gold" / "SUB-901.md").write_text("- Scope: in scope\n- Expected carrier route: carrier_a\n")
-        (tp / "gold" / "SUB-902.md").write_text("- Scope: out of scope - criterion 1 (scanned). Reason.\n")
+        (tp / "inbox" / "SUB-903").mkdir(parents=True)
+        card = ("- Status: complete\n- Scope: in scope\n- Named insured: Example Roofing LLC\n- Premises: 100 Main St, Austin, TX 78701\n- Effective date: 2027-01-01\n"
+                "- Operations: office lessor\n- Operations items: office building lessor\n- Sales: 742000\n- TIV: 2450000\n- Construction: Masonry\n- Year built: 2005\n"
+                "- Loss runs: Carrier A format, 3 policy periods 2023-06-01 to 2026-06-01, valued as of 2026-08-15\n- Loss runs valued as of: 2026-08-15\n"
+                "- Conflict: none\n- Expected loss run: Carrier A format recognised\n- Expected carrier route: carrier_a (R14)\n")
+        (tp / "gold" / "SUB-901.md").write_text(card)
+        (tp / "gold" / "SUB-902.md").write_text("- Scope: out of scope - criterion 1 (scanned). Reason.\n- Status: manual intake\n")
+        (tp / "gold" / "SUB-903.md").write_text(card.replace("Status: complete", "Status: incomplete — hold: open conflict (sales)").replace("carrier_a (R14)", "senior_referral (R2)")
+                                                 .replace("Conflict: none", "Conflict: sales: 742000 (application) vs 940000 (email)"))
         plan = tp / "plan.json"
-        plan.write_text(json.dumps({"ids": "901-902", "in": 1, "out": 1, "per_criterion": {"1": 1}, "routes": {"carrier_a": 1}, "undated_loss_runs": ["SUB-902"]}))
+        plan.write_text(json.dumps({"ids": "901-903", "in": 2, "out": 1, "per_criterion": {"1": 1}, "routes": {"carrier_a": 1, "senior_referral": 1}, "undated_loss_runs": ["SUB-902"]}))
         INBOX, GOLD = tp / "inbox", tp / "gold"
-        r.append(main([str(plan), "--run-date", "2026-10-17"]) == 0)
-        print(("ok   " if r[-1] else "BAD  ") + "clean temp set passes")
-        plan.write_text(json.dumps({"ids": "901-902", "in": 1, "out": 1}))
+        import eval_holdout_v8 as v8  # noqa: E402  # pyright: ignore[reportMissingImports]
+        p055_real = v8.p055_gate
+        v8.p055_gate = lambda out, rows: p055_real(out, rows) | ({"verdict": "PASS"} if out and rows and not any(r["leaks"] or not r["detected"] for r in out) else {})  # one criterion only in this tiny set
+        try:
+            r.append(main([str(plan), "--run-date", "2026-10-17"]) == 0)
+            print(("ok   " if r[-1] else "BAD  ") + "clean temp set passes, scorer test included (perfect answers clean, every wrong answer caught)")
+            real_mark = v8.loss_run_mark
+            v8.loss_run_mark = lambda *a: "hit"  # a blind loss-run mark
+            got = lint_scorer(["SUB-901", "SUB-902", "SUB-903"], "eval_holdout_v8")
+            v8.loss_run_mark = real_mark
+            r.append(any("wrong loss_runs" in f for f in got))
+            print(("ok   " if r[-1] else "BAD  ") + "a scorer that cannot see a wrong loss-run date is caught")
+            v7_like = card.replace("- Loss runs valued as of: 2026-08-15\n", "")  # the T-108 shape: no valued-as-of line
+            (tp / "gold" / "SUB-901.md").write_text(v7_like)
+            got = lint_scorer(["SUB-901", "SUB-902", "SUB-903"], "eval_holdout_v8")
+            r.append(any(f.startswith("SUB-901/gold") and "valued as of" in f for f in got))
+            print(("ok   " if r[-1] else "BAD  ") + "a gold card with no valued-as-of line fails (v8)")
+            (tp / "gold" / "SUB-901.md").write_text(card)  # the D-116 card, valued-as-of line included; v7 still reads the first date
+            got = lint_scorer(["SUB-901", "SUB-902", "SUB-903"], "eval_holdout_v7")
+            r.append(any(f.startswith("SUB-901/scorer: the perfect answer is marked miss on loss_runs") for f in got))
+            print(("ok   " if r[-1] else "BAD  ") + "v7 on the same card: the perfect answer is a loss-run miss (B-435 found by the lint)")
+            if not r[-1]:
+                print("     got:", got)
+            (tp / "gold" / "SUB-901.md").write_text(card)
+        finally:
+            v8.p055_gate = p055_real
+        plan.write_text(json.dumps({"ids": "901-903", "in": 2, "out": 1}))
         r.append(main([str(plan), "--run-date", "2026-10-17"]) == 1)
         print(("ok   " if r[-1] else "BAD  ") + "same set without the undated declaration fails")
     INBOX, GOLD = saved
@@ -255,11 +430,16 @@ def main(argv: list[str]) -> int:
     if "--run-date" in argv:
         run = date.fromisoformat(argv[argv.index("--run-date") + 1])
         args.remove(argv[argv.index("--run-date") + 1])
+    if "--scorer" in argv:
+        args.remove(argv[argv.index("--scorer") + 1])
     plan = json.loads(Path(args[0]).read_text())
     a, b = (int(n) for n in plan["ids"].split("-"))
     ids = [f"SUB-{n:03d}" for n in range(a, b + 1)]
     f1, infos = lint_dates(ids, run, set(plan.get("undated_loss_runs") or []))
     fails = f1 + lint_gold_and_mix(ids, plan)
+    scorer = argv[argv.index("--scorer") + 1] if "--scorer" in argv else "eval_holdout_v8"
+    if not fails:  # the scorer test needs readable Scope lines
+        fails += lint_scorer(ids, scorer)
     for w in infos:
         print("INFO ", w)
     for f in fails:

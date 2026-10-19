@@ -1872,3 +1872,28 @@ Blocked: No.
 - Done: assist-mode pilot ruling `deliverables/model-risk/T-027-assist-mode-pilot.md`: an assist-only pilot (nothing routable, nothing sendable, human reads everything) is **permitted under conditions C1–C8** and outside the T-027 veto while they hold; break one and it is inside the veto. Hard blockers before real data: B-190 (sign-in/audit) and B-191 (concurrent writes). Not a production approval; T-027 unchanged.
 - Doing next: re-review after any scope/field fix lands on dev; the T-027 gate itself is unchanged.
 - Blocked by / need from: @user decides whether/when to run the pilot; @pm registers it only after B-190/B-191.
+
+### 2026-10-19 (5) — @pm
+- Done: T-109d pilot-readiness checklist `deliverables/pm/pilot-readiness.md`. C1–C8 status: 0 Met, 3 Partly met, 3 Not met, 1 Not started, 1 Not verified. B-190 and B-191 build plans written (hard blockers, both Open).
+- Doing next: nothing on the pilot until B-190 and B-191 land; then register the pilot task (C8).
+- Blocked by / need from: @software-engineer (B-190, B-191 builds); @compliance (sign-in and data-handling choice for B-190); @head-of-underwriting (C8 correction threshold); @user (whether and when to run the pilot).
+
+### 2026-10-19 (6) — @model-risk
+- Done: independent check of T-109a (P-063), T-109b (P-064 scorer v8), T-109c (lint scorer test) `deliverables/model-risk/check-P-063-P-064-T-109c.md`. **All three APPROVE, no High.** Recomputed in a scratch copy: all self-checks ok; scope-v3 vs v4 dev sweep = 1 change (SUB-233); v7 unchanged; lint T-108 output byte-identical; a mutated scorer is caught by the lint. Medium to backlog: email-body multi-location not detected (M1), fail-closed "Building 2" widening to measure (M2), lint stubs the route function (M3). Not a production approval; T-027 KEEP unchanged.
+- Doing next: T-027 re-review only after a fresh frozen hold-out (gold first, v8, lint PASS).
+- Blocked by / need from: nothing.
+
+### 2026-10-19 (7) — @senior-underwriter
+- Done: D-065 UI check of T-109a `deliverables/senior-underwriter/ui-check-T-109a.md`: APPROVE WITH CHANGES, 1 High (H1). The refusals are clear that the file cannot be sent and why, but the route line at the top still says "No send until the hold clears" (missing information) and no card text says what to do next, so an underwriter may chase missing fields on a file that will never clear. Fix is wording only: same words on the route line, a next-step sentence, refusal near the top. 2 Medium to backlog (scope-v4 code name; second "file is not complete" reason).
+- Doing next: re-check the screenshot after the wording fix.
+- Blocked by / need from: @software-engineer (H1 wording).
+
+### 2026-10-19 (8) — @ai-engineer-assistant (written by the orchestrator, labelled)
+- Done: T-109a P-063 built (scope-v4: location labels anywhere in an application line; `prepare.scope_problem` send-time scope re-check in carrier send, producer approve and the workbench card). Dev sweep v3→v4 on 237 folders: only SUB-233 changes (→ multiple_locations). T-109b P-064 built: `eval_holdout_v8.py` (loss-run date from the "Loss runs valued as of" line only; v7 frozen). As-built `deliverables/ai-engineer/p-063-p-064-as-built.md`. @model-risk APPROVE both, no High; UI H1 fixed.
+- Doing next: nothing on extraction (B-433 parked by D-116). Next hold-out gold must carry the valued-as-of line.
+- Blocked by / need from: @user for any next P-### (B-435 scan flag, B-437 scorer conventions, B-440 email-only locations).
+
+### 2026-10-19 (9) — @senior-test-engineer (written by the orchestrator, labelled)
+- Done: T-109c lint scorer test ("test the test"): perfect answers from gold must get no miss and pass the gates; wrong answers per field, leaks and an unsafe route must each be caught. T-108 gold: as written FAIL 15 (no valued-as-of line, freeze blocked); with the line added FAIL 10 (F1 "Conflict: none (…)", F2 "a.m./p.m." in operations items, F3 "needs review" mid-line); 0 wrong answers missed. `deliverables/senior-test-engineer/T-109c-lint-check.md`. @model-risk APPROVE.
+- Doing next: run the lint on the next hold-out's gold before freeze.
+- Blocked by / need from: nothing.

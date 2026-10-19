@@ -1,0 +1,18 @@
+INFO  SUB-212/loss-runs.md: declared undated in the plan; no valued date found, as declared
+INFO  SUB-216/loss-runs.md: declared undated in the plan; no valued date found, as declared
+INFO  SUB-219/loss-runs.md: declared undated in the plan; no valued date found, as declared
+INFO  SUB-220/loss-runs.md: declared undated in the plan; no valued date found, as declared
+INFO  SUB-229/loss-runs.md: declared undated in the plan; no valued date found, as declared
+INFO  SUB-233/loss-runs.md: declared undated in the plan; no valued date found, as declared
+INFO  SUB-235/loss-runs.md: declared undated in the plan; no valued date found, as declared
+FAIL  SUB-216/gold: eval_holdout_v8 cannot read it: no "- Loss runs valued as of: <YYYY-MM-DD>" line; gold expects a loss-run date (v8 reads only that line)
+FAIL  SUB-219/gold: eval_holdout_v8 cannot read it: no "- Loss runs valued as of: <YYYY-MM-DD>" line; gold expects a loss-run date (v8 reads only that line)
+FAIL  SUB-210/scorer: the perfect answer is marked miss on conflict (gold line not scorable as written)
+FAIL  SUB-211/scorer: the perfect answer is marked miss on operations (gold line not scorable as written)
+FAIL  SUB-213/scorer: the perfect answer is marked miss on conflict (gold line not scorable as written)
+FAIL  SUB-218/scorer: the perfect answer is marked miss on conflict (gold line not scorable as written)
+FAIL  SUB-221/scorer: the perfect answer is marked miss on conflict (gold line not scorable as written)
+FAIL  SUB-222/scorer: the perfect answer is marked miss on operations (gold line not scorable as written)
+FAIL  SUB-224/scorer: the perfect answer is marked miss on conflict (gold line not scorable as written)
+FAIL  SUB-225/scorer: the perfect answer is marked miss on operations (gold line not scorable as written)
+FAIL: 10 failure(s), 7 info, 32 files, run date 2026-10-19

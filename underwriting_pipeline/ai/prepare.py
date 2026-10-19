@@ -1282,6 +1282,24 @@ def manifest_problem(submission: str, extract_dir: Path | None = None, inbox: Pa
     return ""
 
 
+def scope_problem(submission: str, extract_dir: Path | None = None, inbox: Path | None = None) -> str:
+    """P-063 (B-432): send-gate scope re-check, independent of status. Empty string = in scope. Else the refusal reason.
+    Refuses when the saved run recorded the file out of scope, or the current detector, run now on the folder, puts it out of scope.
+    Fails closed: no saved run, an unreadable folder or a detector error refuses."""
+    try:
+        saved = read_saved_run(submission, extract_dir).get("scope")
+    except ValueError as exc:
+        return str(exc)
+    try:
+        now = scope.detect(sources.read_folder((Path(inbox) if inbox is not None else INBOX_DIR) / submission))
+    except Exception:  # read_folder failed; detect itself never raises
+        return f"the input folder for {submission} cannot be read for the scope check; refusing"
+    why = [t.removeprefix("Manual intake: ") for s in (saved, now) for t in scope.reasons_text(s)]
+    if (saved or {}).get("in_scope") is False or not now["in_scope"]:
+        return f"out of pilot scope at send time ({'; '.join(dict.fromkeys(why)) or 'scope check'}, {now['version']}); a person reads this file"
+    return ""
+
+
 def current_status(submission: str, extract_dir: Path | None = None) -> str:
     """The status of the last saved run, read, hash-checked, and validated by the gate itself (G2)."""
     return read_saved_run(submission, extract_dir)["status"]
@@ -1396,6 +1414,9 @@ def approve(
     status = current.get("status")
     if status in REFUSED_STATUSES:
         raise ValueError(f"this file's status is {status_refusal(current)}; it cannot be approved or sent, for any actor")
+    problem = scope_problem(draft.stem)  # P-063: every actor, whatever the status says
+    if problem:
+        raise ValueError(problem)
     name = (actor or "").strip().lstrip("@").lower().replace(" ", "-")
     if name not in {"user", "account-manager"}:
         raise ValueError("only the user or the account manager may approve; no AI role can send")
@@ -2408,6 +2429,34 @@ if __name__ == "__main__":
         assert not (tmp_path / "conflicts" / "SUB-602.json").exists(), "a manual-intake file keeps no conflict file"
         assert reps["SUB-603"]["status"] != MANUAL_INTAKE and reps["SUB-603"]["scope"]["in_scope"] and [r["value"] for r in reps["SUB-603"]["fields"]][0] == "Example Roofing LLC"
         assert (pending / "SUB-603.md").exists(), "an in-scope file keeps its missing-info draft"
+        assert scope_problem("SUB-603", tmp_path / "extractions", inbox55) == "", "an in-scope file passes the send-time scope check"
+        # P-063 (B-432): a SUB-233-shaped file saved in scope (an older detector missed it) is refused at send time, whatever its status says
+        inbox63 = tmp_path / "inbox63"
+        (inbox63 / "SUB-604").mkdir(parents=True)
+        (inbox63 / "SUB-604" / "application.md").write_text(APP55.replace("100 Main St, Austin, TX 78701", "Loc 1: 3412 S Georgia St, Amarillo, TX 79109; Loc #2: 6901 Bell St, Amarillo, TX 79106"))
+        (inbox63 / "SUB-604" / "email.md").write_text("Subject: quote\n\nPlease quote this for the business and send it to the producer.")
+        scope.detect = lambda docs: {"version": "old", "in_scope": True, "reasons": []}  # the detector that leaked
+        llm_extract.llm_extract = stub55
+        try:
+            rep63 = write_drafts(inbox63, pending, tmp_path / "conflicts")[0]
+        finally:
+            llm_extract.llm_extract, scope.detect = real_llm, real_detect
+        assert rep63["status"] not in REFUSED_STATUSES and (pending / "SUB-604.md").exists(), "the leak: an ordinary status and a draft"
+        assert not manifest_problem("SUB-604", tmp_path / "extractions", inbox63), "documents unchanged"
+        why63 = scope_problem("SUB-604", tmp_path / "extractions", inbox63)
+        assert why63.startswith("out of pilot scope at send time (multiple locations, " + scope.VERSION), why63
+        assert scope_problem("SUB-999", tmp_path / "extractions", inbox63).startswith("no saved run"), "no saved run fails closed"
+        (pending / "SUB-604.md").write_text("Nothing has been declined")
+        real_dir, real_inbox = globals()["EXTRACT_DIR"], globals()["INBOX_DIR"]
+        globals()["EXTRACT_DIR"], globals()["INBOX_DIR"] = tmp_path / "extractions", inbox63
+        try:
+            approve(pending / "SUB-604.md", "user", tmp_path / "to-producer")
+            raise SystemExit("an approve of an out-of-scope file must be refused, even by the user")
+        except ValueError as exc:
+            assert str(exc) == why63, exc
+        finally:
+            globals()["EXTRACT_DIR"], globals()["INBOX_DIR"] = real_dir, real_inbox
+        assert not (tmp_path / "to-producer").exists()
         (pending / "SUB-601.md").write_text("Nothing has been declined")
         real_dir = globals()["EXTRACT_DIR"]
         globals()["EXTRACT_DIR"] = tmp_path / "extractions"

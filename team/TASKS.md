@@ -1722,3 +1722,35 @@ D-004 (user, 2026-10-09): Sanger & Altgelt agency pipeline. Eight steps. No auto
   - [x] Gold frozen: a freeze note in the mix records the gold SHA/hash and the code SHA above. The pipeline is **not** run on T-108 and no score exists (D-020: gold first, run once, score once, at a later session with the user's approval).
   - [x] @model-risk checks the build (High only) before it is called frozen: mix vs plan vs gold counts, loss-run dates, W1 and office-lessor/deli coverage, gold-first integrity, D-069 (nothing real written by a test run).
 
+
+### T-109a — P-063: scope labels anywhere + send-time scope re-check
+- Owner: @ai-engineer-assistant (built in the orchestrator session) · Status: DONE · Decision: D-116
+- Acceptance criteria:
+  - [x] The detector finds location labels anywhere in a field or body text ("Loc 1 … ; Loc #2 …", "Location 2", "Bldg 2"), not only at line start, list items or schedule cells; version bumped (scope-v4).
+  - [x] The send gate re-checks scope at send time and refuses any out-of-scope file, with the reason shown, independent of status (carrier send and producer approve; workbench card).
+  - [x] Self-checks on dev including SUB-233; dev sweep scope-v3 vs v4; pyright on changed files (0 new).
+  - [x] D-065: workbench "What's new" line, screenshot `deliverables/software-engineer/screenshots/T-109a-scope-send-refused.png`.
+  - [x] @model-risk check, High only: APPROVE, no High (`deliverables/model-risk/check-P-063-P-064-T-109c.md`). @senior-underwriter UI check (D-065): APPROVE WITH CHANGES, H1 (hold wording, no next step) fixed in the same task: top alert "Send blocked — … Next step: re-run extraction …", no route/hold lines on the card; screenshot retaken.
+- Deliverables: `underwriting_pipeline/ai/scope.py`, `underwriting_pipeline/ai/prepare.py`, `underwriting_pipeline/app/package.py`, `underwriting_pipeline/app/workbench.py`, `deliverables/ai-engineer/p-063-p-064-as-built.md`.
+
+### T-109b — P-064: scorer v8 (loss-run valued-as-of line)
+- Owner: @ai-engineer-assistant · Status: DONE · Decision: D-116
+- Acceptance criteria:
+  - [x] Loss-run gold names the valued-as-of date explicitly ("Loss runs valued as of: <date>"); v8 compares that date only, never the policy-period start; v7 stays frozen (unchanged file).
+  - [x] A card that expects a date without the line stops v8 before any call; self-check on synthetic gold.
+  - [x] Gold convention written in `deliverables/ai-engineer/evals/RUN-RULES.md`.
+  - [x] @model-risk check, High only: APPROVE, no High.
+- Deliverables: `underwriting_pipeline/ai/eval_holdout_v8.py`, `deliverables/ai-engineer/evals/RUN-RULES.md`, `deliverables/ai-engineer/p-063-p-064-as-built.md`.
+
+### T-109c — Test the test: the lint scores perfect and wrong answers before any freeze
+- Owner: @senior-test-engineer (built in the orchestrator session) · Status: DONE · Decision: D-116
+- Acceptance criteria:
+  - [x] Before any gold freeze, (a) a perfect answer file built from the gold scores 100% on the scorer, and (b) a set of deliberately wrong answers (one per field, plus a leak and an unsafe route) is each caught. Freeze is blocked if either fails.
+  - [x] Run on T-108's gold now as a check (dev data); write-up with findings.
+  - [x] @model-risk check, High only: APPROVE, no High.
+- Deliverables: `deliverables/senior-test-engineer/lint_holdout.py`, `deliverables/senior-test-engineer/T-109c-lint-check.md` (+ two raw outputs).
+
+### T-109d — Pilot-readiness checklist (no build)
+- Owner: @pm · Status: DONE · Decision: D-116
+- Acceptance criteria:
+  - [x] `deliverables/pm/pilot-readiness.md`: @model-risk's C1–C8 (`deliverables/model-risk/T-027-assist-mode-pilot.md`) as a checklist with a status each, plus B-190 (SSO) and B-191 (concurrent writes) with a short build plan each. No build.

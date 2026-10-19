@@ -34,3 +34,13 @@ The retry count per file and in total, and every `call_failed` file. A retry is 
 ## Test-file lint before a gold freeze (T-106d, D-111)
 
 Before any hold-out gold is frozen, run `.venv/bin/python deliverables/senior-test-engineer/lint_holdout.py <plan.json> [--run-date YYYY-MM-DD]` (read-only, no model call). It must exit 0: every loss-run date is before the run date, every gold Scope line parses with the scorer v6 parser, and the in/out, per-criterion and route counts match the written plan. Any FAIL line means fix the files (or the plan) first; do not freeze. Plan format and details: `deliverables/senior-test-engineer/T-106d-lint.md`.
+
+## Scorer v8 and the loss-run gold line (P-064, D-116)
+
+- New hold-outs are scored with `eval_holdout_v8`. v7 stays frozen; published v7 scores stay as published.
+- Every in-scope gold card whose loss run has a date carries its own line: `- Loss runs valued as of: <YYYY-MM-DD>`. v8 compares the pipeline's date to that date only, never to the policy-period start or any other date in the `- Loss runs:` line. When gold expects no date (loss runs missing / not in documents, or `Expected loss run` starting "needs review" or "loss run found but no valued-as-of date") the line is left out or written `none`.
+- A card that breaks this stops v8 before any call (`--check-gold` shows it), as the Scope line does.
+
+## Test the test before a gold freeze (D-116 item 5)
+
+`lint_holdout.py` also runs the scorer test (`--scorer eval_holdout_v8` is the default): a perfect answer built from each gold card must get no "miss" from the scorer and pass the route and P-055 gates with 0 false completes; deliberately wrong answers (one per field on every in-scope file, a leak on every out-of-scope file, and an unsafe route) must each be caught. Any FAIL blocks the freeze. Gold conventions this enforces (found on T-108 gold, see `deliverables/senior-test-engineer/T-109c-lint-check.md`): write `Conflict: none` with no note after it; start `Expected loss run` with "needs review" when review is expected; no "a.m."/"p.m." or other full stops inside an `Operations items` item ("open until 2 am").

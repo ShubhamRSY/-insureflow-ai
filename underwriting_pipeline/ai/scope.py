@@ -9,7 +9,7 @@ import re
 
 import llm_extract
 
-VERSION = "scope-v3"  # model-inventory.md; bump with every rule change
+VERSION = "scope-v4"  # model-inventory.md; bump with every rule change
 IMAGE = {".png", ".jpg", ".jpeg", ".tif", ".tiff"}
 REASONS = {
     "scanned_application": "Manual intake: scanned application",
@@ -52,8 +52,12 @@ PREMISES_LINE = re.compile(r"(?im)^\W*premises(?:\s+address)?\s*\d*\s*:\s*(.+?)\
 # "Bldgs 1-2", "Building 1 of 2"). Never mid-line, so "500 Oak Park Dr, Building 2, Austin" (one premises address) is not a second location.
 # "Premises 12 Main St" (the number starts a street address), "Building 2 stories" and "Number of buildings: 2" are not labels;
 # "Suite 2", "Floor 2", "Unit 2" and "2 buildings" are not in the word list.
-NUMBERED = re.compile(r"(?i)^\s*(?:(?:[-*\u2022]|\d{1,2}[.)])\s+)?(?:locations?|loc|buildings?|bldgs?|premises)\b\.?\s*(?:(?:no|nos|num|number)\b\.?)?\s*:?\s*#?\s*"
-                      r"(\d{1,2}(?!\d)(?:\s*(?:,|and|&|-|–|to|of)\s*(?:(?:locations?|loc|buildings?|bldgs?)\b\.?\s*(?:no\b\.?)?\s*#?\s*)?\d{1,2}(?!\d))*)(?!\s*[-\u2013]?\s*(?:stor|floor|level|unit|year|ft|feet|sq))")
+_LABEL = (r"(?:locations?|loc|buildings?|bldgs?|premises)\b\.?\s*(?:(?:no|nos|num|number)\b\.?)?\s*:?\s*#?\s*"
+          r"(\d{1,2}(?!\d)(?:\s*(?:,|and|&|-|–|to|of)\s*(?:(?:locations?|loc|buildings?|bldgs?)\b\.?\s*(?:no\b\.?)?\s*#?\s*)?\d{1,2}(?!\d))*)(?!\s*[-\u2013]?\s*(?:stor|floor|level|unit|year|ft|feet|sq))")
+NUMBERED = re.compile(r"(?i)^\s*(?:(?:[-*\u2022]|\d{1,2}[.)])\s+)?" + _LABEL)
+# P-063 (B-432): the same label anywhere in an application line, e.g. inside a premises value ("Loc 1: …; Loc #2: …", SUB-233).
+# "Number of buildings: 2" and "2 of 3 buildings" style counts are not labels.
+NUMBERED_ANY = re.compile(r"(?i)(?<!\bof\s)\b" + _LABEL)
 NOT_A_LOCATION = re.compile(r"(?i)\b(?:mail(?:ing)?\s+(?:address|to)|(?:prior|former|previous)\s+(?:address|location|premises))\b")  # the label, not a substring: "email" and "former bank" are not it
 STREET = re.compile(r"\b\d{1,6}\s+[A-Za-z0-9 .]+?\s(?:st|street|rd|road|ave|avenue|blvd|dr|drive|ln|lane|hwy|way|pkwy|ct|court|pl|place|fwy|trl)\b\.?", re.I)
 
@@ -143,21 +147,20 @@ def _addresses(doc: dict) -> list[str]:
     return found
 
 
-def _numbered(text: str, cells: bool = False) -> bool:
+def _numbered(text: str, cells: bool = False, anywhere: bool = False) -> bool:
     """P-058: two or more premises named by number as a label: a number of 2 or more, or two distinct numbers ("Building 1" twice is one place;
     "Locations 1 and 2", "Bldgs 1-2" and "Building 1 of 2" name two). cells=True reads a schedule one tab-separated cell at a time.
-    A line about a mailing or prior address is skipped; a number that starts a street address ("Premises 12 Main St") is not a label."""
+    A line about a mailing or prior address is skipped; a number that starts a street address ("Premises 12 Main St") is not a label.
+    anywhere=True (P-063, application text) reads every label in a line, not only one at its start."""
     found: set[int] = set()
     for line in text.splitlines():
         if NOT_A_LOCATION.search(line):
             continue
-        for piece in line.split("\t") if cells else [line]:
-            m = NUMBERED.match(piece)
-            if not m:
-                continue
+        pieces = line.split("\t") if cells else [line]
+        for piece, m in ((p, m) for p in pieces for m in (NUMBERED_ANY.finditer(p) if anywhere else [NUMBERED.match(p)]) if m):
             street = STREET.match(piece[m.start(1):])
-            if street and not re.search(r"\d", street.group(0)[len(m.group(1)):]):  # "12 Main St" is an address; "2 Warehouse 50 Elm St" is a label
-                continue
+            if street and not re.search(r"\d", street.group(0)[len(m.group(1)):]) and not re.match(r"\d+\s+(?:on|at|in|is|near|behind|by)\b", street.group(0), re.I):
+                continue  # "12 Main St" is an address; "2 Warehouse 50 Elm St" and "2 on Bell St" (P-063) are labels
             found |= {int(n) for n in re.findall(r"\d+", m.group(1))}
     return len(found) >= 2 or any(n >= 2 for n in found)
 
@@ -167,7 +170,7 @@ def _multi_in_application(app: dict) -> bool:
     Locations heading, "Second location:", or two distinct premises addresses. A mailing or prior address is not a location."""
     text = app.get("text") or ""
     numbers = {n for rx in LOC_LABELS for n in rx.findall(text)}
-    if len(numbers) >= 2 or any(int(n) >= 2 for n in numbers) or LOC_ORDINAL.search(text) or _numbered(text):
+    if len(numbers) >= 2 or any(int(n) >= 2 for n in numbers) or LOC_ORDINAL.search(text) or _numbered(text, anywhere=True):
         return True
     lines = text.splitlines()
     for i, line in enumerate(lines):
@@ -400,9 +403,16 @@ if __name__ == "__main__":
         assert multi(form), form
     for form in ("Suite 2", "Floor 2", "Unit 2", "Apt 2", "Number of buildings: 2", "2 buildings", "Building 2 stories", "Building 2-story masonry", "Premises 12 Main St",
                  "Location 1", "Building 1", "Loc #1 and Loc #1", "Building 1 of 1", "Mailing address: Building 2, PO Box 5", "Prior location 2: 7 Elm St, Waco, TX", "Same as Location 1",
-                 "Locations: 1", "Premises address: 100 Main Street, Ste 2, Austin, TX", "Building 2020", "Premises address: 500 Oak Park Dr, Building 2, Austin, TX",
-                 "Premises: 500 Oak Park Dr, Bldg 2, Austin", "The shop is in Building 2 of the plaza", "Former address: Location 2, 5 Elm", "Mail to: Loc 2, PO Box 4", "Previous location 2: 9 Elm"):
+                 "Locations: 1", "Premises address: 100 Main Street, Ste 2, Austin, TX", "Building 2020", "Former address: Location 2, 5 Elm", "Mail to: Loc 2, PO Box 4",
+                 "Previous location 2: 9 Elm", "Operations: we lease 1 of 2 buildings", "Premises address: Loc 1: 100 Main St, Austin, TX"):
         assert not multi(form), form
+    # P-063 (B-432): a label anywhere in a field or body line counts, not only at line start. SUB-233 wrote both inside the premises value.
+    # Fail closed: "Building 2" inside one premises address (P-058 kept it in scope) is now manual intake; a person reads it.
+    for form in ("Premises address: Loc 1: 3412 S Georgia St, Amarillo, TX 79109; Loc #2: 6901 Bell St, Amarillo, TX 79106", "Premises: Location 1 at 1 A St and Location 2 at 9 B Rd",
+                 "Operations: retail; we also run Location 2 on Bell St", "Premises address: 500 Oak Park Dr, Building 2, Austin, TX", "Premises: 500 Oak Park Dr, Bldg 2, Austin",
+                 "The shop is in Building 2 of the plaza", "Description: storage in Bldg #3 behind the shop"):
+        assert multi(form), form
+    assert codes_of("SUB-233") == ["multiple_locations"], codes_of("SUB-233")
     sched_cells = "loc\tname\nLocation No. 2\tWarehouse\nLocation 1\tShop"
     assert [r["code"] for r in detect([doc("application.md", APP), doc("schedule.csv", sched_cells)])["reasons"]] == ["multiple_locations"], "numbered cells in a schedule"
     assert [r["code"] for r in detect([doc("application.md", APP), doc("schedule.csv", "loc\tname\nBldg 1\tShop\nBldg 2\tYard")])["reasons"]] == ["multiple_locations"]
