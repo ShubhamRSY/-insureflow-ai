@@ -1266,3 +1266,14 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: T-108 (build done and frozen; run and score later, on the user's word, under D-020). Backlog B-429, B-430, B-431.
 - Status: ACCEPTED
 - Amends: D-112 pending decision 2 (next hold-out: built and frozen). T-104 scores stay as published; T-104 is dev data.
+
+## D-114 — M2/B-430 resolved: T-108 gold checked against builder source data; gold re-frozen
+- Date / Owner: 2026-10-19 / @user
+- Context: D-113 point (5) (M2/B-430 to be recorded in a separate decision; T-108 gold not final until then); `deliverables/senior-underwriter/T-108-gold-vs-source.md`; `deliverables/model-risk/T-108-M2-close.md`; the user's instruction to compare every gold card against the **builder scripts' source data** (not OCR), correct differences, re-lint, re-freeze.
+- Options considered: none. The user instructed the comparison against builder source data.
+- Decision: (1) M2/B-430 is resolved. Every T-108 gold card was checked field by field against the builder scripts' source data (`simulation/inbox/build_SUB-206-225.py`, `build_SUB-226-237.py`), not against an OCR read. (2) The scanned/image-only cards (209, 211, 217, 218, 225, 228, 229, 230, 231) and the typed 236 were faithful to source data; no OCR-induced drift in any field. (3) Four wording-only corrections were made: SUB-206 and SUB-208 scope lines ("no schedule" -> one-row schedule); SUB-214 source/scope lines (unsupported scan reference removed); SUB-230 loss-summary wording (Low L1). (4) @model-risk's re-check found H1 — SUB-211's gold omitted an open premises conflict (application 1120 Commerce St vs the email's "their new spot on Guadalupe"); SUB-211 is corrected to **`incomplete — hold: open conflict`** (pending `premises address reconciled`), route unchanged (`senior_referral`, suggested `carrier_b`). (5) Lint re-run exit 0 (0 failures, 7 info, 32 files); @model-risk re-check: M2 CLOSED, H1 FIXED, freeze APPROVED, no High. (6) Gold re-frozen at manifest **sha256 `11933e96b8370f57321ce5c1e1c6c3c3105a4f0517d841fbbbb8821bca18633d`** (32 gold cards + route table, file order 206..237 then routes), replacing `657c63a9…` / `7a26b81e…` / `196152332a…`. Code `457f1bf`, prompt `759b3e6bc9b2`, scorer v7 unchanged; T-108 still not run.
+- Rationale: the user required the gold's facts to come from the source data, not the same OCR the pipeline uses; the comparison and the reviewer's re-check confirm the gold is now source-grounded. The user typed this instruction in this session on 2026-10-19.
+- Dissent: none
+- Follow-up tasks: T-108 (gold final; run and score later on the user's word under D-020). B-430 closed as resolved. B-431 (out-of-scope full fields; mix mtime) stays Low.
+- Status: ACCEPTED by @user, 2026-10-19
+- Amends: D-113 point (5). The T-108 gold is now final.

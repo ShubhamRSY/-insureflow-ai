@@ -1847,3 +1847,18 @@ Blocked: No.
 - Doing next: nothing on T-108.
 - Blocked by / need from: nothing.
 - Correction: the "2026-10-19 (2) — @producer (no entry written)" block above was added in error; @producer took no turn in this continuation, so no entry for it belongs here. Ignore that block (append-only file, so it stands as a record of the mistake).
+
+### 2026-10-19 (3) — @ai-engineer-assistant (written by orchestrator; the run and record are the AI Engineer's, executed on the user's word)
+- Done: official T-108 hold-out run, SUB-206–237, once and scored once with v7 on frozen code `457f1bf` (prompt `759b3e6bc9b2`, gold manifest `11933e96…`), fresh empty cache, 0 cached replies, qwen paced 55 s; result `deliverables/ai-engineer/evals/SUB-206-237-holdout-v7.{md,json}`, record `SUB-206-237-run-record.md`, mismatches `SUB-206-237-holdout-v7-mismatches.md`. Gates: route PASS (0 unsafe, 18/20); P-055 scope FAIL (1 leak SUB-233, recall 11/12); 0 false completes; operations 9/20, loss_runs 5/20; silent 0.094; 0 call_failed; 8 retries all logged.
+- Doing next: nothing on T-108. Backlog B-432 (scope detector), B-433 (operations/loss-run completeness); both need code work on dev, no prompt change without `approve change P-###`.
+- Blocked by / need from: @user (the fixes are new work, not this run).
+
+### 2026-10-19 (3) — @model-risk
+- Done: T-027 production-gate memo `deliverables/model-risk/T-027-memo.md`. **Verdict KEEP — the T-027 veto is not lifted.** Verified run integrity and every JSON count independently; route gate PASS, P-055 scope gate FAIL (H1: SUB-233 leak), operations/loss_runs below floor (H2). Found three documentation errors in the AI Engineer's mismatches file (M2–M4); corrected in place by the orchestrator, no JSON number changed.
+- Doing next: the veto resolves only when both fixes land on dev with a @model-risk check (no High), code+scorer re-frozen, and a fresh 20+12 hold-out run once/scored once meets every gate criterion.
+- Blocked by / need from: the fixes (B-432, B-433) are not yet built.
+
+### 2026-10-19 (3) — @senior-test-engineer (written by orchestrator; the scorer pre-checks were run by the orchestrator)
+- Done: v7 `--self-check` ok and `--check-gold` parsed all 32 Scope lines (20 in, 12 out; per criterion 4/5/4/2; 3 two-criteria; 2 criterion-4) before the run. No scorer or lint edited.
+- Doing next: nothing on T-108.
+- Blocked by / need from: nothing.
