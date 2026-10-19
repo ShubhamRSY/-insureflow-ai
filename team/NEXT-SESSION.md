@@ -1,6 +1,6 @@
 # Next session
 
-Written 2026-10-19 by the orchestrator at wrap-up. Wrap-up commit: `f251e71` on `ai-team` (plus this file), pushed to `origin/ai-team` (private).
+Written 2026-10-19 by the orchestrator at wrap-up. Wrap-up commit: `3529a32` on `ai-team` (this file committed after it), pushed to `origin/ai-team` (private). Previous wrap-up: `f251e71` / `1261f7e`.
 
 - Budget rule 8: demo blockers only until the demo is done.
 - Standing rules: D-065, D-069, the CLAUDE.md "Plugins" section (D-097). One AI session on this repo (D-090). The `frontend/` files and `.claude/settings*.json` belong to the user and are never staged.
@@ -8,17 +8,17 @@ Written 2026-10-19 by the orchestrator at wrap-up. Wrap-up commit: `f251e71` on 
 - **Run every pipeline command with `.venv/bin/python`.** Re-scores: `HOLDOUT_RESCORE=1`, a temp cache copy in `LLM_CACHE_DIR`, `LLM_PACE_SECONDS=0`, `HOLDOUT_OUT` in a temp folder.
 - pyright: `npx --yes pyright@1.1.390 --pythonpath .venv/bin/python <files>`. Playwright is installed only for homebrew python `/opt/homebrew/opt/python@3.14/bin/python3.14`; `snap.py` runs under that interpreter.
 
-## Where we stopped (D-113)
+## Where we stopped (D-113 recorded and ACCEPTED)
 
-- **B-428 / B-411 fixed and committed as the T-108 code freeze, `457f1bf`.** The workbench "Not read by extraction" line now reads the saved run's unread rows through helper `not_read_by_extraction` in `underwriting_pipeline/app/workbench.py`, whole-file only, never the file name; self-check added. Demo replay 0 live calls; 24 demo screenshots retaken on a temp copy (D-065/D-069). Ruff 98 = baseline, pyright 35 = baseline.
-- **B-427 analysis** (`deliverables/ai-engineer/b-427-silent-errors-and-ops-flags.md`): all 9 dev silent errors are stale dev gold with no operations-items line; **0 real check gaps, no P-### needed**. Operations flags 5/16 old -> 0/16 new, 1 of 41 new replies (SUB-134, true positive); B-415's "1 of 16" cell corrected to "1 of 41".
+- **D-113 recorded** in `team/DECISIONS.md` (Status ACCEPTED by @user, 2026-10-19): (1) B-428/B-411 fixed and committed as the T-108 code freeze `457f1bf`; (2) T-108 built gold-first, lint exit 0 before freeze; (3) T-108 **not** run, no score; (4) B-427 closed as analysis only (0 real gaps, no P-###); (5) M2/B-430 resolved in a separate decision.
+- **M2 / B-430 resolved.** Every T-108 gold card was compared field by field against the **builder scripts' source data** (not OCR): `deliverables/senior-underwriter/T-108-gold-vs-source.md`. No OCR-induced drift in any scanned field. Wording-only corrections to SUB-206, SUB-208, SUB-214, SUB-230.
+- **@model-risk M2 closure** `deliverables/model-risk/T-108-M2-close.md`: first pass M2 CLOSED but **H1** — SUB-211's gold omitted an open premises conflict (application 1120 Commerce St vs the email's "their new spot on Guadalupe"). Gold corrected to `incomplete — hold: open conflict` (route unchanged, `senior_referral` / suggested `carrier_b`). Re-check: **M2 CLOSED, H1 FIXED, freeze APPROVED, no High**.
 - **T-108 built and frozen, NOT run:**
-  - 32 submissions `simulation/inbox/SUB-206..237` (20 in-scope, 12 out-of-scope). Out-of-scope criteria 4/5/4/2, three two-criteria files, two criterion-4-alone. W1 held files SUB-222, SUB-225; office-lessor SUB-206, SUB-213; deli SUB-207, SUB-215; duplicate pair SUB-217 (partial) / SUB-224 (complete). No folder carries a rule code or class label. Mix: `deliverables/producer/T-108-mix.md`.
+  - 32 submissions `simulation/inbox/SUB-206..237` (20 in-scope, 12 out-of-scope; criteria 4/5/4/2, three two-criteria, two criterion-4-alone). Mix: `deliverables/producer/T-108-mix.md`.
   - Gold 32 cards `deliverables/senior-underwriter/gold-set/SUB-206..237.md`, route table `T-108-routes.md` (carrier_a 2, **senior_referral 16, no_match 2, carrier_b 0, carrier_c 0**), summary `T-108-gold-summary.md`.
-  - Plan `deliverables/senior-test-engineer/T-108-plan.json` (7 `undated_loss_runs`); lint `lint_holdout.py --run-date 2026-10-19` **exit 0** (0 failures, 7 info, 32 files), `T-108-lint.md`; lint not edited.
-  - Freeze: code `457f1bf`, prompt `759b3e6bc9b2` (P-059), scorer v7; gold manifest sha256 `7a26b81efbc4794276462caa6ca1a2a84fcbc38d54e6ca6e4534dde10ca02257`. Recorded on the board (`team/TASKS.md` T-108). **No score exists.**
-- **@model-risk check** `deliverables/model-risk/T-108-check.md`: first pass OBJECTION (H1: the T-108 board entry did not record the code SHA, prompt and scorer) -> fixed -> **APPROVE, no High**; the build may be called frozen. M2 (gold read the scans with tesseract/pdftoppm as a document reader) is open for the user.
-- Backlog: B-429 (lint cannot read xlsx loss runs), B-430 (M2), B-431 (Low).
+  - Plan `deliverables/senior-test-engineer/T-108-plan.json` (7 `undated_loss_runs`); lint `lint_holdout.py --run-date 2026-10-19` **exit 0** (0 failures, 7 info, 32 files), re-run twice after the M2/SUB-211 corrections, `T-108-lint.md`; lint not edited.
+  - Freeze: code `457f1bf`, prompt `759b3e6bc9b2` (P-059), scorer v7; **gold manifest sha256 `11933e96b8370f57321ce5c1e1c6c3c3105a4f0517d841fbbbb8821bca18633d`** (32 gold cards + `T-108-routes.md`, file order 206..237 then routes). Recorded on the board (`team/TASKS.md` T-108). **No score exists.**
+- Backlog: B-429 (lint cannot read xlsx loss runs), B-430 (M2 — resolved, keep the row as closed), B-431 (Lows: summary wording done; out-of-scope full fields; mix mtime).
 
 ## Approved, not built
 
@@ -31,26 +31,24 @@ Written 2026-10-19 by the orchestrator at wrap-up. Wrap-up commit: `f251e71` on 
 
 ## Pending decisions for the user
 
-1. **M2 / B-430:** accept the gold written from the scanned submissions using `tesseract`/`pdftoppm` as a document reader (gold-first integrity intact, but the reader is the same OCR the pipeline uses), or have the affected cards (209, 217 and the out-of-scope scans) redone by eye before the run.
-2. **Run T-108:** when to run the frozen hold-out once and score it once with v7 (D-020). The run closes the T-027 production veto only if all 15 gate criteria are met.
-3. **Record D-113** (this session's work) in `team/DECISIONS.md`, or renumber it, at the user's word — the board, mix and lint artefacts already cite D-113.
-4. Still open: P-056 (a) month-first dates (D-104); B-402 email-only locations; detector gaps B-398/B-404; B-416/B-417 (ops check polarity and labels, each needs a P-###); B-429 (xlsx loss runs in the lint).
+1. **Run T-108:** when to run the frozen hold-out once and score it once with v7 (D-020). The run closes the T-027 production veto only if all 15 gate criteria are met.
+2. Still open: P-056 (a) month-first dates (D-104); B-402 email-only locations; detector gaps B-398/B-404; B-416/B-417 (ops check polarity and labels, each needs a P-###); B-429 (xlsx loss runs in the lint).
 
 ## Open vetoes and what resolves each
 
 | Task | Holder | Resolves when |
 |---|---|---|
-| T-027 | @model-risk (production) | Re-freeze done (`457f1bf`); the new 20 + 12 hold-out is built gold-first with the lint passing and @model-risk's build approval (T-108, done). Remaining: run T-108 once and score with v7, meeting all 15 criteria. |
+| T-027 | @model-risk (production) | Re-freeze done (`457f1bf`); T-108 built gold-first, lint passing, build approved and M2 closed (all done). Remaining: run T-108 once and score with v7, meeting all 15 criteria. |
 | T-082 | @responsible-ai (fairness) | As written in its veto message in team/DISCUSSION.md. |
 
 ## First 3 tasks next session
 
-1. Ask the user for decisions 1 and 2 above (M2/B-430, and running T-108); record D-113 in `team/DECISIONS.md`.
+1. Ask the user for decision 1 (when to run T-108 once and score with v7).
 2. If approved: run T-108 once under the run rules (`deliverables/ai-engineer/evals/RUN-RULES.md`, temp cache/out, `HOLDOUT_RESCORE` as required), score once with v7, publish, and take it to @model-risk for the production gate.
 3. Give the manager demo from `deliverables/pm/demo-guide.md` using `run-demo.sh` (0 live calls) — unchanged by this session.
 
 ## For the AI Engineer
 
 - Pending proposals: none open. P-059 to P-062 built and approved by @model-risk.
-- Latest scores: no new scores this session (T-108 built, not run). T-104 hold-out stays as published; dev B-415 numbers unchanged (0 unsafe, 0 false completes, silent errors 9/180, operations flags 1/41).
-- Top failure to fix next: route accuracy under P-061/P-062 is still unproven on real-shaped files (B-427). T-108 is built and frozen for exactly that — run it once.
+- Latest scores: no new scores this session (T-108 built, not run). T-104 hold-out stays as published; dev B-415 numbers unchanged (0 unsafe, 0 false completes, silent errors 9/180 = stale dev gold, operations flags 1/41).
+- Top failure to fix next: route accuracy under P-061/P-062 is still unproven on real-shaped files. T-108 is built and frozen for exactly that — run it once.
