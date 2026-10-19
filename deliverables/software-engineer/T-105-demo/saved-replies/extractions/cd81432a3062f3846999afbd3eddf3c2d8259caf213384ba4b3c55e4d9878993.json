@@ -1,0 +1,87 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "prompt_version": "759b3e6bc9b2",
+  "files": [
+    "application.md",
+    "email.md",
+    "loss-runs.pdf",
+    "schedule.csv"
+  ],
+  "usage": {
+    "queue_time": 0.031831835,
+    "prompt_tokens": 1297,
+    "prompt_time": 0.112242908,
+    "completion_tokens": 694,
+    "completion_time": 1.443927599,
+    "total_tokens": 1991,
+    "total_time": 1.556170507
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Cedar Bend Financial Advisors LLC",
+        "source": "application.md",
+        "quote": "Named insured: Cedar Bend Financial Advisors LLC",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": "1800 Main St, Dallas, TX 75201",
+        "source": "application.md",
+        "quote": "Premises address: 1800 Main St, Dallas, TX 75201",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-03-01",
+        "source": "application.md",
+        "quote": "Effective date: 2027-03-01",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "Financial advisory and tax office, 2nd floor. Clients by appointment. No inventory, no goods held for sale. No cooking.",
+        "source": "application.md",
+        "quote": "Operations: Financial advisory and tax office, 2nd floor. Clients by appointment. No inventory, no goods held for sale.\nCooking operations: None",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "1060000",
+        "source": "application.md",
+        "quote": "Annual sales: $1,060,000 (gross fees, prior year)",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "1150000",
+        "source": "application.md",
+        "quote": "Building TIV: $1,150,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "Masonry non-combustible",
+        "source": "application.md",
+        "quote": "Construction: Masonry non-combustible",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": "1987",
+        "source": "application.md",
+        "quote": "Year built: 1987",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-09-30",
+        "source": "loss-runs.pdf",
+        "quote": "Valued as of: 2026-09-30",
+        "confidence": 1.0
+      }
+    ],
+    "conflicts": []
+  }
+}

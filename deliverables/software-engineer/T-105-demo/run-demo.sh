@@ -4,7 +4,7 @@
 set -e
 T=${1:?give a new empty folder}; HERE=$(cd "$(dirname "$0")" && pwd); W=$(cd "$HERE/../../.." && pwd)
 mkdir -p "$T/inbox" "$T/cache" "$T/pngs"
-for n in $(seq 127 153); do cp -R "$W/simulation/inbox/SUB-$n" "$T/inbox/"; done
+for n in $(seq 127 153) 179 184; do cp -R "$W/simulation/inbox/SUB-$n" "$T/inbox/"; done
 cp -R "$HERE/saved-replies/extractions" "$T/cache/"
 cp "$HERE"/*.py "$T/"
 export LLM_CACHE_DIR="$T/cache" LLM_PACE_SECONDS=0

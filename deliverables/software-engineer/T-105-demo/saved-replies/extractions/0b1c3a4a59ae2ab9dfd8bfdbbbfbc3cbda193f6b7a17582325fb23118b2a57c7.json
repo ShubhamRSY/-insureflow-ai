@@ -1,0 +1,87 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "prompt_version": "759b3e6bc9b2",
+  "files": [
+    "application.md",
+    "email.md",
+    "loss-runs.jpg",
+    "schedule.csv"
+  ],
+  "usage": {
+    "queue_time": 0.096985584,
+    "prompt_tokens": 1410,
+    "prompt_time": 0.100110287,
+    "completion_tokens": 841,
+    "completion_time": 1.600304118,
+    "total_tokens": 2251,
+    "total_time": 1.700414405
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Hollis and Vane Kitchen LLC",
+        "source": "application.md",
+        "quote": "Named insured: Hollis and Vane Kitchen LLC",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": "1100 Travis St, Houston, TX 77002",
+        "source": "application.md",
+        "quote": "Premises address: 1100 Travis St, Houston, TX 77002",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-01-01",
+        "source": "application.md",
+        "quote": "Effective date: 2027-01-01",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "full-service restaurant, lunch and dinner, 140 seats, beer and wine only, no liquor license, weekend brunch, gas char-broiler (36 in), two gas fryers (50 lb each), flat-top griddle, 6-burner range, 2-deck convection oven, Type I hood over all cooking lines with UL 300 wet chemical suppression, hood and duct cleaned quarterly by licensed vendor, last cleaned 2026-08-20",
+        "source": "application.md",
+        "quote": "Operations: full-service restaurant, lunch and dinner, 140 seats, beer and wine only, no liquor license. Weekend brunch.\nCooking operations: gas char-broiler (36 in), two gas fryers (50 lb each), flat-top griddle, 6-burner range, 2-deck convection oven. Type I hood over all cooking lines with UL 300 wet chemical suppression. Hood and duct cleaned quarterly by licensed vendor, last cleaned 2026-08-20.",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "1480000",
+        "source": "application.md",
+        "quote": "Annual sales: $1,480,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "615000",
+        "source": "application.md",
+        "quote": "Building TIV: $615,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "Joisted masonry",
+        "source": "application.md",
+        "quote": "Construction: Joisted masonry",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": "1994",
+        "source": "application.md",
+        "quote": "Year built: 1994",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-09-39",
+        "source": "loss-runs.jpg",
+        "quote": "Valuation date; 2026-09-39",
+        "confidence": 0.9
+      }
+    ],
+    "conflicts": []
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "prompt_version": "759b3e6bc9b2",
+  "files": [
+    "application.md",
+    "resubmission.md"
+  ],
+  "usage": {
+    "queue_time": 0.104698355,
+    "prompt_tokens": 893,
+    "prompt_time": 0.061998344,
+    "completion_tokens": 728,
+    "completion_time": 1.415981812,
+    "total_tokens": 1621,
+    "total_time": 1.477980156
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "St Cloud Gifts LLC",
+        "source": "application.md",
+        "quote": "Named insured: St Cloud Gifts LLC",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": "30 St Cloud St, San Antonio, TX 78228",
+        "source": "application.md",
+        "quote": "Premises: 30 St Cloud St, San Antonio, TX 78228",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-01-01",
+        "source": "application.md",
+        "quote": "Effective date: 2027-01-01",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "dry retail",
+        "source": "application.md",
+        "quote": "Operations: dry retail",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": null,
+        "source": null,
+        "quote": null,
+        "confidence": 0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": 160000,
+        "source": "application.md",
+        "quote": "Building TIV: 160000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "masonry",
+        "source": "application.md",
+        "quote": "Construction: masonry",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": 1977,
+        "source": "application.md",
+        "quote": "Year built: 1977",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-04-04",
+        "source": "application.md",
+        "quote": "Valued through: 2026-04-04",
+        "confidence": 1.0
+      }
+    ],
+    "conflicts": [
+      {
+        "field": "sales_or_payroll",
+        "values": [
+          {
+            "value": "360000",
+            "source": "application.md",
+            "quote": "Sales: 360000",
+            "confidence": 1.0
+          },
+          {
+            "value": "190000",
+            "source": "resubmission.md",
+            "quote": "Sales: 190000",
+            "confidence": 1.0
+          }
+        ]
+      }
+    ]
+  }
+}
