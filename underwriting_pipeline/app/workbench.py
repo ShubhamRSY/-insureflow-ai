@@ -41,6 +41,10 @@ BANNER = ""  # set by serve(); the sandbox screenshots label the page with it
 MESSAGES: dict[str, tuple[bool, str]] = {}  # submission -> (ok, plain-words result of the last action); shown once
 # D-065 item 5: one line per user-visible feature: date, task or proposal, decision number, what an underwriter sees.
 WHATS_NEW = (
+    ("2026-10-19", "B-428, B-411", "D-113",
+     "\"Not read by extraction\" now lists only files the saved run did not read, taken from its own unread rows, "
+     "not from the file name. A PDF, workbook, text file or scan that was read (by a reader or OCR) is no longer "
+     "shown as not read beside values taken from it. A partly read file stays on the \"Not read\" line with its page."),
     ("2026-10-18", "T-107a", "D-112", "Carrier match reads the application's Line of business and Cooking operations lines (P-061). A nightclub or lounge beside restaurant evidence, and any bar word beside a non-food operation, is now a prohibited class; a bar, tavern or pub beside real restaurant evidence stays a senior referral (P-062). \"Snacks only\" is not restaurant evidence."),
     ("2026-10-18", "T-107d", "D-112", "What's new shows the latest 5 entries; \"Show all\" opens the rest."),
     ("2026-10-18", "T-107c", "D-112", "The account-manager check passes a carrier a senior confirmed on a senior referral (all other gates unchanged), and every card shows that check in words. A send before the senior confirm now says \"a senior referral needs a senior underwriter to confirm the market first\", the same as the card, instead of \"no logged decision\". \"The file is not in appetite\" is no longer shown for a senior referral."),
@@ -142,6 +146,19 @@ REFERRAL = (
 )
 NOT_READ = "Not read — extraction failed"  # D-079 (B-295)
 MI_NOT_READ = "whole file: not read (manual intake)"  # P-055 (T-104a UI H1)
+
+
+def not_read_by_extraction(report: dict | None, files: list[str]) -> list[str]:
+    """B-428 (D-113): files extraction did not read, for the "Not read by extraction" line.
+    The saved run's unread rows are the log of record: a .pdf, .xlsx, .txt or scan is read by a reader or OCR, so its
+    name alone never means it was skipped (the old `.md`/`.csv` name test named a pdf that gave values, B-411/B-428).
+    A partly read file (some pages unread) is not listed here; the "Not read" line carries that page.
+    Only a run saved before unread rows existed (no key at all) falls back to the old name test."""
+    if report is not None and "unread" in report:
+        return sorted({row.get("file") for row in report["unread"] or [] if row.get("page") is None and row.get("file")})
+    return sorted(name for name in files if not name.endswith((".md", ".csv")))
+
+
 NEVER_SOFT = ("nightclub", "nightclubs", "lounge", "lounges")  # P-062 (D-112): R1 even beside restaurant evidence; bar, tavern, pub stay R2 there
 SNACKS = ("pre-packaged snacks only", "prepackaged snacks only", "pre packaged snacks only", "snacks only", "snack warmer")  # P-062 (b): not restaurant evidence
 EQUIP = ("fryer", "fryers", "deep fryer", "deep fryers", "burner", "burners", "flat-top", "flat top", "griddle", "charbroiler", "char-broiler",
@@ -353,7 +370,7 @@ def load_queue(only: str | None = None) -> list[dict]:
         report, problem = saved_report(folder.name)
         report = package.with_resolutions(report, folder.name) if report is not None else None  # B-324: logged resolutions on this run
         files = sorted(p.name for p in folder.iterdir() if p.is_file())
-        ignored = [name for name in files if not name.endswith((".md", ".csv"))]
+        ignored = not_read_by_extraction(report, files)  # B-428 (D-113)
         row = {"id": folder.name, "report": report, "saved_problem": problem, "files": files, "ignored": ignored}
         if report is not None:
             row.update(
@@ -1413,6 +1430,14 @@ if __name__ == "__main__":
         pf = render([flagged], None)
         assert "NEEDS REVIEW: number or date read from a scan" in pf and "Built 1942" in pf and 'name="ack" value="year_built"' in pf
         assert "a.pdf, page 2: blank" in pf and "b.docx, whole file:" in pf
+        # B-428 (D-113): the "Not read by extraction" list comes from the saved run's unread rows, never from the file name.
+        assert not_read_by_extraction({"unread": []}, ["application.pdf", "loss-runs.jpg", "email.md"]) == [], "a read pdf or jpg is not 'not read' (SUB-184, SUB-127/133)"
+        assert not_read_by_extraction({"unread": [{"file": "a.pdf", "page": 2, "reason": "blank"}]}, ["a.pdf"]) == [], "a partly read file belongs on the Not read line, not here"
+        assert not_read_by_extraction({"unread": [{"file": "b.docx", "page": None, "reason": "file type .docx is not read"}]}, ["b.docx"]) == ["b.docx"]
+        assert not_read_by_extraction(None, ["a.pdf", "a.md"]) == ["a.pdf"], "only a run with no unread rows at all falls back to the name test"
+        flagged["ignored"] = not_read_by_extraction(flagged["report"], [])
+        pf_unread = render([flagged], None).split("<article", 1)[1]
+        assert "<p>Not read by extraction: b.docx</p>" in pf_unread and "<p>Not read by extraction: a.pdf</p>" not in pf_unread, pf_unread[:900]
         assert 'name="ack"' not in page_ok
         # T-087: the card shows the quote status per carrier and SUB-002's open subjectivity.
         sub2 = card("complete", fields=[{"field_id": "operations", "value": "restaurant"}])
