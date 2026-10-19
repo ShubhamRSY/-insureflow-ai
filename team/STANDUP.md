@@ -1862,3 +1862,13 @@ Blocked: No.
 - Done: v7 `--self-check` ok and `--check-gold` parsed all 32 Scope lines (20 in, 12 out; per criterion 4/5/4/2; 3 two-criteria; 2 criterion-4) before the run. No scorer or lint edited.
 - Doing next: nothing on T-108.
 - Blocked by / need from: nothing.
+
+### 2026-10-19 (4) — @ai-engineer-assistant
+- Done: T-108 root cause `deliverables/ai-engineer/analysis/T-108-root-cause.md` (analysis only, 0 calls): the 17 silent errors are 7 loss-run scorer-convention (v7 compares a correct valuation date to the gold line's first date = policy-period start), 9 operations gold-convention wording, 1 SUB-224 scan misread; the SUB-233 leak is the scope detector missing a "Loc 1 / Loc #2" list inside the application body, with no independent send-gate re-check. Wrote the two-step stronger-model plan `deliverables/ai-engineer/analysis/T-108-stronger-model-plan.md` after D-115 promoted SUB-206–237 to dev data (Step 1 free `openai/gpt-oss-120b` on Groq, Step 2 paid only if unclear; plan only, nothing run).
+- Doing next: nothing without the user's word; B-432/B-433 fixes need `approve change P-###`.
+- Blocked by / need from: @user ("go" for Step 1; D-011 lift only for Step 2, after the plan is read).
+
+### 2026-10-19 (4) — @model-risk
+- Done: assist-mode pilot ruling `deliverables/model-risk/T-027-assist-mode-pilot.md`: an assist-only pilot (nothing routable, nothing sendable, human reads everything) is **permitted under conditions C1–C8** and outside the T-027 veto while they hold; break one and it is inside the veto. Hard blockers before real data: B-190 (sign-in/audit) and B-191 (concurrent writes). Not a production approval; T-027 unchanged.
+- Doing next: re-review after any scope/field fix lands on dev; the T-027 gate itself is unchanged.
+- Blocked by / need from: @user decides whether/when to run the pilot; @pm registers it only after B-190/B-191.

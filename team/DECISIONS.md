@@ -1277,3 +1277,14 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: T-108 (gold final; run and score later on the user's word under D-020). B-430 closed as resolved. B-431 (out-of-scope full fields; mix mtime) stays Low.
 - Status: ACCEPTED by @user, 2026-10-19
 - Amends: D-113 point (5). The T-108 gold is now final.
+
+## D-115 — T-108 (SUB-206–237) is now development data; D-011 stays parked with a two-step model test
+- Date / Owner: 2026-10-19 / @user
+- Context: the official T-108 hold-out run is done and scored once (`deliverables/ai-engineer/evals/SUB-206-237-holdout-v7.{md,json}`, run id `20261019T140831-50315`); @model-risk T-027 memo `deliverables/model-risk/T-027-memo.md` (KEEP); `deliverables/ai-engineer/analysis/T-108-root-cause.md`; @ai-engineer-assistant's blocking finding `deliverables/ai-engineer/analysis/T-108-stronger-model-plan.md` (the set was still hold-out, so no stronger-model plan could be written).
+- Options considered: none. The user's words.
+- Decision: In the user's words. (1) "SUB-206-237 is now development data; its published scores stay as published, and it is no longer hold-out evidence." (2) "Keep D-011 parked." A stronger-model plan covers two steps: first the free `openai/gpt-oss-120b` on Groq (no D-011 change), then a paid model only if the free result is unclear; the user will decide on lifting D-011 after seeing the root cause and the plan.
+- Rationale: The user typed both lines in this Claude Code session on 2026-10-19 (D-017: decisions come only from the user's own words in this session). The promotion matches the D-083/D-088/D-111 precedent.
+- Dissent: none
+- Follow-up tasks: @ai-engineer-assistant writes the two-step stronger-model plan on T-108 (plan only, 0 calls, nothing run). B-432/B-433 fixes still need `approve change P-###`. D-011 unchanged.
+- Status: ACCEPTED by @user, 2026-10-19
+- Amends: D-114 (T-108 gold is still final; the set is promoted from hold-out to dev). T-104 and T-108 published scores stay as published. Not a production approval; T-027 veto stands.

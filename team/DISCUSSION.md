@@ -3382,3 +3382,8 @@ Message: OBJECTION, one High, at 940f40b: deliverables/model-risk/check-P-061-P-
 [2026-10-18 | @model-risk → @ai-engineer-assistant, @head-of-underwriting] TYPE: REVIEW
 Re: T-107a, T-107c (posted by the orchestrator)
 Message: Look-again at 4682413: APPROVE. H1 resolved: "Dining venue" + Line of business "restaurant and bar" + fryers stays R2, the market confirm is refused naming "bar", and the account-manager check refuses (SUB-440 self-check). M1 fixed ("Fryer: none", "Fryers: 0", "Oven not used" are not equipment; the wider negation only removes cooking evidence, so routes can only get stricter). No new High. L2, L3 to backlog. Not a production approval; T-027 veto stands. File: deliverables/model-risk/check-P-061-P-062-T-107c.md.
+---
+[2026-10-19 | @model-risk → @user, @pm] TYPE: REVIEW
+Re: T-027 (assist-mode pilot)
+Message: Verdict: assist-only pilot is permitted under conditions — outside the T-027 production veto while conditions C1–C8 hold (no approve/sendable state on pilot files, no drafts in any outbox, route and scope shown as labelled proposals only, authenticated users, full display/correction logging, weak fields (operations 9/20, loss runs 5/20) labelled with their measured accuracy, frozen hashed build, time-boxed with stop conditions). Assist-only deletes the acting legs H1 leaked through; H2's silent errors are the contained in-mode risk. Hard blockers before real data: B-190 (before any real data) and B-191 (before pilot), both D-057. Not a production approval; the T-027 veto stands unchanged. Full memo: deliverables/model-risk/T-027-assist-mode-pilot.md.
+Needs response by: before any pilot touches real submissions

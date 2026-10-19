@@ -1,6 +1,6 @@
-# Manager demo guide: AI underwriting assistant (T-105, D-110; updated T-107g, D-112)
+# Manager demo guide: AI underwriting assistant (T-105, D-110; updated T-108, D-113/D-114)
 
-Audience: a non-technical manager. Length: about 10 minutes. Author: @pm, 2026-10-18. Updated 2026-10-19.
+Audience: a non-technical manager. Length: about 10 minutes. Author: @pm, 2026-10-18. Updated 2026-10-19 (T-108 numbers).
 Synthetic data only. Not a production approval. The T-027 model-risk veto still stands (it says the tool is not yet cleared for real use).
 
 ## Words used in this guide
@@ -42,8 +42,8 @@ Screenshots: the opening best-case steps are in `deliverables/software-engineer/
 | 1:30–4:30 | **Demo A: messy in-scope file to a carrier quote** (SUB-133) | Inbox to quote, with one value a person must check | see A1–A6 |
 | 4:30–6:00 | **Demo B: out-of-scope file to manual intake** (SUB-129) | The tool stops and says why | see B1–B3 |
 | 6:00–8:00 | **Demo C: senior referral confirmed by a senior** (SUB-127) | A senior confirms the carrier, then the file moves on | see C1–C5 |
-| 8:00–9:30 | Numbers: T-104 scores, cost, time saved | Honest scores; estimates clearly marked | none (table below) |
-| 9:30–10:00 | Gaps and next steps | Two open gaps, what production still needs | none |
+| 8:00–9:30 | Numbers: T-108 scores, cost, time saved | Honest scores; estimates clearly marked | none (table below) |
+| 9:30–10:00 | Gaps and next steps | The scope leak and the two field gaps, what production still needs | none |
 
 ### Opening: best case, SUB-184 (1 min)
 
@@ -85,38 +85,40 @@ What it is: a financial-advisory firm in Dallas. The file is complete and clean.
 4. **C4 (0:20)** Approve, then send. The account-manager check passes on the logged senior confirm. No typed override. [`T-105-SUB-127-05-approve.png`, `T-105-SUB-127-06-send-sent.png`] (retaken 2026-10-19)
 5. **C5 (0:20)** Quote: Carrier A, premium 5,100, deductible 1,000, not bound. Simulated. [`T-105-SUB-127-07-quote.png`]
 
-## The numbers (T-104 hold-out, run 2026-10-17, as published)
+## The numbers (T-108 hold-out, run 2026-10-19, as published)
 
-Hold-out: 32 files (SUB-174 to SUB-205), never seen before the run. 20 were in scope and 12 out of scope. Scored once, with no code change after the run. Source: `deliverables/ai-engineer/evals/SUB-174-205-holdout-v6.md` and the run record. Model-risk verdict: `deliverables/model-risk/T-027-gate-memo-T-104.md`.
+Hold-out: 32 files (SUB-206 to SUB-237), never seen before the run. 20 were in scope and 12 out of scope. Scored once, with no code change after the run. Source: `deliverables/ai-engineer/evals/SUB-206-237-holdout-v7.md` and the run record. Model-risk verdict: `deliverables/model-risk/T-027-memo.md`.
 
-The scores below are the T-104 scores, kept as published. The routing rules were tightened after T-104 (P-061/P-062) and checked on dev files only, not on a new hold-out yet.
+The scores below are the T-108 (v7) scores, kept as published. The routing rules were tightened after T-104 (P-061/P-062); T-108 is the first hold-out to test them, and the route gate now passes.
 
 | Check | Result | Target | Met? |
 |---|---|---|---|
-| Out-of-scope files that leaked past the scope rule | 0 of 12 | 0 | Yes |
-| Out-of-scope files caught by the scope rule | 12 of 12 | 100% | Yes |
+| Out-of-scope files that leaked past the scope rule | **1 of 12 (SUB-233)** | 0 | **No** |
+| Out-of-scope files caught by the scope rule | 11 of 12 | 100% | **No** |
 | In-scope files wrongly sent to manual intake | 0 of 20 | at most 2 | Yes |
-| Scope gate (P-055) | PASS | | Yes |
+| Scope gate (P-055) | FAIL | | **No** |
 | False completes (marked complete when not) | 0 | 0 | Yes |
 | Unsafe routes (a carrier shown where a senior or no-match was right) | 0 | 0 | Yes |
-| Route accuracy | 16 of 20 | at least 18 | **No** (T-027 route gate: FAIL) |
-| Operations field | 12 of 20 | at least 9 in 10 | **No** (B-406) |
-| Loss runs field | 9 of 20 | at least 9 in 10 | **No** (B-408) |
-| Other fields (named insured, premises, dates, TIV, construction, year built) | 20 of 20 each | at least 9 in 10 | Yes |
-| Sales field | 19 of 20 | at least 9 in 10 | Yes |
-| Silent errors (wrong and not flagged), all fields | 3 of 180 (1.7%), all operations | | Not met for operations |
-| Values read automatically without a person | 147 of 180 (82%) | | |
+| Route accuracy | 18 of 20 | at least 18 | Yes (route gate PASS) |
+| Operations field | 9 of 20 | at least 9 in 10 | **No** (B-433) |
+| Loss runs field | 5 hit, 9 miss, 6 not credited | at least 9 in 10 | **No** (B-433; 7 of the 9 misses are a scorer rule, the answer is right) |
+| Other fields (named insured, premises, effective date, construction, year built) | 20 of 20 each | at least 9 in 10 | Yes |
+| Sales field | 20 of 20 | at least 9 in 10 | Yes |
+| TIV field | 19 of 20 | at least 9 in 10 | Yes |
+| Silent errors (wrong and not flagged), all fields | 17 of 180 (9.4%): operations 9, loss runs 8 | | Not met |
+| Values read automatically without a person | 142 of 180 (79%) | | |
 
-- Model-risk verdict (T-027): **KEEP**. The veto is not lifted. The safety checks held. The accuracy checks did not.
-- Retries: 5 rate-limit retries, all logged. Failed calls: 0.
+- Model-risk verdict (T-027): **KEEP**. The veto is not lifted. Four of sixteen criteria fail: leakage, detection recall, operations, loss runs. The route gate and the safety stops (0 unsafe, 0 false complete) hold.
+- Honest note on the silent-error jump: T-104 had 3 of 180 (1.7%); T-108 has 17 of 180 (9.4%). Of the 17, **7 are a scorer date rule that compares a correct loss-run date to the policy-period start**, **9 are operations where the tool kept the facts but reworded one checklist item**, and **1 (SUB-224) is a loss-run date read wrongly from a scan and not flagged**. Only the last is a value the tool got wrong.
+- Retries: 8 rate-limit retries, all logged. Failed calls: 0.
 
-### Cost per file (run record, 2026-10-17)
+### Cost per file (run record, 2026-10-19)
 
-- Tokens measured: 35,455 tokens for 20 model calls, about 1,773 per called file. Averaged over all 32 files, about 1,108 per file. The 12 out-of-scope files used no model call.
+- Tokens measured: 42,158 tokens for 21 model calls, about 2,008 per called file. Averaged over all 32 files, about 1,317 per file. The 11 non-in-scope files used no model call.
 - **Actual cost today: $0.** The model ran on the Groq free tier (D-011).
 - **Paid-host estimate (estimate, not measured):** the repo's only public price list is for Gemini, not the model we run, and I did not look up the model's own price.
-  - At Gemini 2.5 Flash list prices ($0.30 per million input tokens, $2.50 per million output): about $0.002 per called file, about $0.0012 per file averaged over 32.
-  - At Gemini 2.5 Pro list prices ($1.25 / $10.00): about $0.008 per called file, about $0.005 averaged.
+  - At Gemini 2.5 Flash list prices ($0.30 per million input tokens, $2.50 per million output): about $0.003 per called file, about $0.002 per file averaged over 32.
+  - At Gemini 2.5 Pro list prices ($1.25 / $10.00): about $0.010 per called file, about $0.007 averaged.
 - Assumptions: one model call per file (no retries); retries carry no tokens in the log and are not counted; the demo files cost $0 because their results were saved.
 
 ### Time saved per submission (an unmeasured estimate, not a result)
