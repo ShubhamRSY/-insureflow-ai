@@ -587,49 +587,53 @@ needs_review_ids = package.needs_review_ids  # D-068: one list, shared with the 
 
 def _append(payload: dict, action: str, actor: str, reason: str, log_path: Path) -> dict:
     """D-055: every entry gets the next sequence number in the log; the highest seq is the latest decision."""
-    last = 0
-    if log_path.exists():
-        with log_path.open("r") as fh:
-            try:
-                fcntl.flock(fh, fcntl.LOCK_SH)
-            except Exception:
-                pass
-            for line in fh:
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    lock_path = log_path.with_suffix(log_path.suffix + ".lock")
+    with lock_path.open("a+") as lfh:
+        try:
+            fcntl.flock(lfh, fcntl.LOCK_EX)
+        except Exception:
+            pass
+        last = 0
+        if log_path.exists():
+            for line in log_path.read_text().splitlines():
                 try:
                     seq = json.loads(line).get("seq")
                 except (ValueError, AttributeError):
                     continue
                 if isinstance(seq, int) and not isinstance(seq, bool):
                     last = max(last, seq)
+        row = {
+            "seq": last + 1,
+            "submission": payload.get("submission"),
+            "action": action,
+            "underwriter_id": actor,
+            "reason": reason,
+            **({"run_hash": payload["run_hash"]} if action in ("approve", "resolve") else {}),
+            **({"conflict_field": payload["conflict_field"], "new_value": payload["new_value"]} if action == "resolve" else {}),
+            **payload["run_record"],
+            **({"approved_values": payload["approved_values"]} if action == "approve" else {}),
+            **({"acknowledged": payload["acknowledged"]} if payload.get("acknowledged") else {}),
+            **({"field_id": payload["field_id"].strip(), "new_value": payload["new_value"].strip()} if (payload.get("field_id") or "").strip() else {}),
+            "date": date.today().isoformat(),
+            "at": datetime.now().astimezone().isoformat(timespec="seconds"),
+            "ai_version": ai_version(),
+            "bound": False,
+            "sent_to_carrier": False,
+        }
+        with log_path.open("a") as handle:
+            handle.write(json.dumps(row) + "\n")
+            handle.flush()
             try:
-                fcntl.flock(fh, fcntl.LOCK_UN)
+                os.fsync(handle.fileno())
             except Exception:
                 pass
-    row = {
-        "seq": last + 1,
-        "submission": payload.get("submission"),
-        "action": action,
-        "underwriter_id": actor,
-        "reason": reason,
-        **({"run_hash": payload["run_hash"]} if action in ("approve", "resolve") else {}),
-        **({"conflict_field": payload["conflict_field"], "new_value": payload["new_value"]} if action == "resolve" else {}),
-        **payload["run_record"],
-        **({"approved_values": payload["approved_values"]} if action == "approve" else {}),
-        **({"acknowledged": payload["acknowledged"]} if payload.get("acknowledged") else {}),
-        **({"field_id": payload["field_id"].strip(), "new_value": payload["new_value"].strip()} if (payload.get("field_id") or "").strip() else {}),
-        "date": date.today().isoformat(),
-        "at": datetime.now().astimezone().isoformat(timespec="seconds"),
-        "ai_version": ai_version(),
-        "bound": False,
-        "sent_to_carrier": False,
-    }
-    log_path.parent.mkdir(parents=True, exist_ok=True)
-    with log_path.open("a") as handle:
-        handle.write(json.dumps(row) + "\n")
+        try:
+            fcntl.flock(lfh, fcntl.LOCK_UN)
+        except Exception:
+            pass
     return row
 
-
-REFUSED_AS = {"/confirm-market": "Market confirm refused", "/decision": "Decision refused", "/mark-code": "Mark refused", "/cooking-call": "Cooking call refused", "/close-subjectivity": "Not closed", "/send": "Send refused", "/approve-draft": "Request not approved"}
 
 
 def act(path: str, payload: dict) -> tuple[str, bool, str]:
