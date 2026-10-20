@@ -498,7 +498,7 @@ def accept_field(item: dict, docs: dict[str, str], ocr_confidence: dict | None =
         return base
     # P-067: special handling for loss_run_valued_through from scan - check digits before dropping
     if field_id == "loss_run_valued_through" and on_scan:
-        from underwriting_pipeline.ai import prepare
+        import prepare  # P-067: same-directory import; the package root is not on sys.path when the pipeline runs as a script
         day = parse_day(value)
         if day is not None:
             doc_text = docs.get(source, "") if docs else ""
@@ -509,7 +509,7 @@ def accept_field(item: dict, docs: dict[str, str], ocr_confidence: dict | None =
     if confidence < MIN_CONFIDENCE and not low_scan:
         # P-067: check if this is a loss_run_valued_through scan with matching digits
         if field_id == "loss_run_valued_through" and on_scan:
-            from underwriting_pipeline.ai import prepare
+            import prepare  # P-067: same-directory import; the package root is not on sys.path when the pipeline runs as a script
             day = parse_day(value)
             if day is not None:
                 doc_text = docs.get(source, "") if docs else ""
@@ -554,7 +554,7 @@ def accept_field(item: dict, docs: dict[str, str], ocr_confidence: dict | None =
     own = reason  # code-review: a scan reason never hides the date-order or reword reason
     # P-067: special handling for loss_run_valued_through from scan
     if field_id == "loss_run_valued_through" and on_scan:
-        from underwriting_pipeline.ai import prepare
+        import prepare  # P-067: same-directory import; the package root is not on sys.path when the pipeline runs as a script
         day = parse_day(value)
         if day is not None:
             doc_text = docs.get(source, "") if docs else ""
