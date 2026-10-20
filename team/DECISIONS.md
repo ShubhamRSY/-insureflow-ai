@@ -1299,3 +1299,27 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: T-109a (P-063), T-109b (P-064 scorer v8 + gold line), T-109c (lint scorer test, run on T-108 gold), T-109d (@pm pilot-readiness.md); @model-risk check of T-109a–c, High only.
 - Status: ACCEPTED by @user, 2026-10-19
 - Amends: D-108 (scope-v3 → scope-v4; three mid-line "Building 2" P-058 negatives are now manual intake), D-111 (v7 frozen; new hold-outs use v8; the lint also tests the scorer). Not a production approval; T-027 veto stands.
+
+## D-117 — approve change P-067 (loss-run scan dates); B-433 operations half → P-068 (scorer v10, facts not wording); then P-066, reviews, wrap-up
+- Date / Owner: 2026-10-19 / @user
+- Context: T-110 re-measure of T-108 with scorer v9 on the corrected gold copy (`deliverables/ai-engineer/evals/SUB-206-237-holdout-v9-cache-rescore.{json,md}`, 0 model calls) and the cause write-up `deliverables/ai-engineer/analysis/T-110-v9-remeasure.md`: route 18/20, 0 unsafe, 0 false completes; operations 10/20, loss_runs 16/20 — both below the 18/20 floor, so B-433 could not be closed as a measurement issue. 4 real misses (loss_runs 217/209/225, conflict 211); the other 26 marks are an approved rule or a scorer artefact.
+- Options considered: B-433's rule offered two branches — close as measurement, or draft a P-### for the real misses only and stop. For operations: (a) prompt the extractor to copy the documents' wording, (b) a scorer rule on facts not wording, (c) leave it open. The user chose the P-### branch and option (b).
+- Decision: In the user's words (pasted): "approve change P-067.
+
+Operations: option (b), as P-068 (scorer v10): operations items are scored on facts, not wording — normalised numbers/units and a short synonym list per checklist item, defined from operations-gold-rule.md, not from T-108 phrasing. Extend the lint's wrong-answer set with near-miss negatives (no alcohol vs beer and wine, hood vs no hood, wrong seat or unit count, cooking vs no cooking); every one must still be caught. v9 stays frozen. Dev re-score of T-108 with v10 is dev evidence only. @model-risk must approve P-068 before it is used for any hold-out.
+
+Then continue: P-066 concurrent-write tests, @pm pilot-readiness update, @model-risk High-only check of P-067, P-068 and P-066, standups, /wrap-up, push ai-team only."
+- Rationale: The user typed both parts in this Claude Code session on 2026-10-19 (D-017; the approval is exact). P-067 covers the real loss-run misses only (`deliverables/ai-engineer/proposal-P-067.md`); P-068 closes the operations measurement gap without touching published v7/v9 scores.
+- Dissent: none
+- Follow-up tasks: T-111 build P-067 (llm_extract + prepare + workbench reason + D-065 What's new/screenshot + @senior-underwriter UI review); T-112 P-066 concurrent-write fix and two-user tests; T-113 P-068 scorer v10 + operations-gold-rule.md synonym list + lint near-miss negatives + dev re-score; @pm updates pilot-readiness (B-191); @model-risk High-only check of P-067, P-068 and P-066 (P-068 needs its approval before any hold-out use); standups, /wrap-up, push `ai-team` only.
+- Status: ACCEPTED by @user, 2026-10-19
+- Amends: D-116 item 3 (B-433's real misses now have an approved proposal instead of staying untouched) and the B-433 measurement branch. v7/v9 stay frozen; new hold-outs keep the scorer they were scored with until @model-risk approves P-068. Not a production approval; T-027 veto stands.
+
+## D-118 — correction: P-067 was reported built on 2026-10-20, but its card-reason path was dead; P-066 was reported built but crashed the workbench
+- Date / Owner: 2026-10-20 / orchestrator (correction note; @user's approval of P-067/P-068 stands, D-117)
+- Context: (1) P-067 was reported implemented on 2026-10-20; on inspection the "rejected value carries its reason to the card" path was not working — `prepare.py:1057` skipped a rejected row, so the field card showed `value=None, reason=None` while `needs_review=True` (SUB-209/211/225). (2) P-066 was reported built (commit 39b2a46); it deleted `REFUSED_AS` while two uses stayed, so every refusal raised `NameError` and `python underwriting_pipeline/app/workbench.py` (its own self-check) crashed. The @model-risk check of 39b2a46 said no High on P-066; the broken file was never run.
+- Correction: P-067 status is now "built, defect closed" — the reason path is fixed under P-067 (no new P-###, within D-117's scope) with a prepare.py self-check; P-066 is fixed by restoring `REFUSED_AS` verbatim from `39b2a46^` and adding a workbench self-check that exercises every refusal route. Both fixes committed separately: `fix(P-066): restore REFUSED_AS …`, `fix(P-067): card reasons for rejected values …`.
+- Disclosure: llm_extract.py's self-check also fails at HEAD (pre-existing; `SCAN_FLOOR` 0.50 vs a self-check expecting a 0.29 cited word kept). Recorded as B-446; not fixed (needs an approved proposal).
+- Dissent: none
+- Status: ACCEPTED as a correction record by the orchestrator, 2026-10-20. Not a production approval; the T-027 veto stands.
+- Amends: none (records that two commits claimed more than they delivered).

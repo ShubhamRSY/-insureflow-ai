@@ -1897,4 +1897,18 @@ Blocked: No.
 - Done: T-109c lint scorer test ("test the test"): perfect answers from gold must get no miss and pass the gates; wrong answers per field, leaks and an unsafe route must each be caught. T-108 gold: as written FAIL 15 (no valued-as-of line, freeze blocked); with the line added FAIL 10 (F1 "Conflict: none (…)", F2 "a.m./p.m." in operations items, F3 "needs review" mid-line); 0 wrong answers missed. `deliverables/senior-test-engineer/T-109c-lint-check.md`. @model-risk APPROVE.
 - Doing next: run the lint on the next hold-out's gold before freeze.
 - Blocked by / need from: nothing.
- 2>&1 | tail -2
+
+### 2026-10-20 (1) — @software-engineer (written by the orchestrator, labelled)
+- Done: fixed two defects found while checking P-066/P-067. (1) P-066 (committed 39b2a46) deleted `REFUSED_AS` while two uses stayed, so every refusal raised `NameError` and the workbench self-check crashed; restored the dict verbatim from `39b2a46^` and added a self-check that exercises every refusal route (commit `fix(P-066): …`). (2) P-067's "card reason for rejected values" path was dead (`prepare.py:1057` skipped a rejected row); fixed under P-067 with a self-check (`fix(P-067): card reasons …`). Both self-checks and the demo replay (SUB-127/129/133/184, temp copy) pass; 2 concurrency tests pass.
+- Doing next: nothing until @user decides; the workbench "What's new" line for P-066 (D-065 item 5) and a screenshot are still owed (B-445-adjacent, model-risk M1).
+- Blocked by / need from: @user for the LLM_CACHE sandbox and any P-###.
+
+### 2026-10-20 (2) — @ai-engineer-assistant (written by the orchestrator, labelled)
+- Done: T-113 dev re-score of T-108 with scorer v10 (P-068) + the P-067 fix, on a temp cache copy, 0 model calls, 0 call_failed: route 18/20 (0 unsafe), 0 false completes, 0 leaks; operations 19/20 (was 10), loss_runs 17/20 (was 16) — both still below the 18/20 floor. Cause write-up `deliverables/ai-engineer/analysis/T-113-v10-dev-rescore.md`; scores `deliverables/ai-engineer/evals/P-068-dev/SUB-206-237-holdout-v10-cache-rescore.{json,md}`. Real misses now 3 (loss_runs 209/225 OCR, conflict 211); the other 13 are an approved rule or a measurement artefact.
+- Doing next: @model-risk must approve P-068 before any hold-out use; P-068/P-067 freeze + next hold-out gold are gated on that.
+- Blocked by / need from: @model-risk (P-068), @user (freeze, next hold-out).
+
+### 2026-10-20 (3) — @model-risk (written by the orchestrator, labelled)
+- Done: High-only check of the P-066 REFUSED_AS restore: **APPROVE, no High**. Dict byte-identical to `39b2a46^`; all 7 refusal routes probed and return their plain-words reason; the 7 POST routes and `REFUSED_AS` match; no real file changed by the self-check. Medium/Low: M1 (no D-065 "What's new" line / screenshot for P-066), L1–L4 (flock failure swallowed; fingerprint not re-asserted; `posted` hand-maintained; `sub` outside the try).
+- Doing next: P-068 check when asked.
+- Blocked by / need from: nothing.
