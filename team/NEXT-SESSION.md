@@ -59,3 +59,4 @@ Written 2026-10-19 by the orchestrator at wrap-up (session 3 of the day). Wrap-u
 - Pending proposals: none open. P-063 and P-064 are built and approved by @model-risk (no High).
 - Latest scores: T-108 (now dev, v7, published, unchanged): route 18/20, 0 unsafe; scope gate FAIL (1 leak SUB-233, which scope-v4 now catches on dev); 0 false completes; operations 9/20; loss_runs 5/20 (7 of the 8 silent misses were v7's date rule, which v8 fixes); silent 0.094.
 - Top failure to fix next: operations/loss-run completeness (B-433, parked) and the scorer/gold conventions the lint found (B-437). Without a decision on these, the next hold-out cannot pass the field floor.
+ 2>&1 | tail -2
