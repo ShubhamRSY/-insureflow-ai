@@ -635,6 +635,8 @@ def _append(payload: dict, action: str, actor: str, reason: str, log_path: Path)
     return row
 
 
+REFUSED_AS = {"/confirm-market": "Market confirm refused", "/decision": "Decision refused", "/mark-code": "Mark refused", "/cooking-call": "Cooking call refused", "/close-subjectivity": "Not closed", "/send": "Send refused", "/approve-draft": "Request not approved"}
+
 
 def act(path: str, payload: dict) -> tuple[str, bool, str]:
     """D-066 items 2/4/8: run one POST action. Returns (submission, ok, plain-words message); a refusal never raises."""
@@ -1967,4 +1969,24 @@ if __name__ == "__main__":
                     globals()[n] = v
                 (package.DECISIONS_LOG, package.SENDS_LOG, package.INBOX, quotes.CLOSURES, quotes.TO_CARRIER, quotes.FROM_CARRIER, prepare.EXTRACT_DIR, prepare.INBOX_DIR, llm_extract.CACHE) = saved_other
         assert fingerprint() == before_real, "a sandbox run changed a real file"
+
+        # P-066 regression (2026-10-20): REFUSED_AS was deleted while two uses stayed, so every refusal
+        # raised NameError instead of a plain-words reason. This check fails if a refusal route has no
+        # reason here, or if the set of POST routes and REFUSED_AS ever drift apart. Runs in a sandbox,
+        # so nothing real is written.
+        with tempfile.TemporaryDirectory() as ref_box:
+            ref_box = Path(ref_box)
+            try:
+                sandbox(ref_box)
+                posted = {"/confirm-market", "/decision", "/mark-code", "/cooking-call", "/close-subjectivity", "/send", "/approve-draft"}
+                assert set(REFUSED_AS) == posted, ("refusal reasons and POST routes must match", set(REFUSED_AS) ^ posted)
+                for ref_path, ref_reason in REFUSED_AS.items():
+                    sub, ok, text = act(ref_path, {})  # an empty form is refused by every action
+                    assert ok is False, (ref_path, "an empty form must be refused")
+                    assert text.startswith(f"{ref_reason}: "), (ref_path, "plain-words reason missing", text)
+            finally:
+                for n, v in saved_mod.items():
+                    globals()[n] = v
+                (package.DECISIONS_LOG, package.SENDS_LOG, package.INBOX, quotes.CLOSURES, quotes.TO_CARRIER, quotes.FROM_CARRIER, prepare.EXTRACT_DIR, prepare.INBOX_DIR, llm_extract.CACHE) = saved_other
+
         print("workbench ok")
