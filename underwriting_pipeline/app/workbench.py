@@ -42,6 +42,8 @@ BANNER = ""  # set by serve(); the sandbox screenshots label the page with it
 MESSAGES: dict[str, tuple[bool, str]] = {}  # submission -> (ok, plain-words result of the last action); shown once
 # D-065 item 5: one line per user-visible feature: date, task or proposal, decision number, what an underwriter sees.
 WHATS_NEW = (
+    ("2026-10-20", "P-067", "D-118", "A rejected value now keeps its reason on the card: a field the extraction could not trust shows why (\"value not inside the cited text\", \"the date does not parse\") instead of an empty reason."),
+    ("2026-10-20", "P-066", "D-118", "Every refusal now names its reason in plain words, and no action can crash the page: a blocked send, approve or carrier package shows why it was refused."),
     ("2026-10-19", "P-067", "D-117", "Loss-run dates read from a scan are kept for review when the date digits appear in the cited text: the card shows \"read from a scan — check it against the page\" and is never silently dropped."),
     ("2026-10-19", "T-109a", "D-116",
      "Scope check scope-v4 (P-063): a location label anywhere in the application (\"Loc 1 …; Loc #2 …\", \"Location 2\", \"Bldg 2\") "
