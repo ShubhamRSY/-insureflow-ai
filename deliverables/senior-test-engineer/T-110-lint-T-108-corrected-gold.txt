@@ -1,0 +1,12 @@
+# T-110 (P-065) — lint on the corrected T-108 gold copy, scorer default v9, run date 2026-10-19
+# HOLDOUT_GOLD=deliverables/senior-underwriter/gold-set-T-108-corrected
+# .venv/bin/python deliverables/senior-test-engineer/lint_holdout.py deliverables/senior-test-engineer/T-108-plan.json --run-date 2026-10-19
+
+INFO  SUB-212/loss-runs.md: declared undated in the plan; no valued date found, as declared
+INFO  SUB-216/loss-runs.md: declared undated in the plan; no valued date found, as declared
+INFO  SUB-219/loss-runs.md: declared undated in the plan; no valued date found, as declared
+INFO  SUB-220/loss-runs.md: declared undated in the plan; no valued date found, as declared
+INFO  SUB-229/loss-runs.md: declared undated in the plan; no valued date found, as declared
+INFO  SUB-233/loss-runs.md: declared undated in the plan; no valued date found, as declared
+INFO  SUB-235/loss-runs.md: declared undated in the plan; no valued date found, as declared
+PASS: 0 failure(s), 7 info, 32 files, run date 2026-10-19
