@@ -12,6 +12,7 @@ import html
 import json
 import os
 import re
+import fcntl
 import shutil
 import sys
 import tempfile
@@ -41,6 +42,7 @@ BANNER = ""  # set by serve(); the sandbox screenshots label the page with it
 MESSAGES: dict[str, tuple[bool, str]] = {}  # submission -> (ok, plain-words result of the last action); shown once
 # D-065 item 5: one line per user-visible feature: date, task or proposal, decision number, what an underwriter sees.
 WHATS_NEW = (
+    ("2026-10-19", "P-067", "D-117", "Loss-run dates read from a scan are kept for review when the date digits appear in the cited text: the card shows \"read from a scan — check it against the page\" and is never silently dropped."),
     ("2026-10-19", "T-109a", "D-116",
      "Scope check scope-v4 (P-063): a location label anywhere in the application (\"Loc 1 …; Loc #2 …\", \"Location 2\", \"Bldg 2\") "
      "now means multiple locations, so the file is manual intake. Every send re-checks scope at send time, whatever the status says, "
@@ -587,13 +589,22 @@ def _append(payload: dict, action: str, actor: str, reason: str, log_path: Path)
     """D-055: every entry gets the next sequence number in the log; the highest seq is the latest decision."""
     last = 0
     if log_path.exists():
-        for line in log_path.read_text().splitlines():
+        with log_path.open("r") as fh:
             try:
-                seq = json.loads(line).get("seq")
-            except (ValueError, AttributeError):
-                continue
-            if isinstance(seq, int) and not isinstance(seq, bool):
-                last = max(last, seq)
+                fcntl.flock(fh, fcntl.LOCK_SH)
+            except Exception:
+                pass
+            for line in fh:
+                try:
+                    seq = json.loads(line).get("seq")
+                except (ValueError, AttributeError):
+                    continue
+                if isinstance(seq, int) and not isinstance(seq, bool):
+                    last = max(last, seq)
+            try:
+                fcntl.flock(fh, fcntl.LOCK_UN)
+            except Exception:
+                pass
     row = {
         "seq": last + 1,
         "submission": payload.get("submission"),

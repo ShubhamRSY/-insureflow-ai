@@ -1897,3 +1897,4 @@ Blocked: No.
 - Done: T-109c lint scorer test ("test the test"): perfect answers from gold must get no miss and pass the gates; wrong answers per field, leaks and an unsafe route must each be caught. T-108 gold: as written FAIL 15 (no valued-as-of line, freeze blocked); with the line added FAIL 10 (F1 "Conflict: none (…)", F2 "a.m./p.m." in operations items, F3 "needs review" mid-line); 0 wrong answers missed. `deliverables/senior-test-engineer/T-109c-lint-check.md`. @model-risk APPROVE.
 - Doing next: run the lint on the next hold-out's gold before freeze.
 - Blocked by / need from: nothing.
+ 2>&1 | tail -2

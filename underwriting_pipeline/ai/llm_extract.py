@@ -316,9 +316,10 @@ REASON_DATE_ORDER = "date read month first (US order): check the month and day" 
 REASON_QUOTE = "quote not found in {}"
 REASON_VALUE = "value not inside the cited text"
 REASON_REWORDED = "value is not in the cited text (translated or reworded)"
-REASON_SCAN = "number or date read from a scan"
 SCAN_FLOOR = 0.50  # P-025 (D-067): on a scan, 0.50 to below MIN_CONFIDENCE is stored for review, not dropped
+REASON_SCAN = "number or date read from a scan"
 REASON_LOW_SCAN = "Low-confidence scan read — check against the page"
+REASON_SCAN_DATE_REVIEW = "read from a scan — check it against the page"  # P-067
 _JOIN = re.compile(r"\n|\s*(?:\.\.\.|…)\s*")  # P-056 (c): how a quote joins two cited lines
 
 
@@ -495,10 +496,37 @@ def accept_field(item: dict, docs: dict[str, str], ocr_confidence: dict | None =
     }
     if value is None or str(value).strip() == "" or str(value).lower() == "null":
         return base
-    low_scan = on_scan and floor >= SCAN_FLOOR and confidence < MIN_CONFIDENCE
+    # P-067: special handling for loss_run_valued_through from scan - check digits before dropping
+    if field_id == "loss_run_valued_through" and on_scan:
+        from underwriting_pipeline.ai import prepare
+        day = parse_day(value)
+        if day is not None:
+            doc_text = docs.get(source, "") if docs else ""
+            if prepare.digits_of(str(day)) in prepare.digits_of(doc_text):
+                # Keep it for review - don't drop due to low confidence
+                pass  # will proceed below with flag set appropriately
+    low_scan = on_scan and SCAN_FLOOR <= confidence < MIN_CONFIDENCE
     if confidence < MIN_CONFIDENCE and not low_scan:
-        base["reason"] = f"confidence {confidence:.2f} is under {MIN_CONFIDENCE}"
-        return base
+        # P-067: check if this is a loss_run_valued_through scan with matching digits
+        if field_id == "loss_run_valued_through" and on_scan:
+            from underwriting_pipeline.ai import prepare
+            day = parse_day(value)
+            if day is not None:
+                doc_text = docs.get(source, "") if docs else ""
+                if prepare.digits_of(str(day)) in prepare.digits_of(doc_text):
+                    # Keep for review - don't drop
+                    base["reason"] = f"confidence {confidence:.2f} is under {MIN_CONFIDENCE}"  # will be overridden later? no
+                    # but better to not return; let it proceed
+                    pass
+                else:
+                    base["reason"] = f"confidence {confidence:.2f} is under {MIN_CONFIDENCE}"
+                    return base
+            else:
+                base["reason"] = f"confidence {confidence:.2f} is under {MIN_CONFIDENCE}"
+                return base
+        else:
+            base["reason"] = f"confidence {confidence:.2f} is under {MIN_CONFIDENCE}"
+            return base
     text = docs.get(source, "")
     span = find_quote(text, quote)  # P-016 N: the old fallback to the value's own characters is gone
     spans = [span] if span else None
@@ -524,6 +552,28 @@ def accept_field(item: dict, docs: dict[str, str], ocr_confidence: dict | None =
         day = parse_day(value)  # P-056 (a): "4/1/27" is stored as 2027-04-01; value_in_span has parsed it
         value = day.isoformat() if day else value
     own = reason  # code-review: a scan reason never hides the date-order or reword reason
+    # P-067: special handling for loss_run_valued_through from scan
+    if field_id == "loss_run_valued_through" and on_scan:
+        from underwriting_pipeline.ai import prepare
+        day = parse_day(value)
+        if day is not None:
+            doc_text = docs.get(source, "") if docs else ""
+            if prepare.digits_of(str(day)) in prepare.digits_of(doc_text):
+                base.update({
+                    "value": day.isoformat(),
+                    "source": source,
+                    "start": span[0],
+                    "end": span[1],
+                    "confidence": confidence,
+                    "model_confidence": model_confidence,
+                    "ocr_cited_confidence": cited,
+                    "needs_review": True,
+                    "reason": REASON_SCAN_DATE_REVIEW,
+                    "quote": cited_text,
+                })
+                if len(spans) > 1:
+                    base["spans"] = spans
+                return base
     if on_scan and field_id in NUMBER_FIELDS + DATE_FIELDS:  # S2
         flag, reason = True, REASON_SCAN
     if low_scan:

@@ -1754,3 +1754,4 @@ D-004 (user, 2026-10-09): Sanger & Altgelt agency pipeline. Eight steps. No auto
 - Owner: @pm · Status: DONE · Decision: D-116
 - Acceptance criteria:
   - [x] `deliverables/pm/pilot-readiness.md`: @model-risk's C1–C8 (`deliverables/model-risk/T-027-assist-mode-pilot.md`) as a checklist with a status each, plus B-190 (SSO) and B-191 (concurrent writes) with a short build plan each. No build.
+ 2>&1 | tail -2 2>&1 | tail -2
