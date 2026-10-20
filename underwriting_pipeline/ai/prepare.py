@@ -1056,7 +1056,14 @@ def process_submission(folder: Path) -> dict:
     scans = {doc["name"]: doc["ocr_words"] for doc in docs if doc.get("ocr_words")}  # P-037: files whose text came from OCR; one list for every rule
     for row in extracted["fields"]:
         field_id = row.get("field_id")
-        if field_id not in merged or not row.get("value"):
+        if field_id not in merged:
+            continue
+        if not row.get("value"):
+            # P-067 (D-117): a value the model read but the gate rejected carries its reason to the card.
+            # Before this, a rejected row was skipped and its reason dropped, so the field showed as silently
+            # missing. Only a real reason is carried (a plain null keeps reason None and stays silent).
+            if row.get("reason") and merged[field_id]["value"] is None and not merged[field_id].get("reason"):
+                merged[field_id] = {**merged[field_id], "needs_review": True, "reason": row["reason"], "source": row.get("source")}
             continue
         cur = merged[field_id]
         if cur["value"] is None:
@@ -2309,6 +2316,13 @@ if __name__ == "__main__":
     on_run = {"loss_run_valued_through": {"source": "loss-runs.md"}}
     clean = run_case(on_run, {"loss-runs.md": run_107})
     assert clean["status"] == "complete" and clean["complete"] and ready_to_route(clean) and clean["request"] is None, clean["status"]
+    # P-067 (D-117): a value the model read but the gate rejected carries its reason to the card; a plain null stays silent.
+    rejected = run_case({"tiv_building": {"value": None, "needs_review": True, "reason": "value not inside the cited text"}}, {})
+    row = {r["field_id"]: r for r in rejected["fields"]}["tiv_building"]
+    assert row["value"] is None and row["needs_review"] and row["reason"] == "value not inside the cited text", ("a rejected value must keep its reason", row)
+    silent = run_case({"tiv_building": {"value": None, "needs_review": True, "reason": None}}, {})
+    row = {r["field_id"]: r for r in silent["fields"]}["tiv_building"]
+    assert row["value"] is None and not row.get("reason"), ("a plain null is not a rejected value", row)
     for src, extra in (("application.md", {}), (None, {}), ("schedule.csv", {"schedule.csv": "location,valued\n1,2026-01-01\n"}), ("email.md", {"email.md": "Loss runs valued 2026-01-01."})):
         box = {"loss_run_valued_through": {"field_id": "loss_run_valued_through", "value": "2026-01-01", "source": src, "quote": "2026-01-01", "needs_review": False, "reason": None}}
         gate_loss_run(box, {"loss-runs.md": run_110.replace("Valuation date: 2026-09-30\n", ""), "application.md": "Loss runs valued 2026-01-01", **extra})
