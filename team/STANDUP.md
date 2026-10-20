@@ -1912,3 +1912,13 @@ Blocked: No.
 - Done: High-only check of the P-066 REFUSED_AS restore: **APPROVE, no High**. Dict byte-identical to `39b2a46^`; all 7 refusal routes probed and return their plain-words reason; the 7 POST routes and `REFUSED_AS` match; no real file changed by the self-check. Medium/Low: M1 (no D-065 "What's new" line / screenshot for P-066), L1–L4 (flock failure swallowed; fingerprint not re-asserted; `posted` hand-maintained; `sub` outside the try).
 - Doing next: P-068 check when asked.
 - Blocked by / need from: nothing.
+
+### 2026-10-20 (4) — @model-risk (written by the orchestrator, labelled)
+- Done: re-check of the **current** P-068 working tree (the uncommitted v10 + lint, which differ from the `1da0066` check): **BLOCK** for hold-out use. H1 the rewritten `ops_items_hit` non-contiguous branch still admits wrong answers as hits — interleaved counts (`48 seats` vs "40 seats and 48 parking spaces"), spanned negation (`beer wine liquor` vs "Beer with no wine or liquor"), neighbouring facts (`counter service` vs "…table service"); 10/28 adversarial false positives. H2 synonym list is overfit to T-108 phrasing and `operations-gold-rule.md` has no synonym list (both explicit D-117 conditions). M1 docstring false; M2 v10 output labelled v9; M3 `eval_holdout_v9.py` untracked (now committed `6f959a9`); M4 substring synonym match; M5 still misses the SUB-211 comma form; L1 near-miss self-check exercises 4/12; L2 fix only in the working tree.
+- Resolves the block: run negation/look-again over the true span end; counts as one token; exact-key synonyms written into `operations-gold-rule.md`; add the adversarial cases to the lint and the self-check; fix docstring + output label; re-request the check.
+- Blocked by / need from: @user (any fix to v10 is extraction/scorer work, D-017).
+
+### 2026-10-20 (5) — @pm (written by the orchestrator, labelled)
+- Done: updated `deliverables/pm/pilot-readiness.md` for B-191 after P-066 and for the P-068 block. B-191 **Partly done** (cross-process `flock` + 8-thread/2-process tests pass, @model-risk no High; item 2 "failed write never silent" not shown). C5 Not met → Partly met; C6/C7 updated; C1–C8 now 0 Met / 4 Partly / 3 Not met / 1 Not verified. C6 warning numbers cannot be written against a blocked scorer.
+- Doing next: register the pilot task only once B-190 and B-191 both pass.
+- Blocked by / need from: @software-engineer (B-190, B-191 item 2), @ai-engineer-assistant/@model-risk (P-068 fix + re-check).
