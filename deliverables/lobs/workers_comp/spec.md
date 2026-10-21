@@ -42,7 +42,7 @@
 Baseline criteria 1–4. WC readings:
 
 - A payroll schedule is not a location schedule; multiple rows are not criterion 2.
-- A non-Texas risk is **out of appetite** (not out of scope) until other states are approved; **needs review**.
+- A non-Texas risk is **out of scope** (manual intake) per D-121 item 7; it is not an appetite refusal.
 - A file with no class-code/payroll rows is **incomplete**, not manual intake.
 
 ## 5. Operations slots

@@ -1356,3 +1356,23 @@ Then continue: P-066 concurrent-write tests, @pm pilot-readiness update, @model-
 - Follow-up tasks: update the roadmap and Wave 1 specs; write Wave 2 specs; @producer builds 10 synthetic commercial_package dev files with a dev gold set and lint (this session, dev only); @model-risk reviews the engine design before any build; a future P-### for the prompt move.
 - Status: ACCEPTED by @user, 2026-10-21 (items 2 and 3 in principle, build gated on @model-risk's Claude Code review)
 - Amends: D-119 is unchanged. The LOB roadmap's earlier Wave 1 (5 lines) is replaced by this decision. Not a production approval; the T-027 veto stands.
+
+## D-121 — Wave 2 order and scope details; engine step 1 to be prepared on a separate branch
+- Date / Owner: 2026-10-21 / @user
+- Context: D-120; the new-decisions list from the LOB specs session; `deliverables/architecture/lob-engine-design.md`. Typed by @user in OpenCode on 2026-10-21.
+- Decision (in the user's words, item by item):
+  1. Wave 2 order confirmed for now: umbrella → inland marine → builders risk → commercial auto → WC; to be revisited for business volume.
+  2. New Wave 2 field names/shapes: **not approved yet**; review tomorrow by @senior-underwriter and @model-risk.
+  3. `bpp_limit` and `sprinklered` become scored in the property-pack P-### with a new scorer version after the engine exists; notes until then; v11 untouched.
+  4. Umbrella criterion 5 is decided when umbrella starts, with @compliance.
+  5. Package dev set 6 in + 4 out accepted for dev; hold-outs stay 20/12.
+  6. Wave 2 synthetic limits/bands accepted as placeholders, labelled synthetic.
+  7. WC outside Texas: out of scope (manual intake).
+  8. Occupied renovation (builders risk vs property): `senior_referral` with both suggested until a written rule exists.
+  9. Personal-auto submissions are a commercial-auto scope criterion (manual intake).
+- Conditions: the engine work is prepared for review on branch `lob-engine-step1` in a separate worktree; it is **not merged** into `ai-team`. No scorer, lint or existing gold is changed. No P-### has been opened for the prompt move or for BPP/sprinklers.
+- Rationale: the user typed all nine items in this session on 2026-10-21.
+- Dissent: none
+- Follow-up tasks: apply items 7–9 to the Wave 2 specs; prepare engine migration step 1 and the baseline-equality test on `lob-engine-step1`; @senior-underwriter + @model-risk review Wave 2 fields tomorrow; @compliance on umbrella criterion 5 when umbrella starts.
+- Status: ACCEPTED by @user, 2026-10-21
+- Amends: D-120 item 7 (umbrella criterion 5 timing) and D-120 items 1/10/12 by the Wave 2 decisions above. Not a production approval; the T-027 veto stands.

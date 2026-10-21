@@ -43,7 +43,7 @@ Baseline criteria 1–4. Builders risk readings:
 
 - Two project sites → criterion 2 in Wave 2.
 - A project with no stated value or no stated construction period is **incomplete**, not manual intake.
-- A renovation of an occupied building may be BOP/property instead; **needs review** on which line wins.
+- A renovation of an occupied building is **not** out of scope: D-121 item 8 says `senior_referral` with **both** carriers suggested until a written rule exists. A person decides the line.
 
 ## 5. Operations slots
 
@@ -61,7 +61,7 @@ Fictional only.
 | Carrier B | Renovation of a contractor/retail project; value ≤ $5,000,000 | `senior_referral`, suggested `carrier_b` |
 | Carrier C | Habitational or mixed-use project; value ≤ $7,500,000 | `senior_referral`, suggested `carrier_c` |
 
-Rules (all **needs review**): BR1 project value or end date missing → hold; BR2 project period over 18 months → referral; BR3 occupied renovation → referral; BR4 prohibited class (R1) → `no_match`; else class rules. No decline and no bind.
+Rules (all **needs review**): BR1 project value or end date missing → hold; BR2 project period over 18 months → referral; BR3 occupied renovation → `senior_referral` with both Carrier B and Carrier C suggested (D-121 item 8); BR4 prohibited class (R1) → `no_match`; else class rules. No decline and no bind.
 
 ## 7. Gold-writing rules
 
@@ -77,6 +77,6 @@ Same format as BOP, plus:
 ## 8. Needs review
 
 - Exact field names for project value and period.
-- Ground-up vs renovation overlap with property/BOP.
+- Occupied renovation rule is decided (D-121 item 8); the written line-allocation rule is still owed.
 - Synthetic BR1–BR4 and the $10M/$5M/$7.5M placeholders.
 - Whether a project with no loss run can be complete (recommended: yes, if every other required field is present).

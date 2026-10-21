@@ -38,11 +38,11 @@
 
 ## 4. Out-of-scope criteria
 
-Baseline criteria 1–4, plus possible auto-specific readings:
+Baseline criteria 1–4, plus criterion 5:
 
 - Two distinct garage addresses → criterion 2 in Wave 2.
 - A vehicle schedule with no readable VIN/year but otherwise complete is **incomplete**, not manual intake.
-- A personal auto policy (personal named insured, personal use) is a different line → manual intake/triage, **needs review** as criterion 5.
+- A personal auto submission (personal named insured, personal use) is a **scope criterion 5 → manual intake** (D-121 item 9).
 
 ## 5. Operations slots
 
@@ -75,6 +75,5 @@ Same format as BOP, plus:
 ## 8. Needs review
 
 - Exact field and row shape for vehicles, and whether VIN is a scored field.
-- Personal-auto triage as a scope criterion.
 - Synthetic CA1–CA4 and the vehicle/limit placeholders.
 - @compliance: MVR is a consumer report; permissible purpose and FCRA notice before real files.

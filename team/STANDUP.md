@@ -2053,3 +2053,8 @@ Blocked: No.
 - Done: no review performed in this session. D-120 items 2–3 are approved in principle and gated on a Claude Code review of `deliverables/architecture/lob-engine-design.md`; that review is still owed.
 - Doing next: review the engine design in Claude Code when the user asks.
 - Blocked by / need from: user dispatch in Claude Code; nothing built yet.
+
+### 2026-10-21 (26) — @pm / @senior-underwriter (written in OpenCode, not independently reviewed)
+- Done: recorded D-121 (Wave 2 order confirmed; Wave 2 field shapes not approved, review tomorrow; BPP/sprinkler scoring waits for a property-pack P-###; umbrella criterion 5 when umbrella starts; package dev 6+4 accepted; synthetic Wave 2 limits accepted; WC non-TX out of scope; occupied renovation senior_referral with both suggested; personal auto is a commercial-auto scope criterion). Applied items 7–9 to the Wave 2 specs.
+- Doing next: engine step 1 on branch `lob-engine-step1` for review, not merged.
+- Blocked by / need from: @senior-underwriter + @model-risk review of Wave 2 field shapes tomorrow; @compliance on umbrella criterion 5.
