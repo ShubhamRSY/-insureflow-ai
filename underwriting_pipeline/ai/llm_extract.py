@@ -505,8 +505,9 @@ def accept_field(item: dict, docs: dict[str, str], ocr_confidence: dict | None =
             if prepare.digits_of(str(day)) in prepare.digits_of(doc_text):
                 # Keep it for review - don't drop due to low confidence
                 pass  # will proceed below with flag set appropriately
-    low_scan = on_scan and SCAN_FLOOR <= confidence < MIN_CONFIDENCE
-    if confidence < MIN_CONFIDENCE and not low_scan:
+    drop = (on_scan and floor < SCAN_FLOOR) or (not on_scan and confidence < MIN_CONFIDENCE)  # P-056 (b): on a scan a text field is dropped on its cited words' AVERAGE (floor); one low word only flags it
+    low_scan = on_scan and ((SCAN_FLOOR <= confidence < MIN_CONFIDENCE) or (cited is not None and cited < MIN_CONFIDENCE))  # the field is in the review band, or one cited word is under the line
+    if drop:
         # P-067: check if this is a loss_run_valued_through scan with matching digits
         if field_id == "loss_run_valued_through" and on_scan:
             import prepare  # P-067: same-directory import; the package root is not on sys.path when the pipeline runs as a script

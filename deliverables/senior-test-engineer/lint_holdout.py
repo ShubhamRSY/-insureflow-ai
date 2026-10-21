@@ -12,7 +12,7 @@ PLAN.json (written by hand from the mix .md, before gold exists):
    "routes": {"carrier_a": 5, "senior_referral": 3}}    # optional: gold route counts over in-scope files
 Only keys present are checked.
 
-Scorer test (D-116 item 5, "test the test"), with --scorer NAME (default eval_holdout_v9; the scorer the set will be scored with):
+Scorer test (D-116 item 5, "test the test"), with --scorer NAME (default eval_holdout_v10, the scorer the set will be scored with once P-068 is approved):
   (a) a perfect answer built from each gold card is scored by the scorer itself (score_report, no pipeline run, no model call): no mark
       may be "miss" or "call_failed", and the set's route gate and P-055 gate must PASS with 0 false completes;
   (b) deliberately wrong answers, each must be caught: one per field on every in-scope file (named insured, premises, effective date,
@@ -208,10 +208,35 @@ WRONG = {  # field_id -> (check name, a wrong value)
     "year_built": ("year_built", "1066"), "loss_run_valued_through": ("loss_runs", "2019-01-01"),
 }
 
+# P-068: near-miss negatives. A wrong answer that states the opposite or a neighbouring fact must still be
+# caught, not waved through by the facts-not-wording reader. Each is (gold phrase to look for, wrong text to swap in).
+# Applied to every in-scope card whose operations items hold the phrase; the operations mark must be "miss".
+NEARMISS = [  # (present-phrase, wrong replacement) -- no alcohol vs beer and wine, hood vs no hood, count, cooking
+    ("no alcohol", "beer and wine served"),
+    ("beer and wine only", "full liquor bar"),
+    ("no cooking", "full commercial kitchen with cooking"),
+    ("no hood", "Type I hood installed"),
+    ("no fryer", "two deep fryers"),
+    ("no bar", "full bar"),
+    ("96 seats", "60 seats"),
+    ("24 seats", "40 seats"),
+    ("18 seats", "34 seats"),
+    ("14 units", "20 units"),
+    ("no processing", "processing and packaging on site"),
+    ("no manufacturing", "on-site manufacturing"),
+]
+
 
 def _empty(line: str) -> bool:
     low = (line or "").strip().lower()
     return low.startswith(("missing", "not in documents", "both", "none")) or not low
+
+
+def perfect_value(report: dict, field_id: str) -> str | None:
+    for r in report.get("fields", []):
+        if r.get("field_id") == field_id:
+            return r.get("value")
+    return None
 
 
 def perfect_report(scorer, sid: str, gold_text: str) -> dict:
@@ -306,6 +331,17 @@ def lint_scorer(ids: list[str], scorer_name: str) -> list[str]:
                 got = score(sid, text, wrong)
                 if got is not None and got["checks"].get(check) != "miss":
                     fails.append(f"{sid}/scorer: a wrong {check} ({value!r}) is not caught (marked {got['checks'].get(check)})")
+            gold_ops = (perfect_value(perfect, "operations") or "")
+            for phrase, wrong_ops in NEARMISS:  # P-068: a near-miss (facts not wording) is still a miss
+                if phrase.lower() not in gold_ops.lower():
+                    continue
+                wrong = copy.deepcopy(perfect)
+                for r in wrong["fields"]:
+                    if r["field_id"] == "operations":
+                        r["value"], r["needs_review"] = wrong_ops, False
+                got = score(sid, text, wrong)
+                if got is not None and got["checks"].get("operations") != "miss":
+                    fails.append(f"{sid}/scorer: a near-miss operations ({phrase!r} -> {wrong_ops!r}) is not caught (marked {got['checks'].get('operations')})")
             for check, change in (("conflict", {"conflicts": [] if perfect["conflicts"] else [{"field": "x", "text": "sales: 1 vs 2", "resolution": "open"}]}),
                                   ("status", {"complete": not perfect["complete"], "status": "incomplete" if perfect["complete"] else "complete"}),
                                   ("route", {"_route": "carrier_b" if perfect["_route"] != "carrier_b" else "carrier_a"})):
@@ -392,9 +428,11 @@ def self_check() -> int:
         plan = tp / "plan.json"
         plan.write_text(json.dumps({"ids": "901-903", "in": 2, "out": 1, "per_criterion": {"1": 1}, "routes": {"carrier_a": 1, "senior_referral": 1}, "undated_loss_runs": ["SUB-902"]}))
         INBOX, GOLD = tp / "inbox", tp / "gold"
-        import eval_holdout_v9 as v9  # noqa: E402  # pyright: ignore[reportMissingImports] the scorer the set is scored with by default
-        p055_real = v9.p055_gate
-        v9.p055_gate = lambda out, rows: p055_real(out, rows) | ({"verdict": "PASS"} if out and rows and not any(r["leaks"] or not r["detected"] for r in out) else {})  # one criterion only in this tiny set
+        import eval_holdout_v9 as v9  # noqa: E402  # pyright: ignore[reportMissingImports] used by the explicit --scorer cases below
+        import eval_holdout_v10 as v10  # noqa: E402  # pyright: ignore[reportMissingImports] the default scorer the temp set is checked with
+        tiny = lambda real: lambda out, rows: real(out, rows) | ({"verdict": "PASS"} if out and rows and not any(r["leaks"] or not r["detected"] for r in out) else {})  # one criterion only in this tiny set
+        v9_p055_real, v10_p055_real = v9.p055_gate, v10.p055_gate
+        v9.p055_gate, v10.p055_gate = tiny(v9_p055_real), tiny(v10_p055_real)
         try:
             r.append(main([str(plan), "--run-date", "2026-10-17"]) == 0)
             print(("ok   " if r[-1] else "BAD  ") + "clean temp set passes, scorer test included (perfect answers clean, every wrong answer caught)")
@@ -441,8 +479,68 @@ def self_check() -> int:
             f9 = [x for x in v9_findings if x.startswith(tuple(fids))]  # per-file findings; the set-wide gate lines are not these cards
             r.append(not f9 and not any("not caught" in x for x in v9_findings))
             print(("ok   " if r[-1] else "BAD  ") + "F1-F3: v9 scores all three cards clean and still catches every wrong answer" + (f"  got: {f9}" if f9 else ""))
+            # P-068: the near-miss negatives are part of the wrong-answer set and must be caught; prove a blind scorer fails them
+            nm_card = card.replace("- Operations: office lessor", "- Operations: retail store").replace(
+                "- Operations items: office building lessor", "- Operations items: retail store; 24 seats; no hood; no cooking; no alcohol")
+            (tp / "gold" / "SUB-907.md").write_text(nm_card)
+            v10_ops_real = v10.ops_items_hit
+            good_nm = [x for x in lint_scorer(["SUB-907"], "eval_holdout_v10") if "near-miss operations" in x]  # v10 catches every near-miss on this card
+            v10.ops_items_hit = lambda *a: True  # a scorer blind to every operation (near-miss included)
+            blind_nm = [x for x in lint_scorer(["SUB-907"], "eval_holdout_v10") if "near-miss operations" in x]
+            v10.ops_items_hit = v10_ops_real
+            r.append(not good_nm and bool(blind_nm))
+            print(("ok   " if r[-1] else "BAD  ") + f"near-miss negatives are tested ({len(blind_nm)} caught when blind, 0 uncaught by v10)" + (f"  got: {good_nm}" if good_nm else ""))
+            # P-068 / @model-risk H1: the exact adversarial repros that broke the v10 draft (interleaved counts,
+            # a negation spanned across the item, a neighbouring fact). Each must be a miss; each true positive a hit.
+            h1 = [  # (answer, gold items, want_hit)
+                ("40 seats and 48 parking spaces", "48 seats", False),
+                ("Seating for 40 with 24 parking spaces", "24 seats", False),
+                ("6 units with 14 garage spaces", "14 units", False),
+                ("Beer with no wine or liquor", "beer wine liquor", False),
+                ("Counter space for 12 with table service", "counter service", False),
+                ("Live band music - no.", "live music", False),
+                ("Full liquor license, 90 seats", "beer and wine only", False),
+                ("Type II hood, I think", "Type I hood", False),
+                ("No liquor; beer and wine", "beer only", False),
+                ("48 seats", "4 seats", False),
+                ("Full bar, alcohol served, no patio", "no alcohol", False),
+                ("The dining room has 48 seats.", "48 seats", True),
+                ("Sin cocina, 24 asientos", "no cooking; 24 seats", True),
+                ("Type I hood with UL 300", "Type I hood; UL 300", True),
+                ("Retail seating for 24", "24 seats", True),
+                # H3/H4/H5 (second @model-risk pass): a negation for one fact must not flip a neighbouring one
+                ("Full bar, no patio", "no alcohol", False),
+                ("Beer and wine, no delivery", "no alcohol", False),
+                ("Type I hood, no delivery", "no hood", False),
+                ("2 fryers, no hood", "no fryer", False),
+                ("Type I hood, no delivery", "Type I hood", True),
+                ("Beer and wine only, no liquor license", "beer and wine only", True),
+                ("Beer and wine only, no liquor license", "no alcohol", False),
+                ("Beer and wine: no liquor license", "beer and wine only", True),
+                ("Fire sprinkler suppression system in the building", "Type I hood", False),
+                ("Type I hood with UL 300 suppression", "Type I hood", True),
+                # H6/H7/H8 (third @model-risk pass): a trailing negation still voids its own fact; a positive
+                # value across clauses beats an absence; a negated unit count is skipped.
+                ("Live music, no", "live music", False),
+                ("Beer and wine, no", "beer and wine only", False),
+                ("48 seats, no", "48 seats", False),
+                ("Beer and wine: no liquor license", "beer and wine only", True),
+                ("No hard liquor; beer and wine only", "beer and wine only", True),
+                ("No liquor license; beer and wine served", "beer and wine only", True),
+                ("Not 6 units, 8 units", "6 units", False),
+                ("No oven on site", "oven", False),
+                # H9/H10 (fourth @model-risk pass): a later-stated value wins; a negated repeat of the same
+                # fact must not void an earlier positive.
+                ("40 seats. 48 seats.", "48 seats", True),
+                ("48 seats. 60 seats.", "48 seats", False),
+                ("Type I hood, no hood", "Type I hood", True),
+                ("No hood, Type I hood", "Type I hood", True),
+            ]
+            h1_bad = [f"{a!r} vs {i!r} (want hit={w})" for a, i, w in h1 if v10.ops_items_hit(a, i) != w]
+            r.append(not h1_bad)
+            print(("ok   " if r[-1] else "BAD  ") + f"H1 repros all close ({len(h1)} cases, 0 false positives, 0 false negatives)" + (f"  got: {h1_bad}" if h1_bad else ""))
         finally:
-            v9.p055_gate = p055_real
+            v9.p055_gate, v10.p055_gate = v9_p055_real, v10_p055_real
         plan.write_text(json.dumps({"ids": "901-903", "in": 2, "out": 1}))
         r.append(main([str(plan), "--run-date", "2026-10-17"]) == 1)
         print(("ok   " if r[-1] else "BAD  ") + "same set without the undated declaration fails")
@@ -466,7 +564,7 @@ def main(argv: list[str]) -> int:
     ids = [f"SUB-{n:03d}" for n in range(a, b + 1)]
     f1, infos = lint_dates(ids, run, set(plan.get("undated_loss_runs") or []))
     fails = f1 + lint_gold_and_mix(ids, plan)
-    scorer = argv[argv.index("--scorer") + 1] if "--scorer" in argv else "eval_holdout_v9"
+    scorer = argv[argv.index("--scorer") + 1] if "--scorer" in argv else "eval_holdout_v10"
     if not fails:  # the scorer test needs readable Scope lines
         fails += lint_scorer(ids, scorer)
     for w in infos:

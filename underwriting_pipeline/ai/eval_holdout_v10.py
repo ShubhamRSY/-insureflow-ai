@@ -366,112 +366,253 @@ def _hours(text: str) -> str:
 
 
 
-SYNONYMS = {
-    "office building lessor": ["building owner", "owner lessor", "lessor", "building owner/lessor", "building owner lessor"],
-    "craft supplies": ["craft and hobby supplies", "hobby supplies"],
-    "canned goods": ["canned and dry goods", "dry goods"],
-    "no packaging": ["no processing or packaging"],
-    "owner marketing the space": ["owner is marketing the space", "marketing the space"],
-    "bar snacks only": ["beyond bar snacks only", "bar snacks"],
-    "no cooking": ["no kitchen"],
-    "beer wine liquor": ["beer and wine and liquor", "beer wine and liquor"],
-    "closes 11 p.m.": ["closes at 11 p.m.", "closes at 11 pm", "closes 11pm"],
-    "no late-night entertainment": ["no dancing or late-night entertainment"],
-}
+# P-068 rework (T-115, 2026-10-20): operations is scored on FACTS (slots), not on wording.
+# The slot vocabulary is defined in `deliverables/senior-underwriter/operations-gold-rule.md`
+# ("Slot definition table (T-114 / D-117, 2026-10-20)") from underwriting knowledge, never from
+# any hold-out answer. A slot is read within ONE clause; a negation in that clause flips or voids it.
+NEG_WORDS = {"no", "not", "non", "without", "never", "none", "sin", "nada"}
+UNIT_NUM = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10}
+
+# slot -> (list of trigger phrases, absent-value phrase list). Triggers are lowercased; matched as whole-word runs in a clause.
+ALCOHOL_FULL = ["full liquor license", "full liquor", "liquor license", "spirits", "mixed drinks", "hard liquor", "full bar", "full liquor bar", "bar service", "serves liquor", "licores", "bebidas espirituosas", "cocteles", "restaurant and bar", "bar and restaurant"]
+ALCOHOL_BEER_WINE = ["beer and wine", "beer & wine", "beer/wine", "wine and beer", "beer wine", "vino y cerveza", "cerveza y vino"]
+ALCOHOL_BEER_ONLY = ["beer only", "cerveza solamente", "beer only license"]
+COOKING_FULL = ["full kitchen", "kitchen", "cooking operations", "grill", "charbroiler", "flat-top", "flattop", "griddle", "range", "burners", "fryer", "fryers", "deep fryer", "wok", "oven", "comal", "wood-fired", "deep frying", "freidora", "fritura", "parrilla", "plancha", "horno", "cocina"]
+COOKING_LIGHT = ["microwave only", "cold prep", "assembly only", "warming only", "no cooktop"]
+FRYER_WORDS = ["fryer", "fryers", "deep fryer", "deep fat fryer", "deep frying", "freidora", "freidoras", "fritura"]
+FLAME_WORDS = ["grill", "charbroiler", "wood-fired", "open flame", "flame cooking", "torch-down", "torch down", "parrilla", "llama abierta"]
+HOOD_WORDS = ["type i hood", "exhaust hood", "hood", "wet chemical", "ul 300", "extinguishing system", "campana", "sistema de supresion"]
+ENT_WORDS = ["live music", "band", "dj", "dancing", "dance floor", "music on premises", "musica en vivo", "baile"]
+DELIVERY_WORDS = ["delivery", "delivery service", "catering", "entrega", "domicilio"]
+OPEN24_WORDS = ["24-hour", "24 hours", "24/7", "around the clock", "las 24 horas", "abierto las 24"]
+PROC_WORDS = ["on-site processing", "manufacturing", "repackaging", "food prep for resale", "sorting", "repair work", "storage of flammables", "commercial pressing", "empaque", "reenvasado", "manufactura"]
+OUTDOOR_WORDS = ["outdoor seating", "outdoor service", "outdoor dining", "patio", "deck seating", "sidewalk cafe", "outside seating", "terraza", "comedor exterior", "patios"]
+SECURITY_WORDS = ["security staff", "security guard", "bouncer", "armed guard", "doorman", "seguridad", "guardia", "custodio"]
+HAZMAT_WORDS = ["hazardous materials", "hazmat", "flammable liquids", "aerosols", "pesticides", "explosives", "fireworks", "propane", "chemicals", "materiales peligrosos", "explosivos", "fuegos artificiales"]
+FLOOR_WORDS = ["basement", "ground floor", "first floor", "second floor", "upstairs", "downstairs", "planta baja", "primer piso", "segundo piso", "sotano"]
+
+SEAT_WORDS = ["seats", "seat", "seating", "capacity", "asientos", "capacidad"]
+UNIT_WORDS = ["units", "unit", "apartments", "apartment", "unidades", "apartamentos", "suites", "rental units", "rental unit"]
+BUILDING_WORDS = ["building", "buildings", "estructuras", "structures"]
+STORY_WORDS = ["story", "stories", "floor building"]
 
 
-def _norm_numbers_units(s: str) -> str:
-    """P-068 (v10): normalize numbers/units to facts."""
-    s = s.lower()
-    s = re.sub(r"(\d+)\s*seats?", r"seats_\1", s)
-    s = re.sub(r"seating for\s*(\d+)", r"seats_\1", s)
-    s = re.sub(r"limited seating for\s*(\d+)", r"seats_\1", s)
-    s = re.sub(r"(\d+)\s*units?", r"units_\1", s)
-    s = re.sub(r"approximately\s*(\d+)\s*%", r"pct_\1", s)
-    s = re.sub(r"(\d+)\s*%", r"pct_\1", s)
-    return s
+def _num_before(words: list[str], i: int) -> int | None:
+    """The integer stated immediately before (or at) word i, or None."""
+    if i > 0 and words[i - 1].isdigit():
+        return int(words[i - 1])
+    if i > 0 and words[i - 1] in UNIT_NUM:
+        return UNIT_NUM[words[i - 1]]
+    return None
 
-def _syn_variants(item_str: str) -> list[list[str]]:
-    vars_list = [item_words(item_str)]
-    item_low = item_str.lower()
-    for k, syns in SYNONYMS.items():
-        if k.lower() == item_low or item_low in k.lower() or k.lower() in item_low:
-            for s in syns:
-                vars_list.append(item_words(s))
-    # also add common rewrites
-    s = item_low
-    if 'late-night' in s or 'late night' in s:
-        vars_list.append(item_words('no dancing or late-night entertainment'))
-    if 'closes' in s and '11' in s:
-        vars_list.append(item_words('closes at 11 p.m.'))
-        vars_list.append(item_words('closes at 11 pm'))
-    if 'seats' in s and re.search(r'(\d+)', item_str):
-        m = re.search(r'(\d+)', item_str)
-        if m:
-            vars_list.append(item_words(f'seating for {m.group(1)}'))
-            vars_list.append(item_words(f'limited seating for {m.group(1)}'))
-            vars_list.append(item_words(f'{m.group(1)} seats'))
-    return vars_list
+
+def _negated_at(words: list[str], i: int) -> bool:
+    """A negation word immediately before position i (or the trigger's own leading 'no')."""
+    return i > 0 and words[i - 1] in NEG_WORDS
+
+
+def _clause_slots(clause: str) -> dict:
+    """The slots stated in ONE clause. A negation voids the trigger -> the slot's absent value (or 'no')."""
+    words = item_words(clause)
+    low = " " + " ".join(words) + " "
+    out: dict = {}
+
+    def _t(t: str) -> str:
+        return " " + " ".join(item_words(t)) + " "  # a trigger in the same token form as the clause ("24-hour" -> "24 hour")
+
+    def has(triggers) -> bool:
+        return any(_t(t) in low for t in triggers)
+
+    def _runs(t: str) -> list[tuple[int, int]]:
+        tw = item_words(t)
+        return [(i, i + len(tw)) for i in range(len(words) - len(tw) + 1) if words[i:i + len(tw)] == tw] if tw else []
+
+    def _positive(triggers) -> bool:
+        """A trigger run that is not negated: no negation right before it, and not before a clause-final
+        negation. A later negated repeat of the same trigger ("Type I hood, no hood") does not void an
+        earlier positive run — only a trigger with NO positive run is voided."""
+        lastneg = len(words) - 1 if words and words[-1] in NEG_WORDS else -1
+        for t in triggers:
+            for i, _ in _runs(t):
+                if i > 0 and words[i - 1] in NEG_WORDS:
+                    continue  # this run is negated
+                if lastneg >= 0 and i < lastneg:
+                    continue  # a standalone clause-final negation voids this run
+                return True
+        return False
+
+    def neg(triggers) -> bool:
+        # A trigger is voided only when it has no positive run: a negation right before its only run, or a
+        # clause-final negation with no run after it ("live music - no", "beer and wine: no", "4 fryers: no").
+        # A negation followed by other content ("type i hood, no delivery", "beer and wine: no liquor license")
+        # does not void it — the "no" belongs to the next fact; a negated repeat ("Type I hood, no hood") does
+        # not void the earlier positive.
+        return has(triggers) and not _positive(triggers)
+
+    # alcohol. A negated trigger of one class never masks a stated value of another class:
+    # "no liquor license" in a beer & wine clause confirms beer_wine (table row 2 note), never full_bar or none.
+    if has(ALCOHOL_FULL) and not neg(ALCOHOL_FULL):
+        out["alcohol"] = "full_bar"
+    elif has(ALCOHOL_BEER_WINE) and not neg(ALCOHOL_BEER_WINE):
+        out["alcohol"] = "beer_wine"
+    elif has(ALCOHOL_BEER_ONLY) and not neg(ALCOHOL_BEER_ONLY):
+        out["alcohol"] = "beer_only"
+    elif has(ALCOHOL_FULL) or has(ALCOHOL_BEER_WINE) or has(ALCOHOL_BEER_ONLY) or has(["no alcohol", "no liquor", "sin licor", "sin alcohol", "dry bar", "sin bar"]):
+        out["alcohol"] = "none"
+    # cooking. A negated appliance trigger does not read "full" ("No oven on site" is not a full kitchen).
+    if has(["no cooking", "no kitchen", "sin cocina", "no hay cocina"]):
+        out["cooking"] = "none"
+    elif has(COOKING_LIGHT) and not neg(COOKING_LIGHT):
+        out["cooking"] = "light"
+    elif has(COOKING_FULL) and not neg(COOKING_FULL):
+        out["cooking"] = "full"
+    elif has(COOKING_LIGHT) or has(COOKING_FULL):
+        out["cooking"] = "none"
+    # fryer (presence; count compared only when stated). A negated count ("not 2 fryers") is skipped;
+    # a negation before or after ("no fryer", "4 fryers: no") flips the whole slot.
+    if has(FRYER_WORDS):
+        if neg(FRYER_WORDS):
+            out["fryer"] = "no"
+        else:
+            cnt = None
+            for i, w in enumerate(words):
+                if w in ("fryer", "fryers", "freidora", "freidoras"):
+                    n = _num_before(words, i)
+                    if n is not None and not (i > 1 and words[i - 2] in NEG_WORDS) and not (i > 0 and words[i - 1] in NEG_WORDS):
+                        cnt = n
+                        break
+            out["fryer"] = f"yes{cnt}" if cnt is not None else "yes"
+    # open flame
+    if has(FLAME_WORDS):
+        out["open_flame"] = "no" if neg(FLAME_WORDS) else "yes"
+    # hood (Type I / suppression is the required hood; a Type II hood is not)
+    if has(HOOD_WORDS):
+        if re.search(r"type\s*(ii|2)\b", low):
+            out["hood"] = "no"
+        else:
+            out["hood"] = "no" if neg(HOOD_WORDS) else "yes"
+    # entertainment: a stated live-entertainment trigger wins; a bare "no dancing"/"no live music" is none.
+    if has(ENT_WORDS) and not neg(ENT_WORDS) and not has(["no live music", "no entertainment", "sin musica"]):
+        out["entertainment"] = "live"
+    elif has(["no live music", "no entertainment", "sin musica", "no dancing"]) or has(ENT_WORDS):
+        out["entertainment"] = "none"
+    # delivery
+    if has(DELIVERY_WORDS):
+        out["delivery"] = "no" if neg(DELIVERY_WORDS) else "yes"
+    # hours: the set of clock times stated in the clause (v9 _hours form: "N am"/"N pm"/"N MM am|pm").
+    times = re.findall(r"\b(\d{1,2})(?:\s(\d{2}))?\s?(am|pm)\b", low)
+    stated = {f"{h}:{m if m else '00'} {mer}" for h, m, mer in times} if times else set()
+    if stated:
+        out["hours"] = stated
+    # 24h
+    if has(OPEN24_WORDS):
+        out["open_24h"] = "no" if neg(OPEN24_WORDS) else "yes"
+    # onsite processing
+    if has(PROC_WORDS):
+        out["onsite_processing"] = "no" if neg(PROC_WORDS) else "yes"
+    # outdoor
+    if has(OUTDOOR_WORDS):
+        out["outdoor"] = "no" if neg(OUTDOOR_WORDS) else "yes"
+    # security
+    if has(SECURITY_WORDS):
+        out["security"] = "no" if neg(SECURITY_WORDS) else "yes"
+    # hazmat
+    if has(HAZMAT_WORDS):
+        out["hazmat"] = "no" if neg(HAZMAT_WORDS) else "yes"
+    # floor (open value)
+    if has(FLOOR_WORDS):
+        for w in FLOOR_WORDS:
+            if _t(w) in low:
+                out["floor"] = w
+                break
+    # seats (integer, only the number adjacent to a seat word). A clause ending in a negation voids it.
+    for i, w in enumerate(words):
+        if w in SEAT_WORDS:
+            n = _num_before(words, i)
+            if n is None and i + 1 < len(words) and words[i + 1].isdigit():
+                n = int(words[i + 1])
+            if n is None and i + 2 < len(words) and words[i + 1] in {"for", "of"} and words[i + 2].isdigit():
+                n = int(words[i + 2])  # "seating for 24", "capacity of 96"
+            if n is not None:
+                out["seats"] = "no" if _negated_at(words, i) or _negated_at(words, i - 1 if i else 0) or (words and words[-1] in NEG_WORDS) else n
+    # units (integer, only adjacent to a unit word; dwellings only). A negated count ("not 6 units") is skipped.
+    for i, w in enumerate(words):
+        if w in UNIT_WORDS:
+            if (i > 0 and words[i - 1] in NEG_WORDS) or (i > 1 and words[i - 2] in NEG_WORDS):
+                continue
+            n = _num_before(words, i)
+            if n is None and i + 1 < len(words) and words[i + 1].isdigit():
+                n = int(words[i + 1])
+            if n is None and i + 2 < len(words) and words[i + 1] in {"for", "of"} and words[i + 2].isdigit():
+                n = int(words[i + 2])  # "units for 6", "apartments of 8"
+            if n is not None:
+                out["units"] = n
+    return out
+
+
+ABSENT = {"none", "no"}  # a slot's "absent" value; a positive value stated anywhere in the answer wins over it
+
+
+def _slots(text: str) -> dict:
+    """Every slot stated anywhere in the text, by clause. A slot stated in any clause is held; a positive
+    value beats an "absent" one across clauses ("No hard liquor; beer and wine only" -> beer_wine).
+    Clauses split on ';' and '.' (the gold-item and sentence boundaries); a colon or comma stays inside
+    a clause so a trailing negation ("beer and wine: no") still voids its slot."""
+    held: dict = {}
+    for clause in re.split(r"[;.\n]", _hours(text or "")):
+        for k, v in _clause_slots(clause).items():
+            if k == "hours":
+                held["hours"] = set(held.get("hours") or ()) | set(v)
+            elif k not in held or v not in ABSENT:
+                held[k] = v  # a stated value fills a gap and overrides an earlier value; an "absent" only fills a gap
+    return held
 
 
 def ops_items_hit(answer: str, items_line: str) -> bool:
-    """v5 + v9 + v10 (P-068): facts not wording."""
-    answer, items_line = _hours(answer), _hours(items_line)
-    answer_norm = _norm_numbers_units(answer)
-    items_line_norm = _norm_numbers_units(items_line)
-    clauses = _clauses(answer_norm)
-    items = [item_words(item) for item in items_line_norm.split(";") if item_words(item)]
-    if not items:
-        return False
-
-    def found_variants(item_variants):
-        for item in item_variants:
-            if len(item) == 0:
-                continue
-            for n, words in enumerate(clauses):
-                nxt = clauses[n + 1] if n + 1 < len(clauses) else []
-                # try contiguous first
-                for at in range(len(words) - len(item) + 1):
-                    if words[at : at + len(item)] == item:
-                        negated = at > 0 and words[at - 1] in NEGATION and item[0] not in NEGATION
-                        rest = words[at + len(item) :]
-                        negated = negated or bool(rest) and set(rest) <= NO_CLAUSE
-                        if not negated and not (nxt and set(nxt) <= NO_CLAUSE):
-                            return True
-                # v10: facts not wording - allow in order but not necessarily contiguous
-                if len(item) > 1:
-                    # check if all item words appear in order
-                    pos = 0
-                    matched = True
-                    # find each in order
-                    j = 0
-                    for itw in item:
-                        found_it = False
-                        while j < len(words):
-                            if words[j] == itw:
-                                found_it = True
-                                j += 1
-                                break
-                            j += 1
-                        if not found_it:
-                            matched = False
-                            break
-                    if matched:
-                        # check negation before first
-                        negated = False
-                        # find position of first
-                        # simplified
-                        negated = False
-                        if not negated and not (nxt and set(nxt) <= NO_CLAUSE):
-                            return True
-        return False
-
-    for item in items:
-        item_str = ' '.join(item)
-        variants = _syn_variants(item_str)
-        if not found_variants(variants):
+    """v10 (P-068, T-115): slots, facts not wording. Every gold slot must match the answer's slot value;
+    a clause-scoped negation flips a slot; a count is compared as an exact integer.
+    A gold item that names no slot (business type, a trade exclusion like "no roofing") is checked as
+    free text: its content words must appear in the answer, with its own clause-scoped negation honoured."""
+    try:
+        gold_items = [s.strip() for s in re.split(r"[;]", items_line or "") if s.strip()]
+        if not gold_items:
             return False
-    return True
+        gold = _slots(items_line)
+        got = _slots(answer)
+        for slot, want in gold.items():
+            if slot == "hours":
+                if not set(want) <= set(got.get("hours") or ()):
+                    return False
+            elif got.get(slot) != want:
+                return False
+        # free-text items: no slot of their own. v9 wording rule (words together, in order, one clause;
+        # a clause-scoped negation voids it), so a business type or a trade exclusion is still checked.
+        for seg in gold_items:
+            if _slots(seg):
+                continue
+            if not _free_item_hit(answer, seg):
+                return False
+        return True
+    except Exception:  # fail closed: a broken read is a miss, never a silent hit
+        return False
+
+
+def _free_item_hit(answer: str, seg: str) -> bool:
+    """A gold item that names no slot: its words, together and in order, inside one clause of the answer.
+    A match right after a negation, or whose remaining words are only a negation, does not count (v9 rule)."""
+    item = item_words(seg)
+    if not item:
+        return True
+    for words in _clauses(_hours(answer)):
+        for at in range(len(words) - len(item) + 1):
+            if words[at : at + len(item)] != item:
+                continue
+            negated = at > 0 and words[at - 1] in NEGATION and item[0] not in NEGATION
+            rest = words[at + len(item) :]
+            negated = negated or (bool(rest) and set(rest) <= NO_CLAUSE)
+            if not negated:
+                return True
+    return False
 
 
 
@@ -615,7 +756,7 @@ def score_report(sid: str, gold_text: str, report: dict, call: str = "") -> dict
     try:
         sc = gold_scope(gold_text)  # v6: also checked for the whole set in main() before anything runs
     except ValueError as why:
-        raise SystemExit(f"scorer v9 stopped: {sid}: {why}")
+        raise SystemExit(f"scorer v10 stopped: {sid}: {why}")
     if sc["out"]:  # v6: not field-scored; the P-055 measures only
         return {**scope_row(sid, sc, report), "scope": "out", "format": gold.get("format"), "error": None, "call": call, "checks": {}, "retries": report.get("retries", [])}
     got = field_map(report)
@@ -636,8 +777,7 @@ def score_report(sid: str, gold_text: str, report: dict, call: str = "") -> dict
         return bool(needles) and all(needle.lower() in conflict_blob for needle in needles)
 
     checks = {
-        "named_insured": judge(False, named, named == gold["named insured"], gold["named insured"]),
-        "effective_date": judge(gold["effective date"].lower().startswith("missing"), effective, effective == gold["effective date"], gold["effective date"]),  # X1: exact
+        "named_insured": judge(False, named, named == gold["named insured"], gold["named insured"]),        "effective_date": judge(gold["effective date"].lower().startswith("missing"), effective, effective == gold["effective date"], gold["effective date"]),  # X1: exact
         "operations": judge(False, ops, bool(ops) and (ops_items_hit(ops, gold["operations items"]) if gold.get("operations items") else all(word in set(words(ops)) for word in words(gold["operations"]))), gold["operations"]),
         "sales": judge(False, sales, bool(sales) and digits(sales) == digits(gold["sales"]), gold["sales"]),
         "construction": judge(False, construction, bool(construction) and gold["construction"].lower() in construction.lower(), gold["construction"]),
@@ -658,7 +798,7 @@ def score_report(sid: str, gold_text: str, report: dict, call: str = "") -> dict
     try:
         date = gold_valued_date(gold)  # v8 (P-064): the valued-as-of line only, never the first date of the "Loss runs" line
     except ValueError as why:
-        raise SystemExit(f"scorer v9 stopped: {sid}: {why}")
+        raise SystemExit(f"scorer v10 stopped: {sid}: {why}")
     checks["loss_runs"] = loss_run_mark(gold, runs, bool(got["loss_run_valued_through"].get("needs_review")), runs_missing, date)
     if conflict_none(gold["conflict"]):  # v9 (F1): "none" or "none (…)", never a topic note
         if not identity:
@@ -782,7 +922,7 @@ def main() -> None:
     global OUT_JSON, OUT_MD
     bad = gold_problems(IDS)
     if bad:  # v6/v8: before any call and before anything is written
-        raise SystemExit("scorer v9 stopped, nothing scored or written. Gold line problems:\n  " + "\n  ".join(bad))
+        raise SystemExit("scorer v10 stopped, nothing scored or written. Gold line problems:\n  " + "\n  ".join(bad))
     OUT_JSON, OUT_MD = out_paths(RESCORE)  # before any call: a refused live run spends nothing
     if RESCORE:
         llm_extract._post = _no_call
@@ -800,7 +940,7 @@ def main() -> None:
     gate = route_gate(rows)
     OUT_JSON.write_text(json.dumps({"label": LABEL, "commit": head, "uncommitted": dirty, "model": llm_extract.endpoint_settings()["model"], "host": llm_extract._host(), "submissions": rows, "counted": counted, "status_split": status_split, "route_gate": gate, "p055_gate": p055, "scope_rows": out_rows + [r for r in in_all if r not in rows]}, indent=2) + "\n")
     lines = [
-        f"# Extraction score (scorer v9) — {IDS[0]} through {IDS[-1]}",
+        f"# Extraction score (scorer v10) — {IDS[0]} through {IDS[-1]}",
         "",
         "- Author: @ai-engineer-assistant",
         f"- {LABEL}.",
@@ -1123,10 +1263,10 @@ if __name__ == "__main__":
         assert route_gate([mk("H", "miss", "hold", "carrier_a")])["unsafe"] == 0, "D-097: hold is not a gold route; v3 counted this"
         ops = "Restaurant. Breakfast and lunch counter service, 48 seats, dine-in and takeout. No alcohol of any kind. Flat-top, 2 fryers, 4-burner range, Type I hood with UL 300 suppression"
         items = "restaurant; no alcohol; 48 seats; flat-top; 2 fryers; 4-burner range; Type I hood; UL 300; counter service; dine-in; takeout"
-        assert ops_items_hit(ops, items), "SUB-156: every item present; the gold connector 'under' is not an item"
+        assert ops_items_hit(ops, items), "SUB-156: every gold slot present; non-slot items (counter service) are ignored"
         assert not ops_items_hit(ops.replace("No alcohol", "Full liquor"), items), "'no' counts: full liquor is not 'no alcohol'"
         assert not ops_items_hit(ops.replace("48 seats", "40 seats"), items) and not ops_items_hit(ops, "") and not ops_items_hit("", items)
-        assert not ops_items_hit("Restaurant, 48 seats", "restaurant; 48 seats; live music"), "a dropped item is a miss"
+        assert not ops_items_hit("Restaurant, 48 seats", "restaurant; 48 seats; live music"), "a dropped slot is a miss"
         for answer, item in (("Full bar, alcohol served, no patio", "no alcohol"), ("4 fryers, 2-burner range", "2 fryers"), ("48 seats", "4 seats"),
                              ("Type II hood, I think", "Type I hood"), ("No liquor; beer and wine", "beer only")):
             assert not ops_items_hit(answer, item), ("check H2", answer, item)
@@ -1136,9 +1276,25 @@ if __name__ == "__main__":
             assert not ops_items_hit(answer, "live music"), ("look-again H3", answer)
         assert not ops_items_hit("Beer and wine (none)", "beer and wine") and ops_items_hit("Beer and wine only, no liquor", "beer and wine only; no liquor"), "H3"
         assert ops_items_hit("No alcohol of any kind", "no alcohol") and ops_items_hit("Type I hood with UL 300", "Type I hood; UL 300")
+        # T-115 (P-068 rework): the @model-risk H1 false-positive repros must all be misses now.
+        for answer, item in (("40 seats and 48 parking spaces", "48 seats"),          # number must not pair across facts
+                             ("Seating for 40 with 24 parking spaces", "24 seats"),
+                             ("6 units with 14 garage spaces", "14 units"),
+                             ("60 seats and a 96 room capacity", "96 seats"),
+                             ("Beer with no wine or liquor", "beer wine liquor"),     # spanned negation
+                             ("Counter space for 12 with table service", "counter service"),
+                             ("2 kitchen not fryers of the 4 kind", "2 fryers"),
+                             ("Live jazz music? No.", "live music"),
+                             ("Live band music - no.", "live music"),
+                             ("Bar snacks plus hot meals and entrees", "bar snacks only")):
+            assert not ops_items_hit(answer, item), ("H1 rework", answer, item)
+        # and the true positives still hold
+        assert ops_items_hit("The dining room has 48 seats.", "48 seats")
+        assert ops_items_hit("Full liquor license, 90 seats, live music", "full liquor license; 90 seats; live music")
+        assert ops_items_hit("Sin cocina, 24 asientos", "no cooking; 24 seats"), "Spanish: sin cocina / asientos"
         assert parse_gold("- Operations items: a; b\n- Operations: x")["operations items"] == "a; b"
         _v9_self_check()
-        print("eval_holdout_v9 self-check ok")
+        print("eval_holdout_v10 self-check ok")
         sys.exit(0)
     if sys.argv[1:2] == ["--check-gold"]:  # v6: format check only; reads the gold Scope lines of HOLDOUT_IDS, nothing else
         found, _ = gold_scopes(IDS)
