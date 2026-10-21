@@ -1,0 +1,3 @@
+source,loc,address,city,zip,bldg_tiv,construction,year_built,sq_ft,sprinklers,cooking
+application,1,3307 E Central Texas Expy,Killeen,76543,$260000,Metal,2003,4000,No,No
+application,2,920 Indian Trail,Harker Heights,76548,$90000,Metal,2010,1800,No,No

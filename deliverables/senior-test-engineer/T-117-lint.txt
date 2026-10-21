@@ -1,0 +1,4 @@
+INFO  SUB-241/loss-runs.md: declared undated in the plan; no valued date found, as declared
+INFO  SUB-242/loss-runs.md: declared undated in the plan; no valued date found, as declared
+INFO  SUB-254/loss-runs.md: declared undated in the plan; no valued date found, as declared
+PASS: 0 failure(s), 3 info, 32 files, run date 2026-10-21

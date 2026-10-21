@@ -1928,3 +1928,28 @@ Blocked: No.
 - @ai-engineer-assistant: fixed B-446 in `llm_extract.py` (sha256 e72d092a…c606) — text-field scan gate now uses cited-words average per P-056(b); @model-risk APPROVE no High, 20k-case fuzz 0 unsafe changes. Deleted empty stub `tests/test_concurrent_writes_proc.py`. B-446 resolved in BACKLOG.
 - Done: conflict/status non-hit report in T-115 (1 real conflict miss SUB-211, 9 artefacts). All self-checks pass (`llm_extract`, `eval_holdout_v10`, `lint_holdout`).
 - Blocked by / need from: @user (build next 20+12 hold-out gold-first w/operations slots + lint, then /wrap-up/push). T-027 veto remains open until a fresh approved hold-out passes all gates.
+
+### 2026-10-21 (1) — @senior-underwriter (written by the orchestrator, labelled)
+- Done: T-116 `operations-gold-rule.md` P-069 section: `business_type` slot (22 values from carrier-match.md), unscored-notes syntax, 15 near-miss negatives; bar-word line (model-risk H1) and counter-word line (M6, "salad bar" etc. not bar_pub); dev gold SUB-211/222 fixed. T-117 gold first for SUB-238–269 (32 cards), `T-117-routes.md` (carrier_a 2, senior_referral 14, no_match 4), `T-117-gold-summary.md`; lint fixes on SUB-238/239/247/252.
+- Doing next: nothing assigned.
+- Blocked by / need from: @head-of-underwriting to confirm SUB-248 (therapist tenant, carrier_a kept) and the R17 neutral-word reading on 246/248; SUB-211 dev route R9/R10 vs R2.
+
+### 2026-10-21 (2) — @ai-engineer-assistant (written by the orchestrator, labelled)
+- Done: T-116 scorer `eval_holdout_v11.py` (sha256 7ddcfb50…fcbb), lint v11 default, dev gold migration (`P-069-dev/`), `--check-ops-gold`; SUB-127–173 ops gold 47/47; T-108 dev re-score v10 12/20 → v11 15/20 ops, other fields identical, 0 model calls; analysis `T-116-v11-business-type.md`.
+- Doing next: nothing until T-117 is run with the user's approval.
+- Blocked by / need from: @user (run T-117).
+
+### 2026-10-21 (3) — @model-risk (written by the orchestrator, labelled)
+- Done: T-116 check: OBJECTION H1 (dev gold dropped bar_pub on SUB-211/222; rule had no line); look-again after the fix: **APPROVE, no High**, v11 7ddcfb50…fcbb and lint 01147a75…ea653 may be frozen. Backlog: M1–M6, L1–L2 (`deliverables/model-risk/check-T-116-P-069.md`).
+- Doing next: T-117 build check if the user asks for one.
+- Blocked by / need from: nothing.
+
+### 2026-10-21 (4) — @producer (written by the orchestrator, labelled)
+- Done: T-117 submissions SUB-238–269 (20 in / 12 out; criteria 4/5/4/2, two-criteria 263/268/269, criterion-4 258/259) via `simulation/inbox/build_SUB-238-269.py`; mix `deliverables/producer/T-117-mix.md` (written to scratchpad, copied by the orchestrator: @producer has no `deliverables/` access).
+- Doing next: nothing.
+- Blocked by / need from: nothing.
+
+### 2026-10-21 (5) — @senior-test-engineer (written by the orchestrator, labelled)
+- Done: `T-117-plan.json` (T-108 schema); lint with frozen v11: first FAIL (3, all gold), after the gold fixes **PASS**, 0 failures, 3 info, 32 files (re-run by the orchestrator); `T-117-lint.md`.
+- Doing next: nothing.
+- Blocked by / need from: nothing.
