@@ -1,13 +1,13 @@
 # Next session
 
-Written 2026-10-21 by the orchestrator at wrap-up. Wrap-up commit: `b05a89d` on `ai-team`, pushed to `origin/ai-team` (private). Previous: `f3e066b`.
+Written 2026-10-21 (second session) by the orchestrator at wrap-up. Wrap-up commit: `50b9205` on `ai-team`, pushed to `origin/ai-team` (private). Previous: `b05a89d`.
 
 - Budget rule 8: demo blockers only until the demo is done.
 - Standing rules: D-065, D-069, the CLAUDE.md "Plugins" section (D-097). One AI session on this repo (D-090). The `frontend/` files and `.claude/settings*.json` belong to the user and are never staged.
 - **Work in the permanent worktree `/Users/disastershubz/INSURANCE FLOW AI/insureflow-ai-team` (branch `ai-team`, D-101).** Never touch the main folder `-insureflow-ai-1`; its `team/NEXT-SESSION.md` is stale.
 - **Run every pipeline command with `.venv/bin/python`.** New hold-outs are scored with **`eval_holdout_v11`** (v10 and earlier frozen). Gold check: `HOLDOUT_IDS=<a-b> .venv/bin/python underwriting_pipeline/ai/eval_holdout_v11.py --check-gold`.
 - pyright: `npx --yes pyright@1.1.390 --pythonpath .venv/bin/python <files>`. Playwright only via `/opt/homebrew/opt/python@3.14/bin/python3.14`.
-- @producer cannot write `deliverables/`; it writes the mix to the scratchpad and the orchestrator copies it.
+- @producer cannot write `deliverables/`; it writes to the scratchpad and the orchestrator copies it.
 
 ## Frozen code under test (D-119)
 
@@ -17,21 +17,28 @@ Written 2026-10-21 by the orchestrator at wrap-up. Wrap-up commit: `b05a89d` on 
 | Prompt hash (`PROMPT_VERSION`) | `759b3e6bc9b2` |
 | Scorer v11 sha256 | `7ddcfb50521b7af17f00c0e148891ca40008d019ce257b9b5d121c7fa6d3fcbb` |
 | Lint sha256 | `01147a7532bdd7f1ec00861200d1d5e6bbf87f12612389416ff58b78844ea653` |
-| v10 sha256 (unchanged) | `ffd1afdda55fd761f21deb2f6ede49b9294d7517bed6500ccd9520eba361302b` |
+| **T-117 gold manifest sha256** | **`7e076534432f1276bfe6198643547498b613c4f2b7aceb2ed618314b5e39fd33`** (supersedes `9ab5960d…`) |
 
-Any byte change to v11 or the lint reopens the @model-risk check.
+Any byte change to v11, the lint or the gold reopens the check. Commits after `8d605ac` touch docs and gold only, so the code under test is unchanged.
 
 ## Where we stopped
 
-- **P-069 built and frozen (T-116, D-119).** A `business_type` operations slot (22 values from carrier-match.md). Items that fit no slot become `- Operations notes (unscored):`. The rule is in `deliverables/senior-underwriter/operations-gold-rule.md`, including a bar-word line (H1) and a counter-word line for "salad bar" and similar (M6).
-  - @model-risk: OBJECTION H1, because dev gold dropped bar_pub on SUB-211/222. The gold and rule were fixed, and the look-again was **APPROVE, no High** (`deliverables/model-risk/check-T-116-P-069.md`). M1–M6 and L1–L2 are not yet in BACKLOG.md.
-  - Dev evidence (T-108, cache, 0 model calls): operations went from 12/20 on v10 to **15/20 on v11**, and the other fields are identical. The 5 misses (207, 208, 213, 216, 219) are correct answers that also mention a second class in passing. This is a known limit of the word list and fails closed.
-- **T-117 hold-out built and gold frozen, not run.** SUB-238–269: 20 in scope and 12 out of scope, criteria 4/5/4/2.
-  - Routes: carrier_a 2, senior_referral 14, no_match 4. W1 held: 238, 239, 252. Office lessors 246/248, delis 247/249, two-operation 250/252.
-  - Lint PASS with frozen v11: 0 failures, 3 info, run date 2026-10-21.
-  - **Gold manifest sha256 `9ab5960db77f49e02b27518fb13eaff7a0ceb8d6e78c498c430bd2ba350a943d`** (`deliverables/senior-underwriter/T-117-gold-manifest.sha256`). The freeze note is in `deliverables/producer/T-117-mix.md`.
-  - Not done: a @model-risk build check of T-117 and a gold-vs-source comparison (both done for T-108, not requested this time).
-- All 6 self-checks pass at `b05a89d` (llm_extract, prepare, intake, package, workbench, points).
+- **@model-risk T-117 build check** (`deliverables/model-risk/T-117-check.md`): OBJECTION with 2 Highs, both gold.
+  - H1: SUB-246 and SUB-248 were carrier_a against R17 (unlisted words such as lessor and suites).
+  - H2: SUB-249 had business_type=retail, which the documents do not support.
+  - Everything else passed: hashes, the manifest reproduced, lint, check-gold, ops-gold, gold vs builder source (all fields), all 14 valued-as-of lines, Scope lines, and no run artefact.
+- **@senior-underwriter gold fix:**
+  - SUB-246 and SUB-248 now go to senior_referral with carrier_a suggested (R17). 248 keeps its hold.
+  - SUB-249 has `retail` removed.
+  - T-117 routes are now **carrier_a 0, senior_referral 16, no_match 4**.
+  - Lint PASS (0 failures, 3 info), check-gold 32 ok, ops-gold 20 ok. Re-frozen. The orchestrator re-verified the hashes and the lint.
+- **No @model-risk look-again on the fix yet.** The T-116 precedent had one.
+- Medium/Low findings in the backlog:
+  - B-447: pre-register 3 operations misses.
+  - B-448: SUB-252 R1 vs R2 needs a @head-of-underwriting ruling.
+  - B-449: no in-scope direct carrier_a route (a run limitation).
+  - B-450: Lows.
+- Self-checks 6/6 ok at `50b9205`.
 
 ## Approved, not built
 
@@ -44,25 +51,27 @@ Any byte change to v11 or the lint reopens the @model-risk check.
 
 ## Pending decisions for the user
 
-1. **Run T-117 once** on frozen `8d605ac` with v11 and `--write` (live, paced, smoke first), then score it once. Optionally ask for a @model-risk build check first.
-2. @head-of-underwriting to confirm: SUB-248 (a physical-therapist tenant named in the email only, carrier_a kept) and the R17 neutral-word reading on 246/248. If the gold changes, it needs a new freeze note before any run.
-3. Dev gold SUB-211: the route says R9/R10, but carrier-match R2 (bar beside restaurant) says senior_referral. Dev data only.
+1. **@model-risk look-again on the T-117 gold fix** before the run (recommended; quick, gold-only diff `28bba4b..50b9205`).
+2. **SUB-252 (B-448):** gold says R1 no_match, frozen code gives R2 senior_referral. @head-of-underwriting rules, or pre-register it. If the gold changes, re-lint and re-freeze.
+3. **Run T-117 once** on frozen `8d605ac` with v11 and `--write` (smoke first, then live and paced), then score it once. Pre-register B-447 and B-449 in the run notes first.
+4. Carried over: dev gold SUB-211 R2 vs R9/R10 (dev data only). The SUB-248 question is resolved by H1.
 
 ## Open vetoes and what resolves each
 
 | Task | Holder | Resolves when |
 |---|---|---|
-| T-027 | @model-risk (production) | A fresh hold-out (now T-117) is run and scored once on the frozen commit and passes the gates in its veto message: all fields at the floor, 0 false completes, 0 unsafe routes, route at least 18/20. |
+| T-027 | @model-risk (production) | T-117 is run and scored once on the frozen commit and passes the gates in its veto message: all fields at the floor, 0 false completes, 0 unsafe routes, 0 leaks / 100% recall, route at least 18/20. |
 | T-082 | @responsible-ai (fairness) | As written in its veto message in team/DISCUSSION.md. |
+| T-117 freeze | @model-risk (OBJECTION H1/H2) | The gold fix is in; it closes on a @model-risk look-again with no High. |
 
 ## First 3 tasks next session
 
-1. User decision on running T-117 (and on a @model-risk build check first).
-2. If approved: run T-117 once (smoke, then paced live), score with v11 `--write`, and record the scores against the T-027 gates.
-3. Add @model-risk M1–M6 and L1–L2 from `check-T-116-P-069.md` to BACKLOG.md, one line each, and get @head-of-underwriting's answer on SUB-248/R17.
+1. @model-risk look-again on the T-117 gold fix, plus a user/@head-of-underwriting answer on SUB-252 (B-448).
+2. Pre-register B-447 and B-449 in the T-117 run notes, then run T-117 once if the user approves (smoke, then paced live) and score it with v11 `--write` against the T-027 gates.
+3. Backlog: @model-risk M1–M6 and L1–L2 from `check-T-116-P-069.md`, one line each (still not in BACKLOG.md).
 
 ## For the AI Engineer
 
-- Pending proposals: none open. P-069 is built and frozen.
-- Latest scores (dev T-108, v11, cache): ops 15/20 (v10 12/20), route 18/20, 0 unsafe, 0 false completes. No hold-out has been scored with v11.
-- Top failure to fix next: operations misses where a correct answer names a second class in passing ("small office", "therapy"). This is v11's word-list limit and needs a new P-### if it shows up on T-117.
+- Pending proposals: none open.
+- Latest scores (dev T-108, v11, cache): ops 15/20, route 18/20, 0 unsafe, 0 false completes. No hold-out has been scored with v11 yet.
+- Top failure to fix next: none in code until T-117 runs. On T-117, watch the 3 pre-registered operations misses (B-447) and the SUB-252 route (B-448).
