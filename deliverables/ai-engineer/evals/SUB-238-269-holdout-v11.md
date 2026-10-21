@@ -8,6 +8,15 @@
 - Correctly flagged for human means the documents disagree and the AI stored both sides without picking one. It is not a hit and not a miss.
 - Synthetic. Not a production approval.
 
+## Noted before the run (commit b0c78d5)
+
+Written from the plan at `b0c78d54e1f30a2afcc4e29ee7d2bb9f2ffe44be`, before this run was scored. It records what was expected to miss, so it can be checked against the result. It does not change any measured number.
+
+- B-447: 3 operations misses were expected: SUB-253, SUB-254 and SUB-239. SUB-253 is a hit in this run; only SUB-254 and SUB-239 missed.
+- B-448: SUB-252's route was expected to be unresolved before the run. It missed (no_match; a senior referral would have been safe).
+- Route: 19/20 with SUB-252 counted; 19/19 (100%) without it. The gate is 18/20 either way.
+- Carrier A: no in-scope file carries a direct Carrier A loss run, so that path was not exercised by this run (B-449).
+
 ## Per-field
 
 | Field | Hit | Hit (needs review) | Miss | Not credited | Correctly flagged for human | Call failed |

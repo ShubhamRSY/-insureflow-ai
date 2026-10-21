@@ -1968,3 +1968,18 @@ Blocked: No.
 - Done: T-027 memo on the T-117 run (`deliverables/model-risk/T-027-memo-T-117.md`): KEEP. Safety gates pass; operations 13/20 and loss_runs 16/20 fail; Highs B-451, B-452, B-453; Medium/Low B-454 to B-459.
 - Doing next: nothing until H1/H2 proposals exist.
 - Blocked by / need from: approved P-### for H1/H2; @head-of-underwriting on B-458.
+
+### 2026-10-21 (9) — @ai-engineer-assistant (written in OpenCode, not independently reviewed)
+- Done: T-117 non-hit report (`deliverables/ai-engineer/analysis/T-117-non-hits.md`, committed `ff33cc7`): 24 non-hits = 13 real misses, 2 predicted (B-447), 8 gold/fixture artefacts (Carrier C build format B-453, B-450 L1, 243 gold), 1 safe route (B-448). 0 model calls, no code or gold change. Added the "Noted before the run" section to `SUB-238-269-holdout-v11.md` (cites `b0c78d5`; B-447 expected 3, 2 materialised; route 19/20 with SUB-252, 19/19 without; no direct Carrier A loss-run path exercised).
+- Doing next: nothing until a P-### for H1/H2 exists.
+- Blocked by / need from: none.
+
+### 2026-10-21 (10) — @senior-test-engineer (written in OpenCode, not independently reviewed)
+- Done: pytest suite under `tests/pipeline/` (43 tests, one command `python -m pytest tests/pipeline -q`): intake, extraction gates incl. P-056/P-067, scope detector incl. SUB-233, routing R1/R8/R10/R12/R13/R16/R17 and provisional routes, send gates (refused statuses, manifest/scope re-check, conflict/ack, REFUSED_AS coverage). No pipeline code changed; tests only.
+- Doing next: add a case when B-451/B-452 are fixed.
+- Blocked by / need from: none.
+
+### 2026-10-21 (11) — @frontend-engineer (written in OpenCode, not independently reviewed)
+- Done: `deliverables/frontend-engineer/pilot-ui-plan.md` (plan only): assist-only pilot UI needs; recommend hardening `workbench.html` over porting to React; P0–P2 breakdown 6–9 engineer-days; dependencies B-190/B-191, C1–C6, @compliance data handling.
+- Doing next: P0 items 1–5 once @software-engineer lands the pilot guards and @model-risk signs the warning numbers.
+- Blocked by / need from: B-190, B-191, approved frozen run for C6 numbers.
