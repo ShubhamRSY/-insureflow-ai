@@ -28,6 +28,7 @@ sys.path.insert(0, str(ROOT / "underwriting_pipeline" / "models"))
 sys.path.insert(0, str(ROOT / "underwriting_pipeline" / "app"))
 import llm_extract
 import package
+import pilot
 import points
 import prepare
 import quotes
@@ -42,6 +43,7 @@ BANNER = ""  # set by serve(); the sandbox screenshots label the page with it
 MESSAGES: dict[str, tuple[bool, str]] = {}  # submission -> (ok, plain-words result of the last action); shown once
 # D-065 item 5: one line per user-visible feature: date, task or proposal, decision number, what an underwriter sees.
 WHATS_NEW = (
+    ("2026-10-21", "PILOT C1–C6", "D-117/D-118 (T-027 C1–C8)", "Assist-only pilot mode: send, package, draft and producer request are disabled with a plain reason; every value needs a per-value confirmation instead of an approve; scope is always shown; AI proposals and weak-field warnings are labelled; corrections, refusals and time per file are logged for the pilot review."),
     ("2026-10-20", "P-067", "D-118", "A rejected value now keeps its reason on the card: a field the extraction could not trust shows why (\"value not inside the cited text\", \"the date does not parse\") instead of an empty reason."),
     ("2026-10-20", "P-066", "D-118", "Every refusal now names its reason in plain words, and no action can crash the page: a blocked send, approve or carrier package shows why it was refused."),
     ("2026-10-19", "P-067", "D-117", "Loss-run dates read from a scan are kept for review when the date digits appear in the cited text: the card shows \"read from a scan — check it against the page\" and is never silently dropped."),
@@ -526,8 +528,12 @@ def record_decision(payload: dict, log_path: Path) -> dict:
         raise ValueError("underwriter id required")
     if actor not in package.underwriters():
         raise ValueError("only an id on underwriters.json may log a decision (D-055); AI roles never count")
-    if action not in {"approve", "edit", "decline", "resolve"}:
-        raise ValueError("action must be approve, edit, decline or resolve")
+    if action not in {"approve", "edit", "decline", "resolve", "confirm"}:
+        raise ValueError("action must be approve, edit, decline, resolve or confirm")
+    if action == "approve" and pilot.active():
+        pilot.guard("approve", (payload.get("submission") or "").strip())
+    if action == "confirm" and not pilot.active():
+        raise ValueError("confirm is an assist-only pilot action")
     if action == "resolve":  # B-324 (D-089): the underwriter chooses or enters the value of one open conflict on this run
         submission = (payload.get("submission") or "").strip()
         saved = prepare.read_saved_run(submission)
@@ -559,6 +565,21 @@ def record_decision(payload: dict, log_path: Path) -> dict:
             mi_run = {}
         if mi_run.get("status") == prepare.MANUAL_INTAKE:
             raise ValueError(f"this file's status is {prepare.status_refusal(mi_run)}; an edit is refused for it")
+    if action == "confirm":  # T-027 C1: a per-value confirmation, never an approve and never sendable
+        submission = (payload.get("submission") or "").strip()
+        saved = prepare.read_saved_run(submission)
+        if saved["status"] in prepare.REFUSED_STATUSES:
+            raise ValueError(f"this file's status is {prepare.status_refusal(saved)}; no confirmation is recorded for it")
+        shown = (payload.get("run_hash") or "").strip()
+        if shown and shown != saved["saved_hash"]:
+            raise ValueError("the saved run changed since this card was opened; reload the page and review again")
+        listed = [r["field_id"] for r in saved["fields"] if (r.get("value") or "").strip()]
+        unacked = [f for f in listed if f not in (payload.get("ack") or [])]
+        if unacked:
+            raise ValueError(f"confirm every value before recording: {', '.join(unacked)}")
+        if not listed:
+            raise ValueError("there is no value to confirm on this run")
+        payload = {**payload, "acknowledged": listed, "confirmed_values": field_values(saved), "run_hash": saved["saved_hash"]}
     if action == "approve":
         submission = (payload.get("submission") or "").strip()
         # T-071: read the file's status from the last saved run itself. An approve is refused on either
@@ -592,10 +613,7 @@ def _append(payload: dict, action: str, actor: str, reason: str, log_path: Path)
     log_path.parent.mkdir(parents=True, exist_ok=True)
     lock_path = log_path.with_suffix(log_path.suffix + ".lock")
     with lock_path.open("a+") as lfh:
-        try:
-            fcntl.flock(lfh, fcntl.LOCK_EX)
-        except Exception:
-            pass
+        fcntl.flock(lfh, fcntl.LOCK_EX)  # B-191 item 2: a lock failure is an error, never a silent append
         last = 0
         if log_path.exists():
             for line in log_path.read_text().splitlines():
@@ -611,10 +629,11 @@ def _append(payload: dict, action: str, actor: str, reason: str, log_path: Path)
             "action": action,
             "underwriter_id": actor,
             "reason": reason,
-            **({"run_hash": payload["run_hash"]} if action in ("approve", "resolve") else {}),
+            **({"run_hash": payload["run_hash"]} if action in ("approve", "resolve", "confirm") else {}),
             **({"conflict_field": payload["conflict_field"], "new_value": payload["new_value"]} if action == "resolve" else {}),
             **payload["run_record"],
             **({"approved_values": payload["approved_values"]} if action == "approve" else {}),
+            **({"confirmed_values": payload["confirmed_values"]} if action == "confirm" else {}),
             **({"acknowledged": payload["acknowledged"]} if payload.get("acknowledged") else {}),
             **({"field_id": payload["field_id"].strip(), "new_value": payload["new_value"].strip()} if (payload.get("field_id") or "").strip() else {}),
             "date": date.today().isoformat(),
@@ -623,51 +642,105 @@ def _append(payload: dict, action: str, actor: str, reason: str, log_path: Path)
             "bound": False,
             "sent_to_carrier": False,
         }
-        with log_path.open("a") as handle:
-            handle.write(json.dumps(row) + "\n")
-            handle.flush()
-            try:
-                os.fsync(handle.fileno())
-            except Exception:
-                pass
         try:
+            with log_path.open("a") as handle:
+                handle.write(json.dumps(row) + "\n")
+                handle.flush()
+                os.fsync(handle.fileno())  # B-191 item 2: a failed flush is an error, never a silent success
+        finally:
             fcntl.flock(lfh, fcntl.LOCK_UN)
-        except Exception:
-            pass
     return row
 
 
 REFUSED_AS = {"/confirm-market": "Market confirm refused", "/decision": "Decision refused", "/mark-code": "Mark refused", "/cooking-call": "Cooking call refused", "/close-subjectivity": "Not closed", "/send": "Send refused", "/approve-draft": "Request not approved"}
 
 
+def _pilot_correction(path: str, payload: dict, row: dict) -> None:
+    """T-027 C5: capture field, suggested value, final value and reason for every correction."""
+    if not pilot.active():
+        return
+    sub = (payload.get("submission") or "").strip()
+    actor = str(row.get("underwriter_id") or payload.get("underwriter_id") or "")
+    run_hash = str(row.get("run_hash") or "")
+    if path == "/decision":
+        action = row.get("action")
+        if action in {"edit", "resolve", "decline"}:
+            field = (payload.get("conflict_field") if action == "resolve" else payload.get("field_id")) or "file"
+            suggested = ""
+            try:
+                saved = prepare.read_saved_run(sub)
+                if action == "decline":
+                    suggested = f"status {saved.get('status')}"
+                elif action == "resolve":
+                    for c in saved.get("conflicts") or []:
+                        if c.get("field") == field:
+                            suggested = json.dumps(c.get("values") or [])
+                else:
+                    suggested = field_values(saved).get(field, "")
+            except (ValueError, OSError):
+                suggested = ""
+            pilot.record_correction(submission=sub, field=field, kind=action,
+                                    suggested=str(suggested), final=str(payload.get("new_value") or action),
+                                    reason=str(payload.get("reason") or ""), actor=actor, run_hash=run_hash)
+    elif path == "/mark-code":
+        pilot.record_correction(submission=sub, field=str(payload.get("code") or ""), kind="code",
+                                suggested="shown in the score", final="marked wrong",
+                                reason=str(payload.get("reason") or ""), actor=actor, run_hash="")
+
+
+def _pilot_event(path: str, payload: dict, sub: str, outcome: str, message: str) -> str:
+    """Log one action or refusal. Returns a note to show when the log itself failed."""
+    if not pilot.active():
+        return ""
+    try:
+        pilot.record_event(action=path.removeprefix("/"), submission=sub,
+                           actor=str(payload.get("underwriter_id") or ""), outcome=outcome, message=message)
+    except OSError as exc:
+        return f" Pilot log failed: {exc}."
+    return ""
+
+
 def act(path: str, payload: dict) -> tuple[str, bool, str]:
     """D-066 items 2/4/8: run one POST action. Returns (submission, ok, plain-words message); a refusal never raises."""
     sub = (payload.get("submission") or "").strip()
+
+    def done(message: str, row: dict | None = None) -> tuple[str, bool, str]:
+        note = ""
+        try:
+            if row is not None:
+                _pilot_correction(path, payload, row)
+        except OSError as exc:
+            note += f" Pilot correction log failed: {exc}."
+        note += _pilot_event(path, payload, sub, "ok", message)
+        return sub, True, message + note
+
     try:
         if path in ("/send", "/approve-draft") and not re.fullmatch(r"SUB-\d+", sub):
             raise ValueError("no such submission id on the form")
         if path == "/decision":
             row = record_decision(payload, LOG)
-            return sub, True, f"Decision recorded: {row['action']} by {row['underwriter_id']}."
+            return done(f"Decision recorded: {row['action']} by {row['underwriter_id']}.", row)
         if path == "/confirm-market":  # P-052 (D-098)
             row = package.confirm_market(sub, payload.get("underwriter_id", ""), payload.get("carrier", ""), payload.get("reason", ""), payload.get("run_hash", ""))
-            return sub, True, f"Market confirmed: {row['carrier']} by {row['underwriter_id']} {row['underwriter_name']}. Not sent: approve on this run and type the send line."
+            return done(f"Market confirmed: {row['carrier']} by {row['underwriter_id']} {row['underwriter_name']}. Not sent: approve on this run and type the send line.", row)
         if path == "/mark-code":
             row = mark_code(payload)
-            return sub, True, f"Marked {row['code']} wrong by {row['underwriter_id']}. The number does not change."
+            return done(f"Marked {row['code']} wrong by {row['underwriter_id']}. The number does not change.", row)
         if path == "/cooking-call":
             row = cooking_call(payload)
-            return sub, True, f"Cooking recorded {row['call']} by {row['underwriter_id']} for this run. Points now apply."
+            return done(f"Cooking recorded {row['call']} by {row['underwriter_id']} for this run. Points now apply.", row)
         if path == "/close-subjectivity":
             quotes.close_subjectivity(*(payload.get(k, "") for k in ("submission", "carrier", "subjectivity", "underwriter_id", "reason")))
-            return sub, True, "Subjectivity closed and logged."
+            return done("Subjectivity closed and logged.")
         if path == "/send":  # item 1: the same gate as every send; the actor is the user, the line is typed on the card
             dest = package.send_to_carrier(sub, "user", TO_CARRIER, user_line=payload.get("user_line", ""), resend_reason=payload.get("resend_reason", ""))
-            return sub, True, f"Sent: package {dest.name} written to to-carrier. Not bound."
+            return done(f"Sent: package {dest.name} written to to-carrier. Not bound.")
         dest = prepare.approve(PENDING / f"{sub}.md", "user", TO_PRODUCER, payload.get("reason", ""))  # item 13: D-050, user override
-        return sub, True, f"Approved: request {dest.name} written to to-producer. It lists only missing items and declines nothing."
+        return done(f"Approved: request {dest.name} written to to-producer. It lists only missing items and declines nothing.")
     except (ValueError, OSError) as exc:
-        return sub, False, f"{REFUSED_AS.get(path, 'Refused')}: {exc}"
+        message = f"{REFUSED_AS.get(path, 'Refused')}: {exc}"
+        message += _pilot_event(path, payload, sub, "refused", message)
+        return sub, False, message
 
 
 def _confidence(row: dict) -> str:
@@ -789,6 +862,8 @@ def _no_send_reason(item: dict, report: dict, refused: bool) -> str:
 
 def _send_html(item: dict, report: dict, refused: bool, manifest: str) -> str:
     """The send panel plus, T-107c (D-112), the account-manager check result in plain words (the same check send_to_carrier runs)."""
+    if pilot.active():
+        return _send_panel(item, report, refused, manifest)
     try:
         am = package.agency_problem(item["id"])
     except Exception as exc:  # the card must still render
@@ -802,6 +877,8 @@ def _send_html(item: dict, report: dict, refused: bool, manifest: str) -> str:
 
 def _send_panel(item: dict, report: dict, refused: bool, manifest: str) -> str:
     sid = html.escape(item["id"])
+    if pilot.active():
+        return f'<h3>Send to carrier</h3><p class="bad">No send: assist-only pilot — send disabled for {sid}.</p>'
     why = _no_send_reason(item, report, refused)
     if why:
         return f'<h3>Send to carrier</h3><p class="bad">No send: {html.escape(why)}.</p>'
@@ -940,6 +1017,8 @@ def score_html(item: dict, report: dict) -> list[str]:
             '<button type="submit">Mark wrong</button> <small>logged; the number does not change</small></form>'
         )
     out += [f"<p>{html.escape(line)}</p>" for line in sc["lines"]]
+    if pilot.active():
+        out.append(f'<p class="banner">AI proposal — verify against the source. {html.escape(pilot.warning_text())}</p>')
     if sc.get("provisional"):  # B-278 (D-073): the underwriter records the call; points apply only after it
         out.append(
             f'<form method="post" action="/cooking-call" class="mark"><b>Record cooking for this run</b> '
@@ -949,6 +1028,52 @@ def score_html(item: dict, report: dict) -> list[str]:
             '<button type="submit">Record cooking</button> <small>logged with the run hash; points apply only after this</small></form>'
         )
     return out
+
+
+def scope_html(item: dict, report: dict) -> str:
+    """T-027 C3: the scope verdict on every card, not only when it refuses something."""
+    if not pilot.active():
+        return ""
+    if item.get("scope_now"):
+        return (f'<p class="bad"><b>Scope check:</b> manual intake — {html.escape(item["scope_now"])}. '
+                "No send, no draft, no route. Your decision is logged.</p>")
+    version = (report.get("scope") or {}).get("version") or "not recorded"
+    return f'<p><b>Scope check:</b> in pilot scope (scope {html.escape(str(version))}).</p>'
+
+
+def pilot_summary_html(queue: list[dict] | None = None) -> str:
+    """T-027 C5: the pilot monitor. Read-only counts, refusals, time per file and failed extractions."""
+    if not pilot.active():
+        return ""
+    s = pilot.summary(queue)
+    fields = "; ".join(f"{k}: {v}" for k, v in s["per_field"].items()) or "none yet"
+    minutes = "; ".join(f"{k}: {v // 60}m {v % 60}s" for k, v in s["duration_seconds"].items()) or "none yet"
+    failed = ", ".join(s["extraction_failed"]) or "none"
+    return (
+        '<details open><summary><b>Pilot monitor</b> (read-only; nothing here changes a file)</summary>'
+        f'<p>Corrections logged: {s["corrections"]} · overrides: {s["overrides"]} · refusals: {s["refusals"]}</p>'
+        f'<p>Edits per field: {html.escape(fields)}</p>'
+        f'<p>Time per file: {html.escape(minutes)}</p>'
+        f'<p>Extraction failed (never a value): {html.escape(failed)}</p>'
+        '<p>Pilot logs: deliverables/software-engineer/pilot-corrections.jsonl and pilot-events.jsonl.</p></details>'
+    )
+
+
+def pilot_corrections_html(submission: str) -> str:
+    """T-027 C5: one read-only row per correction on this file."""
+    if not pilot.active():
+        return ""
+    rows = pilot.corrections_for(submission)
+    if not rows:
+        return "<h3>Corrections</h3><p>None logged on this file yet.</p>"
+    body = "".join(
+        f'<tr><td>{html.escape(r.get("at", ""))}</td><td>{html.escape(r.get("actor", ""))}</td>'
+        f'<td>{html.escape(r.get("field", ""))}</td><td>{html.escape(r.get("suggested", ""))}</td>'
+        f'<td>{html.escape(r.get("final", ""))}</td><td>{html.escape(r.get("reason", ""))}</td></tr>'
+        for r in rows
+    )
+    return ("<h3>Corrections</h3><table><tr><th>When</th><th>Who</th><th>Field</th>"
+            f"<th>AI said</th><th>Final</th><th>Reason</th></tr>{body}</table>")
 
 
 def render(queue: list[dict], counts: dict | None = None, messages: dict | None = None) -> str:
@@ -1035,6 +1160,7 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
             + "</p>",
             review_pending_html(report),
             manual_intake_html(report),
+            scope_html(item, report),
             (f'<p class="msg bad" role="alert"><b>Send blocked</b> — {html.escape(item["scope_now"])}. Nothing on this file can be sent. '
              "Do not chase the missing items. Next step: re-run extraction on this file; the scope check then makes it manual intake, "
              "and an underwriter reads the whole file by hand.</p>" if item.get("scope_now") and not refused else ""),  # P-063, T-109a UI check H1
@@ -1045,7 +1171,8 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
         if item.get("scope_now") and not refused:  # P-063 (T-109a UI check H1): no route or hold wording on an out-of-scope file
             lines.append("<p>Carrier match: none — out of pilot scope at send time (see the alert above)</p>")
         elif not refused:
-            lines.append(f"<p>Carrier match: {html.escape(item['route'])}{html.escape(' · ' + item['note']) if item.get('note') else ''} · recommendation only</p>")
+            lines.append(f"<p>Carrier match: {html.escape(item['route'])}{html.escape(' · ' + item['note']) if item.get('note') else ''} · "
+                         + ("Suggestion only — not a decision" if pilot.active() else "recommendation only") + "</p>")
             if item.get("provisional"):  # P-048 (c) (D-095): routing always runs; the send stays blocked until the hold clears
                 pv = item["provisional"]
                 lines.append(f"<p>Provisional route: <b>{html.escape(pv['provisional'] or 'none yet')}</b>{html.escape(' · ' + pv['provisional_note']) if pv['provisional_note'] else ''}"
@@ -1060,8 +1187,10 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
             f"<p>Address check: {html.escape(address_check)}</p>",
             f"<p>Locations: {html.escape('; '.join(('primary ' if row.get('primary') else 'other ') + row['address'] for row in report['locations']) or 'one premises') if report.get('locations') is not None else 'not stored in the saved run'}</p>",
             "<h3>Extracted fields</h3>",
-            "<p>Nothing filled in: a person reads the file.</p>" if manual else
-            f"<table><tr><th>Field</th><th>Value</th><th>Confidence</th><th>Source</th><th>Cited text</th><th>Review note</th></tr>{''.join(field_rows)}</table>",
+            "<p>Nothing filled in: a person reads the file.</p>" if manual else (
+                (f"<p class='banner'>AI proposal — verify against the source.</p>" if pilot.active() else "")
+                + f"<table><tr><th>Field</th><th>{'Value (AI proposal — verify)' if pilot.active() else 'Value'}</th><th>Confidence</th><th>Source</th><th>Cited text</th><th>Review note</th></tr>{''.join(field_rows)}</table>"
+            ),
             f"<h3>Conflicts</h3>{conflict_html}",
             quotes.html_for(item["id"]),
         ]
@@ -1069,19 +1198,22 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
             missing = report["missing"] + report.get("extra", [])
             lines += ["<h3>Missing</h3>", f"<p>{html.escape(', '.join(missing) or 'none')}</p>"]
         # T-071: on a refused card there is no approve option. Edit and decline stay so a person decides.
-        options = "<option>decline</option>" if manual else "<option>edit</option><option>decline</option>" if refused else "<option>approve</option><option>edit</option><option>decline</option>"
+        options = "<option>decline</option>" if manual else "<option>edit</option><option>decline</option>" if refused else (
+            "<option>confirm</option><option>edit</option><option>decline</option>" if pilot.active()
+            else "<option>approve</option><option>edit</option><option>decline</option>")
         acks = "".join(
             '<label><input type="checkbox" name="ack" value="{0}"> I checked {0}: {1} (cited: {2})</label><br>'.format(
                 html.escape(row["field_id"]), html.escape(row["value"]), html.escape(row.get("quote") or "—")
             )
             for row in report["fields"]
-            if row.get("needs_review") and row.get("value")
+            if row.get("value") and (pilot.active() or row.get("needs_review"))
         )
         cook = (report.get("cooking") or {}).get("equipment") or {}
         if cook.get("state") == "needs_review":  # P-029 (D-072): the same acknowledgment; no cooking points either way
             acks += '<label><input type="checkbox" name="ack" value="cooking_equipment"> I checked cooking equipment: needs review; points only after the cooking call (cited: {})</label><br>'.format(html.escape(cook.get("quote") or "—"))
         if acks and not refused:
-            acks = f"<fieldset><legend>Needs-review values: acknowledge each to approve</legend>{acks}</fieldset>"
+            legend = "Confirm every value with its cited text" if pilot.active() else "Needs-review values: acknowledge each to approve"
+            acks = f"<fieldset><legend>{legend}</legend>{acks}</fieldset>"
         else:
             acks = ""
         lines.append(
@@ -1096,7 +1228,7 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
 <label>Edited field <input name="field_id" placeholder="e.g. year_built"></label>
 <label>New value <input name="new_value"></label>
 <label>Reason <input name="reason"></label>
-<button type="submit">Record decision</button>
+<button type="submit">{"Record confirmation" if pilot.active() and not refused and not manual else "Record decision"}</button>
 </form>"""
         )
         sid = html.escape(item["id"])
@@ -1105,14 +1237,16 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
             lines.append(
                 f"<h3>Missing-info draft for the producer (not sent)</h3><pre>{html.escape(draft.read_text())}</pre>"
                 + (f'<p class="bad">No send to producer: {html.escape(item["scope_now"])}.</p>' if item.get("scope_now") else  # P-063
-                   f'<form method="post" action="/approve-draft"><input type="hidden" name="submission" value="{sid}">'
-                   '<label>Reason (optional) <input name="reason"></label> '
-                   '<button type="submit">Approve and send to producer (user override)</button></form>')
+                   ('<p class="bad">No producer request: assist-only pilot — producer requests are disabled.</p>' if pilot.active() else
+                    f'<form method="post" action="/approve-draft"><input type="hidden" name="submission" value="{sid}">'
+                    '<label>Reason (optional) <input name="reason"></label> '
+                    '<button type="submit">Approve and send to producer (user override)</button></form>'))
             )
         if (TO_PRODUCER / f"{item['id']}.md").is_file():
             lines.append("<p>Producer request on file in to-producer.</p>")
         lines.append(_send_html(item, report, refused, manifest))
         lines.append(history_html(item["id"], report.get("saved_hash") or "", item.get("marks") or []))
+        lines.append(pilot_corrections_html(item["id"]))
         blocks.append(
             f'<article id="{html.escape(item["id"])}">\n' + "\n".join(lines) + "\n</article>"
         )
@@ -1135,6 +1269,9 @@ footer {{ border-top: 1px solid #ccc; margin-top: 2rem; color: #555; }}
 </style></head><body>
 {f'<p class="banner">{html.escape(BANNER)}</p>' if BANNER else ''}
 <h1>Underwriter workbench</h1>
+{f'<p class="banner">ASSIST-ONLY PILOT — AI proposals only. Nothing is routed, sent or drafted. You decide. <a href="/logout">Sign out</a></p>' if pilot.active() else ''}
+{f'<p class="bad">Pilot mode is on but the sign-in layer is not on this branch. Do not use real data.</p>' if pilot.active() else ''}
+{pilot_summary_html(queue)}
 {''.join(_msg(messages, k) for k in messages if k not in {q["id"] for q in queue})}
 <details open><summary><b>What's new</b> (latest {min(5, len(WHATS_NEW))} of {len(WHATS_NEW)})</summary><ul>{whats_new_items(WHATS_NEW[:5])}</ul>{f"<details><summary>Show all {len(WHATS_NEW)}</summary><ul>{whats_new_items(WHATS_NEW[5:])}</ul></details>" if len(WHATS_NEW) > 5 else ""}</details>
 <p>Synthetic queue. A decision is logged only with an id on the underwriter list. Decline and edit need a reason, and so does an approve after a decline. Approve, edit, and decline are saved with that reason. This page shows saved runs only. It never binds. A carrier send needs the typed line and passes the send gate.</p>
@@ -1171,6 +1308,7 @@ def sandbox(tmp: Path) -> None:
     package.DECISIONS_LOG, package.SENDS_LOG, package.INBOX = LOG, tmp / "sends.jsonl", INBOX
     quotes.CLOSURES, quotes.TO_CARRIER, quotes.FROM_CARRIER = tmp / "closures.jsonl", TO_CARRIER, tmp / "from-carrier"
     prepare.EXTRACT_DIR, prepare.INBOX_DIR, llm_extract.CACHE = tmp / "extractions", INBOX, tmp / "cache"
+    pilot.CORRECTIONS, pilot.EVENTS = tmp / "pilot-corrections.jsonl", tmp / "pilot-events.jsonl"
     BANNER = f"SANDBOX COPY in {tmp}: nothing here is real; no real log, outbox or page is written"
 
 
@@ -1183,7 +1321,19 @@ def serve(port: int = 8765, only: str | None = None, sandbox_dir: Path | None = 
         def do_GET(self):
             shown = dict(MESSAGES)
             MESSAGES.clear()
-            body = render(load_queue(only), correction_counts(LOG), shown).encode()  # saved runs only: no extraction here
+            items = load_queue(only)
+            html_text = render(items, correction_counts(LOG), shown)  # saved runs only: no extraction here
+            try:  # T-027 C5 display log: one row per file shown, with the run hash and model. B-190 supplies the user.
+                viewed = [item for item in items if item.get("report")]
+                for item in viewed:
+                    report = item["report"]
+                    pilot.record_event(action="view", submission=item["id"], actor="unauthenticated", outcome="view",
+                                       message=f"prompt={report.get('prompt_version') or 'not recorded'} "
+                                               f"model={report.get('model_version') or 'not recorded'}",
+                                       run_hash=str(report.get("saved_hash") or ""))
+            except OSError as exc:
+                html_text = html_text.replace("<body>", f'<body><p class="bad">Pilot view log failed: {html.escape(str(exc))}</p>', 1)
+            body = html_text.encode()
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.end_headers()
@@ -1954,7 +2104,7 @@ if __name__ == "__main__":
         before_real = fingerprint()
         names = ("PAGE", "LOG", "INBOX", "PENDING", "TO_PRODUCER", "TO_CARRIER", "BANNER")
         saved_mod = {n: globals()[n] for n in names}
-        saved_other = (package.DECISIONS_LOG, package.SENDS_LOG, package.INBOX, quotes.CLOSURES, quotes.TO_CARRIER, quotes.FROM_CARRIER, prepare.EXTRACT_DIR, prepare.INBOX_DIR, llm_extract.CACHE)
+        saved_other = (package.DECISIONS_LOG, package.SENDS_LOG, package.INBOX, quotes.CLOSURES, quotes.TO_CARRIER, quotes.FROM_CARRIER, prepare.EXTRACT_DIR, prepare.INBOX_DIR, llm_extract.CACHE, pilot.CORRECTIONS, pilot.EVENTS)
         with tempfile.TemporaryDirectory() as box_dir:
             box_dir = Path(box_dir)
             try:
@@ -1969,7 +2119,7 @@ if __name__ == "__main__":
             finally:
                 for n, v in saved_mod.items():
                     globals()[n] = v
-                (package.DECISIONS_LOG, package.SENDS_LOG, package.INBOX, quotes.CLOSURES, quotes.TO_CARRIER, quotes.FROM_CARRIER, prepare.EXTRACT_DIR, prepare.INBOX_DIR, llm_extract.CACHE) = saved_other
+                (package.DECISIONS_LOG, package.SENDS_LOG, package.INBOX, quotes.CLOSURES, quotes.TO_CARRIER, quotes.FROM_CARRIER, prepare.EXTRACT_DIR, prepare.INBOX_DIR, llm_extract.CACHE, pilot.CORRECTIONS, pilot.EVENTS) = saved_other
         assert fingerprint() == before_real, "a sandbox run changed a real file"
 
         # P-066 regression (2026-10-20): REFUSED_AS was deleted while two uses stayed, so every refusal
@@ -1989,6 +2139,6 @@ if __name__ == "__main__":
             finally:
                 for n, v in saved_mod.items():
                     globals()[n] = v
-                (package.DECISIONS_LOG, package.SENDS_LOG, package.INBOX, quotes.CLOSURES, quotes.TO_CARRIER, quotes.FROM_CARRIER, prepare.EXTRACT_DIR, prepare.INBOX_DIR, llm_extract.CACHE) = saved_other
+                (package.DECISIONS_LOG, package.SENDS_LOG, package.INBOX, quotes.CLOSURES, quotes.TO_CARRIER, quotes.FROM_CARRIER, prepare.EXTRACT_DIR, prepare.INBOX_DIR, llm_extract.CACHE, pilot.CORRECTIONS, pilot.EVENTS) = saved_other
 
         print("workbench ok")
