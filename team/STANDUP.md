@@ -1983,3 +1983,43 @@ Blocked: No.
 - Done: `deliverables/frontend-engineer/pilot-ui-plan.md` (plan only): assist-only pilot UI needs; recommend hardening `workbench.html` over porting to React; P0–P2 breakdown 6–9 engineer-days; dependencies B-190/B-191, C1–C6, @compliance data handling.
 - Doing next: P0 items 1–5 once @software-engineer lands the pilot guards and @model-risk signs the warning numbers.
 - Blocked by / need from: B-190, B-191, approved frozen run for C6 numbers.
+
+### 2026-10-21 (12) — @pm (written in OpenCode, not independently reviewed)
+- Done: `deliverables/pm/lob-roadmap.md`: all 29 `InsuranceLine` LOBs in 5 waves by reuse of today's pipeline; per LOB documents, what is new, risks, effort. Wave 1 = BOP, property, GL, package, umbrella (5 lines).
+- Doing next: confirm Wave 1 membership and the `general` triage reading with @user.
+- Blocked by / need from: @user on wave membership; @actuary on later-wave targets.
+
+### 2026-10-21 (13) — @ai-engineer-assistant (written in OpenCode, not independently reviewed)
+- Done: `deliverables/architecture/lob-engine-design.md` with @software-engineer: config-pack schema, loader, exact files, 10-step migration with a green test at each step, baseline equality proof (prompt sha, route table, T-117 score marks), rollback. Design only.
+- Doing next: nothing until the user approves the approach and a P-### exists for the prompt move.
+- Blocked by / need from: @user decision on config-first vs hard cutover.
+
+### 2026-10-21 (14) — @software-engineer (written in OpenCode, not independently reviewed)
+- Done: reviewed the design against `underwriting_pipeline/` (llm_extract, prepare, scope, sources, workbench, package, intake) and `tests/pipeline/`; listed the changed files and the no-call regression tests. No code changed.
+- Doing next: build step 1 (loader + baseline snapshot + fail-closed tests) after approval.
+- Blocked by / need from: approved design; `approve change P-###` for the prompt file.
+
+### 2026-10-21 (15) — @senior-underwriter (written in OpenCode, not independently reviewed)
+- Done: Wave 1 specs for BOP, commercial_property, general_liability, commercial_package and umbrella (`deliverables/lobs/<lob>/spec.md`): fields, documents, scope, slots, synthetic appetite, gold rules, open questions. Synthetic only.
+- Doing next: resolve the "needs review" items with @head-of-underwriting/@compliance before Wave 1 build.
+- Blocked by / need from: @head-of-underwriting on new fields (BPP, umbrella limits) and scope criterion 5.
+
+### 2026-10-21 (16) — @head-of-underwriting (written in OpenCode, not independently reviewed)
+- Done: co-authored the Wave 1 specs' synthetic appetite/referral rules for placeholder carriers A/B/C; kept R1–R17 unchanged and marked every new rule as placeholder.
+- Doing next: confirm or replace the synthetic property limits and umbrella U1–U5.
+- Blocked by / need from: @compliance on real carrier terms (none today; placeholders only).
+
+### 2026-10-21 (17) — @senior-test-engineer (written in OpenCode, not independently reviewed)
+- Done: `deliverables/lobs/test-plan.md`: 29-LOB dev/hold-out mix, loss-run types, lint rules, pytest coverage, gates and per-LOB done definition. No tests or gold changed.
+- Doing next: build the LOB test suites with the engine, BOP baseline first.
+- Blocked by / need from: engine baseline snapshot test; @user on 20/10 vs 20/12 out-of-scope set.
+
+### 2026-10-21 (18) — @model-risk (written in OpenCode, not independently reviewed)
+- Done: `deliverables/model-risk/lob-review-questions.md`: common and per-LOB questions for a build check. **No verdicts today.**
+- Doing next: answer the list only when a LOB asks for a check.
+- Blocked by / need from: frozen run, pack fingerprint, gold manifest and lint hash per LOB.
+
+### 2026-10-21 (19) — @compliance (written in OpenCode, not independently reviewed)
+- Done: `deliverables/compliance/lob-review-questions.md`: common and per-LOB data-handling, privacy, licensing and fairness questions. **No verdicts today.**
+- Doing next: review the model-host data-handling note when the pilot asks.
+- Blocked by / need from: @user/@pm on states and data classes per LOB.
