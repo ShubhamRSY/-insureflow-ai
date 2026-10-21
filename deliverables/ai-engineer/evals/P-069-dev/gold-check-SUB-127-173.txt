@@ -1,0 +1,1 @@
+gold Operations items: 47 ok, 0 fail (47 files)

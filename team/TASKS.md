@@ -1755,3 +1755,24 @@ D-004 (user, 2026-10-09): Sanger & Altgelt agency pipeline. Eight steps. No auto
 - Acceptance criteria:
   - [x] `deliverables/pm/pilot-readiness.md`: @model-risk's C1–C8 (`deliverables/model-risk/T-027-assist-mode-pilot.md`) as a checklist with a status each, plus B-190 (SSO) and B-191 (concurrent writes) with a short build plan each. No build.
  2>&1 | tail -2 2>&1 | tail -2
+### T-116 — P-069: business_type operations slot, scorer v11
+- Owner: @ai-engineer-assistant (scorer, lint), @senior-underwriter (operations-gold-rule.md) · Status: DONE (frozen) · Decision: D-119
+- Acceptance criteria:
+  - [x] A `business_type` operations slot whose values are the class list in `deliverables/head-of-underwriting/carrier-match.md` (allow-list + referral + prohibited classes).
+  - [x] Every operations item that matters is a slot; items that fit no slot are removed from the scored checklist and listed as unscored notes.
+  - [ ] `deliverables/senior-underwriter/operations-gold-rule.md` updated to match.
+  - [x] Scorer `underwriting_pipeline/ai/eval_holdout_v11.py`; `eval_holdout_v10.py` unchanged (sha256 `ffd1afdd…302b`).
+  - [x] Lint (`deliverables/senior-test-engineer/lint_holdout.py`, v11 default): perfect answers score 100%; every wrong answer, including near-miss negatives, is caught.
+  - [x] Validated on SUB-127–173 and a dev re-score of T-108 (SUB-206–237) with 0 model calls (cache only, temp paths per D-069).
+  - [x] @model-risk check, High only: OBJECTION H1 (bar word dropped from SUB-211/222 dev gold), resolved by a rule line + gold fix; look-again APPROVE, no High (`deliverables/model-risk/check-T-116-P-069.md`). M1–M6, L1–L2 to backlog.
+  - [x] If no High: code and scorer v11 frozen (v11 sha256 `7ddcfb50521b7af17f00c0e148891ca40008d019ce257b9b5d121c7fa6d3fcbb`, lint `01147a7532bdd7f1ec00861200d1d5e6bbf87f12612389416ff58b78844ea653`, prompt `759b3e6bc9b2`); code-under-test commit, prompt hash and scorer sha256 recorded in NEXT-SESSION.md.
+
+### T-117 — Next hold-out: SUB-238–269 (20 in-scope + 12 out-of-scope), gold first, no run
+- Owner: @producer (files, mix), @senior-underwriter (gold), @senior-test-engineer (plan JSON, lint) · Status: TODO (blocked on T-116 freeze) · Decision: D-119
+- Acceptance criteria:
+  - [ ] 32 new files under `simulation/inbox/` as SUB-238 to SUB-269, nothing reused; 20 in-scope, 12 out-of-scope over proposal-P-055 criteria 1–4 as in T-108; no extraction, no model call, nothing run.
+  - [ ] Build rules as T-108: every carrier loss run valued before the run date, at least two held W1 files, at least two office-lessor / deli-style class files.
+  - [ ] `deliverables/producer/T-117-mix.md` (written before gold) and `deliverables/senior-test-engineer/T-117-plan.json`.
+  - [ ] Gold first, by hand from the documents and written rules only: every in-scope card has `- Scope:`, `- Operations items:` slots per operations-gold-rule.md (P-069), and `Loss runs valued as of: <date>` where loss runs exist.
+  - [ ] Lint PASS (scorer v11) before the gold freeze; gold manifest sha256 recorded in the mix and NEXT-SESSION.md.
+  - [ ] Not run, not scored (D-020).

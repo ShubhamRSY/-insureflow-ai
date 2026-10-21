@@ -1323,3 +1323,13 @@ Then continue: P-066 concurrent-write tests, @pm pilot-readiness update, @model-
 - Dissent: none
 - Status: ACCEPTED as a correction record by the orchestrator, 2026-10-20. Not a production approval; the T-027 veto stands.
 - Amends: none (records that two commits claimed more than they delivered).
+
+## D-119 — approve change P-069 (business_type operations slot, scorer v11); freeze if no High; build the next hold-out (SUB-238–269), gold first, no run
+- Date / Owner: 2026-10-21 / @user
+- Context: T-115 (`deliverables/ai-engineer/analysis/T-115-v10-slot-rework.md`) found 8 of 20 T-108 operations items fit no v10 slot, so v10 scores operations 12/20 on T-108 with no extractor change possible to close it. NEXT-SESSION.md (2026-10-20) offered: add a `business_type` slot, or relax the free-text rule.
+- Decision: In the user's words (pasted): "1. approve change P-069: add a business_type slot whose values are the class list in carrier-match.md (allow-list + referral + prohibited classes). Any operations item that matters must be a slot; items that fit no slot are removed from the scored checklist (listed as unscored notes). Update operations-gold-rule.md. Scorer v11; v10 stays frozen. Lint: perfect answers 100%, all wrong answers incl. near-miss negatives caught. Validate on SUB-127–173 and dev re-score T-108 (0 model calls). @model-risk check, High only. 2. If no High: freeze code and scorer v11; record the code-under-test commit, prompt hash and scorer sha256 in NEXT-SESSION.md. 3. Build the next hold-out (20 in-scope + 12 out-of-scope, next SUB numbers after 237): @producer builds files, @senior-underwriter writes gold first with operations slots and the valued-as-of line; lint must PASS before the gold freeze; record the gold manifest hash. Do not run it."
+- Rationale: The user typed the exact approval in this Claude Code session on 2026-10-21 (D-017; pasted text counts, D-032).
+- Dissent: none
+- Follow-up tasks: T-116 (P-069 scorer v11 + operations-gold-rule.md + lint + dev validation; @model-risk High-only), T-117 (next hold-out SUB-238–269, gold first, no run; blocked on T-116 freeze).
+- Status: ACCEPTED by @user, 2026-10-21
+- Amends: D-117 (P-068 / scorer v10 frozen; new hold-outs score with v11 once frozen). Not a production approval; T-027 veto stands.

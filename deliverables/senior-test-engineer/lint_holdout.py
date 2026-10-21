@@ -12,7 +12,7 @@ PLAN.json (written by hand from the mix .md, before gold exists):
    "routes": {"carrier_a": 5, "senior_referral": 3}}    # optional: gold route counts over in-scope files
 Only keys present are checked.
 
-Scorer test (D-116 item 5, "test the test"), with --scorer NAME (default eval_holdout_v10, the scorer the set will be scored with once P-068 is approved):
+Scorer test (D-116 item 5, "test the test"), with --scorer NAME (default eval_holdout_v11 since T-116 / P-069, which adds the business_type slot; v10 stays selectable with --scorer eval_holdout_v10):
   (a) a perfect answer built from each gold card is scored by the scorer itself (score_report, no pipeline run, no model call): no mark
       may be "miss" or "call_failed", and the set's route gate and P-055 gate must PASS with 0 false completes;
   (b) deliberately wrong answers, each must be caught: one per field on every in-scope file (named insured, premises, effective date,
@@ -227,6 +227,31 @@ NEARMISS = [  # (present-phrase, wrong replacement) -- no alcohol vs beer and wi
 ]
 
 
+# T-116 (P-069): business_type near-miss negatives from operations-gold-rule.md section 5. (gold class set, wrong answer text).
+# Each must be a miss: (a) on every card whose gold class set is exactly that set, the perfect answer with only the class swapped;
+# (b) once per run on a synthetic card, so the case is tested whatever the set holds. A blind scorer fails both.
+NEARMISS_BT = [
+    ({"restaurant"}, "bar"), ({"restaurant"}, "restaurant and bar"),                                  # 1
+    ({"bar_pub"}, "full-service restaurant"),                                                         # 2
+    ({"office"}, "office with pub"),                                                                  # 3
+    ({"office", "bar_pub"}, "office"),                                                                # 4
+    ({"retail"}, "cocktail lounge"), ({"retail"}, "retail and lounge"),                               # 5
+    ({"habitational"}, "vacant building"), ({"habitational"}, "apartments, vacant"),                  # 6
+    ({"vacant"}, "apartment building"),                                                               # 7
+    ({"wholesale"}, "retail store"),                                                                  # 8
+    ({"wholesale"}, "wholesale of fertilizer and pesticides"),                                        # 9
+    ({"cold_storage"}, "warehouse"), ({"cold_storage"}, "wholesale distributor"),                     # 10
+    ({"contractor"}, "roofing and sheet metal manufacturing"), ({"contractor"}, "office building owner"),  # 11
+    ({"lab_medical"}, "office"),                                                                      # 12
+    ({"cannabis"}, "retail"), ({"cannabis"}, "smoke shop"),                                           # 13
+    ({"restaurant"}, "no restaurant"), ({"bar_pub"}, "not a bar, restaurant"),                        # 14
+    ({"restaurant"}, "not a restaurant, a bar"), ({"restaurant", "bar_pub"}, "restaurant"),           # drop one of two
+    ({"restaurant"}, "business_type=bar_pub"),                                                        # explicit wrong token
+]
+BT_TRUE = [({"restaurant"}, "not a bar, restaurant"), ({"office", "bar_pub"}, "office with a pub"), ({"retail", "office"}, "retail and office"),
+           ({"restaurant", "bar_pub"}, "Restaurant and bar"), ({"other_class"}, "Machine shop with a welding bay")]  # true positives, must hit
+
+
 def _empty(line: str) -> bool:
     low = (line or "").strip().lower()
     return low.startswith(("missing", "not in documents", "both", "none")) or not low
@@ -271,6 +296,9 @@ def perfect_report(scorer, sid: str, gold_text: str) -> dict:
     complete = gold.get("status", "").lower().startswith("complete")
     return {"fields": fields, "conflicts": conflicts, "complete": complete, "status": "complete" if complete else "incomplete", "error": None,
             "request": None, "scope": {"version": "lint", "in_scope": True, "reasons": []}, "_route": scorer.gold_route_of(gold.get("expected carrier route") or "")}
+
+
+WARNS: list[str] = []  # v11: items lines with no business_type= item (a warning, not a failure)
 
 
 def lint_scorer(ids: list[str], scorer_name: str) -> list[str]:
@@ -342,6 +370,18 @@ def lint_scorer(ids: list[str], scorer_name: str) -> list[str]:
                 got = score(sid, text, wrong)
                 if got is not None and got["checks"].get("operations") != "miss":
                     fails.append(f"{sid}/scorer: a near-miss operations ({phrase!r} -> {wrong_ops!r}) is not caught (marked {got['checks'].get('operations')})")
+            if hasattr(scorer, "split_items"):  # v11: business_type near-misses on the cards that hold exactly that class set
+                bt, rest, _ = scorer.split_items(scorer.parse_gold(text).get("operations items") or "")
+                for gset, wrong_text in NEARMISS_BT:
+                    if bt != gset:
+                        continue
+                    wrong = copy.deepcopy(perfect)
+                    for r in wrong["fields"]:
+                        if r["field_id"] == "operations":
+                            r["value"], r["needs_review"] = "; ".join([wrong_text] + rest), False
+                    got = score(sid, text, wrong)
+                    if got is not None and got["checks"].get("operations") != "miss":
+                        fails.append(f"{sid}/scorer: a business_type near-miss ({sorted(gset)} -> {wrong_text!r}) is not caught (marked {got['checks'].get('operations')})")
             for check, change in (("conflict", {"conflicts": [] if perfect["conflicts"] else [{"field": "x", "text": "sales: 1 vs 2", "resolution": "open"}]}),
                                   ("status", {"complete": not perfect["complete"], "status": "incomplete" if perfect["complete"] else "complete"}),
                                   ("route", {"_route": "carrier_b" if perfect["_route"] != "carrier_b" else "carrier_a"})):
@@ -350,6 +390,22 @@ def lint_scorer(ids: list[str], scorer_name: str) -> list[str]:
                 got = score(sid, text, copy.deepcopy(perfect) | change)
                 if got is not None and got["checks"].get(check) != "miss":
                     fails.append(f"{sid}/scorer: a wrong {check} is not caught (marked {got['checks'].get(check)})")
+        if hasattr(scorer, "answer_classes"):  # v11: the class reader, whatever the set holds
+            line = lambda c: "; ".join(f"business_type={x}" for x in sorted(c))
+            for gset, wrong_text in NEARMISS_BT:
+                if scorer.ops_items_hit(wrong_text, line(gset)):
+                    fails.append(f"scorer: business_type near-miss {sorted(gset)} -> {wrong_text!r} is not caught")
+            for gset, ok_text in BT_TRUE:
+                if not scorer.ops_items_hit(ok_text, line(gset)):
+                    fails.append(f"scorer: business_type true positive {sorted(gset)} <- {ok_text!r} is wrongly a miss")
+            for value, syns in scorer.BT_SYNONYMS.items():
+                for text_ in (f"business_type={value}", syns[0]):
+                    if not scorer.ops_items_hit(text_, line({value})):
+                        fails.append(f"scorer: the perfect class answer {text_!r} is not read as {value}")
+            for gold_item in ("office building lessor", "business_type=lounge", "no bar"):  # an item that fits no slot is a gold error and a miss
+                if scorer.ops_items_hit("business_type=office; no bar", f"business_type=office; {gold_item}") or not scorer.ops_item_problems(gold_item):
+                    fails.append(f"scorer: the gold item {gold_item!r} (fits no slot) is not refused")
+            WARNS.extend(scorer.gold_ops_warnings([i for i in ids if i not in broken]))
         gate = scorer.route_gate(rows_in) if rows_in else {"verdict": "NOT EVALUABLE"}
         p055 = scorer.p055_gate(rows_out, rows_in)
         if gate["verdict"] != "PASS":
@@ -418,7 +474,7 @@ def self_check() -> int:
         (tp / "inbox" / "SUB-902" / "loss-runs.md").write_text("| 2025 | X | P | No losses | - | $0 |\n")
         (tp / "inbox" / "SUB-903").mkdir(parents=True)
         card = ("- Status: complete\n- Scope: in scope\n- Named insured: Example Roofing LLC\n- Premises: 100 Main St, Austin, TX 78701\n- Effective date: 2027-01-01\n"
-                "- Operations: office lessor\n- Operations items: office building lessor\n- Sales: 742000\n- TIV: 2450000\n- Construction: Masonry\n- Year built: 2005\n"
+                "- Operations: office lessor\n- Operations items: business_type=office\n- Sales: 742000\n- TIV: 2450000\n- Construction: Masonry\n- Year built: 2005\n"
                 "- Loss runs: Carrier A format, 3 policy periods 2023-06-01 to 2026-06-01, valued as of 2026-08-15\n- Loss runs valued as of: 2026-08-15\n"
                 "- Conflict: none\n- Expected loss run: Carrier A format recognised\n- Expected carrier route: carrier_a (R14)\n")
         (tp / "gold" / "SUB-901.md").write_text(card)
@@ -429,10 +485,11 @@ def self_check() -> int:
         plan.write_text(json.dumps({"ids": "901-903", "in": 2, "out": 1, "per_criterion": {"1": 1}, "routes": {"carrier_a": 1, "senior_referral": 1}, "undated_loss_runs": ["SUB-902"]}))
         INBOX, GOLD = tp / "inbox", tp / "gold"
         import eval_holdout_v9 as v9  # noqa: E402  # pyright: ignore[reportMissingImports] used by the explicit --scorer cases below
-        import eval_holdout_v10 as v10  # noqa: E402  # pyright: ignore[reportMissingImports] the default scorer the temp set is checked with
+        import eval_holdout_v10 as v10  # noqa: E402  # pyright: ignore[reportMissingImports] selectable with --scorer
+        import eval_holdout_v11 as v11  # noqa: E402  # pyright: ignore[reportMissingImports] the default scorer the temp set is checked with
         tiny = lambda real: lambda out, rows: real(out, rows) | ({"verdict": "PASS"} if out and rows and not any(r["leaks"] or not r["detected"] for r in out) else {})  # one criterion only in this tiny set
-        v9_p055_real, v10_p055_real = v9.p055_gate, v10.p055_gate
-        v9.p055_gate, v10.p055_gate = tiny(v9_p055_real), tiny(v10_p055_real)
+        v9_p055_real, v10_p055_real, v11_p055_real = v9.p055_gate, v10.p055_gate, v11.p055_gate
+        v9.p055_gate, v10.p055_gate, v11.p055_gate = tiny(v9_p055_real), tiny(v10_p055_real), tiny(v11_p055_real)
         try:
             r.append(main([str(plan), "--run-date", "2026-10-17"]) == 0)
             print(("ok   " if r[-1] else "BAD  ") + "clean temp set passes, scorer test included (perfect answers clean, every wrong answer caught)")
@@ -457,7 +514,7 @@ def self_check() -> int:
             # B-437 F1-F3 (P-065): the same three gold shapes, v8 must fail them and v9 must score them clean
             f1_card = card.replace("- Conflict: none\n", "- Conflict: none (schedule matches application on TIV/sq ft/construction/year built)\n")
             f2_card = (card.replace("- Operations: office lessor", "- Operations: full-service restaurant")
-                           .replace("- Operations items: office building lessor",
+                           .replace("- Operations items: business_type=office",
                                     "- Operations items: full-service restaurant; 48 seats; closes 11 p.m.; open until 2:00 a.m.; no dancing"))
             f3_card = (card.replace("- Loss runs valued as of: 2026-08-15\n", "")
                            .replace("- Loss runs: Carrier A format, 3 policy periods 2023-06-01 to 2026-06-01, valued as of 2026-08-15",
@@ -481,7 +538,7 @@ def self_check() -> int:
             print(("ok   " if r[-1] else "BAD  ") + "F1-F3: v9 scores all three cards clean and still catches every wrong answer" + (f"  got: {f9}" if f9 else ""))
             # P-068: the near-miss negatives are part of the wrong-answer set and must be caught; prove a blind scorer fails them
             nm_card = card.replace("- Operations: office lessor", "- Operations: retail store").replace(
-                "- Operations items: office building lessor", "- Operations items: retail store; 24 seats; no hood; no cooking; no alcohol")
+                "- Operations items: business_type=office", "- Operations items: retail store; 24 seats; no hood; no cooking; no alcohol")
             (tp / "gold" / "SUB-907.md").write_text(nm_card)
             v10_ops_real = v10.ops_items_hit
             good_nm = [x for x in lint_scorer(["SUB-907"], "eval_holdout_v10") if "near-miss operations" in x]  # v10 catches every near-miss on this card
@@ -490,6 +547,29 @@ def self_check() -> int:
             v10.ops_items_hit = v10_ops_real
             r.append(not good_nm and bool(blind_nm))
             print(("ok   " if r[-1] else "BAD  ") + f"near-miss negatives are tested ({len(blind_nm)} caught when blind, 0 uncaught by v10)" + (f"  got: {good_nm}" if good_nm else ""))
+            # T-116 (P-069): v11 business_type. Two-operation card scores clean; a non-slot item and a bad value are gold errors; a blind scorer
+            # and a scorer that reads no class both fail the near-miss stage; the notes line is never scored.
+            two_op = card.replace("- Operations: office lessor", "- Operations: office with a pub").replace(
+                "- Operations items: business_type=office", "- Operations items: business_type=office; business_type=bar_pub; 48 seats; no alcohol").replace(
+                "- Expected carrier route: carrier_a (R14)", "- Expected carrier route: senior_referral (R16)") + "- Operations notes (unscored): pub is a tenant on the ground floor; family owned.\n"
+            (tp / "gold" / "SUB-908.md").write_text(two_op)
+            (tp / "gold" / "SUB-909.md").write_text(two_op.replace("; 48 seats; no alcohol", "; office building lessor"))
+            (tp / "gold" / "SUB-910.md").write_text(two_op.replace("business_type=bar_pub", "business_type=pub"))
+            good11 = [x for x in lint_scorer(["SUB-908"], "eval_holdout_v11") if x.startswith("SUB-908")]
+            r.append(not good11)
+            print(("ok   " if r[-1] else "BAD  ") + "v11: a two-operation card with a notes line scores clean, every near-miss caught" + (f"  got: {good11}" if good11 else ""))
+            bad11 = lint_scorer(["SUB-909", "SUB-910"], "eval_holdout_v11")
+            r.append(any(x.startswith("SUB-909/gold") and "fits no slot" in x for x in bad11) and any(x.startswith("SUB-910/gold") and "business_type=pub" in x for x in bad11))
+            print(("ok   " if r[-1] else "BAD  ") + "v11: an item that fits no slot and an unlisted business_type value are gold errors")
+            v11_ops_real, v11_cls_real = v11.ops_items_hit, v11.answer_classes
+            v11.ops_items_hit = lambda *a: True  # blind to every operation
+            blind11 = [x for x in lint_scorer(["SUB-908"], "eval_holdout_v11") if "business_type" in x or "near-miss" in x]
+            v11.ops_items_hit = v11_ops_real
+            v11.answer_classes = lambda text: set()  # reads no class at all
+            nocls11 = [x for x in lint_scorer(["SUB-908"], "eval_holdout_v11") if "scorer:" in x]
+            v11.answer_classes = v11_cls_real
+            r.append(bool(blind11) and bool(nocls11))
+            print(("ok   " if r[-1] else "BAD  ") + f"v11: a blind scorer ({len(blind11)} findings) and a scorer that reads no class ({len(nocls11)} findings) are both caught")
             # P-068 / @model-risk H1: the exact adversarial repros that broke the v10 draft (interleaved counts,
             # a negation spanned across the item, a neighbouring fact). Each must be a miss; each true positive a hit.
             h1 = [  # (answer, gold items, want_hit)
@@ -540,7 +620,7 @@ def self_check() -> int:
             r.append(not h1_bad)
             print(("ok   " if r[-1] else "BAD  ") + f"H1 repros all close ({len(h1)} cases, 0 false positives, 0 false negatives)" + (f"  got: {h1_bad}" if h1_bad else ""))
         finally:
-            v9.p055_gate, v10.p055_gate = v9_p055_real, v10_p055_real
+            v9.p055_gate, v10.p055_gate, v11.p055_gate = v9_p055_real, v10_p055_real, v11_p055_real
         plan.write_text(json.dumps({"ids": "901-903", "in": 2, "out": 1}))
         r.append(main([str(plan), "--run-date", "2026-10-17"]) == 1)
         print(("ok   " if r[-1] else "BAD  ") + "same set without the undated declaration fails")
@@ -552,6 +632,7 @@ def self_check() -> int:
 def main(argv: list[str]) -> int:
     if "--self-check" in argv:
         return self_check()
+    WARNS.clear()  # one run's warnings only (self_check calls main many times)
     args = [a for a in argv if not a.startswith("--")]
     run = date.today()
     if "--run-date" in argv:
@@ -564,11 +645,13 @@ def main(argv: list[str]) -> int:
     ids = [f"SUB-{n:03d}" for n in range(a, b + 1)]
     f1, infos = lint_dates(ids, run, set(plan.get("undated_loss_runs") or []))
     fails = f1 + lint_gold_and_mix(ids, plan)
-    scorer = argv[argv.index("--scorer") + 1] if "--scorer" in argv else "eval_holdout_v10"
+    scorer = argv[argv.index("--scorer") + 1] if "--scorer" in argv else "eval_holdout_v11"
     if not fails:  # the scorer test needs readable Scope lines
         fails += lint_scorer(ids, scorer)
     for w in infos:
         print("INFO ", w)
+    for w in WARNS:
+        print("WARN ", w)
     for f in fails:
         print("FAIL ", f)
     print(f"{'FAIL' if fails else 'PASS'}: {len(fails)} failure(s), {len(infos)} info, {len(ids)} files, run date {run}")

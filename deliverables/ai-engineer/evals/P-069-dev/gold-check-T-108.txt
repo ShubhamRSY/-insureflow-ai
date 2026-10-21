@@ -1,0 +1,34 @@
+SUB-206 parse ok: in scope
+SUB-207 parse ok: in scope
+SUB-208 parse ok: in scope
+SUB-209 parse ok: in scope
+SUB-210 parse ok: in scope
+SUB-211 parse ok: in scope
+SUB-212 parse ok: in scope
+SUB-213 parse ok: in scope
+SUB-214 parse ok: in scope
+SUB-215 parse ok: in scope
+SUB-216 parse ok: in scope
+SUB-217 parse ok: in scope
+SUB-218 parse ok: in scope
+SUB-219 parse ok: in scope
+SUB-220 parse ok: in scope
+SUB-221 parse ok: in scope
+SUB-222 parse ok: in scope
+SUB-223 parse ok: in scope
+SUB-224 parse ok: in scope
+SUB-225 parse ok: in scope
+SUB-226 parse ok: out of scope, criteria 4 application not identified
+SUB-227 parse ok: out of scope, criteria 4 application not identified
+SUB-228 parse ok: out of scope, criteria 1 scanned application
+SUB-229 parse ok: out of scope, criteria 1 scanned application
+SUB-230 parse ok: out of scope, criteria 1 scanned application
+SUB-231 parse ok: out of scope, criteria 1 scanned application, 2 multiple locations
+SUB-232 parse ok: out of scope, criteria 2 multiple locations
+SUB-233 parse ok: out of scope, criteria 2 multiple locations
+SUB-234 parse ok: out of scope, criteria 3 non-English
+SUB-235 parse ok: out of scope, criteria 3 non-English
+SUB-236 parse ok: out of scope, criteria 2 multiple locations, 3 non-English
+SUB-237 parse ok: out of scope, criteria 2 multiple locations, 3 non-English
+totals: 20 in scope, 12 out of scope; per criterion 1 scanned application: 4, 2 multiple locations: 5, 3 non-English: 4, 4 application not identified: 2; two-criteria files: 3 (SUB-231, SUB-236, SUB-237); criterion 4 files: 2 (SUB-226, SUB-227)
+gold Scope and valued-as-of lines: 32 ok, 0 fail (32 files)
