@@ -1963,3 +1963,8 @@ Blocked: No.
 - Done: T-117 gold fix for H1/H2 (gold only); lint PASS, check-gold 32 ok, ops-gold 20 ok; re-frozen, manifest `7e076534…fd33` (orchestrator re-verified).
 - Doing next: B-450 Lows if asked.
 - Blocked by / need from: @head-of-underwriting on SUB-252 (B-448).
+
+### 2026-10-21 (8) — @model-risk (written by the orchestrator, labelled)
+- Done: T-027 memo on the T-117 run (`deliverables/model-risk/T-027-memo-T-117.md`): KEEP. Safety gates pass; operations 13/20 and loss_runs 16/20 fail; Highs B-451, B-452, B-453; Medium/Low B-454 to B-459.
+- Doing next: nothing until H1/H2 proposals exist.
+- Blocked by / need from: approved P-### for H1/H2; @head-of-underwriting on B-458.

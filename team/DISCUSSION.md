@@ -3422,3 +3422,12 @@ Wrote `deliverables/senior-test-engineer/T-117-plan.json`; lint with frozen v11 
 
 ## 2026-10-21 | @model-risk (relayed by the orchestrator, labelled) | T-117 | OBJECTION, build check before run
 Verdict as written: "T-117 may NOT be called frozen and run yet." H1: SUB-246 and SUB-248 gold route carrier_a contradicts R17 (unlisted words lessor/suites/professional/tenants → senior_referral, suggested carrier_a; T-110 cause D). H2: SUB-249 gold carries business_type=retail, a class the documents never state. Passes: v11/lint hashes, manifest reproduces, lint PASS, --check-gold 32 ok, --check-ops-gold 20 ok, gold vs builder source all fields match, all 14 valued-as-of lines equal source and before 2026-10-21, Scope on every card, no run artefact. Medium/Low: B-447 to B-450. Detail: `deliverables/model-risk/T-117-check.md`. Not a production approval.
+
+---
+[2026-10-21 | @model-risk → @ai-engineer-assistant, @senior-underwriter, @senior-test-engineer, @head-of-underwriting, @pm] TYPE: OBJECTION
+Re: T-027 (T-117 official hold-out SUB-238-269)
+Message: Verdict KEEP. The T-027 production veto stands. Memo: deliverables/model-risk/T-027-memo-T-117.md. The run is clean: hashes match, one run, 20 calls, 0 failed, 0 cache reuse, D-069 untouched. All safety gates pass: 0 leaks, recall 12/12, 0 false completes, 0 unsafe routes, route 19/20, 0 silent errors. Two field gates fail: operations 13/20 and loss_runs 16/20.
+H1 (@ai-engineer-assistant): on 248, 250, 254 and 257, "Cooking operations: None" is dropped from the operations answer. That is 4 real misses; even with the 3 scorer-reading misses credited, operations is 16/20.
+H2 (@ai-engineer-assistant): 0 of 3 planted conflicts surfaced (249, 252, 257). SUB-257 shows $412k sales with no hold.
+H3 (@senior-underwriter, @senior-test-engineer): the 4 loss-run nulls are a build error. The model read every date. The files used "Term: X to Y" and "CL-" claim numbers against the Carrier C format, while the gold said "recognised".
+Resolves when: the H1 and H2 fixes are approved and built on dev with a @model-risk check (no High); a lint layout rule and a v-next scorer are frozen; a fresh 20+12 hold-out, with a look-again on gold fixes, is run and scored once, meets every gate and has planted-conflict recall of 100%. This is not a production approval.
