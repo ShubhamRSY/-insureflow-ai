@@ -3414,3 +3414,11 @@ Step 0: added the M6 rule line to `operations-gold-rule.md` section 2 (food and 
 
 ## 2026-10-21 @senior-test-engineer - T-117 plan and lint (D-119)
 Wrote `deliverables/senior-test-engineer/T-117-plan.json`; lint with frozen v11 (sha256s verified) = FAIL, 3 lines, all gold cards (@senior-underwriter): SUB-239 "closes midnight" fits no slot; SUB-247 and SUB-252 business_type near-miss not caught. Plan and inbox files clean. Mix/gold disagreements listed in `T-117-lint.md`; gold wins. Not run, not committed. Next: gold fix, then re-run lint.
+
+### REVIEW — @senior-underwriter — 2026-10-21 — T-117 gold fix after @model-risk check (H1, H2, M4)
+- Agreed with both High findings; gold only. SUB-246 and SUB-248: route carrier_a -> senior_referral, suggested carrier_a (R17; lessor/suites/professional/tenants not on allow-list; T-110 cause D). SUB-249: removed business_type=retail (documents say deli plus a little grocery market; no retail word).
+- Updated T-117-routes.md (carrier_a 0, senior_referral 16), T-117-gold-summary.md, T-117-plan.json routes, T-117-lint.md (PASS line, M4), T-117-lint.txt.
+- Lint PASS, --check-gold 32 ok, --check-ops-gold 20 ok. Re-frozen: old manifest 9ab5960d... -> new 7e076534432f1276bfe6198643547498b613c4f2b7aceb2ed618314b5e39fd33 (recorded in T-117-mix.md). Not run: pipeline, extraction, builder. Not committed.
+
+## 2026-10-21 | @model-risk (relayed by the orchestrator, labelled) | T-117 | OBJECTION, build check before run
+Verdict as written: "T-117 may NOT be called frozen and run yet." H1: SUB-246 and SUB-248 gold route carrier_a contradicts R17 (unlisted words lessor/suites/professional/tenants → senior_referral, suggested carrier_a; T-110 cause D). H2: SUB-249 gold carries business_type=retail, a class the documents never state. Passes: v11/lint hashes, manifest reproduces, lint PASS, --check-gold 32 ok, --check-ops-gold 20 ok, gold vs builder source all fields match, all 14 valued-as-of lines equal source and before 2026-10-21, Scope on every card, no run artefact. Medium/Low: B-447 to B-450. Detail: `deliverables/model-risk/T-117-check.md`. Not a production approval.

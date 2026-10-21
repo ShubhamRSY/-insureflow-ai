@@ -72,3 +72,11 @@ Counts as built: criterion 1: 4 (260, 261, 262, 263). Criterion 2: 5 (263, 264, 
 - Lint before freeze: `.venv/bin/python deliverables/senior-test-engineer/lint_holdout.py deliverables/senior-test-engineer/T-117-plan.json --run-date 2026-10-21` → exit 0, 0 failures, 3 info (declared undated 241, 242, 254), 32 files. A first run failed on gold SUB-239/247/252 (class words in non-class items); fixed in gold only (also SUB-238), recorded in `T-117-gold-summary.md`.
 - Not done (not requested in D-119): a @model-risk build check of T-117, and a gold-vs-source comparison as in T-108.
 - No score exists: T-117 is not run (D-020: run once, score once, later, with the user's approval).
+
+## Re-freeze note (T-117), 2026-10-21 (written by @senior-underwriter after the @model-risk build check)
+
+- Reason: T-117 check H1 (SUB-246, SUB-248 route carrier_a contradicted R17 strict word rule) and H2 (SUB-249 carried business_type=retail the documents never state). Gold only; no code, prompt, scorer, lint or inbox file changed. Nothing was run.
+- Files changed: `gold-set/SUB-246.md` (route carrier_a -> senior_referral, suggested carrier_a), `gold-set/SUB-248.md` (same, hold kept), `gold-set/SUB-249.md` (business_type=retail item removed), `T-117-routes.md` (rows 246, 248, counts carrier_a 0 / senior_referral 16, judgment call 2 removed). Also updated, not in the manifest: `T-117-gold-summary.md`, `deliverables/senior-test-engineer/T-117-plan.json` (routes), `T-117-lint.md`, `T-117-lint.txt`.
+- Old manifest sha256: `9ab5960db77f49e02b27518fb13eaff7a0ceb8d6e78c498c430bd2ba350a943d` (superseded).
+- **New manifest sha256 = `7e076534432f1276bfe6198643547498b613c4f2b7aceb2ed618314b5e39fd33`** (same method: shasum -a 256 of SUB-238..269.md then T-117-routes.md, 33 lines; sha256 of that file).
+- Re-checked after the fix: lint PASS (0 failures, 3 info, 32 files); `--check-gold` 32 ok; `--check-ops-gold` 20 ok.

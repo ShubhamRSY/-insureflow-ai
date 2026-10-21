@@ -6,13 +6,13 @@
 ## Counts
 - In scope 20 (SUB-238-257); out of scope 12 (SUB-258-269).
 - Criteria: 1 = 4 (260, 261, 262, 263); 2 = 5 (263, 264, 265, 268, 269); 3 = 4 (266, 267, 268, 269); 4 = 2 (258, 259). Two criteria: 3 (263 = 1+2; 268, 269 = 2+3). Criterion 4 alone: 2. Same as the mix.
-- Routes (in scope): carrier_a 2, senior_referral 14, no_match 4, hold 0. Status: complete 10, incomplete 10.
+- Routes (in scope): carrier_a 0, senior_referral 16 (suggested carrier_a 5), no_match 4, hold 0. Status: complete 10, incomplete 10.
 - Loss-run lines: dated and recognised 14 (valued-as-of line present); no valued line 6: undated typed runs 242, 254; no-known-loss letters 241 (undated) and 248 (dated 2026-09-15); not recognised layout 239; no loss run 244. Latest valued date 2026-09-30 (SUB-249), before the run date 2026-10-21.
 
 ## Coverage
 - W1 prohibited, held: 238 (hold year built), 239 (hold loss run), 252 (hold conflict). All three no_match.
-- Office-lessor: 246, 248 (both carrier_a). Deli-style: 247, 249 (both R10, carrier_b suggested); 250 two-operation retail/office also. 
-- Two-operation: 250 (office + retail, R16), 252 (bar_pub + office, R1), 249 deli + grocery (restaurant + retail, one policy). 251 is one class (retail), see below.
+- Office-lessor: 246, 248 (both senior_referral, carrier_a suggested, R17). Deli-style: 247, 249 (both R10, carrier_b suggested); 250 two-operation retail/office also. 
+- Two-operation: 250 (office + retail, R16), 252 (bar_pub + office, R1), 249 deli + grocery is ONE class (restaurant): the documents state no retail word (H2). 251 is one class (retail), see below.
 - M6 words ("salad bar", "sushi bar", "espresso bar", "bar snacks"): none in any file.
 
 ## Mismatches with the producer's mix (documents win)
@@ -23,13 +23,13 @@
 5. SUB-252: the mix expects a pub; gold is no_match R1 (pub beside office), not the R2 referral a pub with restaurant evidence alone would take.
 6. SUB-249: the mix says a conflict in square feet; confirmed and held. SUB-257 sales conflict, SUB-252 suite count conflict confirmed and held.
 7. SUB-254: the mix says undated; confirmed. "contractors" in the operations names the customers (not R11).
-8. Mix coverage counts differ by classification only: allow-list-style direct routes are 2 (246, 248), not 7.
+8. Mix coverage counts differ by classification only: direct Carrier A routes are 0, not 7 (allow-list-style files 243, 246, 248, 254, 257 all take R17 senior_referral).
 
 ## Judgment calls to check
 - Restaurants are "complete" when the pipeline-held fields are present, as in T-108; the extinguishing inspection date, closing hour and liquor share (required-fields.md) are asked for in the recommendation, not a hold.
 - Loss runs of one policy term (240, 243, 247, 249, 250, 251, 252, 253, 255, 257) are accepted as recognised layouts; the short history is noted in the recommendation only.
 - Cooking items left out when the documents contradict themselves (SUB-239 oven vs "no real kitchen"; SUB-252 fryer vs "no full kitchen"); notes carry both.
-- SUB-248 physical therapist (email) and the R17 neutral-word question for lessor language: see `T-117-routes.md`.
+- SUB-248 physical therapist (email): see `T-117-routes.md`. The R17 lessor-language question is closed (H1): strict R17, senior_referral.
 - Policy period end dates after the run date (243, 247, 254, others) are period dates, not valued dates.
 
 ## Changes after the T-117 lint (gold only)
@@ -37,3 +37,7 @@
 - SUB-247: "catering" moved from items to notes (restaurant synonym; a wrong answer keeping it would read as restaurant).
 - SUB-252: alcohol item "full bar" changed to "full liquor" (H1; bar_pub already carried).
 - SUB-238: item "no kitchen" changed to "no cooking" (kitchen is a restaurant synonym). Other in-scope cards checked against the class synonym lists: no further fault.
+
+## Changes after the @model-risk build check (2026-10-21, gold only)
+- H1: SUB-246 and SUB-248 route carrier_a -> senior_referral, suggested carrier_a (R17 strict word rule; T-108 SUB-206/213 precedent was scored the other way, T-110 cause D). Counts: carrier_a 0, senior_referral 16.
+- H2: SUB-249 item business_type=retail removed (grocery market is not a retail word in the documents); notes line carries it. Route unchanged.

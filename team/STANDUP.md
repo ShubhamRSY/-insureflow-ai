@@ -1953,3 +1953,13 @@ Blocked: No.
 - Done: `T-117-plan.json` (T-108 schema); lint with frozen v11: first FAIL (3, all gold), after the gold fixes **PASS**, 0 failures, 3 info, 32 files (re-run by the orchestrator); `T-117-lint.md`.
 - Doing next: nothing.
 - Blocked by / need from: nothing.
+
+### 2026-10-21 (6) — @model-risk (written by the orchestrator, labelled)
+- Done: T-117 build check (`deliverables/model-risk/T-117-check.md`): OBJECTION, H1 (SUB-246/248 route vs R17), H2 (SUB-249 retail). Everything else passes.
+- Doing next: look-again on the gold fix if the user asks.
+- Blocked by / need from: nothing.
+
+### 2026-10-21 (7) — @senior-underwriter (written by the orchestrator, labelled)
+- Done: T-117 gold fix for H1/H2 (gold only); lint PASS, check-gold 32 ok, ops-gold 20 ok; re-frozen, manifest `7e076534…fd33` (orchestrator re-verified).
+- Doing next: B-450 Lows if asked.
+- Blocked by / need from: @head-of-underwriting on SUB-252 (B-448).

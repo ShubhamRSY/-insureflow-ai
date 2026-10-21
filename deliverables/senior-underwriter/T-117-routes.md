@@ -12,9 +12,9 @@
 | SUB-243 | complete | senior_referral | carrier_a | R17; AG:29-30 | bicycle retail and repair: goods and service words not on allow-list |
 | SUB-244 | incomplete — hold: loss run missing | senior_referral | carrier_b | R11; AG:38, AG:62 | roofing contractor |
 | SUB-245 | complete | senior_referral | carrier_c | R12; AG:37, AG:62 | habitational 12 units, no sprinklers (AG:61 candidate) |
-| SUB-246 | complete | carrier_a | — | R14; AG:29-31 | office building lessor, 14 suites, TIV 2.65M |
+| SUB-246 | complete | senior_referral | carrier_a | R17; AG:29-30 | office building lessor, 14 suites: lessor, suites, professional, tenants not on allow-list |
 | SUB-247 | complete | senior_referral | carrier_b | R9, R10; AG:39, AG:62 | deli with flat-top, hood, catering, no liquor |
-| SUB-248 | incomplete — hold: loss run not recognised | carrier_a | — | R14; AG:29-31 | office building lessor, six suites; verify medical tenant (email only) |
+| SUB-248 | incomplete — hold: loss run not recognised | senior_referral | carrier_a | R17; AG:29-30 | office building lessor, six suites: lessor, professional, six, suites not on allow-list; verify medical tenant (email only) |
 | SUB-249 | incomplete — hold: open conflict (sq ft) | senior_referral | carrier_b | R9, R10; AG:39, AG:62 | deli with grill, hood plus grocery market, no alcohol |
 | SUB-250 | complete | senior_referral | — | R16; AG:33 | two operations: tax office plus phone repair retail |
 | SUB-251 | complete | senior_referral | — | W2d; R14; AG:30 | wine shop and tasting room; "liquor liability" on the line of business |
@@ -26,9 +26,9 @@
 | SUB-257 | incomplete — hold: open conflict (sales) | senior_referral | carrier_a | R17; AG:29-30 | thrift retail: "used" and "household goods" not on allow-list |
 
 ## Counts per route (SUB-238 to SUB-257)
-- carrier_a: 2 (SUB-246, SUB-248)
+- carrier_a: 0 (no direct Carrier A route in scope; R17 gives all five allow-list-style files senior_referral)
 - carrier_b: 0 and carrier_c: 0 as routes (suggested market only)
-- senior_referral: 14 (suggested carrier_b 6: 240, 241, 244, 247, 249, 253; carrier_c 2: 245, 256; carrier_a 3: 243, 254, 257; no suggestion 3: 242, 250, 251)
+- senior_referral: 16 (suggested carrier_b 6: 240, 241, 244, 247, 249, 253; carrier_c 2: 245, 256; carrier_a 5: 243, 246, 248, 254, 257; no suggestion 3: 242, 250, 251)
 - no_match: 4 (SUB-238, 239, 252, 255)
 - Total 20. No route is "hold".
 
@@ -36,7 +36,7 @@ The twelve out-of-scope ids SUB-258..SUB-269 carry no route (manual intake).
 
 ## Judgment calls where the written rules are silent or strained (for @head-of-underwriting)
 1. SUB-252: pub plus a fryer (R9 evidence, R2) beside an office operation (R1). Stricter R1 taken (carrier-match note 2: stricter wins except bar beside restaurant evidence alone).
-2. SUB-246, SUB-248: R17 strict word list does not list "lessor", "tenants", "professional"; T-108 SUB-206 and SUB-213 set the precedent (carrier_a), followed here.
-3. SUB-248: a physical therapist tenant in the email (W2b word) is not in the operations text, so the rule gives carrier_a; AG:29 excludes medical occupancy, so the underwriter verifies.
+2. Removed 2026-10-21 (T-117 check H1): SUB-246 and SUB-248 now follow R17 strictly (senior_referral, carrier_a suggested), as T-108 SUB-206/213 were scored (T-110 cause D).
+3. SUB-248: a physical therapist tenant in the email (W2b word) is not in the operations text, so the rule gives carrier_a as the suggested market; AG:29 excludes medical occupancy, so the underwriter verifies.
 4. SUB-254: "contractors" names customers; gold reads wholesale, not R11.
 5. SUB-255: no manufacturing word and no trade word; R8 no_match (overridable).
