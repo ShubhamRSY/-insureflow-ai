@@ -26,6 +26,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "underwriting_pipeline" / "ai"))
 sys.path.insert(0, str(ROOT / "underwriting_pipeline" / "models"))
 sys.path.insert(0, str(ROOT / "underwriting_pipeline" / "app"))
+import auth
 import llm_extract
 import package
 import points
@@ -42,6 +43,7 @@ BANNER = ""  # set by serve(); the sandbox screenshots label the page with it
 MESSAGES: dict[str, tuple[bool, str]] = {}  # submission -> (ok, plain-words result of the last action); shown once
 # D-065 item 5: one line per user-visible feature: date, task or proposal, decision number, what an underwriter sees.
 WHATS_NEW = (
+    ("2026-10-21", "B-190", "D-057", "The workbench now needs a signed-in underwriter: OIDC sign-in, a signed session, a per-form token, an Origin check, and an audit row for every view, decision and send. The typed underwriter id is gone; a posted id cannot be used."),
     ("2026-10-20", "P-067", "D-118", "A rejected value now keeps its reason on the card: a field the extraction could not trust shows why (\"value not inside the cited text\", \"the date does not parse\") instead of an empty reason."),
     ("2026-10-20", "P-066", "D-118", "Every refusal now names its reason in plain words, and no action can crash the page: a blocked send, approve or carrier package shows why it was refused."),
     ("2026-10-19", "P-067", "D-117", "Loss-run dates read from a scan are kept for review when the date digits appear in the cited text: the card shows \"read from a scan — check it against the page\" and is never silently dropped."),
@@ -662,9 +664,9 @@ def act(path: str, payload: dict) -> tuple[str, bool, str]:
             quotes.close_subjectivity(*(payload.get(k, "") for k in ("submission", "carrier", "subjectivity", "underwriter_id", "reason")))
             return sub, True, "Subjectivity closed and logged."
         if path == "/send":  # item 1: the same gate as every send; the actor is the user, the line is typed on the card
-            dest = package.send_to_carrier(sub, "user", TO_CARRIER, user_line=payload.get("user_line", ""), resend_reason=payload.get("resend_reason", ""))
+            dest = package.send_to_carrier(sub, payload.get("underwriter_id") or "user", TO_CARRIER, user_line=payload.get("user_line", ""), resend_reason=payload.get("resend_reason", ""))
             return sub, True, f"Sent: package {dest.name} written to to-carrier. Not bound."
-        dest = prepare.approve(PENDING / f"{sub}.md", "user", TO_PRODUCER, payload.get("reason", ""))  # item 13: D-050, user override
+        dest = prepare.approve(PENDING / f"{sub}.md", payload.get("underwriter_id") or "user", TO_PRODUCER, payload.get("reason", ""))  # item 13: D-050, user override
         return sub, True, f"Approved: request {dest.name} written to to-producer. It lists only missing items and declines nothing."
     except (ValueError, OSError) as exc:
         return sub, False, f"{REFUSED_AS.get(path, 'Refused')}: {exc}"
@@ -699,16 +701,26 @@ def _msg(messages: dict, key: str) -> str:
     return f'<p class="msg {"ok" if ok else "bad"}" role="alert">{html.escape(text)}</p>'
 
 
-def resolve_form(sub: str, report: dict, conflict: dict) -> str:
+def _msg_key(user: auth.User | None, key: str) -> str:
+    return f"{user.id}|{key}" if user is not None else key
+
+
+def _msg_for(messages: dict, user: auth.User | None, key: str) -> str:
+    return _msg(messages, _msg_key(user, key)) or _msg(messages, key)
+
+
+def resolve_form(sub: str, report: dict, conflict: dict, user: auth.User | None = None) -> str:
     """B-324 (D-089): choose one stored side or enter the value; logged with this run's hash. Then approve."""
     field = conflict.get("field") or ""
     sides = "".join(f'<option value="{html.escape(str(v.get("value")))}">{html.escape(str(v.get("value")))} ({html.escape(v.get("source") or "file not named")})</option>'
                     for v in conflict.get("values") or [] if v.get("value"))
+    actor = ('<label>Underwriter id <input name="underwriter_id" required></label> ' if user is None else
+             f'<input type="hidden" name="csrf" value="{html.escape(auth.csrf_for(user))}"><span class="actor">Signed in as {html.escape(user.name)} ({html.escape(user.id)})</span> ')
     return (f'<form method="post" action="/decision"><input type="hidden" name="action" value="resolve">'
             f'<input type="hidden" name="submission" value="{html.escape(sub)}"><input type="hidden" name="run_hash" value="{html.escape(report.get("saved_hash") or "")}">'
             f'<input type="hidden" name="conflict_field" value="{html.escape(field)}">'
             f'<b>Resolve {html.escape(field)}</b> <label>Choose <select name="chosen_value"><option value="">—</option>{sides}</select></label> '
-            f'<label>or enter <input name="entered_value"></label> <label>Underwriter id <input name="underwriter_id" required></label> '
+            f'<label>or enter <input name="entered_value"></label> {actor}'
             f'<label>Reason <input name="reason"></label> <button type="submit">Record resolution</button> '
             "<small>Logged with this run. Resolve each open conflict, then approve.</small></form>")
 
@@ -736,7 +748,7 @@ def _carrier(item: dict, report: dict) -> str:
     return c["carrier"] if c else item["route"]
 
 
-def confirm_html(item: dict, report: dict) -> str:
+def confirm_html(item: dict, report: dict, user: auth.User | None = None) -> str:
     """P-052 (D-098): who confirmed the market and why, or the senior confirm form, or why there is none."""
     sid = html.escape(item["id"])
     try:
@@ -752,6 +764,8 @@ def confirm_html(item: dict, report: dict) -> str:
                 "The send below still needs an approve on this run and the typed line.</p>")
     seniors = package.seniors()
     opts = "".join(f'<option value="{html.escape(i)}">{html.escape(i)} {html.escape(n)}</option>' for i, n in sorted(seniors.items()))
+    if user is not None and not user.senior:
+        return f'<p class="bad">No market confirm: {html.escape(user.name)} ({html.escape(user.id)}) is not a senior underwriter.</p>'
     excluded = package.excluded_carriers(package.reviewed(item["id"]))
     carriers = "".join(f'<option{" selected" if c == item.get("suggested") else ""}>{c}</option>' for c in sorted(package.CARRIERS - set(excluded)))
     why = ("".join(f'<p class="bad">Not offered: {html.escape(c)}. A note on the file excludes it ({html.escape(w)}). '
@@ -759,8 +773,9 @@ def confirm_html(item: dict, report: dict) -> str:
     return (
         '<form method="post" action="/confirm-market"><fieldset><legend>Confirm the market (senior underwriter only)</legend>' + why +
         f'<input type="hidden" name="submission" value="{sid}"><input type="hidden" name="run_hash" value="{html.escape(report.get("saved_hash") or "")}">'
-        f'<label>Senior underwriter <select name="underwriter_id" required><option value="">choose</option>{opts}</select></label> '
-        f'<label>Carrier <select name="carrier">{carriers}</select></label> '
+        + (f'<input type="hidden" name="csrf" value="{html.escape(auth.csrf_for(user))}"><span class="actor">Signed in as {html.escape(user.name)} ({html.escape(user.id)}, senior)</span> ' if user is not None else
+           f'<label>Senior underwriter <select name="underwriter_id" required><option value="">choose</option>{opts}</select></label> ')
+        + f'<label>Carrier <select name="carrier">{carriers}</select></label> '
         '<label>Reason (required) <input name="reason" size="40" required></label> '
         '<button type="submit">Confirm market</button>'
         "<p>Logged with this run. It sends nothing: the send still needs an approve on this run and the typed line. A new run needs a new confirm.</p>"
@@ -787,7 +802,7 @@ def _no_send_reason(item: dict, report: dict, refused: bool) -> str:
     return ""
 
 
-def _send_html(item: dict, report: dict, refused: bool, manifest: str) -> str:
+def _send_html(item: dict, report: dict, refused: bool, manifest: str, user: auth.User | None = None) -> str:
     """The send panel plus, T-107c (D-112), the account-manager check result in plain words (the same check send_to_carrier runs)."""
     try:
         am = package.agency_problem(item["id"])
@@ -797,10 +812,10 @@ def _send_html(item: dict, report: dict, refused: bool, manifest: str) -> str:
             if not am else f'<p class="bad">Account-manager check: refused, {html.escape(am)}.</p>')
     if not am and _no_send_reason(item, report, refused):
         line = ""  # the send panel already gives the reason; do not say "passes" beside it
-    return _send_panel(item, report, refused, manifest) + line
+    return _send_panel(item, report, refused, manifest, user) + line
 
 
-def _send_panel(item: dict, report: dict, refused: bool, manifest: str) -> str:
+def _send_panel(item: dict, report: dict, refused: bool, manifest: str, user: auth.User | None = None) -> str:
     sid = html.escape(item["id"])
     why = _no_send_reason(item, report, refused)
     if why:
@@ -820,8 +835,9 @@ def _send_panel(item: dict, report: dict, refused: bool, manifest: str) -> str:
     resend = (
         '<label>Resend reason (required for a second send) <input name="resend_reason" size="30"></label> ' if when else ""
     )
+    csrf = f'<input type="hidden" name="csrf" value="{html.escape(auth.csrf_for(user))}">' if user is not None else ""
     return (
-        f'<h3>Send to carrier</h3>{already}<form method="post" action="/send"><input type="hidden" name="submission" value="{sid}">'
+        f'<h3>Send to carrier</h3>{already}<form method="post" action="/send"><input type="hidden" name="submission" value="{sid}">{csrf}'
         f"<p>The package goes to <b>{html.escape(carrier)}</b>{' (market confirmed by a senior underwriter)' if carrier != item['route'] else ''}. Check the carrier name, then confirm.</p>"
         f'{resend}<label>Type <code>send to carrier {sid}</code> to confirm <input name="user_line" size="28" autocomplete="off"></label> '
         f'<button type="submit">{"Resend" if when else "Send"} to {html.escape(carrier)}</button></form>'
@@ -920,7 +936,7 @@ def stale_changes(sub: str, report: dict) -> str:
     return "<p>Changed since your approval (old → new):</p><ul>" + "".join(f"<li>{html.escape(d)}</li>" for d in diff) + "</ul>"
 
 
-def score_html(item: dict, report: dict) -> list[str]:
+def score_html(item: dict, report: dict, user: auth.User | None = None) -> list[str]:
     """P-015: the score, or why there is none; the three lines; a mark-wrong control beside each code (W1). No add-a-code control (A1)."""
     sc, sid = item["score"], html.escape(item["id"])
     marks = item.get("marks") or []
@@ -936,7 +952,9 @@ def score_html(item: dict, report: dict) -> list[str]:
         out.append(
             f'<form method="post" action="/mark-code" class="mark"><b>{html.escape(code)}</b>{shown} '
             f'<input type="hidden" name="submission" value="{sid}"><input type="hidden" name="code" value="{html.escape(code)}">'
-            '<label>Mark wrong: id <input name="underwriter_id" size="8" required></label> <label>reason <input name="reason" required></label> '
+            + (f'<input type="hidden" name="csrf" value="{html.escape(auth.csrf_for(user))}"><span class="actor">{html.escape(user.name)}</span> ' if user is not None else
+               '<label>Mark wrong: id <input name="underwriter_id" size="8" required></label> ')
+            + '<label>reason <input name="reason" required></label> '
             '<button type="submit">Mark wrong</button> <small>logged; the number does not change</small></form>'
         )
     out += [f"<p>{html.escape(line)}</p>" for line in sc["lines"]]
@@ -945,13 +963,15 @@ def score_html(item: dict, report: dict) -> list[str]:
             f'<form method="post" action="/cooking-call" class="mark"><b>Record cooking for this run</b> '
             f'<input type="hidden" name="submission" value="{sid}"><input type="hidden" name="run_hash" value="{html.escape(report.get("saved_hash") or "")}">'
             '<label><input type="radio" name="call" value="present" required> present</label> <label><input type="radio" name="call" value="none"> none</label> '
-            '<label>id <input name="underwriter_id" size="8" required></label> <label>reason <input name="reason" required></label> '
+            + (f'<input type="hidden" name="csrf" value="{html.escape(auth.csrf_for(user))}"><span class="actor">{html.escape(user.name)}</span> ' if user is not None else
+               '<label>id <input name="underwriter_id" size="8" required></label> ')
+            + '<label>reason <input name="reason" required></label> '
             '<button type="submit">Record cooking</button> <small>logged with the run hash; points apply only after this</small></form>'
         )
     return out
 
 
-def render(queue: list[dict], counts: dict | None = None, messages: dict | None = None) -> str:
+def render(queue: list[dict], counts: dict | None = None, messages: dict | None = None, user: auth.User | None = None) -> str:
     counts = counts or {"approve": 0, "edit": 0, "decline": 0}
     messages = messages or {}
     corrections = counts["edit"] + counts["decline"]
@@ -960,7 +980,7 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
         report = item["report"]
         if report is None:  # item 10: no saved run, or it cannot be read; nothing is extracted here
             unsaved.append(
-                f'<article id="{html.escape(item["id"])}"><h2>{html.escape(item["id"])}</h2>{_msg(messages, item["id"])}'
+                f'<article id="{html.escape(item["id"])}"><h2>{html.escape(item["id"])}</h2>{_msg_for(messages, user, item["id"])}'
                 f'<p class="bad">No usable saved run: {html.escape(item.get("saved_problem") or "none found")}. '
                 "This page shows saved runs only and does not run extraction. Run extraction, then reload. No decision or send is offered.</p></article>"
             )
@@ -1000,7 +1020,7 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
                     else ("" if item_c.get("resolution") == "resolved" else " · OPEN: no send until the underwriter chooses or enters the value"),
                 )
                 for item_c in conflicts
-            ) + "</ul>" + ("" if refused else "".join(resolve_form(item["id"], report, item_c) for item_c in conflicts if item_c.get("resolution") != "resolved"))
+            ) + "</ul>" + ("" if refused else "".join(resolve_form(item["id"], report, item_c, user) for item_c in conflicts if item_c.get("resolution") != "resolved"))
         address_check = "—"
         for row in report["fields"]:
             if row["field_id"] == "premises_address":
@@ -1028,7 +1048,7 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
         manifest = item.get("manifest") or ""
         lines = [
             f"<h2>{html.escape(item['id'])}</h2>",
-            _msg(messages, item["id"]),
+            _msg_for(messages, user, item["id"]),
             (f'<p class="msg bad" role="alert">{package.STALE}. Approve and tick each needs-review value again.</p>' + stale_changes(item["id"], report) if package._decision_problem(item["id"], report.get("saved_hash") or "") == package.STALE else ""),
             f"<p>Saved run: status {html.escape(str(report.get('status')))} · hash check: ok · manifest check: "
             + (f'<span class="bad">FAILED — {html.escape(manifest)}. A send will be refused.</span>' if manifest else "ok")
@@ -1041,7 +1061,7 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
             f"<p>Files: {html.escape(', '.join(item['files']) or 'none')}</p>",
             f"<p>Not read by extraction: {html.escape(none_ if manual else ', '.join(item['ignored']) or none_)}</p>",
         ]
-        lines += score_html(item, report)
+        lines += score_html(item, report, user)
         if item.get("scope_now") and not refused:  # P-063 (T-109a UI check H1): no route or hold wording on an out-of-scope file
             lines.append("<p>Carrier match: none — out of pilot scope at send time (see the alert above)</p>")
         elif not refused:
@@ -1052,7 +1072,7 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
                              f" ({html.escape(pv['provisional_label'])}) · No send until the hold clears</p>")
             if item["route"] == "senior_referral":  # B-264: only a senior referral names a market
                 lines.append(f"<p>Suggested market: <b>{html.escape(item.get('suggested') or 'none')}</b> · recommendation only; the underwriter decides</p>")
-                lines.append(confirm_html(item, report))
+                lines.append(confirm_html(item, report, user))
         lines += [
             f"<p>Extraction: {html.escape(extraction)}</p>",
             unread_html,
@@ -1063,7 +1083,7 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
             "<p>Nothing filled in: a person reads the file.</p>" if manual else
             f"<table><tr><th>Field</th><th>Value</th><th>Confidence</th><th>Source</th><th>Cited text</th><th>Review note</th></tr>{''.join(field_rows)}</table>",
             f"<h3>Conflicts</h3>{conflict_html}",
-            quotes.html_for(item["id"]),
+            quotes.html_for(item["id"], user),
         ]
         if not refused:
             missing = report["missing"] + report.get("extra", [])
@@ -1089,7 +1109,7 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
 <input type="hidden" name="submission" value="{html.escape(item['id'])}">
 <input type="hidden" name="run_hash" value="{html.escape(report.get('saved_hash') or '')}">
 {acks}
-<label>Underwriter id <input name="underwriter_id" required></label>
+{f'<input type="hidden" name="csrf" value="{html.escape(auth.csrf_for(user))}"><span class="actor">Signed in as {html.escape(user.name)} ({html.escape(user.id)})</span>' if user is not None else '<label>Underwriter id <input name="underwriter_id" required></label>'}
 <label>Action
 <select name="action">{options}</select>
 </label>
@@ -1106,16 +1126,26 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
                 f"<h3>Missing-info draft for the producer (not sent)</h3><pre>{html.escape(draft.read_text())}</pre>"
                 + (f'<p class="bad">No send to producer: {html.escape(item["scope_now"])}.</p>' if item.get("scope_now") else  # P-063
                    f'<form method="post" action="/approve-draft"><input type="hidden" name="submission" value="{sid}">'
-                   '<label>Reason (optional) <input name="reason"></label> '
+                   + (f'<input type="hidden" name="csrf" value="{html.escape(auth.csrf_for(user))}">' if user is not None else "")
+                   + '<label>Reason (optional) <input name="reason"></label> '
                    '<button type="submit">Approve and send to producer (user override)</button></form>')
             )
         if (TO_PRODUCER / f"{item['id']}.md").is_file():
             lines.append("<p>Producer request on file in to-producer.</p>")
-        lines.append(_send_html(item, report, refused, manifest))
+        lines.append(_send_html(item, report, refused, manifest, user))
         lines.append(history_html(item["id"], report.get("saved_hash") or "", item.get("marks") or []))
         blocks.append(
             f'<article id="{html.escape(item["id"])}">\n' + "\n".join(lines) + "\n</article>"
         )
+    ids = {q["id"] for q in queue}
+    loose = "".join(_msg(messages, k) for k in messages if k not in ids and (user is None or k.startswith(f"{user.id}|") or "|" not in k))
+    identity = (
+        f'<p class="identity">Signed in as <b>{html.escape(user.name)}</b> ({html.escape(user.id)})'
+        f'{" · senior underwriter" if user.senior else ""}'
+        f'<form method="post" action="/logout"><input type="hidden" name="csrf" value="{html.escape(auth.csrf_for(user))}">'
+        '<button type="submit">Sign out</button></form></p>'
+        if user is not None else '<p class="identity">Not signed in. No decision or send is accepted.</p>'
+    )
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><title>Underwriter workbench</title>
 <style>
@@ -1132,10 +1162,14 @@ form.mark {{ margin: 0.2rem 0; }}
 pre {{ background: #f6f6f6; padding: 0.5rem; white-space: pre-wrap; }}
 details {{ margin: 0.5rem 0; }}
 footer {{ border-top: 1px solid #ccc; margin-top: 2rem; color: #555; }}
+.identity {{ background: #eef3f8; border-left: 4px solid #1f4e79; padding: 0.5rem 0.75rem; }}
+.identity form {{ display: inline; margin-left: 1rem; }}
+.actor {{ color: #1f4e79; font-weight: 600; margin-right: 0.5rem; }}
 </style></head><body>
 {f'<p class="banner">{html.escape(BANNER)}</p>' if BANNER else ''}
 <h1>Underwriter workbench</h1>
-{''.join(_msg(messages, k) for k in messages if k not in {q["id"] for q in queue})}
+{identity}
+{loose}
 <details open><summary><b>What's new</b> (latest {min(5, len(WHATS_NEW))} of {len(WHATS_NEW)})</summary><ul>{whats_new_items(WHATS_NEW[:5])}</ul>{f"<details><summary>Show all {len(WHATS_NEW)}</summary><ul>{whats_new_items(WHATS_NEW[5:])}</ul></details>" if len(WHATS_NEW) > 5 else ""}</details>
 <p>Synthetic queue. A decision is logged only with an id on the underwriter list. Decline and edit need a reason, and so does an approve after a decline. Approve, edit, and decline are saved with that reason. This page shows saved runs only. It never binds. A carrier send needs the typed line and passes the send gate.</p>
 <p>Decisions so far: {counts['approve']} approved, {counts['edit']} edited, {counts['decline']} declined. Corrections: {corrections}.</p>
@@ -1153,6 +1187,8 @@ def sandbox(tmp: Path) -> None:
     (token log). Nothing real is written afterwards. Call before serve() or any test that posts an action."""
     global PAGE, LOG, INBOX, PENDING, TO_PRODUCER, TO_CARRIER, BANNER
     tmp = Path(tmp)
+    if auth.audit_path().is_file():
+        shutil.copy2(auth.audit_path(), tmp / "auth-audit.jsonl")
     if marks_path().is_file():
         shutil.copy2(marks_path(), tmp / "code_marks.jsonl")
     if calls_path().is_file():
@@ -1171,39 +1207,161 @@ def sandbox(tmp: Path) -> None:
     package.DECISIONS_LOG, package.SENDS_LOG, package.INBOX = LOG, tmp / "sends.jsonl", INBOX
     quotes.CLOSURES, quotes.TO_CARRIER, quotes.FROM_CARRIER = tmp / "closures.jsonl", TO_CARRIER, tmp / "from-carrier"
     prepare.EXTRACT_DIR, prepare.INBOX_DIR, llm_extract.CACHE = tmp / "extractions", INBOX, tmp / "cache"
+    auth.AUDIT_LOG = tmp / "auth-audit.jsonl"
     BANNER = f"SANDBOX COPY in {tmp}: nothing here is real; no real log, outbox or page is written"
+
+
+def make_handler(only: str | None = None):
+    """The HTTP handler, separate from serve() so tests can bind an ephemeral port. Every route needs sign-in."""
+    class Handler(BaseHTTPRequestHandler):
+        def _send(self, status: int, body: str, *, content_type: str = "text/html; charset=utf-8", headers: dict | None = None) -> None:
+            raw = body.encode()
+            self.send_response(status)
+            self.send_header("Content-Type", content_type)
+            self.send_header("Content-Length", str(len(raw)))
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("X-Content-Type-Options", "nosniff")
+            self.send_header("Referrer-Policy", "no-referrer")
+            self.send_header("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'")
+            for key, value in (headers or {}).items():
+                self.send_header(key, value)
+            self.end_headers()
+            self.wfile.write(raw)
+
+        def _redirect(self, location: str, cookies: list[str] | None = None) -> None:
+            self.send_response(303)
+            self.send_header("Location", location)
+            self.send_header("Cache-Control", "no-store")
+            for cookie in cookies or []:
+                self.send_header("Set-Cookie", cookie)
+            self.end_headers()
+
+        def _user(self) -> tuple[auth.User | None, str]:
+            try:
+                return auth.session_from_cookie(self.headers.get("Cookie")), ""
+            except auth.AuthError as exc:
+                return None, str(exc)
+
+        def _config_or_page(self) -> auth.Config | None:
+            try:
+                return auth.config()
+            except auth.AuthError as exc:
+                self._send(503, auth.config_error_page(str(exc)))
+                return None
+
+        def do_GET(self):
+            path = self.path.split("?", 1)[0]
+            if path == "/favicon.ico":
+                self.send_error(404)
+                return
+            cfg = self._config_or_page()
+            if cfg is None:
+                return
+            if path == "/login":
+                query = {k: v[0] for k, v in parse_qs(self.path.split("?", 1)[1] if "?" in self.path else "").items()}
+                try:
+                    target, cookie = auth.sign_in_url(query.get("next") or "/")
+                except auth.AuthError as exc:
+                    self._send(502, auth.sign_in_page(f"Sign-in could not start: {exc}"), headers={"Set-Cookie": auth.clear_cookie(auth.STATE_COOKIE)})
+                    return
+                self._redirect(target, [cookie])
+                return
+            if path == "/auth/callback":
+                query = {k: v[0] for k, v in parse_qs(self.path.split("?", 1)[1] if "?" in self.path else "").items()}
+                try:
+                    user, session, next_path = auth.complete_sign_in(query, self.headers.get("Cookie"))
+                    auth.audit(user, "login", outcome="ok", reason="OIDC sign-in")
+                except (auth.AuthError, OSError) as exc:
+                    self._send(403, auth.sign_in_page(f"Sign-in failed: {exc}"), headers={"Set-Cookie": auth.clear_cookie(auth.STATE_COOKIE)})
+                    return
+                self._redirect(next_path, [auth.clear_cookie(auth.STATE_COOKIE), auth.cookie_header(auth.SESSION_COOKIE, session, auth.SESSION_TTL, auth._secure(cfg))])
+                return
+            user, problem = self._user()
+            if user is None:
+                self._send(200, auth.sign_in_page(problem, self.path))
+                return
+            queue = load_queue(only)
+            try:
+                for item in queue:
+                    report = item.get("report") or {}
+                    auth.audit(user, "view", item["id"], run_hash=report.get("saved_hash") or "")
+            except (OSError, auth.AuthError) as exc:
+                self._send(503, auth.sign_in_page(f"Audit log unavailable: {exc}", self.path))
+                return
+            shown = {k: v for k, v in MESSAGES.items() if k.startswith(f"{user.id}|")}
+            for key in list(shown):
+                MESSAGES.pop(key, None)
+            body = render(queue, correction_counts(LOG), shown, user)
+            self._send(200, body)
+
+        def do_POST(self):
+            path = self.path.split("?", 1)[0]
+            cfg = self._config_or_page()
+            if cfg is None:
+                return
+            user, _ = self._user()
+            if path == "/logout":
+                if user is None:
+                    self._send(401, auth.sign_in_page("Sign-in required: sign out was not recorded."))
+                    return
+                try:
+                    auth.check_origin(self.headers.get("Origin"), self.headers.get("Host"))
+                    size = int(self.headers.get("Content-Length", "0") or 0)
+                    if size > auth.MAX_FORM_BYTES:
+                        raise auth.AuthError("the form is too large")
+                    form = parse_qs(self.rfile.read(size).decode())
+                    auth.check_csrf(user, (form.get("csrf") or [""])[0])
+                    auth.audit(user, "logout", outcome="ok", reason="signed out")
+                except (auth.AuthError, ValueError, OSError) as exc:
+                    self._send(403, auth.sign_in_page(f"Sign out refused: {exc}"))
+                    return
+                self._redirect("/", [auth.clear_cookie(auth.SESSION_COOKIE)])
+                return
+            label = REFUSED_AS.get(path)
+            if label is None:
+                self.send_error(404)
+                return
+            if user is None:
+                self._send(401, auth.sign_in_page(f"Sign-in required: {label.lower()} was not recorded."))
+                return
+            try:
+                auth.check_origin(self.headers.get("Origin"), self.headers.get("Host"))
+                size = int(self.headers.get("Content-Length", "0") or 0)
+                if size > auth.MAX_FORM_BYTES:
+                    raise auth.AuthError("the form is too large")
+                form = parse_qs(self.rfile.read(size).decode())
+                payload = {k: v[0] for k, v in form.items()}
+                payload["ack"] = form.get("ack", [])
+                auth.check_csrf(user, payload.get("csrf", ""))
+                payload.pop("csrf", None)
+                posted_actor = (payload.pop("underwriter_id", "") or "").strip()
+                if posted_actor and posted_actor != user.id:
+                    payload["_posted_actor_ignored"] = posted_actor
+                payload["underwriter_id"] = user.id
+                sub, ok, text = act(path, payload)
+                outcome, reason = ("ok" if ok else "refused"), text
+                try:
+                    auth.audit(user, path.strip("/"), sub, outcome=outcome, reason=reason)
+                except OSError as exc:
+                    text, ok = f"Audit log failed after the action: {exc}. Check the decision log before relying on this screen.", False
+            except (auth.AuthError, ValueError, OSError) as exc:
+                self._send(403, auth.sign_in_page(f"{label}: {exc}"))
+                return
+            MESSAGES[f"{user.id}|{sub}"] = (ok, text)
+            self._redirect("/" + (f"#{sub}" if sub else ""))
+
+    return Handler
 
 
 def serve(port: int = 8765, only: str | None = None, sandbox_dir: Path | None = None) -> None:
     if sandbox_dir is not None:
         sandbox(sandbox_dir)
-    PAGE.write_text(render(load_queue(only), correction_counts(LOG)))
-
-    class Handler(BaseHTTPRequestHandler):
-        def do_GET(self):
-            shown = dict(MESSAGES)
-            MESSAGES.clear()
-            body = render(load_queue(only), correction_counts(LOG), shown).encode()  # saved runs only: no extraction here
-            self.send_response(200)
-            self.send_header("Content-Type", "text/html; charset=utf-8")
-            self.end_headers()
-            self.wfile.write(body)
-
-        def do_POST(self):
-            if self.path not in REFUSED_AS:
-                self.send_error(404)
-                return
-            size = int(self.headers.get("Content-Length", "0"))
-            form = parse_qs(self.rfile.read(size).decode())
-            payload = {k: v[0] for k, v in form.items()}
-            payload["ack"] = form.get("ack", [])
-            sub, ok, text = act(self.path, payload)
-            MESSAGES[sub] = (ok, text)
-            self.send_response(303)  # never a bare 400 page: back to the card with the reason on it
-            self.send_header("Location", "/" + (f"#{sub}" if sub else ""))
-            self.end_headers()
-
-    ThreadingHTTPServer(("127.0.0.1", port), Handler).serve_forever()
+    try:
+        auth.config()
+        PAGE.write_text(auth.sign_in_page("", "/"))
+    except auth.AuthError as exc:
+        PAGE.write_text(auth.config_error_page(str(exc)))
+    ThreadingHTTPServer(("127.0.0.1", port), make_handler(only)).serve_forever()
 
 
 if __name__ == "__main__":
@@ -1955,6 +2113,7 @@ if __name__ == "__main__":
         names = ("PAGE", "LOG", "INBOX", "PENDING", "TO_PRODUCER", "TO_CARRIER", "BANNER")
         saved_mod = {n: globals()[n] for n in names}
         saved_other = (package.DECISIONS_LOG, package.SENDS_LOG, package.INBOX, quotes.CLOSURES, quotes.TO_CARRIER, quotes.FROM_CARRIER, prepare.EXTRACT_DIR, prepare.INBOX_DIR, llm_extract.CACHE)
+        saved_audit = auth.AUDIT_LOG
         with tempfile.TemporaryDirectory() as box_dir:
             box_dir = Path(box_dir)
             try:
@@ -1970,6 +2129,7 @@ if __name__ == "__main__":
                 for n, v in saved_mod.items():
                     globals()[n] = v
                 (package.DECISIONS_LOG, package.SENDS_LOG, package.INBOX, quotes.CLOSURES, quotes.TO_CARRIER, quotes.FROM_CARRIER, prepare.EXTRACT_DIR, prepare.INBOX_DIR, llm_extract.CACHE) = saved_other
+                auth.AUDIT_LOG = saved_audit
         assert fingerprint() == before_real, "a sandbox run changed a real file"
 
         # P-066 regression (2026-10-20): REFUSED_AS was deleted while two uses stayed, so every refusal
@@ -1990,5 +2150,6 @@ if __name__ == "__main__":
                 for n, v in saved_mod.items():
                     globals()[n] = v
                 (package.DECISIONS_LOG, package.SENDS_LOG, package.INBOX, quotes.CLOSURES, quotes.TO_CARRIER, quotes.FROM_CARRIER, prepare.EXTRACT_DIR, prepare.INBOX_DIR, llm_extract.CACHE) = saved_other
+                auth.AUDIT_LOG = saved_audit
 
         print("workbench ok")

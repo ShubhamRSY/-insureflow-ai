@@ -71,3 +71,7 @@ graphify-out/
 # P-014 (D-030): the extraction token log and the cache folder are run output, not source
 underwriting_pipeline/cache/token_log.jsonl
 underwriting_pipeline/cache/
+
+# B-190: the workbench sign-in audit log is run output, never source
+deliverables/software-engineer/auth-audit.jsonl
+deliverables/software-engineer/auth-audit.jsonl.lock
