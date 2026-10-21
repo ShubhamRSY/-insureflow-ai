@@ -2058,3 +2058,18 @@ Blocked: No.
 - Done: recorded D-121 (Wave 2 order confirmed; Wave 2 field shapes not approved, review tomorrow; BPP/sprinkler scoring waits for a property-pack P-###; umbrella criterion 5 when umbrella starts; package dev 6+4 accepted; synthetic Wave 2 limits accepted; WC non-TX out of scope; occupied renovation senior_referral with both suggested; personal auto is a commercial-auto scope criterion). Applied items 7–9 to the Wave 2 specs.
 - Doing next: engine step 1 on branch `lob-engine-step1` for review, not merged.
 - Blocked by / need from: @senior-underwriter + @model-risk review of Wave 2 field shapes tomorrow; @compliance on umbrella criterion 5.
+
+### 2026-10-21 (27) — @producer (written in OpenCode, not independently reviewed)
+- Done: built 10 synthetic commercial_property dev submissions SUB-280–289 (6 in scope, 4 out of scope, one per P-055 criterion) in `simulation/inbox-dev/commercial_property/`; every in-scope application and schedule states BPP and sprinklers. Note: `deliverables/producer/commercial-property-dev.md`.
+- Doing next: nothing for dev; the property hold-out waits on the pack and a user decision.
+- Blocked by / need from: nothing for dev.
+
+### 2026-10-21 (28) — @senior-underwriter (written in OpenCode, not independently reviewed)
+- Done: wrote 10 dev gold cards in `deliverables/senior-underwriter/gold-set-commercial_property/dev/` with `BPP limit:` and `Sprinklered:` as notes only (D-121 item 3); README and `dev-manifest.sha256` written after lint.
+- Doing next: review the Wave 2 field shapes with @model-risk tomorrow.
+- Blocked by / need from: user decision on Wave 2 field names.
+
+### 2026-10-21 (29) — @senior-test-engineer (written in OpenCode, not independently reviewed)
+- Done: dev plan `commercial-property-dev-plan.json`; lint PASS (0 failures, 0 info, 10 files, run date 2026-10-21); note `commercial-property-dev-lint.md`; lint and scorer hashes unchanged before the run. Dev only, no score published.
+- Doing next: property pack tests once the pack exists.
+- Blocked by / need from: engine step 2 and @model-risk review.
