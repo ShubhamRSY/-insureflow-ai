@@ -1,6 +1,6 @@
 # Next session
 
-Written 2026-10-21 (second session) by the orchestrator at wrap-up. Wrap-up commit: `50b9205` on `ai-team`, pushed to `origin/ai-team` (private). Previous: `b05a89d`.
+Written 2026-10-21 (third session) by the orchestrator at wrap-up. Wrap-up commit: `dea2eb5` on `ai-team`, pushed to `origin/ai-team` (private). Previous: `50b9205`. The T-117 run commit `05c3110` was made outside this conversation; the user asked for its results to be read here.
 
 - Budget rule 8: demo blockers only until the demo is done.
 - Standing rules: D-065, D-069, the CLAUDE.md "Plugins" section (D-097). One AI session on this repo (D-090). The `frontend/` files and `.claude/settings*.json` belong to the user and are never staged.
@@ -23,22 +23,23 @@ Any byte change to v11, the lint or the gold reopens the check. Commits after `8
 
 ## Where we stopped
 
-- **@model-risk T-117 build check** (`deliverables/model-risk/T-117-check.md`): OBJECTION with 2 Highs, both gold.
-  - H1: SUB-246 and SUB-248 were carrier_a against R17 (unlisted words such as lessor and suites).
-  - H2: SUB-249 had business_type=retail, which the documents do not support.
-  - Everything else passed: hashes, the manifest reproduced, lint, check-gold, ops-gold, gold vs builder source (all fields), all 14 valued-as-of lines, Scope lines, and no run artefact.
-- **@senior-underwriter gold fix:**
-  - SUB-246 and SUB-248 now go to senior_referral with carrier_a suggested (R17). 248 keeps its hold.
-  - SUB-249 has `retail` removed.
-  - T-117 routes are now **carrier_a 0, senior_referral 16, no_match 4**.
-  - Lint PASS (0 failures, 3 info), check-gold 32 ok, ops-gold 20 ok. Re-frozen. The orchestrator re-verified the hashes and the lint.
-- **No @model-risk look-again on the fix yet.** The T-116 precedent had one.
-- Medium/Low findings in the backlog:
-  - B-447: pre-register 3 operations misses.
-  - B-448: SUB-252 R1 vs R2 needs a @head-of-underwriting ruling.
-  - B-449: no in-scope direct carrier_a route (a run limitation).
-  - B-450: Lows.
-- Self-checks 6/6 ok at `50b9205`.
+- **T-117 was run once and scored once** (`05c3110`): frozen `8d605ac`, scorer v11 `--write`, gold `7e076534…`, run id `20261021T112723-44537`, 20 calls, 0 failed, fresh cache.
+
+  | Gate | Result |
+  |---|---|
+  | named_insured, premises, effective_date, sales, tiv, construction, year_built | 20/20 each |
+  | operations | **13/20 FAIL** |
+  | loss_runs | **16/20 FAIL** |
+  | False completes / unsafe routes / leaks | 0 / 0 / 0 |
+  | Route accuracy | 19/20 (miss SUB-252, B-448) |
+  | Recall / false manual intake | 12/12 / 0/20 |
+
+- **@model-risk T-027 memo** (`deliverables/model-risk/T-027-memo-T-117.md`): **KEEP**, veto not lifted. Run integrity verified.
+  - H1 (B-451): the "Cooking operations: None" line is dropped on 4 files. Real misses. Crediting the 3 scorer-reading cases still gives only 16/20.
+  - H2 (B-452): 0 of 3 planted conflicts raised (SUB-257 sales $412k vs ~$540k, no hold). Planted-conflict recall 100% joins the gate from the next hold-out.
+  - H3 (B-453): the 4 loss-run misses are a build/gold error (Carrier C format). The model read every date.
+  - Medium/Low: B-454 to B-459, including the skipped look-again on the gold fix (B-457).
+- Per the user, nothing was fixed. Self-checks 6/6 ok at `dea2eb5`.
 
 ## Approved, not built
 
@@ -51,27 +52,26 @@ Any byte change to v11, the lint or the gold reopens the check. Commits after `8
 
 ## Pending decisions for the user
 
-1. **@model-risk look-again on the T-117 gold fix** before the run (recommended; quick, gold-only diff `28bba4b..50b9205`).
-2. **SUB-252 (B-448):** gold says R1 no_match, frozen code gives R2 senior_referral. @head-of-underwriting rules, or pre-register it. If the gold changes, re-lint and re-freeze.
-3. **Run T-117 once** on frozen `8d605ac` with v11 and `--write` (smoke first, then live and paced), then score it once. Pre-register B-447 and B-449 in the run notes first.
-4. Carried over: dev gold SUB-211 R2 vs R9/R10 (dev data only). The SUB-248 question is resolved by H1.
+1. Whether to raise proposals for H1 (B-451, keep the cooking line in operations) and H2 (B-452, raise planted conflicts). Each needs `approve change P-###`. The alternative for H1 is a @head-of-underwriting scoring ruling before the next gold.
+2. H3 (B-453): a lint rule that runs every built carrier loss run through `carrier_run_check`, plus a v-next scorer for the 3 scorer-reading operations cases. Both must be frozen and hashed before any new gold.
+3. B-458: a SUB-252 R1 vs R2 ruling by @head-of-underwriting.
+4. When to build the next 20+12 hold-out: at least 2 direct carrier routes (B-459), a look-again on every gold fix, and the planted-conflict gate.
 
 ## Open vetoes and what resolves each
 
 | Task | Holder | Resolves when |
 |---|---|---|
-| T-027 | @model-risk (production) | T-117 is run and scored once on the frozen commit and passes the gates in its veto message: all fields at the floor, 0 false completes, 0 unsafe routes, 0 leaks / 100% recall, route at least 18/20. |
+| T-027 | @model-risk (production), KEEP 2026-10-21 | H1/H2 fixed on dev under an approved P-### with a @model-risk check (no High); the H3 lint rule and a v-next scorer frozen and hashed; a fresh 20+12 hold-out (look-again on every gold fix) run and scored once, meeting every gate plus planted-conflict recall 100%. |
 | T-082 | @responsible-ai (fairness) | As written in its veto message in team/DISCUSSION.md. |
-| T-117 freeze | @model-risk (OBJECTION H1/H2) | The gold fix is in; it closes on a @model-risk look-again with no High. |
 
 ## First 3 tasks next session
 
-1. @model-risk look-again on the T-117 gold fix, plus a user/@head-of-underwriting answer on SUB-252 (B-448).
-2. Pre-register B-447 and B-449 in the T-117 run notes, then run T-117 once if the user approves (smoke, then paced live) and score it with v11 `--write` against the T-027 gates.
+1. User decisions on H1/H2 proposals and the H3 lint/scorer work. @ai-engineer-assistant drafts P-### for H1 and H2 if asked.
+2. Addenda (no score rewrite) to the T-117 run record and mismatches for B-454 and B-456. @head-of-underwriting rules on B-458.
 3. Backlog: @model-risk M1–M6 and L1–L2 from `check-T-116-P-069.md`, one line each (still not in BACKLOG.md).
 
 ## For the AI Engineer
 
-- Pending proposals: none open.
-- Latest scores (dev T-108, v11, cache): ops 15/20, route 18/20, 0 unsafe, 0 false completes. No hold-out has been scored with v11 yet.
-- Top failure to fix next: none in code until T-117 runs. On T-117, watch the 3 pre-registered operations misses (B-447) and the SUB-252 route (B-448).
+- Pending proposals: none open; H1 (B-451) and H2 (B-452) need new P-### to proceed.
+- Latest scores (T-117 hold-out, v11, scored once): 7 fields 20/20, operations 13/20, loss_runs 16/20, 0 false completes, 0 unsafe, route 19/20, 0 leaks, recall 12/12.
+- Top failure to fix next: the operations answer drops "Cooking operations: None" (B-451), then conflicts never raised (B-452).
