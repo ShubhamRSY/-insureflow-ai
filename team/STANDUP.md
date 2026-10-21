@@ -1922,3 +1922,9 @@ Blocked: No.
 - Done: updated `deliverables/pm/pilot-readiness.md` for B-191 after P-066 and for the P-068 block. B-191 **Partly done** (cross-process `flock` + 8-thread/2-process tests pass, @model-risk no High; item 2 "failed write never silent" not shown). C5 Not met → Partly met; C6/C7 updated; C1–C8 now 0 Met / 4 Partly / 3 Not met / 1 Not verified. C6 warning numbers cannot be written against a blocked scorer.
 - Doing next: register the pilot task only once B-190 and B-191 both pass.
 - Blocked by / need from: @software-engineer (B-190, B-191 item 2), @ai-engineer-assistant/@model-risk (P-068 fix + re-check).
+## 2026-10-20 (session 5, P-068 freeze + B-446)
+
+- @ai-engineer-assistant: reworked P-068 v10 over 4 passes per user directives (slot matcher from T-114 table, clause-scoped negation, fail-closed, adversarial H1–H10). @model-risk APPROVE fourth pass (no High): 37-case H1 block 0 FP/0 FN, ops 12/20 (gains SUB-207/220, 0 regressions), v9 unchanged. Committed freeze `e03dfcc` (v10 sha256 ffd1afdd…302b, lint d21b92cb…936a).
+- @ai-engineer-assistant: fixed B-446 in `llm_extract.py` (sha256 e72d092a…c606) — text-field scan gate now uses cited-words average per P-056(b); @model-risk APPROVE no High, 20k-case fuzz 0 unsafe changes. Deleted empty stub `tests/test_concurrent_writes_proc.py`. B-446 resolved in BACKLOG.
+- Done: conflict/status non-hit report in T-115 (1 real conflict miss SUB-211, 9 artefacts). All self-checks pass (`llm_extract`, `eval_holdout_v10`, `lint_holdout`).
+- Blocked by / need from: @user (build next 20+12 hold-out gold-first w/operations slots + lint, then /wrap-up/push). T-027 veto remains open until a fresh approved hold-out passes all gates.
