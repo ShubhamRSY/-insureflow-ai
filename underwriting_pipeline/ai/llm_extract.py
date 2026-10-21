@@ -804,7 +804,8 @@ def location_sides(sides: list[dict], texts: dict[str, str]) -> list[tuple[int, 
     return sorted(found.items(), key=lambda pair: pair[0]) if 1 in found else []  # code-review: never promote loc 2 to the premises
 
 
-def llm_extract(docs: list[dict]) -> dict:
+def request_for(docs: list[dict]) -> dict:
+    """Build the exact model request and cache key for these documents, with no call and no cache read."""
     settings = provider_guard(calling=False)  # refused only below, when the cache has no result and a model call is next
     docs = [doc for doc in docs if not doc.get("unread")]  # P-016 (c): a file type that is not read, or a file that cannot be opened, never reaches the model or the key
     parts, not_sent, size = [], [], 0
@@ -829,10 +830,27 @@ def llm_extract(docs: list[dict]) -> dict:
         ],
     }
     names = [doc["name"] for doc in docs]
+    return {
+        "docs": docs,
+        "payload": payload,
+        "key": cache_key(docs, settings["model"]),
+        "files": names,
+        "not_sent": not_sent,
+        "settings": settings,
+    }
+
+
+def llm_extract(docs: list[dict]) -> dict:
+    request = request_for(docs)
+    settings = request["settings"]
+    docs = request["docs"]
+    payload = request["payload"]
+    names = request["files"]
+    not_sent = request["not_sent"]
+    key = request["key"]
     if CACHE not in _swept:  # D-028: once per run and per cache folder, before the first read or write
         _swept.add(CACHE)
         _sweep_tmp()
-    key = cache_key(docs, settings["model"])
     settings = {**settings, "files": names, "cache_key": key}  # so every log row names its files and its cache key
     saved = CACHE / "extractions" / f"{key}.json"
     parsed = None

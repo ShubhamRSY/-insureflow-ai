@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 import os
 import shutil
-import tempfile
 from pathlib import Path
 
 import pytest
@@ -76,31 +75,46 @@ def _normalise(report: dict) -> dict:
     return json.loads(json.dumps(report, sort_keys=True, default=str))
 
 
-def test_no_call_replay_on_and_off_are_identical(monkeypatch, tmp_path):
-    """Set LOB_BASELINE_CACHE to the saved cache to replay SUB-127–269 with no model calls."""
-    source = os.environ.get("LOB_BASELINE_CACHE")
-    if not source:
-        pytest.skip("set LOB_BASELINE_CACHE to a saved extraction cache to run the replay")
-    files = _cache_files(Path(source))
-    if not files:
-        pytest.skip(f"no cached replies under {source}")
+FIXTURE = Path(__file__).resolve().parent / "fixtures" / "replay"
 
-    cache = tmp_path / "cache"
-    (cache / "extractions").mkdir(parents=True)
-    for path in files.values():
-        shutil.copy(path, cache / "extractions" / path.name)
-    monkeypatch.setattr(llm_extract, "CACHE", cache)
+
+def test_no_call_replay_on_and_off_are_identical(monkeypatch, tmp_path):
+    """Replay saved replies: the temporary fixture by default, or LOB_BASELINE_CACHE when set."""
     monkeypatch.setenv("LLM_MODEL", "qwen/qwen3.8-27b")
     monkeypatch.setenv("LLM_BASE_URL", "https://api.groq.com/openai/v1")
-    monkeypatch.delenv("LLM_API_KEY", raising=False)
+    monkeypatch.setenv("LLM_API_KEY", "fixture-not-sent")
+    cache = tmp_path / "cache"
+    (cache / "extractions").mkdir(parents=True)
+
+    source = os.environ.get("LOB_BASELINE_CACHE")
+    if source:
+        files = _cache_files(Path(source))
+        if not files:
+            pytest.fail(f"no cached replies under {source}")
+        folders = [folder for folder in _saved_runs() if 127 <= int(folder.name.removeprefix("SUB-")) <= 269]
+        for path in files.values():
+            shutil.copy(path, cache / "extractions" / path.name)
+        keys = set(files)
+    else:
+        replies = json.loads((FIXTURE / "replies.json").read_text(encoding="utf-8"))
+        folders = [FIXTURE / "submissions" / name for name in replies]
+        keys = set()
+        for folder in folders:
+            docs = sources.read_folder(folder)
+            key = llm_extract.key_for(docs)
+            assert key
+            parsed = replies[folder.name]
+            saved = {"model": os.environ["LLM_MODEL"], "prompt_version": llm_extract.PROMPT_VERSION, "files": [doc["name"] for doc in docs], "usage": {}, "parsed": parsed}
+            (cache / "extractions" / f"{key}.json").write_text(json.dumps(saved, indent=2) + "\n", encoding="utf-8")
+            keys.add(key)
+
+    monkeypatch.setattr(llm_extract, "CACHE", cache)
     monkeypatch.setattr(llm_extract, "_post", lambda *args, **kwargs: pytest.fail("model call during replay"))
 
     compared = 0
-    for folder in _saved_runs():
-        if not 127 <= int(folder.name.removeprefix("SUB-")) <= 269:
-            continue
+    for folder in folders:
         key = llm_extract.key_for(sources.read_folder(folder))
-        if key not in files:
+        if key not in keys:
             continue
         monkeypatch.setenv("LOB_ENGINE", "off")
         off = _normalise(prepare.process_submission(folder))
@@ -108,4 +122,4 @@ def test_no_call_replay_on_and_off_are_identical(monkeypatch, tmp_path):
         on = _normalise(prepare.process_submission(folder))
         assert on == off, folder.name
         compared += 1
-    assert compared, "no saved run in SUB-127–269 matched a cached reply"
+    assert compared, "no saved run matched a cached reply"
