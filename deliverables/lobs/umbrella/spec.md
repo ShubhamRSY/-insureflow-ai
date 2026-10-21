@@ -1,13 +1,13 @@
-# umbrella — Wave 1 spec
+# umbrella — Wave 2 spec (first line of Wave 2)
 
 - Authors: @senior-underwriter + @head-of-underwriting (written in OpenCode, not independently reviewed). Date: 2026-10-21.
-- Wave 1. Synthetic data and placeholder carriers only. Not a production approval; the T-027 veto stands.
+- Wave 2, first line (D-120 item 1). Synthetic data and placeholder carriers only. Not a production approval; the T-027 veto stands.
 - **needs review** marks an open question, not a settled rule.
 
 ## 1. Identity
 
 - LOB id: `umbrella` (`InsuranceLine.UMBRELLA`). Family: small commercial P&C.
-- Excess liability over underlying GL, auto and employers liability. No building COPE in Wave 1; the exposure base is the underlying limits and the umbrella limit.
+- Excess liability over underlying GL, auto and employers liability. No building COPE; the exposure base is the underlying limits and the umbrella limit.
 - Texas only in the pilot.
 
 ## 2. Typical submission documents
@@ -41,19 +41,15 @@ Shared nine plus new fields. All new ones are **needs review** until the engine 
 | `underlying_carrier(s)` | Yes (new) | One or more names; a carrier note can exclude a market |
 | `tiv_building`, `construction`, `year_built` | No | Not umbrella exposures; `not in documents` when absent |
 
-The engine consequence is a **field-schema-only** change: the extraction prompt gains four limit fields and one carrier field; the property fields become optional. No new reader.
+The engine consequence is a **field-schema-only** change: the extraction prompt gains four limit fields and one carrier field; the property fields become optional. No new reader. The fields move to Wave 2 with this line (D-120 item 6).
 
 ## 4. Out-of-scope criteria
 
-Baseline criteria 1–4, plus one proposed criterion:
-
-- 5. **underlying coverage not evidenced** (no declarations or limits anywhere) → manual intake.
-
-Criterion 5 is **needs review** because it changes the scope gate and therefore needs a P-### and a new scorer/lint. Until approved, such a file is incomplete.
+Baseline criteria 1–4 apply. Scope criterion 5 (**underlying coverage not evidenced** → manual intake) is **deferred with umbrella to Wave 2** (D-120 item 7) and is not part of this spec's baseline. Until it is approved, such a file is **incomplete** with the missing declarations named.
 
 ## 5. Operations slots
 
-Same v11 closed list and slots; the class comes from the underlying GL policy. No umbrella-specific slot in Wave 1.
+Same v11 closed list and slots; the class comes from the underlying GL policy. No umbrella-specific slot in this line.
 
 **needs review:** whether the underlying carrier names and policy numbers are operations items (recommended: no, they are fields) and whether a "claims-made vs occurrence" item is a slot (recommended: notes until defined).
 
@@ -100,8 +96,8 @@ Rules:
 
 ## 8. Needs review
 
-- The five new fields: exact names, required/optional, and whether a carrier name is a scored field.
-- Scope criterion 5 (underlying not evidenced) and its scorer change.
-- Synthetic U1–U5 rules and B/C limits; @head-of-underwriting to confirm or replace.
+- The five new fields: exact names, required/optional, and whether a carrier name is a scored field (all move with Wave 2; D-120 item 6).
+- Scope criterion 5 (underlying not evidenced) and its scorer change: **deferred with Wave 2** (D-120 item 7).
+- Synthetic U1–U5 rules and B/C limits; @head-of-underwriting to confirm or replace (D-120 item 12).
 - Whether umbrella shares the BOP operations pack or needs its own.
 - @compliance: underlying declarations may contain other insureds' data; check the data-handling question before real files.

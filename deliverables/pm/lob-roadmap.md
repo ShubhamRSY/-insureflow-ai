@@ -4,6 +4,7 @@
 - Inputs: `deliverables/pm/lob-expansion-plan.md` (T-101); `InsuranceLine` in `src/insureflow/rating/models.py` (29 members); `deliverables/head-of-underwriting/carrier-appetite.md`; `deliverables/head-of-underwriting/carrier-match.md`; `deliverables/senior-underwriter/required-fields.md`; the T-117 pipeline state.
 - Design only. No pipeline code, prompt, scorer, lint, gold, inbox or frozen file is changed by this roadmap. Synthetic appetite and placeholder carriers only.
 - Not a production approval. The T-027 veto stands. Every wave needs its own gold-first evaluation before it counts as built.
+- Waves follow D-120 (2026-10-21): Wave 1 is four lines; `umbrella` starts Wave 2; `commercial_package` is a pack composed from the property and GL packs; `general` is triage-only.
 
 ## 1. Wave logic
 
@@ -20,20 +21,20 @@ Effort is a rough engineer-day range for config + fields + rules + gold + tests 
 
 ## 2. The 29 lines by wave
 
-### Wave 1 — reuse today's pipeline (5 lines)
+### Wave 1 — reuse today's pipeline (4 lines)
 
 | LOB | Typical documents | What is new vs today | Main risks | Rough effort |
 |---|---|---|---|---|
 | `business_owners_policy` | ACORD 125 + 140-shaped application, email, carrier loss runs, SOV | **Reference line.** Today's nine fields, operations slots, scope criteria and routes | Baseline only; keep behaviour identical when the engine becomes settings-driven | 1–2 (spec + regression only) |
 | `commercial_property` | Application, property schedule/SOV, loss runs, email | Same fields; property-only required set (BPP line, occupancy); TIV is the primary exposure | Schedule vs application conflicts; blanket vs per-location TIV | 3–5 |
 | `general_liability` | ACORD 125 + 126-shaped application, email, loss runs | Same fields; property COPE optional, sales/payroll required | Class/operations reading; payroll vs sales | 3–5 |
-| `commercial_package` | Application + property schedule + GL section, loss runs | Same as BOP with two coverage sections; no new readers | Double-counting TIV; two coverage limits | 3–5 |
-| `umbrella` | Application + underlying declarations (GL, auto, employers liability) | **New fields:** underlying limits and umbrella limit; no building COPE | Underlying schedule not machine-readable; attachment logic | 6–9 |
+| `commercial_package` | Application + property schedule + GL section, loss runs | **Composed from the property and GL packs** (D-120 item 4); no new readers | Double-counting TIV; two coverage limits; keeping both section rules aligned | 3–5 |
 
-### Wave 2 — property-adjacent schedules (4 lines)
+### Wave 2 — umbrella and property-adjacent schedules (5 lines)
 
 | LOB | Typical documents | What is new vs today | Main risks | Rough effort |
 |---|---|---|---|---|
+| `umbrella` | Application + underlying declarations (GL, auto, employers liability) | **New fields:** underlying limits and umbrella limit; no building COPE | Underlying schedule not machine-readable; attachment logic | 6–9 |
 | `inland_marine` | Application, equipment/schedule form, loss runs | Scheduled items and limits per item; no single building TIV | Item-level schedules; floaters vs property | 6–10 |
 | `builders_risk` | Application, project schedule, loss runs | Project value, construction period, site address | Completed-value vs reported-value; project end date | 6–10 |
 | `commercial_auto` | Application + auto schedule (VIN/year/vehicle), MVR where present, loss runs | Vehicle schedule; garage location; driver counts | VIN/schedule noise; state auto rules | 8–12 |
@@ -85,14 +86,18 @@ Effort is a rough engineer-day range for config + fields + rules + gold + tests 
 
 ## 4. Sequence and gates
 
-1. Wave 1 config extraction + baseline regression (shared engine step 1–4) — no new model calls.
-2. Wave 1 two new lines (package, umbrella) with their own gold-first evaluation.
-3. Wave 2 one line at a time, property schedules first, WC last with @compliance.
+1. Wave 1 config extraction + baseline regression (shared engine step 1–4) — no new model calls; outputs on SUB-127–269 must be identical with the engine on (D-120 item 2).
+2. Wave 1's one new line (`commercial_package`, a composition of the property and GL packs) with its own gold-first evaluation; BOP, property and GL keep their existing gold and scores.
+3. Wave 2 starts with `umbrella`, then one property-adjacent line at a time, WC last with @compliance.
 4. Wave 3 personal lines only after the consumer workflow and state-form questions are answered.
 5. Wave 4/5 after specialist roles and actuarial sign-off; life/health needs @responsible-ai before any build.
 
-## 5. Open questions for the user
+## 5. Decided and remaining questions
 
-- Confirm the Wave 1 membership (three pilot lines + package + umbrella) and whether `commercial_package` is a true duplicate of BOP for now.
-- Confirm `general` is triage-only (no extraction, no route) rather than a real line.
-- Confirm the effort ranges are the right unit for planning, or replace them with calendar weeks at the next planning round.
+Decided by @user on 2026-10-21 (D-120): Wave 1 has four lines; umbrella starts Wave 2; config-first engine in principle; package composed from property + GL; `general` triage-only; BPP and sprinklers scored; umbrella criterion 5 deferred; 20/12 out-of-scope for all waves; `gold-set-<lob>/`; BOP keeps only `carrier-match.md` suggestions; GL sales referral needs a source; real carrier terms need @head-of-underwriting + @compliance sign-off.
+
+Remaining for the user:
+
+- Confirm the effort ranges are the right planning unit, or replace them with calendar weeks at the next planning round.
+- Confirm the order inside Wave 2 after umbrella (`inland_marine` → `builders_risk` → `commercial_auto` → `workers_comp`).
+- Confirm where `general`'s triage sits in the workbench (a card with a refusal reason, no extraction).

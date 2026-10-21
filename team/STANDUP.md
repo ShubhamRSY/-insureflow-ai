@@ -2023,3 +2023,33 @@ Blocked: No.
 - Done: `deliverables/compliance/lob-review-questions.md`: common and per-LOB data-handling, privacy, licensing and fairness questions. **No verdicts today.**
 - Doing next: review the model-host data-handling note when the pilot asks.
 - Blocked by / need from: @user/@pm on states and data classes per LOB.
+
+### 2026-10-21 (20) — @pm (written in OpenCode, not independently reviewed)
+- Done: recorded D-120; roadmap updated to Wave 1 = BOP, property, GL, package (4) and Wave 2 = umbrella first, then inland marine, builders risk, commercial auto, workers comp (5). 29 lines still total.
+- Doing next: hold Wave 2 order until the user confirms it; no build before @model-risk's Claude Code review.
+- Blocked by / need from: @model-risk engine-design review; user on Wave 2 order and effort units.
+
+### 2026-10-21 (21) — @senior-underwriter (written in OpenCode, not independently reviewed)
+- Done: Wave 1 specs updated (BOP carrier suggestions limited to carrier-match.md; BPP/sprinkler scored; package = property + GL composition; umbrella moved to Wave 2, criterion 5 deferred). Wrote Wave 2 specs for umbrella, inland_marine, builders_risk, commercial_auto and workers_comp, needs-review items marked. Wrote the 10-card commercial_package dev gold.
+- Doing next: resolve Wave 2 field names with @head-of-underwriting before build.
+- Blocked by / need from: user decisions on new field names and Wave 2 carrier placeholders.
+
+### 2026-10-21 (22) — @head-of-underwriting (written in OpenCode, not independently reviewed)
+- Done: co-signed the Wave 1 updates and the Wave 2 specs' synthetic appetite tables (umbrella, inland marine, builders risk, auto, WC); every limit and rule is marked placeholder.
+- Doing next: confirm or replace Wave 2 synthetic limits and rules when the user asks.
+- Blocked by / need from: @compliance and user sign-off before any real carrier terms (confidential).
+
+### 2026-10-21 (23) — @producer (written in OpenCode, not independently reviewed)
+- Done: built 10 synthetic commercial_package dev files SUB-270–279 (6 in scope, 4 out of scope, one per P-055 criterion) via `deliverables/producer/build_commercial_package_dev.py`; dev gold at `gold-set-commercial_package/dev/`, manifest hashed.
+- Doing next: the package hold-out only after the pack and a user decision.
+- Blocked by / need from: nothing for dev; hold-out waits on the engine.
+
+### 2026-10-21 (24) — @senior-test-engineer (written in OpenCode, not independently reviewed)
+- Done: dev plan `commercial-package-dev-plan.json`; lint PASS (0 failures, 10 files, run date 2026-10-21); note `T-120-dev-lint.md`; lint and scorer hashes unchanged before the run. Dev only, no score published.
+- Doing next: package unit tests once the composed pack exists.
+- Blocked by / need from: engine baseline snapshot and @model-risk review.
+
+### 2026-10-21 (25) — @model-risk (written in OpenCode, not independently reviewed)
+- Done: no review performed in this session. D-120 items 2–3 are approved in principle and gated on a Claude Code review of `deliverables/architecture/lob-engine-design.md`; that review is still owed.
+- Doing next: review the engine design in Claude Code when the user asks.
+- Blocked by / need from: user dispatch in Claude Code; nothing built yet.

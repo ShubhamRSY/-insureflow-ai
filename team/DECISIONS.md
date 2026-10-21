@@ -1333,3 +1333,26 @@ Then continue: P-066 concurrent-write tests, @pm pilot-readiness update, @model-
 - Follow-up tasks: T-116 (P-069 scorer v11 + operations-gold-rule.md + lint + dev validation; @model-risk High-only), T-117 (next hold-out SUB-238–269, gold first, no run; blocked on T-116 freeze).
 - Status: ACCEPTED by @user, 2026-10-21
 - Amends: D-117 (P-068 / scorer v10 frozen; new hold-outs score with v11 once frozen). Not a production approval; T-027 veto stands.
+
+## D-120 — LOB expansion decisions: Wave 1 = 4 lines, umbrella to Wave 2, config-first engine in principle, package composed from property + GL
+- Date / Owner: 2026-10-21 / @user
+- Context: `deliverables/pm/lob-roadmap.md`, `deliverables/architecture/lob-engine-design.md`, `deliverables/lobs/*/spec.md`, `deliverables/lobs/test-plan.md` (commit `c13cd9c`); the 12 open questions listed at the end of that session. Typed by @user in OpenCode on 2026-10-21.
+- Decision (in the user's words, item by item):
+  1. Wave 1 = BOP, commercial_property, general_liability, commercial_package. Umbrella moves to the start of Wave 2.
+  2. Config-first engine with `LOB_ENGINE=off` rollback; condition: with the engine on, small-commercial outputs on SUB-127–269 must be identical.
+  3. Moving the baseline prompt into a pack is authorised as a future P-###; the prompt hash must stay `759b3e6bc9b2`.
+  4. `commercial_package` = a pack composed from the property and GL packs, not BOP plus flags.
+  5. `general` is triage-only: no extraction, no route, straight to manual intake.
+  6. `bpp_limit` and `sprinklered` are scored fields. Rule: anything affecting status, route or a value sent to a carrier is scored; display-only fields are context only. Umbrella fields move with umbrella to Wave 2.
+  7. Umbrella scope criterion 5 is deferred with umbrella.
+  8. Out-of-scope hold-out size stays 20/12 for all waves.
+  9. Gold layout: `gold-set-<lob>/`, frozen and hashed per LOB.
+  10. BOP carrier suggestions: keep only those in `carrier-match.md`; remove the rest from the specs.
+  11. Accepted: a GL sales-based referral needs a written source before it can exist.
+  12. Real carrier terms replace synthetic A/B/C only after @head-of-underwriting and @compliance sign-off; treated as confidential business data.
+- Conditions: items 2 and 3 are approved in principle; the engine build starts only after @model-risk reviews the engine design in Claude Code. No pipeline code, scorer, lint, gold, inbox or frozen file is changed by this decision record. No P-### has been opened yet.
+- Rationale: the user typed all twelve items in this session on 2026-10-21. The wave change keeps Wave 1 to reuse-only lines; package-as-composition follows the design's config-first principle; decision 6 makes the scored/context boundary explicit.
+- Dissent: none
+- Follow-up tasks: update the roadmap and Wave 1 specs; write Wave 2 specs; @producer builds 10 synthetic commercial_package dev files with a dev gold set and lint (this session, dev only); @model-risk reviews the engine design before any build; a future P-### for the prompt move.
+- Status: ACCEPTED by @user, 2026-10-21 (items 2 and 3 in principle, build gated on @model-risk's Claude Code review)
+- Amends: D-119 is unchanged. The LOB roadmap's earlier Wave 1 (5 lines) is replaced by this decision. Not a production approval; the T-027 veto stands.

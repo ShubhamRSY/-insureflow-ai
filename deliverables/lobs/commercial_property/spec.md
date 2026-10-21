@@ -34,7 +34,8 @@
 | `year_built` | Yes | No inference from prose |
 | `loss_run_valued_through` | Yes for a routable file | No-known-loss letter is not a date |
 | `sales_or_payroll` | **Optional** | Not a property exposure; missing it must not hold the file |
-| `bpp_limit` | **needs review** | Proposed new field; required only when the schedule states BPP |
+| `bpp_limit` | Yes when stated | **Scored field** (D-120 item 6); required only when the schedule states BPP |
+| `sprinklered` | Yes | **Scored field** (D-120 item 6); yes/no only when the schedule or application states it |
 
 The property pack therefore makes `sales_or_payroll` optional and keeps every property field required. This is the first LOB where the required set differs from BOP; the engine change is the `required` flag in the pack, not code.
 
@@ -75,7 +76,7 @@ Rules reuse R1, R2, R10–R14, R16, R17 unchanged. Property additions (all **nee
 Same format as BOP, plus:
 
 - `- TIV:` is the building TIV for the one location.
-- `- BPP limit:` only when the field is in the pack; until then BPP goes in the TIV line as today.
+- `- BPP limit:` and `- Sprinklered:` are required once the pack lands; until then they are stated in `- Operations notes (unscored):` and are not scored by v11.
 - A schedule/application disagreement on TIV, square feet, construction or year built writes both sides in `- Conflict:`; operations never absorbs the disagreement.
 - Multiple buildings at one address: one premises line, TIV summed only when the schedule states a total; otherwise list the stated figures in the loss-run/claims note and mark **needs review**.
 - Scope line: two distinct schedule addresses → `out of scope — 2 multiple locations`.
@@ -83,7 +84,7 @@ Same format as BOP, plus:
 
 ## 8. Needs review
 
-- `bpp_limit` as a scored field and its gold line.
+- The exact pack key names for `bpp_limit` and `sprinklered`, and which scorer version first scores them (a P-### under D-017).
 - Whether application-only property files are incomplete or manual intake.
 - Synthetic B/C property limits (they are placeholders, not sourced appetite).
 - Owner-occupied vs tenant occupancy slot.

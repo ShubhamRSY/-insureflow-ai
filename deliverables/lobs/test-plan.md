@@ -14,7 +14,7 @@
 | Hold-out out of scope | 10–12 | Leakage and recall | Same 4 criteria plus LOB-specific ones, if approved |
 | Quick set | 15 | After each approved change | Drawn from dev; not a hold-out |
 
-Wave 1 keeps the T-117 shape: **dev 12, hold-out 20 in + 12 out**. Later waves use **dev 10, hold-out 20 in + 10 out** until a LOB justifies 12 out.
+Wave 1 keeps the T-117 shape: **dev 12, hold-out 20 in + 12 out**, except `commercial_package`, whose dev set is the 10 files built in this task. Later waves use **dev 10, hold-out 20 in + 12 out** (D-120 item 8: 20/12 for all waves).
 
 ## 2. Mix by LOB
 
@@ -23,39 +23,39 @@ Legend for loss runs: **A/B/C** = the three published typed formats; **NKL** = n
 | LOB | Wave | Dev | Hold-out in/out | Loss-run mix (in-scope) | Lint focus | Pytest suites |
 |---|---|---|---|---|---|---|
 | business_owners_policy | 1 | 12 | 20 / 12 | 8 A, 3 B, 3 C, 2 NKL, 2 none, 2 scan | Baseline format; every existing rule | All existing 43 + baseline snapshot |
-| commercial_property | 1 | 12 | 20 / 12 | 8 A, 2 B, 3 C, 2 NKL, 2 none, 3 scan | Property lines; BPP optional; schedule conflict | Property required/optional, BPP, scope criterion 2 |
+| commercial_property | 1 | 12 | 20 / 12 | 8 A, 2 B, 3 C, 2 NKL, 2 none, 3 scan | Property lines; BPP/sprinkler scored; schedule conflict | Property required/optional, BPP, sprinkler, scope criterion 2 |
 | general_liability | 1 | 12 | 20 / 12 | 8 A, 3 B, 2 C, 2 NKL, 3 none, 2 scan | COPE fields `not in documents`; `requires_tiv: false` | GL route without TIV, R6 bypass, required set |
-| commercial_package | 1 | 12 | 20 / 12 | 7 A, 3 B, 3 C, 2 NKL, 2 none, 3 scan | Both coverage sections; one TIV line | Package pack, either-section-out placeholder |
-| umbrella | 1 | 12 | 20 / 12 | 6 A, 3 B, 3 C, 2 NKL, 3 none, 3 scan | New limit lines; U1–U5; TIV `not in documents` | New fields, U rules, scope criterion 5 (if approved) |
-| inland_marine | 2 | 10 | 20 / 10 | 6 A, 3 B, 3 C, 2 NKL, 3 none, 3 sheet | Item-level schedule; no single TIV | Schedule items, limits per item |
-| builders_risk | 2 | 10 | 20 / 10 | 5 A, 3 B, 3 C, 2 NKL, 3 none, 4 sheet | Project value and dates | Project fields, scope |
-| commercial_auto | 2 | 10 | 20 / 10 | 5 A, 3 B, 3 C, 2 NKL, 4 none, 3 sheet | Vehicle rows; VIN/year | Vehicle schedule reader, limits |
-| workers_comp | 2 | 12 | 20 / 10 | 5 A, 4 B, 3 C, 2 NKL, 4 none, 2 sheet | Payroll by class; state | WC fields, state rules, class codes |
-| crime | 3 | 10 | 20 / 10 | 4 A, 3 B, 3 C, 2 NKL, 4 none, 4 sheet | Financial statements; limits | Crime limits, controls |
-| surety_bonds | 3 | 10 | 20 / 10 | 3 A, 3 B, 3 C, 2 NKL, 5 none, 4 sheet | Penal sum; financial capacity | Bond fields, financial reader |
-| personal_homeowners | 3 | 12 | 20 / 10 | 5 A, 3 B, 3 C, 2 NKL, 4 none, 3 scan | Dwelling/contents split; mortgagee | Consumer fields, state forms |
-| personal_auto | 3 | 12 | 20 / 10 | 4 A, 3 B, 3 C, 2 NKL, 5 none, 3 sheet | Drivers/vehicles | Consumer fields, MVR placeholder |
-| directors_and_officers | 4 | 10 | 20 / 10 | 3 A, 3 B, 3 C, 2 NKL, 6 none, 3 scan | Limits-rated; no COPE | Entity/financial fields |
-| errors_and_omissions | 4 | 10 | 20 / 10 | 3 A, 3 B, 3 C, 2 NKL, 6 none, 3 scan | Professional class; claims-made | Professional class, limits |
-| cyber_liability | 4 | 10 | 20 / 10 | 3 A, 3 B, 3 C, 2 NKL, 6 none, 3 scan | Controls and data volume | Controls fields |
-| trade_credit | 4 | 10 | 20 / 10 | 2 A, 2 B, 2 C, 2 NKL, 7 none, 5 sheet | Buyer-level rows | Buyer schedule, concentration |
-| key_person | 4 | 10 | 20 / 10 | 2 A, 2 B, 2 C, 2 NKL, 7 none, 5 sheet | Face amount; financials | Face amount, financial reader |
-| legal_expense | 4 | 10 | 20 / 10 | 3 A, 2 B, 2 C, 2 NKL, 6 none, 5 sheet | Limits; matter profile | Programme terms |
-| pollution_liability | 4 | 10 | 20 / 10 | 3 A, 3 B, 3 C, 2 NKL, 6 none, 3 scan | Site/contaminant fields | Site fields, hazmat |
-| kidnap_ransom | 4 | 10 | 20 / 10 | 2 A, 2 B, 2 C, 2 NKL, 7 none, 5 sheet | Territory and limits | Territory fields |
-| political_risk | 4 | 10 | 20 / 10 | 2 A, 2 B, 2 C, 2 NKL, 7 none, 5 sheet | Country exposure | Country fields, sanctions hook (compliance) |
-| flood_commercial | 5 | 12 | 20 / 10 | 4 A, 3 B, 3 C, 2 NKL, 5 none, 3 scan | Flood zone/elevation | Zone fields, cat data |
-| earthquake_commercial | 5 | 12 | 20 / 10 | 4 A, 3 B, 3 C, 2 NKL, 5 none, 3 scan | Seismic zone/construction | Seismic fields, PML hook |
-| terrorism | 5 | 10 | 20 / 10 | 3 A, 2 B, 3 C, 2 NKL, 7 none, 3 sheet | Location/TIV aggregation | Aggregation fields |
-| aviation | 5 | 10 | 20 / 10 | 2 A, 2 B, 2 C, 2 NKL, 8 none, 4 sheet | Aircraft/crew | Aircraft schedule |
-| life | 5 | 15 | 20 / 10 | 2 A, 2 B, 2 C, 3 NKL, 10 none, 1 scan | Face amount; medical/financial lines | Life fields, fairness review hook |
-| health | 5 | 15 | 20 / 10 | 2 A, 2 B, 2 C, 3 NKL, 10 none, 1 scan | Plan/member data | Health fields, fairness review hook |
-| general | 5 | 10 | 20 / 10 | 3 A, 2 B, 2 C, 3 NKL, 8 none, 2 scan | Triage only; no route | Triage routing, refusal reasons |
+| commercial_package | 1 | 10 (dev set SUB-270–279: 6 in / 4 out) | 20 / 12 | 7 A, 3 B, 3 C, 2 NKL, 2 none, 3 scan | Both coverage sections; one TIV line | Package pack, either-section-out placeholder |
+| umbrella | 2 | 12 | 20 / 12 | 6 A, 3 B, 3 C, 2 NKL, 3 none, 3 scan | New limit lines; U1–U5; TIV `not in documents` | New fields, U rules, criterion 5 deferred |
+| inland_marine | 2 | 10 | 20 / 12 | 6 A, 3 B, 3 C, 2 NKL, 3 none, 3 sheet | Item-level schedule; no single TIV | Schedule items, limits per item |
+| builders_risk | 2 | 10 | 20 / 12 | 5 A, 3 B, 3 C, 2 NKL, 3 none, 4 sheet | Project value and dates | Project fields, scope |
+| commercial_auto | 2 | 10 | 20 / 12 | 5 A, 3 B, 3 C, 2 NKL, 4 none, 3 sheet | Vehicle rows; VIN/year | Vehicle schedule reader, limits |
+| workers_comp | 2 | 12 | 20 / 12 | 5 A, 4 B, 3 C, 2 NKL, 4 none, 2 sheet | Payroll by class; state | WC fields, state rules, class codes |
+| crime | 3 | 10 | 20 / 12 | 4 A, 3 B, 3 C, 2 NKL, 4 none, 4 sheet | Financial statements; limits | Crime limits, controls |
+| surety_bonds | 3 | 10 | 20 / 12 | 3 A, 3 B, 3 C, 2 NKL, 5 none, 4 sheet | Penal sum; financial capacity | Bond fields, financial reader |
+| personal_homeowners | 3 | 12 | 20 / 12 | 5 A, 3 B, 3 C, 2 NKL, 4 none, 3 scan | Dwelling/contents split; mortgagee | Consumer fields, state forms |
+| personal_auto | 3 | 12 | 20 / 12 | 4 A, 3 B, 3 C, 2 NKL, 5 none, 3 sheet | Drivers/vehicles | Consumer fields, MVR placeholder |
+| directors_and_officers | 4 | 10 | 20 / 12 | 3 A, 3 B, 3 C, 2 NKL, 6 none, 3 scan | Limits-rated; no COPE | Entity/financial fields |
+| errors_and_omissions | 4 | 10 | 20 / 12 | 3 A, 3 B, 3 C, 2 NKL, 6 none, 3 scan | Professional class; claims-made | Professional class, limits |
+| cyber_liability | 4 | 10 | 20 / 12 | 3 A, 3 B, 3 C, 2 NKL, 6 none, 3 scan | Controls and data volume | Controls fields |
+| trade_credit | 4 | 10 | 20 / 12 | 2 A, 2 B, 2 C, 2 NKL, 7 none, 5 sheet | Buyer-level rows | Buyer schedule, concentration |
+| key_person | 4 | 10 | 20 / 12 | 2 A, 2 B, 2 C, 2 NKL, 7 none, 5 sheet | Face amount; financials | Face amount, financial reader |
+| legal_expense | 4 | 10 | 20 / 12 | 3 A, 2 B, 2 C, 2 NKL, 6 none, 5 sheet | Limits; matter profile | Programme terms |
+| pollution_liability | 4 | 10 | 20 / 12 | 3 A, 3 B, 3 C, 2 NKL, 6 none, 3 scan | Site/contaminant fields | Site fields, hazmat |
+| kidnap_ransom | 4 | 10 | 20 / 12 | 2 A, 2 B, 2 C, 2 NKL, 7 none, 5 sheet | Territory and limits | Territory fields |
+| political_risk | 4 | 10 | 20 / 12 | 2 A, 2 B, 2 C, 2 NKL, 7 none, 5 sheet | Country exposure | Country fields, sanctions hook (compliance) |
+| flood_commercial | 5 | 12 | 20 / 12 | 4 A, 3 B, 3 C, 2 NKL, 5 none, 3 scan | Flood zone/elevation | Zone fields, cat data |
+| earthquake_commercial | 5 | 12 | 20 / 12 | 4 A, 3 B, 3 C, 2 NKL, 5 none, 3 scan | Seismic zone/construction | Seismic fields, PML hook |
+| terrorism | 5 | 10 | 20 / 12 | 3 A, 2 B, 3 C, 2 NKL, 7 none, 3 sheet | Location/TIV aggregation | Aggregation fields |
+| aviation | 5 | 10 | 20 / 12 | 2 A, 2 B, 2 C, 2 NKL, 8 none, 4 sheet | Aircraft/crew | Aircraft schedule |
+| life | 5 | 15 | 20 / 12 | 2 A, 2 B, 2 C, 3 NKL, 10 none, 1 scan | Face amount; medical/financial lines | Life fields, fairness review hook |
+| health | 5 | 15 | 20 / 12 | 2 A, 2 B, 2 C, 3 NKL, 10 none, 1 scan | Plan/member data | Health fields, fairness review hook |
+| general | 5 | 10 | 20 / 12 | 3 A, 2 B, 2 C, 3 NKL, 8 none, 2 scan | Triage only; no route | Triage routing, refusal reasons |
 
 Mix rules:
 
 - Every in-scope set includes at least two NKL, two `none`, and two scans; every wave includes at least one Spanish document and one multi-location file in the **out-of-scope** set (to exercise criteria 2 and 3).
-- Wave 1 must reuse T-117 files where the LOB matches; it must **not** rewrite T-117 gold or scores.
+- Wave 1 must reuse T-117 files where the LOB matches (BOP, property, GL); the package dev set is new and dev-only. It must **not** rewrite T-117 gold or scores.
 - Each new LOB builds its own inbox folder (`simulation/inbox/<lob>/SUB-###/`) or a manifest mapping; no re-use of another LOB's gold.
 
 ## 3. Lint rules
@@ -143,10 +143,10 @@ A LOB that misses a gate is **not done**; it goes back to the backlog with the f
 
 ## 7. Sequencing
 
-Wave 1 test work can start only after the engine's baseline snapshot test exists. Then: BOP baseline → property → GL → package → umbrella, one LOB per branch, each with its own pack, gold folder and lint. No LOB's tests may import another LOB's gold.
+Wave 1 test work can start only after the engine's baseline snapshot test exists. Then: BOP baseline → property → GL → package, one LOB per branch, each with its own pack, `gold-set-<lob>/` and lint. Wave 2 starts with umbrella, then the schedule lines. No LOB's tests may import another LOB's gold.
 
 ## 8. Needs review
 
-- Whether 20/10 is enough out-of-scope files for later waves, or 20/12 stays the standard.
-- Whether Wave 1 reuses T-117 files per LOB or builds fresh ones (recommendation: reuse only the matching BOP/property/GL files, fresh for package/umbrella).
+- *Decided (D-120 item 8): 20/12 out-of-scope for all waves.*
+- The package dev set (`SUB-270–279`) is new and dev-only; Wave 1 reuses T-117 files for BOP/property/GL and builds fresh hold-outs for package and umbrella.
 - The exact pytest file names once the engine lands.
