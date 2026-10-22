@@ -1376,3 +1376,14 @@ Then continue: P-066 concurrent-write tests, @pm pilot-readiness update, @model-
 - Follow-up tasks: apply items 7–9 to the Wave 2 specs; prepare engine migration step 1 and the baseline-equality test on `lob-engine-step1`; @senior-underwriter + @model-risk review Wave 2 fields tomorrow; @compliance on umbrella criterion 5 when umbrella starts.
 - Status: ACCEPTED by @user, 2026-10-21
 - Amends: D-120 item 7 (umbrella criterion 5 timing) and D-120 items 1/10/12 by the Wave 2 decisions above. Not a production approval; the T-027 veto stands.
+
+## D-122 — approve change P-070 (carry the stated cooking line into operations; a disagreement between documents on a rating or scored figure becomes an open conflict and a hold)
+- Date / Owner: 2026-10-21 / @user
+- Context: the T-117 memo of @model-risk (`deliverables/model-risk/T-027-memo-T-117.md`) carries two High findings: H1 (on SUB-248/250/254/257 the stated application line `Cooking operations: None` is dropped from the operations answer) and H2 (0 of 3 planted document conflicts surfaced). The cause write-up is `deliverables/ai-engineer/analysis/T-117-H1-H2-cause.md`; the change is `deliverables/ai-engineer/proposal-P-070.md`.
+- Decision: In the user's words (typed in this session): "approve change P-070".
+- Conditions: the change is in `underwriting_pipeline/ai/prepare.py` only — no prompt, no model, no scorer, no gold, no hold-out file, no published score. The model request stays byte-identical (zero changed requests). Self-checks on development files only, shaped like SUB-249/252/257 but new files. D-065: the workbench card, one "What's new" line, a Playwright screenshot and @senior-underwriter's UI review (High only). The work lands on branch `fix-t117` and is pushed there only. @model-risk checks the result before any use beyond development; the T-027 veto stands.
+- Rationale: the user typed the exact approval in this session on 2026-10-21 (D-017).
+- Dissent: none
+- Follow-up tasks: @ai-engineer-assistant builds P-070 on `fix-t117` with the dev set `simulation/inbox-dev/document_conflicts/`; @senior-test-engineer and @model-risk own the v-next scorer (the M-class operations readings and the suite-count conflict topic), frozen before the next gold; @model-risk reviews the fix with no High before it counts towards the H1/H2 closure.
+- Status: ACCEPTED by @user, 2026-10-21
+- Amends: none. Not a production approval; the T-027 veto stands.
