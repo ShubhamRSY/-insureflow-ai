@@ -11,6 +11,7 @@ from pathlib import Path
 import auth
 import llm_extract
 import package
+import pilot
 import prepare
 import pytest
 import quotes
@@ -33,7 +34,8 @@ def live(monkeypatch, tmp_path: Path):
     box.mkdir()
     saved = {name: getattr(workbench, name) for name in ("PAGE", "LOG", "INBOX", "PENDING", "TO_PRODUCER", "TO_CARRIER", "BANNER")}
     saved_other = (package.DECISIONS_LOG, package.SENDS_LOG, package.INBOX, quotes.CLOSURES, quotes.TO_CARRIER,
-                   quotes.FROM_CARRIER, prepare.EXTRACT_DIR, prepare.INBOX_DIR, llm_extract.CACHE)
+                   quotes.FROM_CARRIER, prepare.EXTRACT_DIR, prepare.INBOX_DIR, llm_extract.CACHE,
+                   pilot.CORRECTIONS, pilot.EVENTS)
     saved_audit = auth.AUDIT_LOG
     workbench.sandbox(box)
     audit_path = box / "auth-audit.jsonl"
@@ -55,7 +57,8 @@ def live(monkeypatch, tmp_path: Path):
         for name, value in saved.items():
             setattr(workbench, name, value)
         (package.DECISIONS_LOG, package.SENDS_LOG, package.INBOX, quotes.CLOSURES, quotes.TO_CARRIER,
-         quotes.FROM_CARRIER, prepare.EXTRACT_DIR, prepare.INBOX_DIR, llm_extract.CACHE) = saved_other
+         quotes.FROM_CARRIER, prepare.EXTRACT_DIR, prepare.INBOX_DIR, llm_extract.CACHE,
+         pilot.CORRECTIONS, pilot.EVENTS) = saved_other
         auth.AUDIT_LOG = saved_audit
         workbench.MESSAGES.clear()
 
@@ -134,3 +137,17 @@ def test_logout_clears_the_cookie_and_is_audited(live):
     assert status == 303
     assert any("Max-Age=0" in value for value in headers.values() if "Set-Cookie" in str(value)) or "Max-Age=0" in str(headers)
     assert rows(audit_path)[-1]["action"] == "logout"
+
+
+# The pilot logs before any sandbox: workbench.sandbox() points them at the box, so the live
+# fixture has to put them back. Without that, a later test writes the pilot log into a temp
+# folder that is already gone.
+PILOT_PATHS_BEFORE = (pilot.CORRECTIONS, pilot.EVENTS)
+
+
+@pytest.fixture(scope="module", autouse=True)
+def pilot_logs_are_back_after_this_module():
+    yield
+    assert (pilot.CORRECTIONS, pilot.EVENTS) == PILOT_PATHS_BEFORE, \
+        "the live fixture left the pilot logs pointing at its temp box"
+

@@ -6,6 +6,7 @@ make a file sendable. The underwriter records a per-value confirmation instead.
 
 Two append-only logs carry the pilot's evidence:
   pilot-corrections.jsonl  field, suggested value, final value, reason, actor, run hash
+                           one row per correction and one row per per-value confirmation
   pilot-events.jsonl       every action and refusal, for counts and time per file
 
 No log is written when PILOT_MODE is off. A failed log write raises; callers show
@@ -92,13 +93,22 @@ def _append(path: Path, row: dict) -> dict:
 
 def record_correction(*, submission: str, field: str, kind: str, suggested: str, final: str,
                       reason: str, actor: str, run_hash: str = "") -> dict:
-    """C5: one row for each edit, conflict resolution, decline or code correction."""
-    return _append(CORRECTIONS, {
+    """C5: one row for each edit, conflict resolution, decline or code correction.
+
+    A per-value confirmation is one row too (kind "confirm"), edited or not: the pilot
+    needs every confirmation to measure a correction rate, and only the changed ones
+    would leave no denominator. "corrected" says whether the confirmed value differs
+    from the AI's proposal.
+    """
+    row = {
         "v": 1, "submission": submission, "field": field, "kind": kind,
         "suggested": suggested, "final": final, "reason": reason,
         "actor": actor, "run_hash": run_hash,
         "at": datetime.now().astimezone().isoformat(timespec="seconds"),
-    })
+    }
+    if kind == "confirm":
+        row["corrected"] = str(final) != str(suggested)
+    return _append(CORRECTIONS, row)
 
 
 def record_event(*, action: str, submission: str = "", actor: str = "", outcome: str = "ok",
@@ -128,13 +138,21 @@ def corrections_for(submission: str) -> list[dict]:
 
 
 def summary(queue: list[dict] | None = None) -> dict:
-    """Counts the pilot report needs: edits per field, overrides, refusals, time per file."""
+    """Counts the pilot report needs: edits per field, confirmations per field, the
+    correction rate per field, overrides, refusals and time per file."""
     corrections = _rows(CORRECTIONS)
     events = _rows(EVENTS)
     per_field: dict[str, int] = {}
+    confirmations: dict[str, int] = {}
+    corrected: dict[str, int] = {}
     for row in corrections:
-        if row.get("kind") in {"edit", "resolve"} and row.get("field"):
-            per_field[row["field"]] = per_field.get(row["field"], 0) + 1
+        kind, field = row.get("kind"), row.get("field")
+        if kind in {"edit", "resolve"} and field:
+            per_field[field] = per_field.get(field, 0) + 1
+        if kind == "confirm" and field:
+            confirmations[field] = confirmations.get(field, 0) + 1
+            if row.get("corrected"):
+                corrected[field] = corrected.get(field, 0) + 1
     times: dict[str, list[str]] = {}
     for row in events:
         sub = row.get("submission")
@@ -151,9 +169,18 @@ def summary(queue: list[dict] | None = None) -> dict:
             except ValueError:
                 continue
     failed = sorted({item["id"] for item in queue or [] if (item.get("report") or {}).get("status") == "extraction_failed"})
+    by_count = dict(sorted(per_field.items(), key=lambda kv: (-kv[1], kv[0])))
+    confirms = dict(sorted(confirmations.items(), key=lambda kv: (-kv[1], kv[0])))
+    fixes = dict(sorted(corrected.items(), key=lambda kv: (-kv[1], kv[0])))
     return {
-        "corrections": len(corrections),
-        "per_field": dict(sorted(per_field.items(), key=lambda kv: (-kv[1], kv[0]))),
+        "corrections": sum(1 for r in corrections if r.get("kind") != "confirm"),
+        "confirmations": sum(confirmations.values()),
+        "per_field": by_count,
+        "per_field_confirmations": confirms,
+        "per_field_corrected": fixes,
+        # the rate the pilot review asks for: confirmed values the underwriter corrected,
+        # over the confirmed values, per field. Never above 100%.
+        "correction_rate": {field: round(100 * corrected.get(field, 0) / count) for field, count in confirmations.items()},
         "overrides": sum(1 for r in corrections if r.get("kind") == "override") + sum(1 for e in events if e.get("action") == "override"),
         "refusals": sum(1 for e in events if e.get("outcome") == "refused"),
         "duration_seconds": dict(sorted(durations.items())),

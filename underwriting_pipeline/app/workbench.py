@@ -44,6 +44,7 @@ BANNER = ""  # set by serve(); the sandbox screenshots label the page with it
 MESSAGES: dict[str, tuple[bool, str]] = {}  # submission -> (ok, plain-words result of the last action); shown once
 # D-065 item 5: one line per user-visible feature: date, task or proposal, decision number, what an underwriter sees.
 WHATS_NEW = (
+    ("2026-10-21", "PILOT C5", "D-117/D-118 (T-027 C1–C8)", "Every per-value confirmation is now written to the pilot correction log, edited or not. The pilot monitor shows confirmations per field and the correction rate per field (the confirmed values the underwriter corrected, over the confirmed values), and each confirmation is a read-only row on the card with what the AI said and what was confirmed."),
     ("2026-10-21", "B-190", "D-057", "The workbench now needs a signed-in underwriter: OIDC sign-in, a signed session, a per-form token, an Origin check, and an audit row for every view, decision and send. The typed underwriter id is gone; a posted id cannot be used."),
     ("2026-10-21", "PILOT C1–C6", "D-117/D-118 (T-027 C1–C8)", "Assist-only pilot mode: send, package, draft and producer request are disabled with a plain reason; every value needs a per-value confirmation instead of an approve; scope is always shown; AI proposals and weak-field warnings are labelled; corrections, refusals and time per file are logged for the pilot review."),
     ("2026-10-20", "P-067", "D-118", "A rejected value now keeps its reason on the card: a field the extraction could not trust shows why (\"value not inside the cited text\", \"the date does not parse\") instead of an empty reason."),
@@ -657,6 +658,15 @@ def _append(payload: dict, action: str, actor: str, reason: str, log_path: Path)
 REFUSED_AS = {"/confirm-market": "Market confirm refused", "/decision": "Decision refused", "/mark-code": "Mark refused", "/cooking-call": "Cooking call refused", "/close-subjectivity": "Not closed", "/send": "Send refused", "/approve-draft": "Request not approved"}
 
 
+def reviewed_values(submission: str) -> dict:
+    """The values the underwriter stands behind: the saved run with the logged edits and resolutions."""
+    try:
+        run = package.reviewed(submission)
+    except (ValueError, OSError):
+        return {}
+    return {r["field_id"]: r.get("value") for r in run.get("fields") or []}
+
+
 def _pilot_correction(path: str, payload: dict, row: dict) -> None:
     """T-027 C5: capture field, suggested value, final value and reason for every correction."""
     if not pilot.active():
@@ -666,6 +676,18 @@ def _pilot_correction(path: str, payload: dict, row: dict) -> None:
     run_hash = str(row.get("run_hash") or "")
     if path == "/decision":
         action = row.get("action")
+        if action == "confirm":
+            # Every per-value confirmation, edited or not, is one row: the pilot measures a
+            # correction rate per field, and the rate needs every confirmation as its denominator.
+            suggested_values = row.get("confirmed_values") or {}
+            effective = reviewed_values(sub)
+            for field in row.get("acknowledged") or []:
+                suggested = suggested_values.get(field, "")
+                final = effective.get(field, suggested)
+                pilot.record_correction(submission=sub, field=field, kind="confirm",
+                                        suggested=str(suggested or ""), final=str(final or ""),
+                                        reason=str(payload.get("reason") or "checked against the cited text"),
+                                        actor=actor, run_hash=run_hash)
         if action in {"edit", "resolve", "decline"}:
             field = (payload.get("conflict_field") if action == "resolve" else payload.get("field_id")) or "file"
             suggested = ""
@@ -1067,20 +1089,39 @@ def pilot_summary_html(queue: list[dict] | None = None) -> str:
         return ""
     s = pilot.summary(queue)
     fields = "; ".join(f"{k}: {v}" for k, v in s["per_field"].items()) or "none yet"
+    # every pilot field is listed, confirmed or not, so a field nobody checked is never hidden
+    confirms = "; ".join(f"{f}: {s['per_field_confirmations'].get(f, 0)}" for f in prepare.FIELDS)
+    rates = "; ".join(
+        f"{f}: no confirmations yet" if not s["per_field_confirmations"].get(f, 0)
+        else f"{f}: {s['correction_rate'][f]}% ({s['per_field_corrected'].get(f, 0)} of {s['per_field_confirmations'][f]} confirmed values corrected)"
+        for f in prepare.FIELDS
+    )
     minutes = "; ".join(f"{k}: {v // 60}m {v % 60}s" for k, v in s["duration_seconds"].items()) or "none yet"
     failed = ", ".join(s["extraction_failed"]) or "none"
     return (
         '<details open><summary><b>Pilot monitor</b> (read-only; nothing here changes a file)</summary>'
-        f'<p>Corrections logged: {s["corrections"]} · overrides: {s["overrides"]} · refusals: {s["refusals"]}</p>'
+        f'<p>Corrections logged: {s["corrections"]} · confirmations logged: {s["confirmations"]} · overrides: {s["overrides"]} · refusals: {s["refusals"]}</p>'
         f'<p>Edits per field: {html.escape(fields)}</p>'
+        f'<p>Confirmations per field: {html.escape(confirms)}</p>'
+        f'<p>Correction rate per field (corrected ÷ confirmed): {html.escape(rates)}</p>'
         f'<p>Time per file: {html.escape(minutes)}</p>'
         f'<p>Extraction failed (never a value): {html.escape(failed)}</p>'
         '<p>Pilot logs: deliverables/software-engineer/pilot-corrections.jsonl and pilot-events.jsonl.</p></details>'
     )
 
 
+PILOT_KIND_LABEL = {
+    "confirm": "confirmed",
+    "edit": "edited",
+    "resolve": "conflict resolved",
+    "decline": "declined",
+    "code": "code marked",
+    "override": "override",
+}
+
+
 def pilot_corrections_html(submission: str) -> str:
-    """T-027 C5: one read-only row per correction on this file."""
+    """T-027 C5: one read-only row per correction or per-value confirmation on this file."""
     if not pilot.active():
         return ""
     rows = pilot.corrections_for(submission)
@@ -1088,11 +1129,14 @@ def pilot_corrections_html(submission: str) -> str:
         return "<h3>Corrections</h3><p>None logged on this file yet.</p>"
     body = "".join(
         f'<tr><td>{html.escape(r.get("at", ""))}</td><td>{html.escape(r.get("actor", ""))}</td>'
+        f'<td>{html.escape(PILOT_KIND_LABEL.get(r.get("kind", ""), r.get("kind", "")))}</td>'
         f'<td>{html.escape(r.get("field", ""))}</td><td>{html.escape(r.get("suggested", ""))}</td>'
         f'<td>{html.escape(r.get("final", ""))}</td><td>{html.escape(r.get("reason", ""))}</td></tr>'
         for r in rows
     )
-    return ("<h3>Corrections</h3><table><tr><th>When</th><th>Who</th><th>Field</th>"
+    note = ('<p>"AI said" is the AI\'s proposal; "Final" is the value the underwriter stands behind, '
+            "with the logged edits applied. One row per checked value.</p>")
+    return ("<h3>Corrections</h3>" + note + "<table><tr><th>When</th><th>Who</th><th>Kind</th><th>Field</th>"
             f"<th>AI said</th><th>Final</th><th>Reason</th></tr>{body}</table>")
 
 
