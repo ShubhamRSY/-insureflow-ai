@@ -16,6 +16,9 @@ secrets.json
 *.key
 audit_logs/
 pilot_packages/**
+# T-027 pilot logs hold synthetic actor rows only; never commit them.
+deliverables/software-engineer/pilot-corrections.jsonl*
+deliverables/software-engineer/pilot-events.jsonl*
 !pilot_packages/README.md
 .pytest_cache/
 .mypy_cache/

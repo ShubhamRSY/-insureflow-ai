@@ -22,6 +22,11 @@ import scope
 import sources
 
 ROOT = Path(__file__).resolve().parents[2]
+_APP = ROOT / "underwriting_pipeline" / "app"
+if str(_APP) not in sys.path:
+    sys.path.insert(0, str(_APP))
+import pilot  # noqa: E402  (after the app path is added)
+
 # G2 (D-029): the send gate reads the last saved run at this path. It never calls process_submission and never trusts a passed-in report.
 EXTRACT_DIR = ROOT / "deliverables" / "data-engineer" / "extractions"
 HASH_ALGORITHM = "sha256"
@@ -1357,6 +1362,7 @@ def write_drafts(inbox: Path, draft_dir: Path, conflict_dir: Path) -> list[dict]
     """Drafts go to pending-approval. Conflicts go to a data file. Never to-producer."""
     if draft_dir.name == "to-producer":
         raise RuntimeError("drafts are not sent to the producer")
+    pilot.guard("draft")
     draft_dir.mkdir(parents=True, exist_ok=True)
     conflict_dir.mkdir(parents=True, exist_ok=True)
     extract_dir = conflict_dir.parent / "extractions"
@@ -1370,7 +1376,10 @@ def write_drafts(inbox: Path, draft_dir: Path, conflict_dir: Path) -> list[dict]
         dest = draft_dir / f"{folder.name}.md"
         side = conflict_dir / f"{folder.name}.json"
         if report["request"] and not refused:  # P-055: a manual-intake file gets no automated missing-info draft
-            dest.write_text(report["request"])
+            if pilot.active():  # C2: no draft leaves the tool, even when the reply has a missing-info request
+                dest.unlink(missing_ok=True)
+            else:
+                dest.write_text(report["request"])
         elif refused and dest.exists():
             # D1: a failed call or an all-rejected answer removes the old draft. Nothing is sent to the producer.
             dest.unlink()
@@ -1417,6 +1426,7 @@ def approve(
         sys.path.insert(0, str(app))
     from package import agency_problem
 
+    pilot.guard("producer-request", draft.stem)
     current = read_saved_run(draft.stem)  # G2: the file's current status, read and hash-checked here
     status = current.get("status")
     if status in REFUSED_STATUSES:

@@ -2073,3 +2073,8 @@ Blocked: No.
 - Done: dev plan `commercial-property-dev-plan.json`; lint PASS (0 failures, 0 info, 10 files, run date 2026-10-21); note `commercial-property-dev-lint.md`; lint and scorer hashes unchanged before the run. Dev only, no score published.
 - Doing next: property pack tests once the pack exists.
 - Blocked by / need from: engine step 2 and @model-risk review.
+
+### 2026-10-21 (30) — @software-engineer (written in OpenCode, not independently reviewed)
+- Done: on `pilot-conditions` (from `ai-team` `fd12f9c`), built T-027 C1–C6 code: `PILOT_MODE=assist-only` guards in `package.py`/`prepare.py`, per-value confirmation instead of approve, always-on scope/suggestion/weak-field labels, correction and event logs with a pilot monitor, and B-191 item 2 (no silent `flock`/`fsync` failure). Tests 52 passed; `workbench ok`; no model calls; docs under `deliverables/pm/pilot/`.
+- Doing next: push `pilot-conditions`; no merge of `sso-b190` here.
+- Blocked by / need from: @model-risk independent check + C6 warning source; @senior-underwriter UI check; merge/review of B-190 `sso-b190`; @pm/@head-of-underwriting C8 task and threshold. No real data.

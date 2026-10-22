@@ -40,6 +40,7 @@ ROOT = Path(__file__).resolve().parents[2]
 # B-169: the status reader lives in prepare.py. Reach it the same way workbench.py does.
 sys.path.insert(0, str(ROOT / "underwriting_pipeline" / "ai"))
 import prepare
+import pilot
 
 DECISIONS_LOG = ROOT / "deliverables" / "software-engineer" / "decisions.jsonl"
 SENDS_LOG = ROOT / "deliverables" / "software-engineer" / "sends.jsonl"  # not DECISIONS_LOG: a send row must never read as a decision
@@ -253,6 +254,7 @@ def build_package(submission: str, carrier_override: str = "", override_reason: 
     D-057: carrier_override is honoured only when route() gives no_match (never hold), with a written reason.
     """
     submission = (submission or "").strip()
+    pilot.guard("package", submission)
     report = reviewed(submission)
     if report.get("status") == prepare.MANUAL_INTAKE:  # P-055: no package for a manual-intake file, whatever was edited into it
         raise ValueError(f"no package: this file's status is {prepare.status_refusal(report)}")
@@ -453,6 +455,7 @@ def send_to_carrier(
 
     T-071: read the status from the last saved run itself, before the actor is looked at, and refuse both refused statuses for every actor."""
     submission = (submission or "").strip()
+    pilot.guard("send", submission)
     report = prepare.read_saved_run(submission)  # G2: no file, hash differs, or unknown status -> refuse
     status = report.get("status")
     if status in prepare.REFUSED_STATUSES:
