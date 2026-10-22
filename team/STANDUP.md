@@ -2073,3 +2073,8 @@ Blocked: No.
 - Done: dev plan `commercial-property-dev-plan.json`; lint PASS (0 failures, 0 info, 10 files, run date 2026-10-21); note `commercial-property-dev-lint.md`; lint and scorer hashes unchanged before the run. Dev only, no score published.
 - Doing next: property pack tests once the pack exists.
 - Blocked by / need from: engine step 2 and @model-risk review.
+
+### 2026-10-21 (33) — @pm (written in OpenCode, not independently reviewed)
+- Done: wrote `deliverables/pm/pilot/decisions-for-user.md` (first on `pilot-integration`, copied here to `ai-team` as its own commit `e20500e`): c1–c8 from `deliverables/pm/pilot/c-open-questions.md` plus new c9 (identity mapping), each with the question, 2–3 options, a recommendation with a reason, the parties outside the team who must agree (IT, compliance, manager) and what it blocks. C6 warning number (c1) and the C8 task and threshold (c3, c4) are covered in full.
+- Doing next: record the user's answers as `D-###` in `team/DECISIONS.md`; send the items owned by @model-risk, @head-of-underwriting and @compliance to them as proposals. No decision is recorded in the user's name until the user answers in chat.
+- Blocked by / need from: the user's answers to c1–c9.
