@@ -2078,3 +2078,13 @@ Blocked: No.
 - Done: on `pilot-conditions` (from `ai-team` `fd12f9c`), built T-027 C1–C6 code: `PILOT_MODE=assist-only` guards in `package.py`/`prepare.py`, per-value confirmation instead of approve, always-on scope/suggestion/weak-field labels, correction and event logs with a pilot monitor, and B-191 item 2 (no silent `flock`/`fsync` failure). Tests 52 passed; `workbench ok`; no model calls; docs under `deliverables/pm/pilot/`.
 - Doing next: push `pilot-conditions`; no merge of `sso-b190` here.
 - Blocked by / need from: @model-risk independent check + C6 warning source; @senior-underwriter UI check; merge/review of B-190 `sso-b190`; @pm/@head-of-underwriting C8 task and threshold. No real data.
+
+### 2026-10-21 (31) — @software-engineer (written in OpenCode, not independently reviewed)
+- Done: three-way integration on throwaway branch `pilot-integration` (from `ai-team` `fd12f9c`): merged `lob-engine-step1` (`a9ce607`), `sso-b190` (`f608d2c`) and `pilot-conditions` (`5a8063f`); 12 conflict hunks in 3 files resolved keeping both sides' intent; added the C5 display-log view row to the SSO GET handler so views carry the signed-in user; new `tests/pipeline/test_pilot_signin_combined.py` (sign-in, per-value confirm, send gate). `tests/pipeline` 82 passed; `workbench ok`; no model calls; all writes to a temp sandbox.
+- Doing next: nothing on this branch; it is a throwaway for the conflict report.
+- Blocked by / need from: @model-risk review of C1–C6 and B-191 item 2 (c7); @senior-underwriter UI check (c8); the identity mapping gap in `underwriters.json` (c9) before any real sign-in.
+
+### 2026-10-21 (32) — @pm (written in OpenCode, not independently reviewed)
+- Done: wrote `deliverables/pm/pilot/decisions-for-user.md`: c1–c8 from `c-open-questions.md` plus new c9 (identity mapping), each with the question, 2–3 options, a recommendation with a reason, the parties outside the team who must agree (IT, compliance, manager) and what it blocks. Nothing decided; the answers are the user's.
+- Doing next: record the user's answers as `D-###` in `team/DECISIONS.md`; send the items owned by @model-risk, @head-of-underwriting and @compliance to them as proposals.
+- Blocked by / need from: the user's answers to c1–c9; @pm does not decide c1/c2/c3/c5/c6/c7/c8 on the user's behalf.
