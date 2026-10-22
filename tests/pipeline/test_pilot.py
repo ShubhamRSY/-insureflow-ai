@@ -135,6 +135,62 @@ def test_c5_edit_is_logged_and_shown_read_only(box):
     assert "Pilot monitor" in page and "Edits per field: operations: 1" in page
 
 
+def test_c5_every_confirmed_value_is_logged_and_the_rate_is_per_field(box):
+    sub, ok, text = workbench.act("/decision", {"submission": "SUB-990", "underwriter_id": "user", "action": "edit",
+                                                "field_id": "operations", "new_value": "general office only",
+                                                "reason": "the cited page says office only"})
+    assert ok, text
+    sub, ok, text = workbench.act("/decision", {"submission": "SUB-990", "underwriter_id": "user", "action": "confirm",
+                                                "ack": ["named_insured", "premises_address", "effective_date",
+                                                        "operations", "construction", "sales_or_payroll"]})
+    assert ok, text
+    rows = pilot.corrections_for("SUB-990")
+    confirms = [r for r in rows if r["kind"] == "confirm"]
+    assert len(confirms) == 6, "one row per confirmed value, edited or not"
+    assert len([r for r in rows if r["kind"] == "edit"]) == 1
+    by_field = {r["field"]: r for r in confirms}
+    assert by_field["operations"]["suggested"] == "general office work"
+    assert by_field["operations"]["final"] == "general office only", "the value the underwriter stands behind"
+    assert by_field["operations"]["corrected"] is True
+    assert by_field["named_insured"]["suggested"] == by_field["named_insured"]["final"] == "Example LLC"
+    assert by_field["named_insured"]["corrected"] is False
+    assert by_field["named_insured"]["reason"] == "checked against the cited text"
+    assert by_field["named_insured"]["actor"] == "user"
+    decisions = [json.loads(line) for line in workbench.LOG.read_text().splitlines()]
+    assert len([r for r in decisions if r.get("action") == "confirm"]) == 1, "one decision; six pilot rows"
+    s = pilot.summary(workbench.load_queue())
+    assert s["confirmations"] == 6
+    assert s["corrections"] == 1, "the edit row; the confirmations are counted apart"
+    assert s["per_field_confirmations"]["operations"] == 1 and s["per_field_confirmations"]["named_insured"] == 1
+    assert s["per_field_corrected"]["operations"] == 1
+    assert s["correction_rate"]["operations"] == 100
+    assert s["correction_rate"]["named_insured"] == 0
+    page = workbench.render(workbench.load_queue(), None)
+    assert "Confirmations per field: named_insured: 1" in page
+    assert "tiv_building: 0" in page
+    assert "Correction rate per field (corrected ÷ confirmed):" in page
+    assert "operations: 100% (1 of 1 confirmed values corrected)" in page
+    assert "named_insured: 0% (0 of 1 confirmed values corrected)" in page
+    assert "tiv_building: no confirmations yet" in page, "a field nobody confirmed is never hidden"
+    card = page[page.index('<article id="SUB-990">'):]
+    assert "confirmed" in card and "checked against the cited text" in card
+    assert "the value the underwriter stands behind" in card, "the table says what AI said and Final mean"
+
+
+def test_c5_a_confirmation_without_an_edit_is_still_logged(box):
+    sub, ok, text = workbench.act("/decision", {"submission": "SUB-990", "underwriter_id": "user", "action": "confirm",
+                                                "ack": ["named_insured", "premises_address", "effective_date",
+                                                        "operations", "construction", "sales_or_payroll"]})
+    assert ok, text
+    confirms = [r for r in pilot.corrections_for("SUB-990") if r["kind"] == "confirm"]
+    assert len(confirms) == 6
+    assert all(r["corrected"] is False for r in confirms)
+    s = pilot.summary(workbench.load_queue())
+    assert s["confirmations"] == 6 and s["corrections"] == 0
+    assert s["correction_rate"] == {f: 0 for f in ("construction", "effective_date", "named_insured",
+                                                   "operations", "premises_address", "sales_or_payroll")}
+
+
 def test_c5_refusal_is_logged_and_a_failed_log_is_visible(box, monkeypatch):
     sub, ok, text = workbench.act("/decision", {"submission": "SUB-990", "underwriter_id": "user", "action": "approve", "reason": "ok"})
     assert not ok and "assist-only pilot: approve is disabled" in text
