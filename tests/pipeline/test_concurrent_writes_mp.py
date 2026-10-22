@@ -3,6 +3,25 @@ import subprocess
 import sys
 from pathlib import Path
 
+ROOT = Path(__file__).resolve().parents[2]
+
+# The worker runs in its own process and imports the pipeline from this checkout, the same way
+# tests/pipeline/conftest.py does. It used to live in /tmp outside the repo, so CI could not find it.
+WORKER = """
+import sys
+from pathlib import Path
+root = Path(sys.argv[1])
+for folder in ("underwriting_pipeline/ai", "underwriting_pipeline/models", "underwriting_pipeline/app"):
+    sys.path.insert(0, str(root / folder))
+import package, prepare, workbench
+dlog, uw, ext, start, count = Path(sys.argv[2]), Path(sys.argv[3]), Path(sys.argv[4]), int(sys.argv[5]), int(sys.argv[6])
+package.UNDERWRITERS = uw
+prepare.EXTRACT_DIR = ext
+for i in range(start, start + count):
+    workbench.record_decision({"underwriter_id": "user", "submission": "SUB-901", "action": "edit", "reason": f"e{i}",
+                               "field_id": "named_insured", "new_value": f"x{i}"}, dlog)
+"""
+
 
 def test_multiprocess_concurrent_appends(tmp_path):
     dlog = tmp_path / "decisions.jsonl"
@@ -30,11 +49,10 @@ def test_multiprocess_concurrent_appends(tmp_path):
     }
     (ext / "SUB-901.json").write_text(json.dumps(report))
     procs = []
-    worker = '/tmp/concurrent_append_worker2.py'
     total = 32
     per = 8
     for p in range(4):
-        proc = subprocess.Popen([sys.executable, worker, str(dlog), str(uw), str(ext), str(p*per), str(per)], cwd=str(tmp_path))
+        proc = subprocess.Popen([sys.executable, "-c", WORKER, str(ROOT), str(dlog), str(uw), str(ext), str(p*per), str(per)], cwd=str(tmp_path))
         procs.append(proc)
     for pr in procs:
         assert pr.wait() == 0

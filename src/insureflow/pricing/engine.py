@@ -385,11 +385,7 @@ class PricingStore:
         concurrent calls therefore can never both create a session.
         """
         with self._lock:
-            pending = [
-                rec
-                for rec in self._data.get("checkouts", {}).values()
-                if rec.get("org_id") == org_id and rec.get("status") == "pending"
-            ]
+            pending = [rec for rec in self._data.get("checkouts", {}).values() if rec.get("org_id") == org_id and rec.get("status") == "pending"]
             for rec in pending:
                 if rec.get("tier") == tier:
                     return {**rec, "reused": True}
@@ -623,11 +619,7 @@ class PricingEngine:
         # Don't suspend a plan that is already paid and active; only mark pending
         # when the org is not currently on an active paid tier.
         current = self._store.get_subscription_record(org_id)
-        already_paid = (
-            current.get("status") == "active"
-            and current.get("tier") in TIERS
-            and TIERS[current["tier"]].is_paid
-        )
+        already_paid = current.get("status") == "active" and current.get("tier") in TIERS and TIERS[current["tier"]].is_paid
         if not already_paid:
             self._store.set_subscription(org_id, tier, status="pending")
         return self._store.open_checkout(org_id, tier, amount)

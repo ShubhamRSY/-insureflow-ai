@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import time
+from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
@@ -25,7 +26,7 @@ def _unique(prefix: str = "u") -> str:
     return f"{prefix}_{int(time.time() * 1000) % 100000}"
 
 
-def _signup_free(client: TestClient) -> dict:
+def _signup_free(client: TestClient) -> dict[str, Any]:
     uname = _unique("chk")
     resp = client.post(
         "/auth/signup",
@@ -38,10 +39,11 @@ def _signup_free(client: TestClient) -> dict:
         },
     )
     assert resp.status_code == 201, resp.text
-    return resp.json()
+    data: dict[str, Any] = resp.json()
+    return data
 
 
-def _auth(data: dict) -> dict[str, str]:
+def _auth(data: dict[str, Any]) -> dict[str, str]:
     return {"Authorization": f"Bearer {data['token']}"}
 
 

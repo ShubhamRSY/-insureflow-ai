@@ -272,7 +272,6 @@ def _match(report: dict, gated: bool) -> dict:
     if report.get("status") == prepare.MANUAL_INTAKE:  # P-055 (D-105): no carrier, provisional or suggested route; not a hold either
         return out("manual_intake", prepare.status_refusal(report))
 
-    lob, cook = _line(report, "line_of_business"), _line(report, "cooking_operations")
     cls = class_text(report)  # P-061: class, bar and prohibited words come from the operations and the Line of business line; R17 reads ops only
     snack = _has(cls, SNACKS)  # P-062 (b): a snack warmer or "snacks only" kitchen is not restaurant evidence
     word_food = _has(cls, CLASSES["b"]) and not snack
@@ -1252,7 +1251,7 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
             f"<p>Locations: {html.escape('; '.join(('primary ' if row.get('primary') else 'other ') + row['address'] for row in report['locations']) or 'one premises') if report.get('locations') is not None else 'not stored in the saved run'}</p>",
             "<h3>Extracted fields</h3>",
             "<p>Nothing filled in: a person reads the file.</p>" if manual else (
-                (f"<p class='banner'>AI proposal — verify against the source.</p>" if pilot.active() else "")
+                ("<p class='banner'>AI proposal — verify against the source.</p>" if pilot.active() else "")
                 + f"<table><tr><th>Field</th><th>{'Value (AI proposal — verify)' if pilot.active() else 'Value'}</th><th>Confidence</th><th>Source</th><th>Cited text</th><th>Review note</th></tr>{''.join(field_rows)}</table>"
             ),
             f"<h3>Conflicts</h3>{conflict_html}",
@@ -1348,7 +1347,7 @@ footer {{ border-top: 1px solid #ccc; margin-top: 2rem; color: #555; }}
 <h1>Underwriter workbench</h1>
 {identity}
 {loose}
-{f'<p class="banner">ASSIST-ONLY PILOT — AI proposals only. Nothing is routed, sent or drafted. You decide.</p>' if pilot.active() else ''}
+{'<p class="banner">ASSIST-ONLY PILOT — AI proposals only. Nothing is routed, sent or drafted. You decide.</p>' if pilot.active() else ''}
 {pilot_summary_html(queue)}
 <details open><summary><b>What's new</b> (latest {min(5, len(WHATS_NEW))} of {len(WHATS_NEW)})</summary><ul>{whats_new_items(WHATS_NEW[:5])}</ul>{f"<details><summary>Show all {len(WHATS_NEW)}</summary><ul>{whats_new_items(WHATS_NEW[5:])}</ul></details>" if len(WHATS_NEW) > 5 else ""}</details>
 <p>Synthetic queue. A decision is logged only with an id on the underwriter list. Decline and edit need a reason, and so does an approve after a decline. Approve, edit, and decline are saved with that reason. This page shows saved runs only. It never binds. A carrier send needs the typed line and passes the send gate.</p>

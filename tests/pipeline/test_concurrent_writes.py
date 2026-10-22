@@ -1,8 +1,9 @@
 import json
 from concurrent.futures import ThreadPoolExecutor
 
-from underwriting_pipeline.app import workbench, package
-from underwriting_pipeline.ai import prepare
+import package
+import prepare
+import workbench
 
 
 def test_concurrent_decision_appends(tmp_path, monkeypatch):
