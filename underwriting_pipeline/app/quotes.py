@@ -18,6 +18,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "underwriting_pipeline" / "app"))
 import package
+import auth
 
 FROM_CARRIER = ROOT / "simulation" / "from-carrier"
 TO_CARRIER = ROOT / "simulation" / "to-carrier"
@@ -103,7 +104,7 @@ def track(from_dir: Path = None, to_dir: Path = None, closures: Path = None) -> 
     return sorted(rows.values(), key=lambda r: (r["submission"], r["carrier"]))
 
 
-def html_for(submission: str) -> str:
+def html_for(submission: str, user=None) -> str:
     import html
 
     mine = [r for r in track() if r["submission"] == submission]
@@ -120,7 +121,9 @@ def html_for(submission: str) -> str:
         for s in r["subjectivities"]:  # D-058: a listed underwriter closes it, one logged action
             if s["state"] == "open":
                 f = "".join(f'<input type="hidden" name="{k}" value="{html.escape(v, quote=True)}">' for k, v in (("submission", submission), ("carrier", r["carrier"]), ("subjectivity", s["text"])))
-                out.append(f'<form method="post" action="/close-subjectivity">{f}<input name="underwriter_id" placeholder="underwriter id" required> <input name="reason" placeholder="reason" required> <button>Close: {html.escape(s["text"])}</button></form>')
+                who = (f'<input type="hidden" name="csrf" value="{html.escape(auth.csrf_for(user))}"><span class="actor">{html.escape(user.name)}</span> ' if user is not None
+                       else '<input name="underwriter_id" placeholder="underwriter id" required> ')
+                out.append(f'<form method="post" action="/close-subjectivity">{f}{who}<input name="reason" placeholder="reason" required> <button>Close: {html.escape(s["text"])}</button></form>')
     return "".join(out)
 
 
