@@ -27,26 +27,15 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
+import lob_config
+
 MIN_CONFIDENCE = 0.75
 MAX_CHARS = 120000  # P-016 L1: text sent to the model in one call
 DEFAULT_KEY = "ollama"
 MAX_WAIT = float(os.environ.get("LLM_MAX_WAIT") or 60)  # seconds to wait on one 429; a batch scorer sets this higher
 
-SYSTEM = """You extract commercial insurance fields from the documents.
-Return one JSON object and nothing else.
-Use only facts copied from the documents. If a fact is not there, value is null and confidence is 0.
-Never guess. A no-known-loss letter is not a loss-run date; leave loss_run_valued_through null.
-Spanish and unlabeled email prose are allowed. Put the English value in value. quote must be copied character for character from one file, with no added words and no added accents.
-For operations, keep the specific English words from the source and do not shorten them to one class word. Keep every stated detail: business type; alcohol (full liquor license, beer and wine, beer only, no alcohol); seat count; unit count and stories or floor; cooking (kitchen, fryer, grill, open flame, no cooking); hours; live music or entertainment; delivery or catering; 24-hour; on-site processing or repair; patio; security staff; hazardous or flammable materials. Leave out only marketing adjectives. Also read the application's "Cooking operations", "Hood & extinguishing system" and "Line of business" lines, not only the "Operations" line: keep every item they state (equipment such as a snack warmer or kilns, "no gas", "None" as no cooking, hood inspection dates, "no liquor"), and quote those lines as extra parts. The quote must contain every detail in the value. If they cook a named food, the value must contain that food word and the word restaurant. If the source is Spanish, translate it and still quote the Spanish line exactly. A bar or night club is a bar and nightclub. mamposteria means masonry, and the construction value is the English word.
-sales_or_payroll is gross annual revenue (sales), returned as a single number copied from the document, with no labels or other figures. Payroll is never part of sales.
-loss_run_valued_through is only the valued-through date copied from the file. Never invent a date. If the file does not show that date, use null even if you think runs exist.
-If square feet or the premises address differ across files, do not pick a side. Leave that field null and add a conflict whose values include both numbers or both addresses, each with an exact quote.
-quote must be an exact substring of one document. source is that document's file name.
-confidence is a number from 0 to 1. Use below 0.75 when you are unsure.
-If two documents disagree, do not pick a side. Leave that field null and add a conflict with both values.
-Fields: named_insured, premises_address, effective_date, operations, sales_or_payroll, tiv_building, construction, year_built, loss_run_valued_through.
-Schema: {"fields":[{"field_id":"","value":null,"source":"","quote":"","confidence":0}],"conflicts":[{"field":"","values":[{"value":"","source":"","quote":"","confidence":0}]}]}
-"""
+# Engine step 1: the prompt text lives in the small_commercial pack, unchanged.
+SYSTEM = lob_config.load("small_commercial").prompt_system
 
 
 # P-007. A model result is saved under a key made from the files, the prompt, the OCR settings, and the model.
@@ -815,7 +804,8 @@ def location_sides(sides: list[dict], texts: dict[str, str]) -> list[tuple[int, 
     return sorted(found.items(), key=lambda pair: pair[0]) if 1 in found else []  # code-review: never promote loc 2 to the premises
 
 
-def llm_extract(docs: list[dict]) -> dict:
+def request_for(docs: list[dict]) -> dict:
+    """Build the exact model request and cache key for these documents, with no call and no cache read."""
     settings = provider_guard(calling=False)  # refused only below, when the cache has no result and a model call is next
     docs = [doc for doc in docs if not doc.get("unread")]  # P-016 (c): a file type that is not read, or a file that cannot be opened, never reaches the model or the key
     parts, not_sent, size = [], [], 0
@@ -840,10 +830,27 @@ def llm_extract(docs: list[dict]) -> dict:
         ],
     }
     names = [doc["name"] for doc in docs]
+    return {
+        "docs": docs,
+        "payload": payload,
+        "key": cache_key(docs, settings["model"]),
+        "files": names,
+        "not_sent": not_sent,
+        "settings": settings,
+    }
+
+
+def llm_extract(docs: list[dict]) -> dict:
+    request = request_for(docs)
+    settings = request["settings"]
+    docs = request["docs"]
+    payload = request["payload"]
+    names = request["files"]
+    not_sent = request["not_sent"]
+    key = request["key"]
     if CACHE not in _swept:  # D-028: once per run and per cache folder, before the first read or write
         _swept.add(CACHE)
         _sweep_tmp()
-    key = cache_key(docs, settings["model"])
     settings = {**settings, "files": names, "cache_key": key}  # so every log row names its files and its cache key
     saved = CACHE / "extractions" / f"{key}.json"
     parsed = None
