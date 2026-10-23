@@ -9,6 +9,17 @@ Written 2026-10-21 (third session) by the orchestrator at wrap-up. Wrap-up commi
 - pyright: `npx --yes pyright@1.1.390 --pythonpath .venv/bin/python <files>`. Playwright only via `/opt/homebrew/opt/python@3.14/bin/python3.14`.
 - @producer cannot write `deliverables/`; it writes to the scratchpad and the orchestrator copies it.
 
+## Freeze 2026-10-23 (D-127), for the T-119 hold-out — read this first
+
+Recorded by the orchestrator in the Claude Code session, 2026-10-23. Supersedes the older freeze below for T-119.
+- Worktree and branch: `/Users/disastershubz/INSURANCE FLOW AI/insureflow-integration`, `pilot-integration` (pushed; never `main`).
+- Code under test: `pilot-integration` commit `b6a35b7d94de4afa36d7457b21d28d6f4c8b4358` (pipeline code identical to the merge `d7949d2`: T-118 P-070 conflicts with the cooking add removed by P-072).
+- `PROMPT_VERSION` `759b3e6bc9b2` (`llm_extract.py` unchanged since T-117; request equality 143/143 identical at `d7949d2`).
+- Scorer: **v11** (`underwriting_pipeline/ai/eval_holdout_v11.py`) sha256 `7ddcfb50521b7af17f00c0e148891ca40008d019ce257b9b5d121c7fa6d3fcbb`, self-check ok. v12 dropped (D-127; parked in `deliverables/backlog/P-073-v12/`).
+- Lint: `deliverables/senior-test-engineer/lint_holdout.py` sha256 `01147a7532bdd7f1ec00861200d1d5e6bbf87f12612389416ff58b78844ea653`, SELF-CHECK PASS.
+- Under v11 an answer that omits the cooking slot where gold says no cooking is a miss; T-119 results list these separately (D-127).
+- Next: build T-119 (SUB-340–371) per `team/TASKS.md`, gold first, lint PASS with v11, @model-risk build check, freeze gold, record the manifest. Do not run it.
+
 ## Frozen code under test (D-119)
 
 | Item | Value |
