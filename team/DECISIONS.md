@@ -1387,3 +1387,18 @@ Then continue: P-066 concurrent-write tests, @pm pilot-readiness update, @model-
 - Follow-up tasks: @ai-engineer-assistant builds P-070 on `fix-t117` with the dev set `simulation/inbox-dev/document_conflicts/`; @senior-test-engineer and @model-risk own the v-next scorer (the M-class operations readings and the suite-count conflict topic), frozen before the next gold; @model-risk reviews the fix with no High before it counts towards the H1/H2 closure.
 - Status: ACCEPTED by @user, 2026-10-21
 - Amends: none. Not a production approval; the T-027 veto stands.
+- Confirmed: 2026-10-22, the user typed "approve change P-070" in the Claude Code session (D-045, D-053: the OpenCode record of 2026-10-21 is confirmed here).
+
+## D-123 — approve change P-071 (the stated cooking line is added only when no document in the folder states cooking)
+- Rationale: the user typed "approve change P-071" in the Claude Code session on 2026-10-23 (D-017), after reading `deliverables/ai-engineer/proposal-P-071.md`. Fixes @model-risk T-118 High H1 only.
+- Dissent: none
+- Follow-up tasks: build on `fix-t117` (dev files only, tests/pipeline green, request-equality changes listed); fresh @model-risk check, High only; then merge `fix-t117` into `pilot-integration`.
+- Status: ACCEPTED by @user, 2026-10-23
+- Amends: D-122 (P-070 change 1). Not a production approval; the T-027 veto stands.
+
+## D-124 — approve change P-072 (remove the "; no cooking" add from operations entirely)
+- Rationale: the user typed "approve change P-072" in the Claude Code session on 2026-10-23, with the text: remove the "; no cooking" add from operations entirely; files where cooking is not clearly stated keep their existing review flag; no automatic "no cooking" in any case; revert the P-070/P-071 add logic, keeping harmless refactoring only if it changes no behaviour; the H1 scoring gap moves to the next scorer version. Answers @model-risk T-118 re-check High H1 (`deliverables/model-risk/T-118-recheck.md`).
+- Dissent: none
+- Follow-up tasks: build on `fix-t117` (dev SUB-293 and SUB-296: no false complete, flag kept); fresh @model-risk check, High only; if no High, commit, merge into `pilot-integration`, full suite + request equality. The H1 scoring gap goes to the v-next scorer (@senior-test-engineer, @model-risk).
+- Status: ACCEPTED by @user, 2026-10-23
+- Amends: D-122 (P-070 change 1 withdrawn), D-123 (P-071 withdrawn). P-070 changes 2–5 stand. Not a production approval; the T-027 veto stands.
