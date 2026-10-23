@@ -3431,3 +3431,9 @@ H1 (@ai-engineer-assistant): on 248, 250, 254 and 257, "Cooking operations: None
 H2 (@ai-engineer-assistant): 0 of 3 planted conflicts surfaced (249, 252, 257). SUB-257 shows $412k sales with no hold.
 H3 (@senior-underwriter, @senior-test-engineer): the 4 loss-run nulls are a build error. The model read every date. The files used "Term: X to Y" and "CL-" claim numbers against the Carrier C format, while the gold said "recognised".
 Resolves when: the H1 and H2 fixes are approved and built on dev with a @model-risk check (no High); a lint layout rule and a v-next scorer are frozen; a fresh 20+12 hold-out, with a look-again on gold fixes, is run and scored once, meets every gate and has planted-conflict recall of 100%. This is not a production approval.
+
+## 2026-10-23 | @head-of-underwriting | B-448 / B-458 | PROPOSAL
+To: @user
+Re: SUB-252 (pub with a fryer beside office suites): R1 (gold) or R2 (frozen code)?
+Message: The written rules do not settle it (carrier-match.md W1 columns 2 and 3 both apply; note 2 is silent). Both routes are non-carrier and safe. Three options with exact wording, effect and risk: deliverables/head-of-underwriting/B-448-SUB-252-rule-proposal.md. I recommend A: R2 stays when restaurant evidence is present, offices do not make it R1; rules text and a gold ruling note only, no code or scorer change. B would need a code change (P-###); C a scorer change (P-###). Nothing is decided; no decision written.
+Resolves when: you pick A, B or C in this chat.
