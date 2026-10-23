@@ -1811,4 +1811,5 @@ D-004 (user, 2026-10-09): Sanger & Altgelt agency pipeline. Eight steps. No auto
   - [ ] `deliverables/producer/T-119-mix.md` written before the gold; `deliverables/senior-test-engineer/T-119-plan.json`.
   - [ ] Gold first, by hand from the documents and written rules only; @model-risk look-again on every gold fix (B-457); lint PASS with the scorer in force, then the gold manifest sha256 recorded.
   - [ ] Not run and not scored until the user says so (D-020); scored once, with no code change after the gold exists.
-- Depends on: the H1 fix closing (T-118 is blocked by @model-risk, `deliverables/model-risk/T-118-recheck.md` on `fix-t117`); the v-next scorer for the suite-count topic and the M-class operations readings (D-122 follow-up); B-448.
+- Noted before the run (D-127, 2026-10-23): under v11, answers that omit the cooking slot where gold says no cooking count as misses; results list these separately.
+- Depends on (updated 2026-10-23): settled. H1 in the pipeline: no automatic "no cooking" (D-124); scorer: v11 (D-127); SUB-252-style case: rule A, R2 senior referral (D-125). Lint with v11.

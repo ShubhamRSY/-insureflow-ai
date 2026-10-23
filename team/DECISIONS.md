@@ -1402,3 +1402,25 @@ Then continue: P-066 concurrent-write tests, @pm pilot-readiness update, @model-
 - Follow-up tasks: build on `fix-t117` (dev SUB-293 and SUB-296: no false complete, flag kept); fresh @model-risk check, High only; if no High, commit, merge into `pilot-integration`, full suite + request equality. The H1 scoring gap goes to the v-next scorer (@senior-test-engineer, @model-risk).
 - Status: ACCEPTED by @user, 2026-10-23
 - Amends: D-122 (P-070 change 1 withdrawn), D-123 (P-071 withdrawn). P-070 changes 2–5 stand. Not a production approval; the T-027 veto stands.
+
+## D-125 — B-448/B-458 (SUB-252): option A, restaurant evidence → R2 senior referral wins
+- Rationale: the user chose option A in the Claude Code session on 2026-10-23, from @head-of-underwriting's proposal (`deliverables/head-of-underwriting/B-448-SUB-252-rule-proposal.md`): when a bar word stands beside restaurant evidence, R2 senior referral wins, also when a non-food second operation (offices, retail) is present. Decided by @user.
+- Dissent: none
+- Follow-up tasks: @senior-underwriter updates the written rules (carrier-match.md W1 note) and any affected dev gold, each with a note citing D-125. No code change. Published hold-out gold and scores (T-117) are not rewritten (D-020); the next hold-out (T-119) includes a SUB-252-style case under this rule.
+- Status: ACCEPTED by @user, 2026-10-23
+- Amends: closes B-448 and B-458. Not a production approval; the T-027 veto stands.
+
+## D-126 — approve change P-073 (scorer v12, H1 only)
+- Rationale: the user typed "approve change P-073" in the Claude Code session on 2026-10-23, with the text: scorer v12 reads the cooking slot correctly when the answer leaves cooking out or says "no cooking" in plain words, per operations-gold-rule.md; v11 stays frozen; lint: perfect answers 100%, every wrong answer caught, including near-miss negatives (cooking vs no cooking; "cook/stove/fry/hot food" sentences); dev re-score on SUB-127–296 with 0 model calls; @model-risk check, High only.
+- Dissent: none
+- Follow-up tasks: @senior-test-engineer builds `eval_holdout_v12.py` and its lint cases and runs the dev re-score; fresh @model-risk check; if no High, freeze code (pilot-integration commit) and v12, recorded in team/NEXT-SESSION.md.
+- Status: ACCEPTED by @user, 2026-10-23
+- Amends: D-124 (the H1 scoring gap moves to v12). v11 and all published scores stay frozen (D-020). Not a production approval; the T-027 veto stands.
+- Superseded: by D-127 (2026-10-23), P-073/v12 dropped by @user after the @model-risk BLOCK.
+
+## D-127 — P-073/v12 dropped; v11 remains the scorer
+- Rationale: the user's words in the Claude Code session on 2026-10-23: "P-073/v12 dropped by @user; v11 remains the scorer. Omitted 'no cooking' slots score as misses under v11 (conservative). The H1 scorer fix is deferred to the backlog with P-073-v12-check.md and @model-risk's 45 answers as future lint cases." Follows the @model-risk BLOCK (`deliverables/model-risk/P-073-v12-check.md`, High H1).
+- Dissent: none
+- Follow-up tasks: operations-gold-rule.md states the v11 behaviour explicitly (no scoring change); the v12 files are parked in `deliverables/backlog/P-073-v12/`, off the pipeline path; backlog B-464; T-119 notes the v11 behaviour before any file is built.
+- Status: ACCEPTED by @user, 2026-10-23
+- Amends: supersedes D-126. v11 and every published score stay frozen (D-020). Not a production approval; the T-027 veto stands.

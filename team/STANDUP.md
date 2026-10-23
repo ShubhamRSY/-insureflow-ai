@@ -2115,3 +2115,13 @@ Blocked: No.
 - Done: cause write-up for T-117 H1 and H2 in `deliverables/ai-engineer/analysis/T-117-H1-H2-cause.md`, and proposal P-070 in `deliverables/ai-engineer/proposal-P-070.md`. H1: the model drops `Cooking operations: None` on SUB-248/250/254/257 although the prompt asks for that line (`llm_extract.py:40`), and the pipeline only flags it (`check_operations`, `prepare.py:922-938`) and never completes the value. H2: the model's replies carry `conflicts: []`; the three planted disagreements are missed for three separate reasons — `_square_feet` (`prepare.py:692-718`) does not know the words the documents use ("Square footage", a `sq_ft` column), nothing compares a count across documents, and nothing reads a rating figure out of a second document. Branch `fix-t117` created from `ai-team` (53a7252).
 - Doing next: on the user's `approve change P-070`, build it here — the cooking completion, the square-feet vocabulary, the sales and suite-count conflict rules, the dev set `simulation/inbox-dev/document_conflicts/`, the workbench (D-065), the tests. No prompt, no model, no scorer: the model request stays byte-identical (zero changed requests).
 - Blocked by / need from: the user's `approve change P-070` (D-017) before any change under `underwriting_pipeline/ai/`.
+
+### 2026-10-23 — @senior-underwriter
+- Done: T-118 P-072 UI check (APPROVE, no High); D-125 written into carrier-match.md (W1, note 2, R2); dev gold scanned, no change needed.
+- Doing next: T-119 hold-out gold including a SUB-252-style R2 case, when assigned.
+- Blocked by / need from: nothing. Medium notes M1-M3 for @software-engineer/@frontend-engineer backlog.
+
+### 2026-10-23 — @senior-test-engineer
+- Done: P-073 scorer v12 built (cooking slot only), lint wrapper PASS, dev re-score (0 calls), self-checks ok, tests/pipeline 86 passed. `deliverables/senior-test-engineer/P-073-v12-as-built.md`.
+- Doing next: fix anything @model-risk finds; freeze v12 only after their check (D-126).
+- Blocked by / need from: @model-risk check; a decision on gold for other_class cards (@senior-underwriter); 30 dev files have no saved reply.

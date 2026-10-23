@@ -1,0 +1,3790 @@
+[
+ {
+  "id": "SUB-127",
+  "set": "127-173",
+  "scope": "in",
+  "ops_only": "scorer v11 stopped: SUB-127: no Scope line",
+  "v11": {
+   "operations": "miss"
+  },
+  "v12": {
+   "operations": "miss"
+  },
+  "ops_answer": "Financial advisory and tax office, 2nd floor. Clients by appointment. No inventory, no goods held for sale. No cooking.",
+  "gold_items": "business_type=office; second floor",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-128",
+  "set": "127-173",
+  "scope": "in",
+  "ops_only": "scorer v11 stopped: SUB-128: no Scope line",
+  "v11": {
+   "operations": "hit"
+  },
+  "v12": {
+   "operations": "hit"
+  },
+  "ops_answer": "Dry retail gift shop: candles, home goods, greeting cards, gift wrap. No food, no alcohol, no repackaging.",
+  "gold_items": "business_type=retail",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-129",
+  "set": "127-173",
+  "scope": "out",
+  "ops_only": "scorer v11 stopped: SUB-129: no Scope line",
+  "v11": {
+   "operations": "miss"
+  },
+  "v12": {
+   "operations": "miss"
+  }
+ },
+ {
+  "id": "SUB-130",
+  "set": "127-173",
+  "scope": "in",
+  "ops_only": "scorer v11 stopped: SUB-130: no Scope line",
+  "v11": {
+   "operations": "miss"
+  },
+  "v12": {
+   "operations": "miss"
+  },
+  "ops_answer": "Breakfast and lunch cafe, 64 seats, beer and wine only, no liquor license. Dine-in and takeout. Flat-top griddle, 2 fryers, 6-burner range, convection oven. Type I hood with UL 300 wet chemical suppression, hood cleaned 2026-07.",
+  "gold_items": "business_type=restaurant; 64 seats; beer and wine only",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-131",
+  "set": "127-173",
+  "scope": "in",
+  "ops_only": "scorer v11 stopped: SUB-131: no Scope line",
+  "v11": {
+   "operations": "miss"
+  },
+  "v12": {
+   "operations": "miss"
+  },
+  "ops_answer": "Commercial plumbing service and repair, water heater installs, small remodel work. Office and shop on premises, 2 service vans kept on site overnight. No roofing, no hot work on premises. No cooking.",
+  "gold_items": "business_type=contractor",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-132",
+  "set": "127-173",
+  "scope": "in",
+  "ops_only": "scorer v11 stopped: SUB-132: no Scope line",
+  "v11": {
+   "operations": "miss"
+  },
+  "v12": {
+   "operations": "miss"
+  },
+  "ops_answer": "Southern breakfast and lunch restaurant, 90 seats, beer and wine only, dine-in and takeout, two fryers, flat-top, 8-burner range, two convection ovens, Type I hood with UL 300 wet chemical system, serviced 2026-06",
+  "gold_items": "business_type=restaurant; 90 seats; beer and wine only",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-133",
+  "set": "127-173",
+  "scope": "in",
+  "ops_only": "scorer v11 stopped: SUB-133: no Scope line",
+  "v11": {
+   "operations": "hit"
+  },
+  "v12": {
+   "operations": "hit"
+  },
+  "ops_answer": "Residential apartments, 12 units in one two-story building, long-term leases. Occupancy 91 percent. No cooking (tenant electric ranges only).",
+  "gold_items": "business_type=habitational; 12 units",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-134",
+  "set": "127-173",
+  "scope": "in",
+  "ops_only": "scorer v11 stopped: SUB-134: no Scope line",
+  "v11": {
+   "operations": "miss"
+  },
+  "v12": {
+   "operations": "miss"
+  },
+  "ops_answer": "Glass cutting, tempering and framing for commercial storefronts. Shop and small showroom, no chemicals beyond cleaning supplies. No cooking.",
+  "gold_items": "business_type=contractor",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-135",
+  "set": "127-173",
+  "scope": "in",
+  "ops_only": "scorer v11 stopped: SUB-135: no Scope line",
+  "v11": {
+   "operations": "miss"
+  },
+  "v12": {
+   "operations": "miss"
+  },
+  "ops_answer": "Used book and thrift shop, donated goods sorted on site, sales floor and back room. No food, no alcohol.",
+  "gold_items": "business_type=retail; sorting on site",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-136",
+  "set": "127-173",
+  "scope": "in",
+  "ops_only": "scorer v11 stopped: SUB-136: no Scope line",
+  "v11": {
+   "operations": "hit"
+  },
+  "v12": {
+   "operations": "hit"
+  },
+  "ops_answer": "Mexican restaurant, 70 seats, beer and wine only, no bar, dine-in and takeout, comal and flat-top, two deep fryers, 6-burner range, Type I hood with UL 300 system, cleaned 2026-06",
+  "gold_items": "business_type=restaurant; 70 seats; beer and wine only",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-137",
+  "set": "127-173",
+  "scope": "in",
+  "ops_only": "scorer v11 stopped: SUB-137: no Scope line",
+  "v11": {
+   "operations": "miss"
+  },
+  "v12": {
+   "operations": "miss"
+  },
+  "ops_answer": "HVAC installation and service contractor. Office and warehouse on premises, trucks off site overnight, light shop work. No cooking.",
+  "gold_items": "business_type=contractor",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-138",
+  "set": "127-173",
+  "scope": "in",
+  "ops_only": "scorer v11 stopped: SUB-138: no Scope line",
+  "v11": {
+   "operations": "hit"
+  },
+  "v12": {
+   "operations": "hit"
+  },
+  "ops_answer": "Wholesale and retail of animal feed, seed and fertilizer bags. Warehouse with loading dock and a small trade counter. No cooking.",
+  "gold_items": "business_type=wholesale; business_type=retail; business_type=hazardous_goods",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-139",
+  "set": "127-173",
+  "scope": "in",
+  "ops_only": "scorer v11 stopped: SUB-139: no Scope line",
+  "v11": {
+   "operations": "hit"
+  },
+  "v12": {
+   "operations": "hit"
+  },
+  "ops_answer": "Residential apartments, 6 units in two two-story buildings, long-term leases, occupancy 83 percent, no cooking",
+  "gold_items": "business_type=habitational; 6 units",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-140",
+  "set": "127-173",
+  "scope": "out",
+  "ops_only": "scorer v11 stopped: SUB-140: no Scope line",
+  "v11": {
+   "operations": "miss"
+  },
+  "v12": {
+   "operations": "miss"
+  }
+ },
+ {
+  "id": "SUB-141",
+  "set": "127-173",
+  "scope": "in",
+  "ops_only": "scorer v11 stopped: SUB-141: no Scope line",
+  "v11": {
+   "operations": "miss"
+  },
+  "v12": {
+   "operations": "miss"
+  },
+  "ops_answer": "Full-service restaurant and bar, 180 seats, full liquor license (TABC mixed beverage permit), live music Friday and Saturday until 1 am. Dinner and weekend brunch. Wood-fired oven, charbroiler, two fryers, 8-burner range. Type I hood with UL 300 wet chemical suppression.",
+  "gold_items": "business_type=restaurant; business_type=bar_pub; 180 seats; full liquor license; live music",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-142",
+  "set": "127-173",
+  "scope": "out",
+  "ops_only": "scorer v11 stopped: SUB-142: no Scope line",
+  "v11": {
+   "operations": "miss"
+  },
+  "v12": {
+   "operations": "miss"
+  }
+ },
+ {
+  "id": "SUB-143",
+  "set": "127-173",
+  "scope": "out",
+  "ops_only": "scorer v11 stopped: SUB-143: no Scope line",
+  "v11": {
+   "operations": "miss"
+  },
+  "v12": {
+   "operations": "miss"
+  }
+ },
+ {
+  "id": "SUB-144",
+  "set": "127-173",
+  "scope": "out",
+  "ops_only": "scorer v11 stopped: SUB-144: no Scope line",
+  "v11": {
+   "operations": "miss"
+  },
+  "v12": {
+   "operations": "miss"
+  }
+ },
+ {
+  "id": "SUB-145",
+  "set": "127-173",
+  "scope": "out",
+  "ops_only": "scorer v11 stopped: SUB-145: no Scope line",
+  "v11": {
+   "operations": "miss"
+  },
+  "v12": {
+   "operations": "miss"
+  }
+ },
+ {
+  "id": "SUB-146",
+  "set": "127-173",
+  "scope": "in",
+  "ops_only": "scorer v11 stopped: SUB-146: no Scope line",
+  "v11": {
+   "operations": "miss"
+  },
+  "v12": {
+   "operations": "miss"
+  },
+  "ops_answer": "Full-service restaurant and bar, 180 seats, full liquor license (TABC mixed beverage permit), live music Friday and Saturday until 1 am. Dinner and weekend brunch. Wood-fired oven, charbroiler, two fryers, 8-burner range. Type I hood with UL 300 wet chemical suppression.",
+  "gold_items": "business_type=restaurant; business_type=bar_pub; 180 seats; full liquor license; live music",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-147",
+  "set": "127-173",
+  "scope": "in",
+  "ops_only": "scorer v11 stopped: SUB-147: no Scope line",
+  "v11": {
+   "operations": "hit"
+  },
+  "v12": {
+   "operations": "hit"
+  },
+  "ops_answer": "CPA tax preparation and bookkeeping office. Clients by appointment. No inventory, no goods held for sale. No cooking.",
+  "gold_items": "business_type=office",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-148",
+  "set": "127-173",
+  "scope": "in",
+  "ops_only": "scorer v11 stopped: SUB-148: no Scope line",
+  "v11": {
+   "operations": "miss"
+  },
+  "v12": {
+   "operations": "miss"
+  },
+  "ops_answer": "full-service restaurant, lunch and dinner, 140 seats, beer and wine only, no liquor license, weekend brunch, gas char-broiler (36 in), two gas fryers (50 lb each), flat-top griddle, 6-burner range, 2-deck convection oven, Type I hood over all cooking lines with UL 300 wet chemical suppression, hood and duct cleaned quarterly by licensed vendor, last cleaned 2026-08-20",
+  "gold_items": "business_type=restaurant; 140 seats; beer and wine only; Type I hood; UL 300",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-149",
+  "set": "127-173",
+  "scope": "in",
+  "ops_only": "scorer v11 stopped: SUB-149: no Scope line",
+  "v11": {
+   "operations": "hit"
+  },
+  "v12": {
+   "operations": "hit"
+  },
+  "ops_answer": "residential apartment complex, 12 units in one two-story building, long-term leases, no cooking (tenant electric ranges only)",
+  "gold_items": "business_type=habitational; 12 units",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-150",
+  "set": "127-173",
+  "scope": "in",
+  "ops_only": "scorer v11 stopped: SUB-150: no Scope line",
+  "v11": {
+   "operations": "miss"
+  },
+  "v12": {
+   "operations": "miss"
+  },
+  "ops_answer": "light wholesale of hardware and janitorial supplies to contractors. Warehouse with a small counter for trade customers. No manufacturing, no repackaging. No cooking.",
+  "gold_items": "business_type=wholesale; no manufacturing; no repackaging",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-151",
+  "set": "127-173",
+  "scope": "in",
+  "ops_only": "scorer v11 stopped: SUB-151: no Scope line",
+  "v11": {
+   "operations": "miss"
+  },
+  "v12": {
+   "operations": "miss"
+  },
+  "ops_answer": "interior drywall hanging and finishing, trim carpentry, acoustic ceilings. Commercial and residential remodel. Office and tool shop on site, no hot work on premises. No cooking.",
+  "gold_items": "business_type=contractor",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-152",
+  "set": "127-173",
+  "scope": "in",
+  "ops_only": "scorer v11 stopped: SUB-152: no Scope line",
+  "v11": {
+   "operations": "hit"
+  },
+  "v12": {
+   "operations": "hit"
+  },
+  "ops_answer": "retail store selling outdoor gear and apparel. Sales floor and one storage room. No firearms or ammunition sold. Cooking operations: None",
+  "gold_items": "business_type=retail",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-153",
+  "set": "127-173",
+  "scope": "in",
+  "ops_only": "scorer v11 stopped: SUB-153: no Scope line",
+  "v11": {
+   "operations": "miss"
+  },
+  "v12": {
+   "operations": "miss"
+  },
+  "ops_answer": "Dry retail sale of stationery, greeting cards and office supplies to walk-in customers. Light wholesale distribution of office products to local businesses (no drop shipping of hazardous materials). Admin office on second floor.",
+  "gold_items": "business_type=retail; business_type=wholesale",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-154",
+  "set": "127-173",
+  "scope": "in",
+  "ops_only": "scorer v11 stopped: SUB-154: no Scope line",
+  "v11": {
+   "operations": "miss"
+  },
+  "v12": {
+   "operations": "miss"
+  },
+  "ops_answer": "Office, 2nd floor. Clients by appointment. No inventory, no goods held for sale. No cooking.",
+  "gold_items": "business_type=office; second floor",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-155",
+  "set": "127-173",
+  "scope": "in",
+  "ops_only": "scorer v11 stopped: SUB-155: no Scope line",
+  "v11": {
+   "operations": "hit"
+  },
+  "v12": {
+   "operations": "hit"
+  },
+  "ops_answer": "Dry retail storefront, ground floor, clothing and dry goods. No food, no alcohol, no repackaging.",
+  "gold_items": "business_type=retail; ground floor; no alcohol; no repackaging",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-156",
+  "set": "127-173",
+  "scope": "in",
+  "ops_only": "scorer v11 stopped: SUB-156: no Scope line",
+  "v11": {
+   "operations": "hit"
+  },
+  "v12": {
+   "operations": "hit"
+  },
+  "ops_answer": "Restaurant. Breakfast and lunch counter service, 48 seats, dine-in and takeout. No alcohol of any kind. Flat-top, 2 fryers, 4-burner range, Type I hood with UL 300 suppression, hood cleaned 2026-07",
+  "gold_items": "business_type=restaurant; no alcohol; 48 seats; flat-top; 2 fryers; 4-burner range; Type I hood; UL 300",
+  "cooking_v11": [
+   "full",
+   true,
+   "full"
+  ],
+  "cooking_v12": [
+   "full",
+   true,
+   "full"
+  ]
+ },
+ {
+  "id": "SUB-157",
+  "set": "127-173",
+  "scope": "in",
+  "ops_only": "scorer v11 stopped: SUB-157: no Scope line",
+  "v11": {
+   "operations": "hit"
+  },
+  "v12": {
+   "operations": "hit"
+  },
+  "ops_answer": "Restaurant and bar. Full liquor (TABC mixed beverage permit), 140 seats, live music Thursday to Sunday until midnight. Dinner service and weekend brunch. Charbroiler, 2 fryers, flat-top, 8-burner range, pizza oven. Type I hood with UL 300 system, serviced 2026-08.",
+  "gold_items": "business_type=restaurant; business_type=bar_pub; full liquor license; 140 seats; charbroiler; 2 fryers; flat-top; 8-burner range; pizza oven; live music; Type I hood; UL 300",
+  "cooking_v11": [
+   "full",
+   true,
+   "full"
+  ],
+  "cooking_v12": [
+   "full",
+   true,
+   "full"
+  ]
+ },
+ {
+  "id": "SUB-158",
+  "set": "127-173",
+  "scope": "in",
+  "ops_only": "scorer v11 stopped: SUB-158: no Scope line",
+  "v11": {
+   "operations": "hit"
+  },
+  "v12": {
+   "operations": "hit"
+  },
+  "ops_answer": "Residential apartments, 16 units in two two-story buildings, long-term leases. Occupancy 93 percent. No cooking (tenant electric ranges only).",
+  "gold_items": "business_type=habitational; 16 units; no cooking operations",
+  "cooking_v11": [
+   "none",
+   true,
+   "none"
+  ],
+  "cooking_v12": [
+   "none",
+   true,
+   "none"
+  ]
+ },
+ {
+  "id": "SUB-159",
+  "set": "127-173",
+  "scope": "in",
+  "ops_only": "scorer v11 stopped: SUB-159: no Scope line",
+  "v11": {
+   "operations": "hit"
+  },
+  "v12": {
+   "operations": "hit"
+  },
+  "ops_answer": "Bakery and cafe. Pastries, sandwiches, coffee. 30 seats, dine-in and takeout. No alcohol sold. Deck oven, 2 convection ovens, 4-burner range, flat-top, Type I hood with UL 300",
+  "gold_items": "business_type=restaurant; no alcohol; 30 seats; deck oven; 4-burner range; flat-top; Type I hood; UL 300",
+  "cooking_v11": [
+   "full",
+   true,
+   "full"
+  ],
+  "cooking_v12": [
+   "full",
+   true,
+   "full"
+  ]
+ },
+ {
+  "id": "SUB-160",
+  "set": "127-173",
+  "scope": "in",
+  "ops_only": "scorer v11 stopped: SUB-160: no Scope line",
+  "v11": {
+   "operations": "hit"
+  },
+  "v12": {
+   "operations": "hit"
+  },
+  "ops_answer": "Residential apartments, 8 units in two two-story buildings, long-term leases. Occupancy 88 percent. No cooking (tenant electric ranges only).",
+  "gold_items": "business_type=habitational; 8 units; no cooking operations",
+  "cooking_v11": [
+   "none",
+   true,
+   "none"
+  ],
+  "cooking_v12": [
+   "none",
+   true,
+   "none"
+  ]
+ },
+ {
+  "id": "SUB-161",
+  "set": "127-173",
+  "scope": "in",
+  "ops_only": "scorer v11 stopped: SUB-161: no Scope line",
+  "v11": {
+   "operations": "miss"
+  },
+  "v12": {
+   "operations": "miss"
+  },
+  "ops_answer": "Light wholesale of home goods, kitchenware and small hand tools to retail stores. Goods are not hazardous: no flammable liquids, no aerosols, no pesticides, no batteries. Warehouse with loading dock, no repackaging. No cooking.",
+  "gold_items": "business_type=wholesale; no flammable liquids; no repackaging",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-162",
+  "set": "127-173",
+  "scope": "in",
+  "ops_only": "scorer v11 stopped: SUB-162: no Scope line",
+  "v11": {
+   "operations": "hit"
+  },
+  "v12": {
+   "operations": "hit"
+  },
+  "ops_answer": "Office suite. Clients by appointment. No inventory. No cooking.",
+  "gold_items": "business_type=office",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-163",
+  "set": "127-173",
+  "scope": "out",
+  "ops_only": "scorer v11 stopped: SUB-163: no Scope line",
+  "v11": {
+   "operations": "miss"
+  },
+  "v12": {
+   "operations": "miss"
+  }
+ },
+ {
+  "id": "SUB-164",
+  "set": "127-173",
+  "scope": "in",
+  "ops_only": "scorer v11 stopped: SUB-164: no Scope line",
+  "v11": {
+   "operations": "hit"
+  },
+  "v12": {
+   "operations": "hit"
+  },
+  "ops_answer": "Roofing contractor, residential and commercial re-roofing and repair. Shop and yard on premises, materials stored outside under tarps, torch-down work on some jobs. No cooking.",
+  "gold_items": "business_type=contractor; torch-down",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-165",
+  "set": "127-173",
+  "scope": "in",
+  "ops_only": "scorer v11 stopped: SUB-165: no Scope line",
+  "v11": {
+   "operations": "hit"
+  },
+  "v12": {
+   "operations": "hit"
+  },
+  "ops_answer": "Retail sale of consumer fireworks (aerial, ground and cakes), storefront and seasonal tent. Fireworks inventory stored on premises, including in a trailer on the lot. No cooking.",
+  "gold_items": "business_type=retail; business_type=fireworks_explosives; fireworks",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-166",
+  "set": "127-173",
+  "scope": "in",
+  "ops_only": "scorer v11 stopped: SUB-166: no Scope line",
+  "v11": {
+   "operations": "hit"
+  },
+  "v12": {
+   "operations": "hit"
+  },
+  "ops_answer": "Owner-occupied two-story office building. Insured occupies first floor for its own office, two tenants on second floor, office use only. No retail, no food. No cooking.",
+  "gold_items": "business_type=office",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-167",
+  "set": "127-173",
+  "scope": "in",
+  "ops_only": "scorer v11 stopped: SUB-167: no Scope line",
+  "v11": {
+   "operations": "hit"
+  },
+  "v12": {
+   "operations": "hit"
+  },
+  "ops_answer": "Residential apartments, 24 units in three two-story buildings, long-term leases, occupancy 90 percent, no cooking (tenant electric ranges only)",
+  "gold_items": "business_type=habitational; 24 units; no cooking operations",
+  "cooking_v11": [
+   "none",
+   true,
+   "none"
+  ],
+  "cooking_v12": [
+   "none",
+   true,
+   "none"
+  ]
+ },
+ {
+  "id": "SUB-168",
+  "set": "127-173",
+  "scope": "out",
+  "ops_only": "scorer v11 stopped: SUB-168: no Scope line",
+  "v11": {
+   "operations": "miss"
+  },
+  "v12": {
+   "operations": "miss"
+  }
+ },
+ {
+  "id": "SUB-169",
+  "set": "127-173",
+  "scope": "out",
+  "ops_only": "scorer v11 stopped: SUB-169: no Scope line",
+  "v11": {
+   "operations": "miss"
+  },
+  "v12": {
+   "operations": "miss"
+  }
+ },
+ {
+  "id": "SUB-170",
+  "set": "127-173",
+  "scope": "out",
+  "ops_only": "scorer v11 stopped: SUB-170: no Scope line",
+  "v11": {
+   "operations": "miss"
+  },
+  "v12": {
+   "operations": "miss"
+  }
+ },
+ {
+  "id": "SUB-171",
+  "set": "127-173",
+  "scope": "in",
+  "ops_only": "scorer v11 stopped: SUB-171: no Scope line",
+  "v11": {
+   "operations": "hit"
+  },
+  "v12": {
+   "operations": "hit"
+  },
+  "ops_answer": "Restaurant and bar. Full liquor (TABC mixed beverage permit), 140 seats, live music Thursday to Sunday until midnight. Dinner service and weekend brunch. Charbroiler, 2 fryers, flat-top, 8-burner range, pizza oven. Type I hood with UL 300 system, serviced 2026-08.",
+  "gold_items": "business_type=restaurant; business_type=bar_pub; full liquor license; 140 seats; charbroiler; 2 fryers; flat-top; 8-burner range; pizza oven; live music; Type I hood; UL 300",
+  "cooking_v11": [
+   "full",
+   true,
+   "full"
+  ],
+  "cooking_v12": [
+   "full",
+   true,
+   "full"
+  ]
+ },
+ {
+  "id": "SUB-172",
+  "set": "127-173",
+  "scope": "out",
+  "ops_only": "scorer v11 stopped: SUB-172: no Scope line",
+  "v11": {
+   "operations": "miss"
+  },
+  "v12": {
+   "operations": "miss"
+  }
+ },
+ {
+  "id": "SUB-173",
+  "set": "127-173",
+  "scope": "in",
+  "ops_only": "scorer v11 stopped: SUB-173: no Scope line",
+  "v11": {
+   "operations": "miss"
+  },
+  "v12": {
+   "operations": "miss"
+  },
+  "ops_answer": "Counter service. Tacos, burritos, quesadillas and agua fresca, 35 seats, dine-in and takeout. No liquor.",
+  "gold_items": "business_type=restaurant; no liquor; 35 seats",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-174",
+  "set": "174-205",
+  "scope": "out",
+  "ops_only": "scorer v11 stopped: SUB-174: no \"- Loss runs valued as of: <YYYY-MM-DD>\" line; gold expects a loss-r",
+  "v11": {
+   "operations": "miss"
+  },
+  "v12": {
+   "operations": "miss"
+  }
+ },
+ {
+  "id": "SUB-175",
+  "set": "174-205",
+  "scope": "out",
+  "ops_only": "scorer v11 stopped: SUB-175: no \"- Loss runs valued as of: <YYYY-MM-DD>\" line; gold expects a loss-r",
+  "v11": {
+   "operations": "miss"
+  },
+  "v12": {
+   "operations": "miss"
+  }
+ },
+ {
+  "id": "SUB-176",
+  "set": "174-205",
+  "scope": "in",
+  "v11": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "v12": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "no_saved_reply": true
+ },
+ {
+  "id": "SUB-177",
+  "set": "174-205",
+  "scope": "in",
+  "v11": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "v12": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "no_saved_reply": true
+ },
+ {
+  "id": "SUB-178",
+  "set": "174-205",
+  "scope": "in",
+  "v11": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "v12": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "no_saved_reply": true
+ },
+ {
+  "id": "SUB-179",
+  "set": "174-205",
+  "scope": "out",
+  "ops_only": "scorer v11 stopped: SUB-179: no \"- Loss runs valued as of: <YYYY-MM-DD>\" line; gold expects a loss-r",
+  "v11": {
+   "operations": "miss"
+  },
+  "v12": {
+   "operations": "miss"
+  }
+ },
+ {
+  "id": "SUB-180",
+  "set": "174-205",
+  "scope": "in",
+  "v11": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "v12": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "no_saved_reply": true
+ },
+ {
+  "id": "SUB-181",
+  "set": "174-205",
+  "scope": "in",
+  "v11": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "v12": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "no_saved_reply": true
+ },
+ {
+  "id": "SUB-182",
+  "set": "174-205",
+  "scope": "out",
+  "ops_only": "scorer v11 stopped: SUB-182: no \"- Loss runs valued as of: <YYYY-MM-DD>\" line; gold expects a loss-r",
+  "v11": {
+   "operations": "miss"
+  },
+  "v12": {
+   "operations": "miss"
+  }
+ },
+ {
+  "id": "SUB-183",
+  "set": "174-205",
+  "scope": "out",
+  "ops_only": "scorer v11 stopped: SUB-183: no \"- Loss runs valued as of: <YYYY-MM-DD>\" line; gold expects a loss-r",
+  "v11": {
+   "operations": "miss"
+  },
+  "v12": {
+   "operations": "miss"
+  }
+ },
+ {
+  "id": "SUB-184",
+  "set": "174-205",
+  "scope": "out",
+  "ops_only": "scorer v11 stopped: SUB-184: no \"- Loss runs valued as of: <YYYY-MM-DD>\" line; gold expects a loss-r",
+  "v11": {
+   "operations": "miss"
+  },
+  "v12": {
+   "operations": "miss"
+  }
+ },
+ {
+  "id": "SUB-185",
+  "set": "174-205",
+  "scope": "out",
+  "ops_only": "scorer v11 stopped: SUB-185: no \"- Loss runs valued as of: <YYYY-MM-DD>\" line; gold expects a loss-r",
+  "v11": {
+   "operations": "miss"
+  },
+  "v12": {
+   "operations": "miss"
+  }
+ },
+ {
+  "id": "SUB-186",
+  "set": "174-205",
+  "scope": "out",
+  "ops_only": "scorer v11 stopped: SUB-186: no \"- Loss runs valued as of: <YYYY-MM-DD>\" line; gold expects a loss-r",
+  "v11": {
+   "operations": "miss"
+  },
+  "v12": {
+   "operations": "miss"
+  }
+ },
+ {
+  "id": "SUB-187",
+  "set": "174-205",
+  "scope": "out",
+  "ops_only": "scorer v11 stopped: SUB-187: no \"- Loss runs valued as of: <YYYY-MM-DD>\" line; gold expects a loss-r",
+  "v11": {
+   "operations": "miss"
+  },
+  "v12": {
+   "operations": "miss"
+  }
+ },
+ {
+  "id": "SUB-188",
+  "set": "174-205",
+  "scope": "out",
+  "v11": {},
+  "v12": {}
+ },
+ {
+  "id": "SUB-189",
+  "set": "174-205",
+  "scope": "out",
+  "v11": {},
+  "v12": {}
+ },
+ {
+  "id": "SUB-190",
+  "set": "174-205",
+  "scope": "out",
+  "v11": {},
+  "v12": {}
+ },
+ {
+  "id": "SUB-191",
+  "set": "174-205",
+  "scope": "out",
+  "v11": {},
+  "v12": {}
+ },
+ {
+  "id": "SUB-192",
+  "set": "174-205",
+  "scope": "out",
+  "v11": {},
+  "v12": {}
+ },
+ {
+  "id": "SUB-193",
+  "set": "174-205",
+  "scope": "out",
+  "v11": {},
+  "v12": {}
+ },
+ {
+  "id": "SUB-194",
+  "set": "174-205",
+  "scope": "out",
+  "v11": {},
+  "v12": {}
+ },
+ {
+  "id": "SUB-195",
+  "set": "174-205",
+  "scope": "out",
+  "v11": {},
+  "v12": {}
+ },
+ {
+  "id": "SUB-196",
+  "set": "174-205",
+  "scope": "out",
+  "v11": {},
+  "v12": {}
+ },
+ {
+  "id": "SUB-197",
+  "set": "174-205",
+  "scope": "out",
+  "v11": {},
+  "v12": {}
+ },
+ {
+  "id": "SUB-198",
+  "set": "174-205",
+  "scope": "out",
+  "v11": {},
+  "v12": {}
+ },
+ {
+  "id": "SUB-199",
+  "set": "174-205",
+  "scope": "out",
+  "v11": {},
+  "v12": {}
+ },
+ {
+  "id": "SUB-200",
+  "set": "174-205",
+  "scope": "in",
+  "v11": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "v12": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "no_saved_reply": true
+ },
+ {
+  "id": "SUB-201",
+  "set": "174-205",
+  "scope": "in",
+  "v11": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "v12": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "no_saved_reply": true
+ },
+ {
+  "id": "SUB-202",
+  "set": "174-205",
+  "scope": "in",
+  "v11": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "v12": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "no_saved_reply": true
+ },
+ {
+  "id": "SUB-203",
+  "set": "174-205",
+  "scope": "in",
+  "v11": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "v12": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "no_saved_reply": true
+ },
+ {
+  "id": "SUB-204",
+  "set": "174-205",
+  "scope": "in",
+  "v11": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "v12": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "no_saved_reply": true
+ },
+ {
+  "id": "SUB-205",
+  "set": "174-205",
+  "scope": "in",
+  "v11": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "v12": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "no_saved_reply": true
+ },
+ {
+  "id": "SUB-206",
+  "set": "206-237",
+  "scope": "in",
+  "v11": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "miss",
+   "route": "miss"
+  },
+  "v12": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "miss",
+   "route": "miss"
+  },
+  "ops_answer": "Owns and leases office suites to tenants; 3-story office building, 22 suites, common lobby and restrooms. Building owner/lessor only, no tenant operations. No tenant cooking.",
+  "gold_items": "business_type=office",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-207",
+  "set": "206-237",
+  "scope": "in",
+  "v11": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "miss",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "miss",
+   "route": "hit"
+  },
+  "v12": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "miss",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "miss",
+   "route": "hit"
+  },
+  "ops_answer": "Deli and sub shop (sandwich shop), counter service, cold prep and assembly only. No cooking, no fryer, no hood. Retail seating for 24.",
+  "gold_items": "business_type=restaurant; no cooking; no fryer; no hood; 24 seats",
+  "cooking_v11": [
+   "none",
+   false,
+   "light"
+  ],
+  "cooking_v12": [
+   "none",
+   false,
+   "light"
+  ]
+ },
+ {
+  "id": "SUB-208",
+  "set": "206-237",
+  "scope": "in",
+  "v11": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "miss",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "hit",
+   "route": "hit"
+  },
+  "v12": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "miss",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "hit",
+   "route": "hit"
+  },
+  "ops_answer": "Wholesale distributor of craft and hobby supplies and small-package novelties. Sells to retail shops only. Warehouse shelving and a small office. No manufacturing, no retail walk-in. No cooking.",
+  "gold_items": "business_type=wholesale; no manufacturing",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-209",
+  "set": "206-237",
+  "scope": "in",
+  "v11": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "not_credited",
+   "conflict": "miss",
+   "status": "hit",
+   "route": "hit"
+  },
+  "v12": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "not_credited",
+   "conflict": "miss",
+   "status": "hit",
+   "route": "hit"
+  },
+  "ops_answer": "Concrete flatwork contractor: driveways, patios, sidewalks and small commercial slabs. 12 employees; approximately 25% of work subcontracted to other concrete crews. No roofing, no demolition, no structural. No cooking.",
+  "gold_items": "business_type=contractor",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-210",
+  "set": "206-237",
+  "scope": "in",
+  "v11": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "hit",
+   "route": "hit"
+  },
+  "v12": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "hit",
+   "route": "hit"
+  },
+  "ops_answer": "Residential apartments, 14 units in 2 two-story garden buildings, long-term leases. On-site part-time manager. No short-term rentals. Tenant electric ranges only.",
+  "gold_items": "business_type=habitational; 14 units",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-211",
+  "set": "206-237",
+  "scope": "in",
+  "v11": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "not_credited",
+   "conflict": "miss",
+   "status": "hit",
+   "route": "hit"
+  },
+  "v12": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "not_credited",
+   "conflict": "miss",
+   "status": "hit",
+   "route": "hit"
+  },
+  "ops_answer": "Full-service restaurant: mesquite grill and offset smoker with Type I hood and ansul system, 96 seats. Full bar (beer, wine, liquor). Closes at 11 p.m. No dancing or late-night entertainment. Cooking operations: Mesquite grill and smoker, Type I hood and ansul",
+  "gold_items": "business_type=restaurant; business_type=bar_pub; grill; Type I hood; 96 seats; full liquor; closes 11 p.m.; no dancing",
+  "cooking_v11": [
+   "full",
+   true,
+   "full"
+  ],
+  "cooking_v12": [
+   "full",
+   true,
+   "full"
+  ]
+ },
+ {
+  "id": "SUB-212",
+  "set": "206-237",
+  "scope": "in",
+  "v11": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "hit",
+   "route": "hit"
+  },
+  "v12": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "hit",
+   "route": "hit"
+  },
+  "ops_answer": "Interior finish carpentry and cabinet installation, residential and light commercial. 6 employees in 3 crews. No roofing, no structural, no demolition, no exterior work above 2 stories. No cooking.",
+  "gold_items": "business_type=contractor",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-213",
+  "set": "206-237",
+  "scope": "in",
+  "v11": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "miss",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "miss",
+   "route": "miss"
+  },
+  "v12": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "miss",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "miss",
+   "route": "miss"
+  },
+  "ops_answer": "Owns and leases a single-story office building; 9 suites leased to small professional tenants (insurance, accounting, therapy). Office building lessor only. No tenant cooking, no retail.",
+  "gold_items": "business_type=office",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-214",
+  "set": "206-237",
+  "scope": "in",
+  "v11": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "miss",
+   "loss_runs": "hit",
+   "conflict": "miss",
+   "status": "hit",
+   "route": "hit"
+  },
+  "v12": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "miss",
+   "loss_runs": "hit",
+   "conflict": "miss",
+   "status": "hit",
+   "route": "hit"
+  },
+  "ops_answer": "Retail store, outdoor gear, apparel and footwear. No repair, no fuel, no firearms, no rentals.",
+  "gold_items": "business_type=retail",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-215",
+  "set": "206-237",
+  "scope": "in",
+  "v11": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "miss",
+   "route": "hit"
+  },
+  "v12": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "miss",
+   "route": "hit"
+  },
+  "ops_answer": "Deli and sandwich shop with a small grocery/market section (canned and dry goods, no meat counter). Cold prep and assembly only, no cooking, no fryer, no hood. 6 tables.",
+  "gold_items": "business_type=restaurant; business_type=retail; no cooking; no fryer; no hood",
+  "cooking_v11": [
+   "none",
+   true,
+   "none"
+  ],
+  "cooking_v12": [
+   "none",
+   true,
+   "none"
+  ]
+ },
+ {
+  "id": "SUB-216",
+  "set": "206-237",
+  "scope": "in",
+  "v11": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "miss",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "miss",
+   "status": "hit",
+   "route": "hit"
+  },
+  "v12": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "miss",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "miss",
+   "status": "hit",
+   "route": "hit"
+  },
+  "ops_answer": "Wholesale distributor of paper and packaging supplies to restaurants and offices. Warehouse racking and a small office. No manufacturing. No cooking.",
+  "gold_items": "business_type=wholesale; no manufacturing",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-217",
+  "set": "206-237",
+  "scope": "in",
+  "v11": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "hit",
+   "route": "hit"
+  },
+  "v12": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "hit",
+   "route": "hit"
+  },
+  "ops_answer": "Residential apartments, 10 units in 2 two-story wood frame buildings, long-term leases. On-site manager unit. No short-term rentals. Tenant electric ranges only.",
+  "gold_items": "business_type=habitational; 10 units",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-218",
+  "set": "206-237",
+  "scope": "in",
+  "v11": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "miss",
+   "route": "hit"
+  },
+  "v12": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "miss",
+   "route": "hit"
+  },
+  "ops_answer": "Refrigerated cold storage warehouse for frozen and chilled goods, serving food distributors. Ammonia refrigeration plant (2 compressors), monitored 24/7. Storage only, no processing or packaging. No cooking.",
+  "gold_items": "business_type=cold_storage",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-219",
+  "set": "206-237",
+  "scope": "in",
+  "v11": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "miss",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "miss",
+   "status": "hit",
+   "route": "hit"
+  },
+  "v12": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "miss",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "miss",
+   "status": "hit",
+   "route": "hit"
+  },
+  "ops_answer": "Light manufacturing: blending and packaging of industrial paints and solvent-based coatings, small batch. No bulk storage above ground; flammable liquids in a rated cabinet, max 55 gal per batch. Small office. No cooking.",
+  "gold_items": "business_type=hazardous_goods; business_type=other_listed; flammable liquids",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-220",
+  "set": "206-237",
+  "scope": "in",
+  "v11": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "hit",
+   "route": "hit"
+  },
+  "v12": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "hit",
+   "route": "hit"
+  },
+  "ops_answer": "Fast-casual Chinese restaurant: wok line with Type I hood and ansul, takeout and limited seating for 18. No bar, no alcohol. Wok range, Type I hood and ansul",
+  "gold_items": "business_type=restaurant; wok; Type I hood; 18 seats; no alcohol",
+  "cooking_v11": [
+   "full",
+   true,
+   "full"
+  ],
+  "cooking_v12": [
+   "full",
+   true,
+   "full"
+  ]
+ },
+ {
+  "id": "SUB-221",
+  "set": "206-237",
+  "scope": "in",
+  "v11": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "hit",
+   "route": "hit"
+  },
+  "v12": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "hit",
+   "route": "hit"
+  },
+  "ops_answer": "Small retail strip center, 6 units, currently 100% vacant (last tenant vacated June 2026). Building owner. No contents, no business income. Owner is marketing the space. No cooking.",
+  "gold_items": "business_type=retail; business_type=vacant; no cooking",
+  "cooking_v11": [
+   "none",
+   true,
+   "none"
+  ],
+  "cooking_v12": [
+   "none",
+   true,
+   "none"
+  ]
+ },
+ {
+  "id": "SUB-222",
+  "set": "206-237",
+  "scope": "in",
+  "v11": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "hit",
+   "route": "hit"
+  },
+  "v12": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "hit",
+   "route": "hit"
+  },
+  "ops_answer": "Nightclub open until 2:00 a.m.: full liquor bar, dance floor and DJ booth, bottle service, cover charge at the door. Capacity 350, 21+ only. No cooking (bar snacks only).",
+  "gold_items": "business_type=lounge_nightclub; business_type=bar_pub; open until 2:00 a.m.; full liquor; dance floor; DJ; capacity 350; no cooking",
+  "cooking_v11": [
+   "none",
+   true,
+   "none"
+  ],
+  "cooking_v12": [
+   "none",
+   true,
+   "none"
+  ]
+ },
+ {
+  "id": "SUB-223",
+  "set": "206-237",
+  "scope": "in",
+  "v11": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "hit",
+   "route": "hit"
+  },
+  "v12": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "hit",
+   "route": "hit"
+  },
+  "ops_answer": "Residential apartments, 12 units in a single two-story wood frame building, long-term leases, on-site manager unit. No short-term rentals, no commercial tenants. Tenant electric ranges only.",
+  "gold_items": "business_type=habitational; 12 units",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-224",
+  "set": "206-237",
+  "scope": "in",
+  "v11": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "hit",
+   "route": "hit"
+  },
+  "v12": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "hit",
+   "route": "hit"
+  },
+  "ops_answer": "Residential apartments, 10 units in 2 two-story wood frame buildings, long-term leases. On-site manager unit. No short-term rentals. Tenant electric ranges only.",
+  "gold_items": "business_type=habitational; 10 units",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-225",
+  "set": "206-237",
+  "scope": "in",
+  "v11": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "not_credited",
+   "conflict": "hit",
+   "status": "hit",
+   "route": "hit"
+  },
+  "v12": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "not_credited",
+   "conflict": "hit",
+   "status": "hit",
+   "route": "hit"
+  },
+  "ops_answer": "Lounge and bar with full liquor license, open until 2:00 a.m. DJ and small dance floor on weekends. 21+. No food service beyond bar snacks. No kitchen.",
+  "gold_items": "business_type=lounge_nightclub; business_type=bar_pub; full liquor license; open until 2:00 a.m.; DJ; dance floor; no cooking",
+  "cooking_v11": [
+   "none",
+   true,
+   "none"
+  ],
+  "cooking_v12": [
+   "none",
+   true,
+   "none"
+  ]
+ },
+ {
+  "id": "SUB-226",
+  "set": "206-237",
+  "scope": "out",
+  "v11": {},
+  "v12": {}
+ },
+ {
+  "id": "SUB-227",
+  "set": "206-237",
+  "scope": "out",
+  "v11": {},
+  "v12": {}
+ },
+ {
+  "id": "SUB-228",
+  "set": "206-237",
+  "scope": "out",
+  "v11": {},
+  "v12": {}
+ },
+ {
+  "id": "SUB-229",
+  "set": "206-237",
+  "scope": "out",
+  "v11": {},
+  "v12": {}
+ },
+ {
+  "id": "SUB-230",
+  "set": "206-237",
+  "scope": "out",
+  "v11": {},
+  "v12": {}
+ },
+ {
+  "id": "SUB-231",
+  "set": "206-237",
+  "scope": "out",
+  "v11": {},
+  "v12": {}
+ },
+ {
+  "id": "SUB-232",
+  "set": "206-237",
+  "scope": "out",
+  "v11": {},
+  "v12": {}
+ },
+ {
+  "id": "SUB-233",
+  "set": "206-237",
+  "scope": "out",
+  "v11": {},
+  "v12": {}
+ },
+ {
+  "id": "SUB-234",
+  "set": "206-237",
+  "scope": "out",
+  "v11": {},
+  "v12": {}
+ },
+ {
+  "id": "SUB-235",
+  "set": "206-237",
+  "scope": "out",
+  "v11": {},
+  "v12": {}
+ },
+ {
+  "id": "SUB-236",
+  "set": "206-237",
+  "scope": "out",
+  "v11": {},
+  "v12": {}
+ },
+ {
+  "id": "SUB-237",
+  "set": "206-237",
+  "scope": "out",
+  "v11": {},
+  "v12": {}
+ },
+ {
+  "id": "SUB-238",
+  "set": "238-269",
+  "scope": "in",
+  "v11": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "not_credited",
+   "conflict": "hit",
+   "status": "hit",
+   "route": "hit"
+  },
+  "v12": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "not_credited",
+   "conflict": "hit",
+   "status": "hit",
+   "route": "hit"
+  },
+  "ops_answer": "Nightclub, DJ and dance floor, bar service until 2 am, full liquor license, no kitchen, prepackaged snacks only",
+  "gold_items": "business_type=lounge_nightclub; business_type=bar_pub; full liquor; open until 2 am Thu-Sat; DJ; dance floor; no cooking",
+  "cooking_v11": [
+   "none",
+   true,
+   "none"
+  ],
+  "cooking_v12": [
+   "none",
+   true,
+   "none"
+  ]
+ },
+ {
+  "id": "SUB-239",
+  "set": "238-269",
+  "scope": "in",
+  "v11": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "miss",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "hit",
+   "route": "hit"
+  },
+  "v12": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "miss",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "hit",
+   "route": "hit"
+  },
+  "ops_answer": "Cocktail lounge, full liquor, live music Fri and Sat, closes around midnight, countertop oven, frozen pizza only",
+  "gold_items": "business_type=lounge_nightclub; business_type=bar_pub; full liquor; live music Fri and Sat",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-240",
+  "set": "238-269",
+  "scope": "in",
+  "v11": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "hit",
+   "route": "hit"
+  },
+  "v12": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "hit",
+   "route": "hit"
+  },
+  "ops_answer": "Full-service Italian restaurant, beer and wine, 60 seats, wood-fired oven, fryer, flat-top, hood with suppression",
+  "gold_items": "business_type=restaurant; beer and wine only; 60 seats; wood-fired oven; fryer; flat-top; hood with suppression",
+  "cooking_v11": [
+   "full",
+   true,
+   "full"
+  ],
+  "cooking_v12": [
+   "full",
+   true,
+   "full"
+  ]
+ },
+ {
+  "id": "SUB-241",
+  "set": "238-269",
+  "scope": "in",
+  "v11": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "hit",
+   "route": "hit"
+  },
+  "v12": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "hit",
+   "route": "hit"
+  },
+  "ops_answer": "Cafe, coffee, noodle soup, sandwiches, no alcohol, 30 seats, gas range, fryer, hood",
+  "gold_items": "business_type=restaurant; no alcohol; 30 seats; gas range; fryer; hood",
+  "cooking_v11": [
+   "full",
+   true,
+   "full"
+  ],
+  "cooking_v12": [
+   "full",
+   true,
+   "full"
+  ]
+ },
+ {
+  "id": "SUB-242",
+  "set": "238-269",
+  "scope": "in",
+  "v11": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "hit",
+   "route": "hit"
+  },
+  "v12": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "hit",
+   "route": "hit"
+  },
+  "ops_answer": "Wholesale distributor, frozen seafood, cold storage, frozen shrimp and fish wholesale, two walk-in freezers, dock, no cooking",
+  "gold_items": "business_type=wholesale; business_type=cold_storage",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-243",
+  "set": "238-269",
+  "scope": "in",
+  "v11": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "miss",
+   "route": "hit"
+  },
+  "v12": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "miss",
+   "route": "hit"
+  },
+  "ops_answer": "Retail bicycles, parts and repair service",
+  "gold_items": "business_type=retail",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-244",
+  "set": "238-269",
+  "scope": "in",
+  "v11": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "miss",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "hit",
+   "route": "hit"
+  },
+  "v12": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "miss",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "hit",
+   "route": "hit"
+  },
+  "ops_answer": "Residential and light commercial roofing, tear-off and install; 9 trucks, yard and a small office",
+  "gold_items": "business_type=contractor",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-245",
+  "set": "238-269",
+  "scope": "in",
+  "v11": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "not_credited",
+   "conflict": "hit",
+   "status": "miss",
+   "route": "hit"
+  },
+  "v12": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "not_credited",
+   "conflict": "hit",
+   "status": "miss",
+   "route": "hit"
+  },
+  "ops_answer": "Residential apartments, 12 units, 2 stories, electric ranges only",
+  "gold_items": "business_type=habitational; 12 units",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-246",
+  "set": "238-269",
+  "scope": "in",
+  "v11": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "miss",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "miss",
+   "route": "hit"
+  },
+  "v12": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "miss",
+   "route": "hit"
+  },
+  "ops_answer": "Lessor of office building, 14 suites, professional tenants, no tenant food service",
+  "gold_items": "business_type=office; no cooking",
+  "cooking_v11": [
+   "none",
+   false,
+   null
+  ],
+  "cooking_v12": [
+   "none",
+   true,
+   null
+  ]
+ },
+ {
+  "id": "SUB-247",
+  "set": "238-269",
+  "scope": "in",
+  "v11": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "miss",
+   "route": "hit"
+  },
+  "v12": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "miss",
+   "route": "hit"
+  },
+  "ops_answer": "Restaurant, deli, counter service sandwiches and soups, catering, no liquor, slicer, flat-top grill, steam table, hood",
+  "gold_items": "business_type=restaurant; no liquor; flat-top; hood",
+  "cooking_v11": [
+   "full",
+   true,
+   "full"
+  ],
+  "cooking_v12": [
+   "full",
+   true,
+   "full"
+  ]
+ },
+ {
+  "id": "SUB-248",
+  "set": "238-269",
+  "scope": "in",
+  "v11": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "miss",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "hit",
+   "route": "hit"
+  },
+  "v12": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "hit",
+   "route": "hit"
+  },
+  "ops_answer": "Lessor of professional office building, six suites",
+  "gold_items": "business_type=office; no cooking",
+  "cooking_v11": [
+   "none",
+   false,
+   null
+  ],
+  "cooking_v12": [
+   "none",
+   true,
+   null
+  ]
+ },
+ {
+  "id": "SUB-249",
+  "set": "238-269",
+  "scope": "in",
+  "v11": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "flagged",
+   "status": "hit",
+   "route": "hit"
+  },
+  "v12": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "flagged",
+   "status": "hit",
+   "route": "hit"
+  },
+  "ops_answer": "Restaurant and mercantile package; Deli sandwiches and grocery market (milk, snacks, soda), no alcohol; Slicer, grill, hood",
+  "gold_items": "business_type=restaurant; no alcohol; grill; hood",
+  "cooking_v11": [
+   "full",
+   true,
+   "full"
+  ],
+  "cooking_v12": [
+   "full",
+   true,
+   "full"
+  ]
+ },
+ {
+  "id": "SUB-250",
+  "set": "238-269",
+  "scope": "in",
+  "v11": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "miss",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "miss",
+   "route": "hit"
+  },
+  "v12": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "miss",
+   "route": "hit"
+  },
+  "ops_answer": "Tax preparation office (second floor); cell phone repair and retail accessories (ground floor)",
+  "gold_items": "business_type=office; business_type=retail; no cooking",
+  "cooking_v11": [
+   "none",
+   false,
+   null
+  ],
+  "cooking_v12": [
+   "none",
+   true,
+   null
+  ]
+ },
+ {
+  "id": "SUB-251",
+  "set": "238-269",
+  "scope": "in",
+  "v11": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "not_credited",
+   "conflict": "hit",
+   "status": "miss",
+   "route": "hit"
+  },
+  "v12": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "not_credited",
+   "conflict": "hit",
+   "status": "miss",
+   "route": "hit"
+  },
+  "ops_answer": "Retail wine shop; tasting room (wine and beer by the glass, no hard liquor); cheese boards only, no cooking",
+  "gold_items": "business_type=retail; wine and beer; no cooking",
+  "cooking_v11": [
+   "none",
+   true,
+   "none"
+  ],
+  "cooking_v12": [
+   "none",
+   true,
+   "none"
+  ]
+ },
+ {
+  "id": "SUB-252",
+  "set": "238-269",
+  "scope": "in",
+  "v11": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "not_credited",
+   "conflict": "flagged",
+   "status": "hit",
+   "route": "miss"
+  },
+  "v12": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "not_credited",
+   "conflict": "flagged",
+   "status": "hit",
+   "route": "miss"
+  },
+  "ops_answer": "Pub with full bar on ground floor; two office suites on second floor; fryer and warmer, no full kitchen",
+  "gold_items": "business_type=bar_pub; business_type=office; full liquor; fryer",
+  "cooking_v11": [
+   "full",
+   true,
+   "full"
+  ],
+  "cooking_v12": [
+   "full",
+   true,
+   "full"
+  ]
+ },
+ {
+  "id": "SUB-253",
+  "set": "238-269",
+  "scope": "in",
+  "v11": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "miss",
+   "route": "hit"
+  },
+  "v12": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "miss",
+   "route": "hit"
+  },
+  "ops_answer": "Fast casual Chinese restaurant, wok stir fry, counter service, wok range, deep fryer, hood, no liquor, 40 seats, no beer",
+  "gold_items": "business_type=restaurant; wok; deep fryer; hood; 40 seats; no liquor",
+  "cooking_v11": [
+   "full",
+   true,
+   "full"
+  ],
+  "cooking_v12": [
+   "full",
+   true,
+   "full"
+  ]
+ },
+ {
+  "id": "SUB-254",
+  "set": "238-269",
+  "scope": "in",
+  "v11": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "miss",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "hit",
+   "route": "hit"
+  },
+  "v12": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "miss",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "hit",
+   "route": "hit"
+  },
+  "ops_answer": "Wholesale electrical supplies to contractors, counter pickup",
+  "gold_items": "business_type=wholesale; no cooking",
+  "cooking_v11": [
+   "none",
+   false,
+   null
+  ],
+  "cooking_v12": [
+   "none",
+   true,
+   null
+  ]
+ },
+ {
+  "id": "SUB-255",
+  "set": "238-269",
+  "scope": "in",
+  "v11": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "miss",
+   "route": "hit"
+  },
+  "v12": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "miss",
+   "route": "hit"
+  },
+  "ops_answer": "Custom wood cabinets, millwork, shop with dust collection, table saws, no cooking, shop heaters only",
+  "gold_items": "business_type=other_class; no cooking",
+  "cooking_v11": [
+   "none",
+   true,
+   "none"
+  ],
+  "cooking_v12": [
+   "none",
+   true,
+   "none"
+  ]
+ },
+ {
+  "id": "SUB-256",
+  "set": "238-269",
+  "scope": "in",
+  "v11": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "miss",
+   "route": "hit"
+  },
+  "v12": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "hit",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "hit",
+   "status": "miss",
+   "route": "hit"
+  },
+  "ops_answer": "Residential apartments, 12 units, 2 stories, electric ranges only",
+  "gold_items": "business_type=habitational; 12 units",
+  "cooking_v11": null,
+  "cooking_v12": null
+ },
+ {
+  "id": "SUB-257",
+  "set": "238-269",
+  "scope": "in",
+  "v11": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "miss",
+   "sales": "flagged",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "flagged",
+   "status": "hit",
+   "route": "hit"
+  },
+  "v12": {
+   "named_insured": "hit",
+   "effective_date": "hit",
+   "operations": "hit",
+   "sales": "flagged",
+   "construction": "hit",
+   "year_built": "hit",
+   "premises": "hit",
+   "tiv": "hit",
+   "loss_runs": "hit",
+   "conflict": "flagged",
+   "status": "hit",
+   "route": "hit"
+  },
+  "ops_answer": "Thrift retail, used clothing and household goods, donations in the back",
+  "gold_items": "business_type=retail; no cooking",
+  "cooking_v11": [
+   "none",
+   false,
+   null
+  ],
+  "cooking_v12": [
+   "none",
+   true,
+   null
+  ]
+ },
+ {
+  "id": "SUB-258",
+  "set": "238-269",
+  "scope": "out",
+  "v11": {},
+  "v12": {}
+ },
+ {
+  "id": "SUB-259",
+  "set": "238-269",
+  "scope": "out",
+  "v11": {},
+  "v12": {}
+ },
+ {
+  "id": "SUB-260",
+  "set": "238-269",
+  "scope": "out",
+  "v11": {},
+  "v12": {}
+ },
+ {
+  "id": "SUB-261",
+  "set": "238-269",
+  "scope": "out",
+  "v11": {},
+  "v12": {}
+ },
+ {
+  "id": "SUB-262",
+  "set": "238-269",
+  "scope": "out",
+  "v11": {},
+  "v12": {}
+ },
+ {
+  "id": "SUB-263",
+  "set": "238-269",
+  "scope": "out",
+  "v11": {},
+  "v12": {}
+ },
+ {
+  "id": "SUB-264",
+  "set": "238-269",
+  "scope": "out",
+  "v11": {},
+  "v12": {}
+ },
+ {
+  "id": "SUB-265",
+  "set": "238-269",
+  "scope": "out",
+  "v11": {},
+  "v12": {}
+ },
+ {
+  "id": "SUB-266",
+  "set": "238-269",
+  "scope": "out",
+  "v11": {},
+  "v12": {}
+ },
+ {
+  "id": "SUB-267",
+  "set": "238-269",
+  "scope": "out",
+  "v11": {},
+  "v12": {}
+ },
+ {
+  "id": "SUB-268",
+  "set": "238-269",
+  "scope": "out",
+  "v11": {},
+  "v12": {}
+ },
+ {
+  "id": "SUB-269",
+  "set": "238-269",
+  "scope": "out",
+  "v11": {},
+  "v12": {}
+ },
+ {
+  "id": "SUB-270",
+  "set": "270-279",
+  "scope": "in",
+  "v11": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "v12": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "no_saved_reply": true
+ },
+ {
+  "id": "SUB-271",
+  "set": "270-279",
+  "scope": "in",
+  "v11": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "v12": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "no_saved_reply": true
+ },
+ {
+  "id": "SUB-272",
+  "set": "270-279",
+  "scope": "in",
+  "v11": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "v12": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "no_saved_reply": true
+ },
+ {
+  "id": "SUB-273",
+  "set": "270-279",
+  "scope": "in",
+  "v11": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "v12": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "no_saved_reply": true
+ },
+ {
+  "id": "SUB-274",
+  "set": "270-279",
+  "scope": "in",
+  "v11": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "v12": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "no_saved_reply": true
+ },
+ {
+  "id": "SUB-275",
+  "set": "270-279",
+  "scope": "out",
+  "v11": {},
+  "v12": {}
+ },
+ {
+  "id": "SUB-276",
+  "set": "270-279",
+  "scope": "in",
+  "v11": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "v12": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "no_saved_reply": true
+ },
+ {
+  "id": "SUB-277",
+  "set": "270-279",
+  "scope": "out",
+  "v11": {},
+  "v12": {}
+ },
+ {
+  "id": "SUB-278",
+  "set": "270-279",
+  "scope": "out",
+  "v11": {},
+  "v12": {}
+ },
+ {
+  "id": "SUB-279",
+  "set": "270-279",
+  "scope": "out",
+  "v11": {},
+  "v12": {}
+ },
+ {
+  "id": "SUB-280",
+  "set": "280-289",
+  "scope": "in",
+  "v11": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "v12": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "no_saved_reply": true
+ },
+ {
+  "id": "SUB-281",
+  "set": "280-289",
+  "scope": "in",
+  "v11": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "v12": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "no_saved_reply": true
+ },
+ {
+  "id": "SUB-282",
+  "set": "280-289",
+  "scope": "in",
+  "v11": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "v12": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "no_saved_reply": true
+ },
+ {
+  "id": "SUB-283",
+  "set": "280-289",
+  "scope": "in",
+  "v11": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "v12": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "no_saved_reply": true
+ },
+ {
+  "id": "SUB-284",
+  "set": "280-289",
+  "scope": "in",
+  "v11": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "v12": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "no_saved_reply": true
+ },
+ {
+  "id": "SUB-285",
+  "set": "280-289",
+  "scope": "in",
+  "v11": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "v12": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "no_saved_reply": true
+ },
+ {
+  "id": "SUB-286",
+  "set": "280-289",
+  "scope": "out",
+  "v11": {},
+  "v12": {}
+ },
+ {
+  "id": "SUB-287",
+  "set": "280-289",
+  "scope": "out",
+  "v11": {},
+  "v12": {}
+ },
+ {
+  "id": "SUB-288",
+  "set": "280-289",
+  "scope": "out",
+  "v11": {},
+  "v12": {}
+ },
+ {
+  "id": "SUB-289",
+  "set": "280-289",
+  "scope": "out",
+  "v11": {},
+  "v12": {}
+ },
+ {
+  "id": "SUB-290",
+  "set": "290-296",
+  "scope": "in",
+  "v11": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "v12": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "no_saved_reply": true
+ },
+ {
+  "id": "SUB-291",
+  "set": "290-296",
+  "scope": "in",
+  "v11": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "v12": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "no_saved_reply": true
+ },
+ {
+  "id": "SUB-292",
+  "set": "290-296",
+  "scope": "in",
+  "v11": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "v12": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "no_saved_reply": true
+ },
+ {
+  "id": "SUB-293",
+  "set": "290-296",
+  "scope": "in",
+  "v11": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "v12": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "no_saved_reply": true
+ },
+ {
+  "id": "SUB-294",
+  "set": "290-296",
+  "scope": "in",
+  "v11": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "v12": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "no_saved_reply": true
+ },
+ {
+  "id": "SUB-295",
+  "set": "290-296",
+  "scope": "in",
+  "v11": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "v12": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "no_saved_reply": true
+ },
+ {
+  "id": "SUB-296",
+  "set": "290-296",
+  "scope": "in",
+  "v11": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "v12": {
+   "named_insured": "call_failed",
+   "effective_date": "call_failed",
+   "operations": "call_failed",
+   "sales": "call_failed",
+   "construction": "call_failed",
+   "year_built": "call_failed",
+   "premises": "call_failed",
+   "tiv": "call_failed",
+   "loss_runs": "call_failed",
+   "conflict": "call_failed",
+   "status": "call_failed"
+  },
+  "no_saved_reply": true
+ }
+]
