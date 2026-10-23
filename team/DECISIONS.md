@@ -1376,3 +1376,29 @@ Then continue: P-066 concurrent-write tests, @pm pilot-readiness update, @model-
 - Follow-up tasks: apply items 7–9 to the Wave 2 specs; prepare engine migration step 1 and the baseline-equality test on `lob-engine-step1`; @senior-underwriter + @model-risk review Wave 2 fields tomorrow; @compliance on umbrella criterion 5 when umbrella starts.
 - Status: ACCEPTED by @user, 2026-10-21
 - Amends: D-120 item 7 (umbrella criterion 5 timing) and D-120 items 1/10/12 by the Wave 2 decisions above. Not a production approval; the T-027 veto stands.
+
+## D-122 — approve change P-070 (carry the stated cooking line into operations; a disagreement between documents on a rating or scored figure becomes an open conflict and a hold)
+- Date / Owner: 2026-10-21 / @user
+- Context: the T-117 memo of @model-risk (`deliverables/model-risk/T-027-memo-T-117.md`) carries two High findings: H1 (on SUB-248/250/254/257 the stated application line `Cooking operations: None` is dropped from the operations answer) and H2 (0 of 3 planted document conflicts surfaced). The cause write-up is `deliverables/ai-engineer/analysis/T-117-H1-H2-cause.md`; the change is `deliverables/ai-engineer/proposal-P-070.md`.
+- Decision: In the user's words (typed in this session): "approve change P-070".
+- Conditions: the change is in `underwriting_pipeline/ai/prepare.py` only — no prompt, no model, no scorer, no gold, no hold-out file, no published score. The model request stays byte-identical (zero changed requests). Self-checks on development files only, shaped like SUB-249/252/257 but new files. D-065: the workbench card, one "What's new" line, a Playwright screenshot and @senior-underwriter's UI review (High only). The work lands on branch `fix-t117` and is pushed there only. @model-risk checks the result before any use beyond development; the T-027 veto stands.
+- Rationale: the user typed the exact approval in this session on 2026-10-21 (D-017).
+- Dissent: none
+- Follow-up tasks: @ai-engineer-assistant builds P-070 on `fix-t117` with the dev set `simulation/inbox-dev/document_conflicts/`; @senior-test-engineer and @model-risk own the v-next scorer (the M-class operations readings and the suite-count conflict topic), frozen before the next gold; @model-risk reviews the fix with no High before it counts towards the H1/H2 closure.
+- Status: ACCEPTED by @user, 2026-10-21
+- Amends: none. Not a production approval; the T-027 veto stands.
+- Confirmed: 2026-10-22, the user typed "approve change P-070" in the Claude Code session (D-045, D-053: the OpenCode record of 2026-10-21 is confirmed here).
+
+## D-123 — approve change P-071 (the stated cooking line is added only when no document in the folder states cooking)
+- Rationale: the user typed "approve change P-071" in the Claude Code session on 2026-10-23 (D-017), after reading `deliverables/ai-engineer/proposal-P-071.md`. Fixes @model-risk T-118 High H1 only.
+- Dissent: none
+- Follow-up tasks: build on `fix-t117` (dev files only, tests/pipeline green, request-equality changes listed); fresh @model-risk check, High only; then merge `fix-t117` into `pilot-integration`.
+- Status: ACCEPTED by @user, 2026-10-23
+- Amends: D-122 (P-070 change 1). Not a production approval; the T-027 veto stands.
+
+## D-124 — approve change P-072 (remove the "; no cooking" add from operations entirely)
+- Rationale: the user typed "approve change P-072" in the Claude Code session on 2026-10-23, with the text: remove the "; no cooking" add from operations entirely; files where cooking is not clearly stated keep their existing review flag; no automatic "no cooking" in any case; revert the P-070/P-071 add logic, keeping harmless refactoring only if it changes no behaviour; the H1 scoring gap moves to the next scorer version. Answers @model-risk T-118 re-check High H1 (`deliverables/model-risk/T-118-recheck.md`).
+- Dissent: none
+- Follow-up tasks: build on `fix-t117` (dev SUB-293 and SUB-296: no false complete, flag kept); fresh @model-risk check, High only; if no High, commit, merge into `pilot-integration`, full suite + request equality. The H1 scoring gap goes to the v-next scorer (@senior-test-engineer, @model-risk).
+- Status: ACCEPTED by @user, 2026-10-23
+- Amends: D-122 (P-070 change 1 withdrawn), D-123 (P-071 withdrawn). P-070 changes 2–5 stand. Not a production approval; the T-027 veto stands.

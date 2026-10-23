@@ -76,6 +76,12 @@ PLAIN = {
     "construction": "construction type",
     "year_built": "year built",
     "loss_run_valued_through": "currently valued carrier loss runs (a no-known-loss letter does not count)",
+    # P-070 (D-122): a conflict topic in plain words. The producer and the underwriter read these, not the field name.
+    "square_feet": "square footage",
+    "suite_count": "suite count",
+    "unit_count": "unit count",
+    "apartment_count": "apartment count",
+    "tenant_count": "tenant count",
 }
 
 
@@ -292,7 +298,7 @@ def _request(folder: str, missing: list[str], conflicts: list[str]) -> str:
         parts.append("")
     if conflicts:
         parts.append("These fields disagree across documents. Both values are stored as data, not only in this email:")
-        parts.extend(f"- {item}" for item in conflicts)
+        parts.extend(f"- {PLAIN.get(item, item)}" for item in conflicts)
     return "\n".join(parts).rstrip() + "\n"
 
 
@@ -694,32 +700,44 @@ def _set_cited(merged: dict, field: str, value: str, source: str, start: int, en
     }
 
 
+# P-070 (D-122): the words a document uses for a floor area. "Square footage" and a "sq_ft" column are the same
+# fact as "square feet"; the old list only knew "square feet", "sqft" and "sf", so an area stated in the other words
+# was never read and two documents that disagreed about it looked the same.
+AREA_WORD = re.compile(r"(?i)\s*(?:square\s+feet|square\s+footage|sq\.?\s*ft\.?|sqft|sf)\b.*$")
+AREA_HEADERS = ("sqft", "sf", "sq_ft", "sq ft", "sq. ft.", "square feet", "square_feet", "square footage")
+
+
+def _area_amount(text: str) -> int | None:
+    """The number of a floor area. "2,800 square footage" and "2,800 sq ft" are the same number."""
+    return amount_value(AREA_WORD.sub("", text))
+
+
 def _square_feet(texts: dict) -> list[tuple[str, str, str]]:
     found = []
     for name, text in texts.items():
-        area = r"(\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?)[ \t]*([kmb])?[ \t]*(?:square[ \t]+feet|sq\.?[ \t]*ft\.?|sqft|sf)\b"
+        area = r"(\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?)[ \t]*([kmb])?[ \t]*(?:square[ \t]+feet|square[ \t]+footage|sq\.?[ \t]*ft\.?|sqft|sf)\b"
         for match in re.finditer(area, text, re.I):
-            amount = amount_value(match.group(0))
+            amount = _area_amount(match.group(0))
             if amount is not None:
                 found.append((str(amount), name, match.group(0)))
-        labeled = r"(?im)^(?:square\s+feet|sq\.?\s*ft\.?|sqft|sf):\s*(\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?)\s*([kmb])?"
+        labeled = r"(?im)^(?:square\s+feet|square\s+footage|sq\.?\s*ft\.?|sqft|sf):\s*(\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?)\s*([kmb])?"
         for match in re.finditer(labeled, text):
             amount = amount_value(match.group(0).split(":", 1)[1])
             if amount is not None:
-                found.append((str(amount), name, match.group(0)))
+                found.append((str(amount), name, match.group(0).strip()))
         headers = None
         for line in text.splitlines():
             cells = [cell.strip() for cell in line.split("\t")]
             low = [cell.lower() for cell in cells]
-            if headers is None and any(cell in {"sqft", "sf"} for cell in low):
+            if headers is None and any(cell in AREA_HEADERS for cell in low):
                 headers = low
                 continue
-            key = "sqft" if headers and "sqft" in headers else "sf" if headers and "sf" in headers else ""
+            key = next((cell for cell in (headers or []) if cell in AREA_HEADERS), "")  # the column name, then the cell under it
             if key and len(cells) == len(headers):
                 raw = cells[headers.index(key)]
                 amount = amount_value(raw)
                 if amount is not None:
-                    found.append((str(amount), name, raw))
+                    found.append((str(amount), name, line.strip()))  # P-070: the cited text is the whole row, so the underwriter sees which row said it
     return found
 
 
@@ -780,6 +798,139 @@ def apply_locations(merged: dict, conflicts: list, texts: dict, scans: dict | No
     return locations
 
 
+# P-070 (D-122): two documents that state different sales figures disagree. Before this, only the model's own
+# answer could raise a conflict, and a second document that said a different figure was silently ignored.
+SALES_LABELS = ("sales or payroll:", "annual sales:", "gross sales:", "sales:", "gross revenue:", "annual revenue:", "revenue:", "turnover:")
+SALES_WORD = r"(?:gross\s+|annual\s+|net\s+|estimated\s+)?(?:sales|revenue|turnover)s?"
+AMOUNT_TOKEN = r"(?:about|around|approximately|roughly|~)?\s*\$?\s*(?:\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?)\s*(?:mm|[kmb])?\b"
+SALES_BEFORE = re.compile(rf"(?P<amount>{AMOUNT_TOKEN})\s*(?:in|of)?\s*\b{SALES_WORD}\b", re.I)
+SALES_AFTER = re.compile(rf"\b{SALES_WORD}\b(?:\s+(?:of|was|were|is|at|totaled|totalled|stood at))?\s*[:\-]?\s*(?P<amount>{AMOUNT_TOKEN})", re.I)
+SALES_MIN = 1000  # a sales figure is a real figure: a year or a percentage is not
+
+
+def _sales_figures(text: str) -> list[tuple[int, str]]:
+    """The sales figures a document states: a labelled sales line, or an amount beside a sales word."""
+    found: list[tuple[int, str]] = []
+
+    def add(token: str, quote: str, tail: str = "") -> None:
+        amount = amount_value(token.strip())
+        if amount is None or amount < SALES_MIN or "%" in tail or 1900 <= amount <= 2100:
+            return
+        if not any(amount == known and quote == known_quote for known, known_quote in found):
+            found.append((amount, quote))
+
+    for line in text.splitlines():
+        stripped = line.lstrip()
+        low = stripped.lower()
+        for label in SALES_LABELS:
+            if not low.startswith(label):
+                continue
+            rest = stripped[len(label) :]
+            token = re.search(AMOUNT_TOKEN, rest, re.I)
+            if token:
+                add(token.group(0), line.strip(), rest[token.end() : token.end() + 1])
+            break
+    for match in SALES_BEFORE.finditer(text):
+        quote = text[max(0, text.rfind("\n", 0, match.start()) + 1) : text.find("\n", match.start()) if text.find("\n", match.start()) >= 0 else len(text)].strip()
+        add(match.group("amount"), quote, text[match.end() : match.end() + 1])
+    for match in SALES_AFTER.finditer(text):
+        start = text.rfind("\n", 0, match.start()) + 1
+        end = text.find("\n", match.start())
+        quote = text[start : end if end >= 0 else len(text)].strip()
+        add(match.group("amount"), quote, text[match.end() : match.end() + 1])
+    return found
+
+
+def apply_sales_conflicts(merged: dict, conflicts: list, texts: dict) -> None:
+    """P-070 (D-122): two documents that state different sales figures are an open conflict.
+
+    The sales value is emptied and both figures are stored as the two sides of the conflict, so the file cannot
+    read as complete with one of the two figures silently kept. The producer is asked which figure stands."""
+    figures: dict[str, list[tuple[int, str]]] = {}
+    for name, text in texts.items():
+        found = _sales_figures(text)
+        if found:
+            figures[name] = found
+    if len(figures) < 2:
+        return
+    sides: list[tuple[int, str, str]] = []
+    for name, found in figures.items():
+        amount, quote = found[0]
+        if not any(amount == side[0] for side in sides):
+            sides.append((amount, name, quote))
+    if len(sides) < 2:
+        return
+    if any(item.get("field") == "sales_or_payroll" for item in conflicts):
+        return  # a conflict on sales is already open: one open conflict, not two
+    conflicts.append(
+        {
+            "field": "sales_or_payroll",
+            "values": [{"value": str(amount), "source": name, "quote": quote} for amount, name, quote in sides],
+            "resolution": "unresolved",
+            "resolved_value": None,
+            "resolved_by": None,
+        }
+    )
+    row = merged.get("sales_or_payroll") or {}
+    if row.get("value") is not None:
+        merged["sales_or_payroll"] = {**row, "value": None, "needs_review": True, "reason": "the documents state different sales figures"}
+
+
+# P-070 (D-122): two documents that state a different number of the same thing (offices, units) disagree.
+# The count is not a scored field, so the operations value stays and the disagreement is an open conflict.
+COUNT_WORDS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10, "eleven": 11, "twelve": 12}
+COUNT_NOUNS = {"suite": "suite_count", "suites": "suite_count", "unit": "unit_count", "units": "unit_count",
+               "apartment": "apartment_count", "apartments": "apartment_count", "tenant": "tenant_count", "tenants": "tenant_count"}
+COUNT_RE = re.compile(r"(?i)\b(\d{1,3}|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s+(?:[a-z]+\s+)?(suites?|units?|apartments?|tenants?)\b")
+
+
+def _count_figures(text: str) -> list[tuple[str, int, str]]:
+    """The unit counts a text states: (topic, count, the cited line)."""
+    found = []
+    for match in COUNT_RE.finditer(text):
+        word = match.group(1).lower()
+        count = int(word) if word.isdigit() else COUNT_WORDS.get(word, 0)
+        if not count:
+            continue
+        start = text.rfind("\n", 0, match.start()) + 1
+        end = text.find("\n", match.start())
+        found.append((COUNT_NOUNS[match.group(2).lower()], count, text[start : end if end >= 0 else len(text)].strip()))
+    return found
+
+
+def apply_count_conflicts(merged: dict, conflicts: list, texts: dict) -> None:
+    """P-070 (D-122): two documents that state a different count of the same thing are an open conflict.
+
+    The count is not a scored field: the operations value stays as the answer and the two counts are stored as
+    the two sides of the conflict, so the file is held for the underwriter instead of reading as complete."""
+    row = merged.get("operations") or {}
+    value, source = row.get("value"), row.get("source")
+    figures: dict[str, list[tuple[int, str, str]]] = {}
+    for topic, count, quote in _count_figures(value or ""):
+        figures.setdefault(topic, []).append((count, str(source or ""), quote))
+    for name, text in texts.items():
+        for topic, count, quote in _count_figures(text):
+            figures.setdefault(topic, []).append((count, name, quote))
+    for topic, items in figures.items():
+        sides: list[tuple[int, str, str]] = []
+        for count, name, quote in items:
+            if not any(count == side[0] for side in sides):
+                sides.append((count, name, quote))
+        if len(sides) < 2:
+            continue
+        if any(item.get("field") == topic for item in conflicts):
+            continue  # a conflict on this count is already open
+        conflicts.append(
+            {
+                "field": topic,
+                "values": [{"value": str(count), "source": name, "quote": quote} for count, name, quote in sides],
+                "resolution": "unresolved",
+                "resolved_value": None,
+                "resolved_by": None,
+            }
+        )
+
+
 def apply_document_rules(merged: dict, conflicts: list, texts: dict, scans: dict | None = None) -> None:
     """Cited document rules. They do not call the model and do not invent a date."""
     run = carrier_run_date(texts)
@@ -810,20 +961,20 @@ def apply_document_rules(merged: dict, conflicts: list, texts: dict, scans: dict
     for item in areas:
         if item[0] not in {row[0] for row in distinct}:
             distinct.append(item)
-    if len(distinct) < 2:
-        return
-    blob = json.dumps(conflicts)
-    if all(item[0] in blob for item in distinct):
-        return
-    conflicts.append(
-        {
-            "field": "square_feet",
-            "values": [{"value": item[0], "source": item[1], "quote": item[2]} for item in distinct],
-            "resolution": "unresolved",
-            "resolved_value": None,
-            "resolved_by": None,
-        }
-    )
+    if len(distinct) >= 2:
+        blob = json.dumps(conflicts)
+        if not all(item[0] in blob for item in distinct):
+            conflicts.append(
+                {
+                    "field": "square_feet",
+                    "values": [{"value": item[0], "source": item[1], "quote": item[2]} for item in distinct],
+                    "resolution": "unresolved",
+                    "resolved_value": None,
+                    "resolved_by": None,
+                }
+            )
+    apply_sales_conflicts(merged, conflicts, texts)  # P-070 (D-122): two documents, two sales figures
+    apply_count_conflicts(merged, conflicts, texts)  # P-070 (D-122): two documents, two counts of the same thing
 
 
 # P-047 (b), D-094: the operations gold rule items (deliverables/senior-underwriter/operations-gold-rule.md).
@@ -2497,4 +2648,84 @@ if __name__ == "__main__":
             assert process_submission(inbox55 / "SUB-603")["status"] == "extraction_failed"
         finally:
             llm_extract.llm_extract = real_llm
+        # P-070 (D-122): the document_conflicts dev set. Two documents that disagree are an open conflict;
+        # the same figure in other words is not a conflict. P-072 (D-124): no "no cooking" is ever added to operations.
+        dev_root = ROOT / "simulation" / "inbox-dev" / "document_conflicts"
+
+        def dev_file(sid: str) -> tuple[dict, dict]:
+            docs = sources.read_folder(dev_root / sid)
+            texts = {doc["name"]: doc["text"] for doc in docs}
+            merged = {
+                field: {"field_id": field, "value": None, "source": None, "start": None, "end": None, "confidence": 0.0, "needs_review": False, "reason": None, "quote": None}
+                for field in FIELDS
+            }
+            app = texts["application.md"]
+            for field, label in (("operations", LABELS["operations"]), ("sales_or_payroll", LABELS["sales_or_payroll"])):
+                row = extract_labeled(app, label)[0]
+                if row["value"] is None:
+                    continue
+                merged[field] = {"field_id": field, "value": _canonical(field, row["value"]), "source": "application.md",
+                                 "start": row["start"], "end": row["end"], "confidence": 0.9, "needs_review": False, "reason": None,
+                                 "quote": app[row["start"] : row["end"]], "spans": [(row["start"], row["end"])]}
+            return texts, merged
+
+        dev_cases = (
+            ("SUB-290", {"square_feet": {"2800", "3150"}}),
+            ("SUB-291", {"suite_count": {"2", "3"}}),
+            ("SUB-292", {"sales_or_payroll": {"412000", "540000"}}),
+            ("SUB-293", {}),
+            ("SUB-294", {}),
+            ("SUB-295", {}),
+            ("SUB-296", {}),
+        )
+        for sid, expect in dev_cases:
+            texts, merged = dev_file(sid)
+            dev_conflicts: list = []
+            apply_document_rules(merged, dev_conflicts, texts)
+            check_operations(merged, texts)
+            got = {item["field"]: {side["value"] for side in item["values"]} for item in dev_conflicts}
+            assert got == expect, (sid, got, expect)
+            if sid in ("SUB-293", "SUB-296"):  # P-072 (D-124): "Cooking operations: None" is never added; the flag stays for the underwriter
+                assert "no cooking" not in merged["operations"]["value"], (sid, merged["operations"]["value"])
+                assert merged["operations"]["needs_review"], (sid, "the flag stays for the underwriter")
+            if sid == "SUB-291":  # the count is not a scored field: the operations value stays
+                assert merged["operations"]["value"] and merged["operations"]["value"].startswith("Lessor"), merged["operations"]
+            if sid == "SUB-292":  # the sales value is emptied and the reason is on the row
+                assert merged["sales_or_payroll"]["value"] is None and merged["sales_or_payroll"]["needs_review"], merged["sales_or_payroll"]
+                assert "different sales figures" in merged["sales_or_payroll"]["reason"], merged["sales_or_payroll"]
+        # P-072 (D-124), the @model-risk T-118 H1 case end to end: SUB-296 (published Carrier A run, so it does not hold on
+        # the loss run) with each email below, the @model-risk re-check sentences among them. "no cooking" is never added and
+        # the operations flag stays, so no version of the file is complete.
+        # The stub answers with the labelled lines, and llm_extract.accept_field grounds each answer as a real reply is grounded.
+        def stub296(docs):
+            rows, by_name = [], {doc["name"]: doc["text"] for doc in docs}
+            for doc in docs:
+                labels = {"loss_run_valued_through": ("valued as of:",)} if doc["name"] == "loss-runs.md" else LABELS if doc["name"] == "application.md" else {}
+                for field, label in labels.items():
+                    row = extract_labeled(doc["text"], label)[0]
+                    if row["value"] is not None:
+                        item = {"field_id": field, "value": row["value"], "source": doc["name"], "quote": doc["text"][row["start"] : row["end"]], "confidence": 0.95}
+                        rows.append(llm_extract.accept_field(item, by_name))
+            return {"fields": rows, "conflicts": [], "not_sent": []}
+
+        import shutil
+
+        emails = ("Since the application the tenant added a flat-top griddle and a wok station for staff lunches.",  # SUB-296 as built
+                  "Nothing to add; the loss run from Carrier A is attached.",  # neutral: no cooking word at all
+                  "We started cooking hot breakfast for staff on a stove in the back.", "The lobby now has a cafe serving hot food.",
+                  "Staff use a hot plate and a panini press.", "On Fridays there is a barbecue and a rotisserie out back.",
+                  "We fry chicken wings for the Friday lunch.", "We put in a range and a commercial hood.")
+        llm_extract.llm_extract = stub296
+        try:
+            for n, email in enumerate(emails):
+                case = tmp_path / "p072" / f"case{n}" / "SUB-296"
+                shutil.copytree(dev_root / "SUB-296", case)
+                (case / "email.md").write_text(f"Subject: Harborview Insurance Agency LLC\n\nHi,\n{email}\nThanks\n")
+                rep296 = process_submission(case)
+                ops296 = next(r for r in rep296["fields"] if r["field_id"] == "operations")
+                assert rep296["status"] != "complete" and "no cooking" not in (ops296["value"] or "") and ops296["needs_review"], (email, rep296["status"], ops296)
+        finally:
+            llm_extract.llm_extract = real_llm
+        request = _request("SUB-290", [], ["square_feet", "suite_count"])
+        assert "- square footage" in request and "- suite count" in request, request
     print("prepare ok")

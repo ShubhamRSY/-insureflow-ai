@@ -222,11 +222,13 @@ def with_resolutions(report: dict, submission: str = "") -> dict:
 
 
 def conflict_problem(report: dict) -> str:
-    """B-324 (D-089): empty when no conflict is open (after logged resolutions on this run). Every actor, the user included."""
+    """B-324 (D-089): empty when no conflict is open (after logged resolutions on this run). Every actor, the user included.
+    P-070 (D-122): the topic is named in plain words, so the refusal reads "square footage", not "square_feet"."""
     open_ = [c.get("field") or "?" for c in report.get("conflicts") or [] if c.get("resolution") != "resolved"]
     if not open_:
         return ""
-    return f"open conflict on {', '.join(open_)}: the underwriter must choose or enter the value on the card (logged with this run) before a send"
+    names = ", ".join(prepare.PLAIN.get(field, field) for field in open_)
+    return f"open conflict on {names}: the underwriter must choose or enter the value on the card (logged with this run) before a send"
 
 
 def reviewed(submission: str) -> dict:
@@ -978,13 +980,13 @@ if __name__ == "__main__":
             sq = {"field": "square_feet", "values": [{"value": "16800", "source": "email.md"}, {"value": "14200", "source": "application.md"}], "resolution": "unresolved"}
             save(ext, "SUB-330", prepare.REVIEW_PENDING, fields=office, sprinklers="no", conflicts=[sq])
             decide("SUB-330", "approve")
-            assert "open conflict on square_feet" in agency_problem("SUB-330")
+            assert "open conflict on square footage" in agency_problem("SUB-330")
             for actor in ("user", "account-manager"):
                 try:
                     send_to_carrier("SUB-330", actor, dest_dir, reason="ready", user_line=LINE("SUB-330"))
                     raise SystemExit(f"B-324: an open conflict must refuse the send for {actor}")
                 except ValueError as exc:
-                    assert "open conflict on square_feet" in str(exc), exc
+                    assert "open conflict on square footage" in str(exc), exc
             resolve = lambda run_hash: log.open("a").write(json.dumps({"seq": next(seq), "submission": "SUB-330", "action": "resolve", "underwriter_id": "UW-001", "reason": "",
                                                                        "conflict_field": "square_feet", "new_value": "14200", "run_hash": run_hash}) + "\n")
             resolve("another-run")

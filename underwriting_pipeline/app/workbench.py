@@ -44,6 +44,12 @@ BANNER = ""  # set by serve(); the sandbox screenshots label the page with it
 MESSAGES: dict[str, tuple[bool, str]] = {}  # submission -> (ok, plain-words result of the last action); shown once
 # D-065 item 5: one line per user-visible feature: date, task or proposal, decision number, what an underwriter sees.
 WHATS_NEW = (
+    ("2026-10-23", "T-118 (P-072)", "D-124", "Operations never gets \"no cooking\" added automatically. When the application says \"Cooking operations: None\" "
+     "and the operations value does not say it, the value stays as stated and keeps its review note, so the underwriter checks cooking against every document."),
+    ("2026-10-21", "T-118", "D-122",
+     "Two documents that disagree are now seen (P-070). A floor area, a sales figure or a count of units that two documents state "
+     "differently is an open conflict on the card, named in plain words (\"square footage\", \"sales or payroll\", \"suite count\"), "
+     "the file is held until the underwriter chooses or enters the value, and the producer is asked which figure stands."),
     ("2026-10-21", "PILOT C5", "D-117/D-118 (T-027 C1–C8)", "Every per-value confirmation is now written to the pilot correction log, edited or not. The pilot monitor shows confirmations per field and the correction rate per field (the confirmed values the underwriter corrected, over the confirmed values), and each confirmation is a read-only row on the card with what the AI said and what was confirmed."),
     ("2026-10-21", "B-190", "D-057", "The workbench now needs a signed-in underwriter: OIDC sign-in, a signed session, a per-form token, an Origin check, and an audit row for every view, decision and send. The typed underwriter id is gone; a posted id cannot be used."),
     ("2026-10-21", "PILOT C1–C6", "D-117/D-118 (T-027 C1–C8)", "Assist-only pilot mode: send, package, draft and producer request are disabled with a plain reason; every value needs a per-value confirmation instead of an approve; scope is always shown; AI proposals and weak-field warnings are labelled; corrections, refusals and time per file are logged for the pilot review."),
@@ -804,8 +810,10 @@ def _msg_for(messages: dict, user: auth.User | None, key: str) -> str:
 
 
 def resolve_form(sub: str, report: dict, conflict: dict, user: auth.User | None = None) -> str:
-    """B-324 (D-089): choose one stored side or enter the value; logged with this run's hash. Then approve."""
+    """B-324 (D-089): choose one stored side or enter the value; logged with this run's hash. Then approve.
+    P-070 (D-122): the topic is named in plain words ("Resolve square footage")."""
     field = conflict.get("field") or ""
+    plain = prepare.PLAIN.get(field, field)
     sides = "".join(f'<option value="{html.escape(str(v.get("value")))}">{html.escape(str(v.get("value")))} ({html.escape(v.get("source") or "file not named")})</option>'
                     for v in conflict.get("values") or [] if v.get("value"))
     actor = ('<label>Underwriter id <input name="underwriter_id" required></label> ' if user is None else
@@ -813,7 +821,7 @@ def resolve_form(sub: str, report: dict, conflict: dict, user: auth.User | None 
     return (f'<form method="post" action="/decision"><input type="hidden" name="action" value="resolve">'
             f'<input type="hidden" name="submission" value="{html.escape(sub)}"><input type="hidden" name="run_hash" value="{html.escape(report.get("saved_hash") or "")}">'
             f'<input type="hidden" name="conflict_field" value="{html.escape(field)}">'
-            f'<b>Resolve {html.escape(field)}</b> <label>Choose <select name="chosen_value"><option value="">—</option>{sides}</select></label> '
+            f'<b>Resolve {html.escape(plain)}</b> <label>Choose <select name="chosen_value"><option value="">—</option>{sides}</select></label> '
             f'<label>or enter <input name="entered_value"></label> {actor}'
             f'<label>Reason <input name="reason"></label> <button type="submit">Record resolution</button> '
             "<small>Logged with this run. Resolve each open conflict, then approve.</small></form>")
@@ -824,7 +832,7 @@ def review_pending_html(report: dict) -> str:
     if report.get("status") != prepare.REVIEW_PENDING:
         return ""
     review = [r["field_id"] for r in report.get("fields") or [] if r.get("value") and r.get("needs_review")]
-    open_ = [c.get("field") or "?" for c in report.get("conflicts") or [] if c.get("resolution") != "resolved"]
+    open_ = [prepare.PLAIN.get(c.get("field") or "?", c.get("field") or "?") for c in report.get("conflicts") or [] if c.get("resolution") != "resolved"]  # P-070: plain words
     what = "; ".join(x for x in (review and "values to review: " + ", ".join(review), open_ and "open conflict: " + ", ".join(open_)) if x)
     return f'<p class="bad">Complete — review pending: {html.escape(what or "see the review notes")}. Not complete until checked.</p>'
 
@@ -892,7 +900,13 @@ def _no_send_reason(item: dict, report: dict, refused: bool) -> str:
     if _carrier(item, report) not in package.CARRIERS:
         return f"the carrier match is {item['route']}" + (f" ({item['note']})" if item.get("note") else "") + ", so no carrier is named"
     if not prepare.ready_to_route(report):
-        return "an open conflict is still on the file" if report.get("status") == prepare.REVIEW_PENDING else "the file is incomplete (a required field is empty)"
+        if report.get("status") == prepare.REVIEW_PENDING:
+            return "an open conflict is still on the file"
+        why = "the file is incomplete (a required field is empty)"
+        open_ = [prepare.PLAIN.get(c.get("field") or "?", c.get("field") or "?") for c in report.get("conflicts") or [] if c.get("resolution") != "resolved"]  # P-070: the topic in plain words
+        if open_:  # D-065 item 2: the block says what is open, not only that something is
+            why += " and there is an open conflict on " + ", ".join(open_)
+        return why
     return ""
 
 
@@ -1034,6 +1048,15 @@ def stale_changes(sub: str, report: dict) -> str:
     return "<p>Changed since your approval (old → new):</p><ul>" + "".join(f"<li>{html.escape(d)}</li>" for d in diff) + "</ul>"
 
 
+def _plain_reason(text: str) -> str:
+    """P-070 (D-122): the topic of a conflict is named in plain words on the card. The score model keeps its
+    own wording (points.py is a model file and is not touched); the card names the topic for the underwriter."""
+    out = text or ""
+    for field, plain in prepare.PLAIN.items():
+        out = out.replace(f"open conflict on {field}", f"open conflict on {plain}")
+    return out
+
+
 def score_html(item: dict, report: dict, user: auth.User | None = None) -> list[str]:
     """P-015: the score, or why there is none; the three lines; a mark-wrong control beside each code (W1). No add-a-code control (A1)."""
     sc, sid = item["score"], html.escape(item["id"])
@@ -1044,7 +1067,7 @@ def score_html(item: dict, report: dict, user: auth.User | None = None) -> list[
         if not sc["reason_codes"]:
             out.append("<p>Codes: none</p>")
     else:
-        out.append(f"<p class=\"bad\">{html.escape(sc['not_scored_reason'])}</p>")
+        out.append(f"<p class=\"bad\">{html.escape(_plain_reason(sc['not_scored_reason']))}</p>")
     for code in sc["reason_codes"]:
         shown = "".join(f" <i>(marked wrong by {html.escape(m['underwriter_id'])}: {html.escape(m['reason'])})</i>" for m in marks if m.get("code") == code)
         out.append(
@@ -1181,9 +1204,14 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
         conflict_html = "<p>No stored conflict.</p>"
         if conflicts:
             conflict_html = "<ul>" + "".join(
-                "<li>{}: {}{}</li>".format(
-                    html.escape(item_c["field"]),
-                    html.escape(json.dumps(item_c["values"])),
+                "<li>{}: <ul>{}</ul>{}</li>".format(
+                    html.escape(str(prepare.PLAIN.get(item_c["field"], item_c["field"]))),  # P-070: the topic in plain words
+                    "".join(  # T-118: each side in words (value, file, cited text), not a JSON blob
+                        "<li><b>{}</b> ({}) — cited: {}</li>".format(
+                            html.escape(str(v.get("value"))), html.escape(str(v.get("source") or "file not named")), html.escape(str(v.get("quote") or "—")),
+                        )
+                        for v in (item_c["values"] if isinstance(item_c["values"], list) else [])
+                    ),
                     html.escape(f" · RESOLVED by {item_c['resolved_by']}: {item_c['resolved_value']}") if item_c.get("resolution") == "resolved" and item_c.get("resolved_by")
                     else ("" if item_c.get("resolution") == "resolved" else " · OPEN: no send until the underwriter chooses or enters the value"),
                 )
@@ -1795,7 +1823,7 @@ if __name__ == "__main__":
         rpc["report"].update(missing=[], conflicts=[{"field": "square_feet", "values": [{"value": "16800", "source": "email.md"}, {"value": "14200", "source": "application.md"}], "resolution": "unresolved"}])
         rpc_page = render([rpc], None).split("<article", 1)[1]
         assert 'name="action" value="resolve"' in rpc_page and 'value="16800"' in rpc_page and 'name="entered_value"' in rpc_page, rpc_page[:400]
-        assert "OPEN: no send until the underwriter chooses or enters the value" in rpc_page and "No send: open conflict on square_feet" in rpc_page
+        assert "OPEN: no send until the underwriter chooses or enters the value" in rpc_page and "No send: open conflict on square footage" in rpc_page
         rpc["report"]["conflicts"][0].update(resolution="resolved", resolved_value="14200", resolved_by="UW-001")
         assert "RESOLVED by UW-001: 14200" in render([rpc], None) and 'value="resolve"' not in render([rpc], None).split("<article", 1)[1]
         normal = card("complete", fields=[{"field_id": "operations", "value": "accounting office"}])
@@ -2157,7 +2185,7 @@ if __name__ == "__main__":
                 # B-324 (D-089): a resolve names an open conflict of this run, is logged with the run hash, and the card then shows it resolved.
                 sq = {"field": "square_feet", "values": [{"value": "16800", "source": "email.md"}, {"value": "14200", "source": "application.md"}], "resolution": "unresolved"}
                 stored("SUB-909", prepare.REVIEW_PENDING, good, complete=False, conflicts=[sq])
-                assert "No send: open conflict on square_feet" in art(render(load_queue(), None), "SUB-909")
+                assert "No send: open conflict on square footage" in art(render(load_queue(), None), "SUB-909")
                 base = {"submission": "SUB-909", "underwriter_id": "user", "action": "resolve", "conflict_field": "square_feet"}
                 assert act("/decision", {**base, "conflict_field": "sales_or_payroll", "chosen_value": "1"})[2] == "Decision refused: no open conflict on sales_or_payroll in this run"
                 assert act("/decision", base)[2] == "Decision refused: choose one of the values or enter the value"
