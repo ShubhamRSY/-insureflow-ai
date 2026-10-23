@@ -1777,3 +1777,19 @@ D-004 (user, 2026-10-09): Sanger & Altgelt agency pipeline. Eight steps. No auto
   - [x] Lint PASS (scorer v11) before the gold freeze; gold manifest sha256 `9ab5960db77f49e02b27518fb13eaff7a0ceb8d6e78c498c430bd2ba350a943d` recorded in the mix and NEXT-SESSION.md.
   - [x] Not run, not scored (D-020).
 - Notes: 2026-10-21 @model-risk build check OBJECTION H1/H2 (gold only; `deliverables/model-risk/T-117-check.md`). @senior-underwriter fixed SUB-246, SUB-248 (→ senior_referral, R17) and SUB-249 (retail removed); routes now carrier_a 0, senior_referral 16, no_match 4. Lint PASS, check-gold 32 ok. **Re-frozen: gold manifest sha256 `7e076534432f1276bfe6198643547498b613c4f2b7aceb2ed618314b5e39fd33`** (supersedes `9ab5960d…`). Code, prompt, scorer v11 and lint unchanged. Not run.
+
+### T-119 — Next hold-out: SUB-340–371 (20 in-scope + 12 out-of-scope), plan only, not built
+- Owner: @producer (files, mix), @senior-underwriter (gold), @senior-test-engineer (plan JSON, lint), @model-risk (look-again on every gold fix, B-457) · Status: PLANNED (not built; build starts only on the user's word) · Planned by: orchestrator, Claude Code session, 2026-10-23, from the user's own list.
+- Numbers: SUB-340 to SUB-371. SUB-290–296 are the document_conflicts dev set; SUB-321, SUB-322 and SUB-330 appear in self-checks, so the range starts at 340.
+- Acceptance criteria (for the build):
+  - [ ] 32 new files under `simulation/inbox/`, nothing reused from any hold-out or dev set: 20 in-scope and 12 out-of-scope over proposal-P-055 criteria 1–4 (at least two per criterion), as in T-108 and T-117.
+  - [ ] Direct Carrier A routes: at least 3 in-scope files that route straight to Carrier A (R14: allow-list class, no W1/W2 word, TIV ≤ 5M, clean loss run). T-117 had none (B-449).
+  - [ ] Planted conflicts (the H2 case): at least 3 files where two documents state different values for a scored or rating figure (a floor area, a sales figure, a unit or suite count), each written into the gold as an open conflict with both sides.
+  - [ ] Cooking lines (the H1 case): files with `Cooking operations: None` whose operations answer must carry it, and files where the cooking line is stated only in another document (equipment or plain words such as "cook", "stove", "hot food"). The expected gold depends on the outcome of the H1 fix (P-070/P-071 and its follow-up); the gold is written to the rule in force at gold time.
+  - [ ] Loss runs: typed, in the published carrier formats (`CARRIER_RUN_FORMATS`), including at least 2 Carrier C runs and at least 1 Carrier B run; every run valued before the run date (T-108 rule); no `| None reported |` rows (T-118 M4).
+  - [ ] SUB-252-style case (bar/restaurant R1 vs R2): included only after @head-of-underwriting rules on B-448/B-458; until then it is left out, not guessed.
+  - [ ] Build rules as T-108/T-117: at least two held W1 files and at least two office-lessor or deli-style class files.
+  - [ ] `deliverables/producer/T-119-mix.md` written before the gold; `deliverables/senior-test-engineer/T-119-plan.json`.
+  - [ ] Gold first, by hand from the documents and written rules only; @model-risk look-again on every gold fix (B-457); lint PASS with the scorer in force, then the gold manifest sha256 recorded.
+  - [ ] Not run and not scored until the user says so (D-020); scored once, with no code change after the gold exists.
+- Depends on: the H1 fix closing (T-118 is blocked by @model-risk, `deliverables/model-risk/T-118-recheck.md` on `fix-t117`); the v-next scorer for the suite-count topic and the M-class operations readings (D-122 follow-up); B-448.
