@@ -1798,7 +1798,7 @@ D-004 (user, 2026-10-09): Sanger & Altgelt agency pipeline. Eight steps. No auto
 - 2026-10-23 T-118: @model-risk check 3 APPROVE, no High (`deliverables/model-risk/T-118-check-3.md`); counts toward H2 on dev only; H1 moves to the v-next scorer (D-124); Medium/Low in B-461–B-463. Not a production approval; the T-027 veto stands.
 
 ### T-119 — Next hold-out: SUB-340–371 (20 in-scope + 12 out-of-scope), plan only, not built
-- Owner: @producer (files, mix), @senior-underwriter (gold), @senior-test-engineer (plan JSON, lint), @model-risk (look-again on every gold fix, B-457) · Status: PLANNED (not built; build starts only on the user's word) · Planned by: orchestrator, Claude Code session, 2026-10-23, from the user's own list.
+- Owner: @producer (files, mix), @senior-underwriter (gold), @senior-test-engineer (plan JSON, lint), @model-risk (look-again on every gold fix, B-457) · Status: FROZEN (built and gold frozen 2026-10-23, D-128; not run) · Planned by: orchestrator, Claude Code session, 2026-10-23, from the user's own list.
 - Numbers: SUB-340 to SUB-371. SUB-290–296 are the document_conflicts dev set; SUB-321, SUB-322 and SUB-330 appear in self-checks, so the range starts at 340.
 - Acceptance criteria (for the build):
   - [ ] 32 new files under `simulation/inbox/`, nothing reused from any hold-out or dev set: 20 in-scope and 12 out-of-scope over proposal-P-055 criteria 1–4 (at least two per criterion), as in T-108 and T-117.
@@ -1812,4 +1812,6 @@ D-004 (user, 2026-10-09): Sanger & Altgelt agency pipeline. Eight steps. No auto
   - [ ] Gold first, by hand from the documents and written rules only; @model-risk look-again on every gold fix (B-457); lint PASS with the scorer in force, then the gold manifest sha256 recorded.
   - [ ] Not run and not scored until the user says so (D-020); scored once, with no code change after the gold exists.
 - Noted before the run (D-127, 2026-10-23): under v11, answers that omit the cooking slot where gold says no cooking count as misses; results list these separately.
+- Noted before the run (D-128, 2026-10-23): under v11 the SUB-348 and SUB-349 conflict marks (cooking) can't be measured; they are reported separately and excluded from the conflict rate.
 - Depends on (updated 2026-10-23): settled. H1 in the pipeline: no automatic "no cooking" (D-124); scorer: v11 (D-127); SUB-252-style case: rule A, R2 senior referral (D-125). Lint with v11.
+- Update 2026-10-23 (orchestrator): BUILT, gold FROZEN, not run. 32 files SUB-340–371 (`simulation/inbox/build_SUB-340-371.py`); mix `deliverables/producer/T-119-mix.md`; gold by @senior-underwriter; plan + lint by @senior-test-engineer; routes carrier_a 4 / senior_referral 12 / no_match 4; planted conflicts 344 (sq ft), 345 (sales), 346 (suites), cooking 348/349; pub case 352 R2 (D-125). @model-risk build check BLOCK (H1) → D-128 gold fixes → look-again APPROVE. Lint v11: only the two D-128 marks fail. Gold manifest sha256 `2feba3b2b007ab197c22a40427b105242585ee0783bed7c5e5a575408fd55fcc`. Status: FROZEN, awaiting the user's word to run (D-020).

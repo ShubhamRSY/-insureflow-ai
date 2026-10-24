@@ -1424,3 +1424,10 @@ Then continue: P-066 concurrent-write tests, @pm pilot-readiness update, @model-
 - Follow-up tasks: operations-gold-rule.md states the v11 behaviour explicitly (no scoring change); the v12 files are parked in `deliverables/backlog/P-073-v12/`, off the pipeline path; backlog B-464; T-119 notes the v11 behaviour before any file is built.
 - Status: ACCEPTED by @user, 2026-10-23
 - Amends: supersedes D-126. v11 and every published score stay frozen (D-020). Not a production approval; the T-027 veto stands.
+
+## D-128 — T-119 cooking conflicts on SUB-348/349: true lines restored, not measured under v11
+- Rationale: the user's words in the Claude Code session on 2026-10-23: "A. Restore the true cooking-conflict lines on SUB-348 and SUB-349. Record: "Under v11 these two conflict marks can't be measured; they are reported separately and excluded from the conflict rate. Noted before the run." Fix SUB-344 (remove 'appraisal 2025' as a required match) and add it to the no-cooking backlog item." Follows the @model-risk T-119 build check BLOCK (`deliverables/model-risk/T-119-build-check.md`, High H1).
+- Dissent: none
+- Follow-up tasks: @senior-underwriter restores the SUB-348/349 conflict lines, moves "appraisal 2025" out of the SUB-344 Conflict line, adds SUB-344 to the no-cooking list (14 files); re-lint; lint record updated; @model-risk look-again (B-457); if it passes, freeze the gold and record the manifest sha256. T-119 is not run (D-020). Backlog B-465.
+- Status: ACCEPTED by @user, 2026-10-23
+- Amends: none. v11 and every published score stay frozen (D-020). Not a production approval; the T-027 veto stands.

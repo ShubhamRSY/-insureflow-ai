@@ -9,6 +9,13 @@ Written 2026-10-21 (third session) by the orchestrator at wrap-up. Wrap-up commi
 - pyright: `npx --yes pyright@1.1.390 --pythonpath .venv/bin/python <files>`. Playwright only via `/opt/homebrew/opt/python@3.14/bin/python3.14`.
 - @producer cannot write `deliverables/`; it writes to the scratchpad and the orchestrator copies it.
 
+## T-119 built and gold frozen, 2026-10-23 (D-128) — not run
+
+- 32 files `simulation/inbox/SUB-340` … `SUB-371`; gold `deliverables/senior-underwriter/gold-set/SUB-340.md` … `SUB-371.md` + `T-119-routes.md`.
+- Gold manifest `deliverables/senior-underwriter/T-119-gold-manifest.sha256`, sha256 `2feba3b2b007ab197c22a40427b105242585ee0783bed7c5e5a575408fd55fcc`. Freeze note at the end of `deliverables/producer/T-119-mix.md`.
+- Lint v11: only the SUB-348/349 conflict marks fail (D-128: not measurable under v11, reported separately, excluded from the conflict rate). @model-risk look-again APPROVE (`deliverables/model-risk/T-119-build-check-2.md`).
+- Next: run T-119 only on the user's word (D-020), against the freeze below; at write-up apply D-127, D-128 and B-467.
+
 ## Freeze 2026-10-23 (D-127), for the T-119 hold-out — read this first
 
 Recorded by the orchestrator in the Claude Code session, 2026-10-23. Supersedes the older freeze below for T-119.
