@@ -1452,3 +1452,10 @@ Then continue: P-066 concurrent-write tests, @pm pilot-readiness update, @model-
 - Follow-up tasks: @ai-engineer-assistant drafts P-074 (not built until `approve change P-074`); after P-074 is built and checked, P-075 drafted; then T-120 planned (plan only). Scorer option for H1 (B-464) not taken.
 - Status: ACCEPTED by @user, 2026-10-24
 - Amends: none. v11 and all published scores stay frozen (D-020). Not a production approval; the T-027 veto stands.
+
+## D-132 — P-074 approved (H2: unverifiable conflict sides stay open; "million" read; approximate amounts never verify)
+- Rationale: the user typed in the Claude Code session on 2026-10-24: "approve change P-074 as drafted, with: (1) keep the extra hedge words (nearly, almost, close to, circa); (2) equal-amount merging as drafted; (3) backup sales rule left out — add a backlog item: "second safety net for sales figures in sentences without a sales word, so a conflict is caught even when the model doesn't raise it."" Proposal: `deliverables/ai-engineer/proposal-P-074.md`.
+- Dissent: none
+- Follow-up tasks: build on a new branch from pilot-integration in the fix worktree; dev checks as in the proposal; @senior-underwriter UI check; @model-risk check (High only, one look-again max, D-129); if it passes, merge into pilot-integration, tests/pipeline + 143-folder request-equality (expect 0 request changes), push pilot-integration only. Then P-075 drafted, not built. Backlog B-478.
+- Status: ACCEPTED by @user, 2026-10-24
+- Amends: none. v11 and all published scores stay frozen (D-020). Not a production approval; the T-027 veto stands.

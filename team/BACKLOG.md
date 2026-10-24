@@ -495,3 +495,4 @@ Also open from T-097, already in the register's Section D so not repeated as row
 | B-475 | T-027 memo T-119 L1 | @ai-engineer-assistant | Low | SUB-371 manual-intake card lists only not_identified (gold criteria 2 and 4); reason accuracy 11/12. | 2026-10-24 |
 | B-476 | T-027 memo T-119 L2 | @ai-engineer-assistant | Low | Out-of-scope files consumed pacing time (~1 min each) with no model call; say so in run records. | 2026-10-24 |
 | B-477 | T-027 memo T-119 L3 | @pm | Low | T-027 acceptance criteria 2 and 3 still unticked in TASKS.md (carried from the T-108 memo). | 2026-10-24 |
+| B-478 | D-132 (P-074 item 3) | @ai-engineer-assistant | Medium | Second safety net for sales figures in sentences without a sales word, so a conflict is caught even when the model doesn't raise it. Needs its own P-###. | 2026-10-24 |
