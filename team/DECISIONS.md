@@ -1431,3 +1431,17 @@ Then continue: P-066 concurrent-write tests, @pm pilot-readiness update, @model-
 - Follow-up tasks: @senior-underwriter restores the SUB-348/349 conflict lines, moves "appraisal 2025" out of the SUB-344 Conflict line, adds SUB-344 to the no-cooking list (14 files); re-lint; lint record updated; @model-risk look-again (B-457); if it passes, freeze the gold and record the manifest sha256. T-119 is not run (D-020). Backlog B-465.
 - Status: ACCEPTED by @user, 2026-10-23
 - Amends: none. v11 and every published score stay frozen (D-020). Not a production approval; the T-027 veto stands.
+
+## D-129 — Fast lane (standing approval)
+- Rationale: the user's words in the Claude Code session on 2026-10-23 (pasted, D-032): "FAST LANE (standing approval by @user, 2026-10-23): Proceed without asking: gold fixes that make gold match the documents; new tests; docs; dev-only data; reviewer-requested UI text fixes; any change that is stricter only (sends more to a person, never less, never loosens a gate). Always stop and ask @user: anything that loosens a rule or gate; scorer changes; frozen files; hold-out runs; rule/routing/appetite decisions; merges into ai-team or main; real data; anything outside the worktrees. Decisions: collect all decisions for @user in one list per session, each with options and a recommendation. Reviews: High-only; at most one look-again per finding. If a fix fails a second time, stop and present 2–3 options instead of looping. Tracks: at most two AI tracks at once, each in its own worktree, one tool per worktree. Everything else in CLAUDE.md (frozen files, gold-first, run once, secret scan, never push main, decisions only typed by @user) still applies."
+- Dissent: none
+- Follow-up tasks: "Fast lane" section in CLAUDE.md and AGENTS.md on pilot-integration and ai-team.
+- Status: ACCEPTED by @user, 2026-10-23
+- Amends: none; D-017 approvals for extraction, prompts, OCR, models and scorers still need `approve change P-###`.
+
+## D-130 — T-119 official run: GO
+- Rationale: the user's words in the Claude Code session on 2026-10-23: "T-119 official run: GO (D-020, typed by @user)." Rules fixed before running: code b6a35b7, PROMPT_VERSION 759b3e6bc9b2, scorer v11 and lint sha256 and T-119 gold manifest 2feba3b2… must match NEXT-SESSION.md exactly, else stop; no changes during or after the run; .venv python; smoke_readers.py first, stop if any reader fails; qwen, paced 55 s; no cached replies for SUB-340–371; retries per RUN-RULES.md, all logged; other failures are "call failed" and counted; all 32 files once; scored once with v11 (--write); D-127/D-128/B-467 reporting; results, mismatches and run record; fix nothing. Then @model-risk writes the T-027 memo.
+- Dissent: none
+- Follow-up tasks: run and score T-119 once; results, mismatches, run record in deliverables/ai-engineer/evals/; @model-risk T-027 memo; findings to the backlog.
+- Status: ACCEPTED by @user, 2026-10-23
+- Amends: none. Published scores are never rewritten (D-020).
