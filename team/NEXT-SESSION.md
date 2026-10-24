@@ -9,6 +9,13 @@ Written 2026-10-21 (third session) by the orchestrator at wrap-up. Wrap-up commi
 - pyright: `npx --yes pyright@1.1.390 --pythonpath .venv/bin/python <files>`. Playwright only via `/opt/homebrew/opt/python@3.14/bin/python3.14`.
 - @producer cannot write `deliverables/`; it writes to the scratchpad and the orchestrator copies it.
 
+## T-119 run and scored, 2026-10-24 (D-130) — T-027 veto KEPT
+
+- Run 20261024T000318-70195, once, v11 `--write`; commit 46aacbe. Results `deliverables/ai-engineer/evals/SUB-340-371-results.md`.
+- Safety gates pass (0 leaks, recall 12/12, 0 false completes, 0 unsafe, route 20/20, loss runs 20/20). Fail: operations 9/20 (B-468), planted-conflict recall 2/3 (B-469; SUB-345 passes the send gate with the conflict discarded).
+- @model-risk memo KEEP: `deliverables/model-risk/T-027-memo-T-119.md`; backlog B-468–B-477. Next: the user decides on P-### drafts for H1/H2.
+- Fast lane D-129 is in CLAUDE.md and AGENTS.md (both branches).
+
 ## T-119 built and gold frozen, 2026-10-23 (D-128) — not run
 
 - 32 files `simulation/inbox/SUB-340` … `SUB-371`; gold `deliverables/senior-underwriter/gold-set/SUB-340.md` … `SUB-371.md` + `T-119-routes.md`.
