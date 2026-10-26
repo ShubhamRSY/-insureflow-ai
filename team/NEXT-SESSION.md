@@ -9,6 +9,12 @@ Written 2026-10-21 (third session) by the orchestrator at wrap-up. Wrap-up commi
 - pyright: `npx --yes pyright@1.1.390 --pythonpath .venv/bin/python <files>`. Playwright only via `/opt/homebrew/opt/python@3.14/bin/python3.14`.
 - @producer cannot write `deliverables/`; it writes to the scratchpad and the orchestrator copies it.
 
+## 2026-10-26: P-074 and P-075 merged; T-120 planned (not built) — read this first
+
+- pilot-integration: P-074 (D-132, unverifiable conflict sides stay open; million read; approximate amounts) and P-075 (D-133, cited cooking none-line copied; cooking elsewhere holds) merged. tests/pipeline 93 passed; 0 of 143 requests changed; PROMPT_VERSION 759b3e6bc9b2. @model-risk APPROVE on both after fixes.
+- T-120 (SUB-450–481) planned in team/TASKS.md, not built. Before building: freeze code/prompt/scorer/lint in this file; the user decides on the operations gate (deliverables/model-risk/T-027-operations-gate-answer.md, C1–C7).
+- Commits are made by hand in the worktrees (the commit-commands plugin runs in the main folder, which holds the user's own work).
+
 ## T-119 run and scored, 2026-10-24 (D-130) — T-027 veto KEPT
 
 - Run 20261024T000318-70195, once, v11 `--write`; commit 46aacbe. Results `deliverables/ai-engineer/evals/SUB-340-371-results.md`.
