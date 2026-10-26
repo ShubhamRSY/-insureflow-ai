@@ -1466,3 +1466,15 @@ Then continue: P-066 concurrent-write tests, @pm pilot-readiness update, @model-
 - Follow-up tasks: @model-risk supplies the 45 P-073 probe sentences (stored as test cases); build P-075 on a new branch in the fix worktree (rule only, review note kept, 0 changed requests); checks; @senior-underwriter UI check; @model-risk check (one look-again); merge if no High; @model-risk answers the T-027 operations-gate question (no change); plan T-120.
 - Status: ACCEPTED by @user, 2026-10-26
 - Amends: none. v11 and all published scores stay frozen (D-020). Not a production approval; the T-027 veto stands.
+
+## D-134 — Operations gate adopted for T-027 (C1–C7), recorded before T-120 gold (2026-10-26)
+- Rationale: The user typed in the Claude Code session on 2026-10-26: "Decisions (typed by @user): 1 = A — adopt the operations gate with @model-risk's C1–C7; record it now, before any T-120 gold. 2 = A — freeze and build T-120 after C1 is built. B-481 waits until after T-120. 1. @ai-engineer-assistant drafts the C1 proposal for me to read: operations is always flagged and must be acknowledged before any send, in all modes; reuse the pilot per-value confirm where possible. Do not build until I approve. 2. Freeze C2 (stricter silent-error count) and C4 (operations ≥15/20) in writing now, in the T-120 plan and the scorer notes. No scorer code change. 3. Add C6 (extra cooking files) to the T-120 plan. Commit, push pilot-integration only."
+- Decision:
+  - **C1:** Operations is never auto-accepted. After all rules/merges (including P-074/P-075), any operations row with a value is flagged `needs_review=True` with a policy note when no specific item-naming reason exists; shown on the card; send refused until acknowledged on the current run hash. Enforced by code change needing its own proposal (**P-076**, draft for user review, not built). Reuse existing per-value acknowledgment.
+  - **C2:** Silent error for operations = scored miss with **no specific** item-naming reason (P-059/P-075 missing-item reasons, cooking/conflict reasons, scan/low-confidence reasons count as specific; the C1 policy reason does **not** count). Counted by a script frozen before T-120 gold; v11 unchanged. Target 0.
+  - **C3:** Zero understated hazards (cooking, fryer, hood, pub, contractor class), whether flagged or not.
+  - **C4:** Operations present ≥ 18/20 and hits ≥ 15/20 under frozen v11 (floor set now, before T-120 gold).
+  - **C5:** All other fields and gates unchanged.
+  - **C6:** T-120 will include ≥12 files with "Cooking operations: None"-type lines, ≥3 with cooking stated, ≥2 with planted cooking conflicts (added to plan).
+  - **C7:** Recorded before any T-120 gold exists (satisfied).
+- Effect: Operations and status automation go to 0 by design. T-027 veto remains until T-120 meets all conditions; this is not a production approval.
