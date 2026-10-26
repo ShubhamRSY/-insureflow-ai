@@ -84,6 +84,10 @@ def run_product_logic(ctx: CommercialProductContext) -> QuoteResult | None:
     if builder is None:
         return None
     quote = builder(ctx)
+    if quote is not None:
+        from insureflow.rating.models import refuse_non_finite_premium
+
+        quote = refuse_non_finite_premium(quote)
     parent = RATED_ON.get(resolved)
     if parent and quote is not None:
         meta = dict(quote.metadata or {})

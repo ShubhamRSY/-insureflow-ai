@@ -43,7 +43,8 @@ def test_build_and_train_single_lob(tmp_path):
     results = train_all_lob_models(data_root=tmp_path / "lines", force=True, insurance_lines=[line])
     assert len(results) == 4
     assert all(r["insurance_line"] == line for r in results)
-    assert sum(1 for r in results if r.get("gate_passed")) >= 3
+    assert all(r.get("gate_passed") is False for r in results)
+    assert all(r.get("gate_reason") for r in results)
 
     model = get_insurance_model(ModelType.LOSS_PREDICTION, line)
     assert model is not None

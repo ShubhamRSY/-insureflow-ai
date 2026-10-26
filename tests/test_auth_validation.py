@@ -42,3 +42,16 @@ def test_validate_company_email_respects_custom_domains(monkeypatch: pytest.Monk
 def test_validate_company_email_skips_domain_check_when_unconfigured(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("REGISTRATION_EMAIL_DOMAINS", "")
     assert validate_company_email("anyone@example.com").valid is True
+
+
+def test_validate_registration_reports_each_error_once(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("REGISTRATION_EMAIL_DOMAINS", raising=False)
+    result = validate_registration(
+        username="not an email@example.com",
+        email="not-an-email",
+        password="ValidPass1!",
+        company_name="Acme Insurance",
+    )
+    assert result.valid is False
+    assert result.errors.count("Invalid email format") == 1
+    assert any("Username may only contain" in err for err in result.errors)

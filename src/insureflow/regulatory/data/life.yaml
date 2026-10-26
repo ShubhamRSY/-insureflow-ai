@@ -33,7 +33,7 @@ states:
   AK:
     name: Alaska
     rate_filing: file_and_use
-    free_look_period_days: 10
+    free_look_period_days: 20
     illustration_standards: NAIC_compliant
     suitability_annuity: true
     replacement_regulations: true
@@ -101,7 +101,7 @@ states:
   CO:
     name: Colorado
     rate_filing: file_and_use
-    free_look_period_days: 10
+    free_look_period_days: 15
     illustration_standards: NAIC_compliant
     suitability_annuity: true
     replacement_regulations: true
@@ -152,7 +152,7 @@ states:
   FL:
     name: Florida
     rate_filing: file_and_use
-    free_look_period_days: 10
+    free_look_period_days: 14
     illustration_standards: NAIC_compliant
     suitability_annuity: true
     replacement_regulations: true
@@ -662,7 +662,7 @@ states:
   RI:
     name: Rhode Island
     rate_filing: file_and_use
-    free_look_period_days: 10
+    free_look_period_days: 20
     illustration_standards: NAIC_compliant
     suitability_annuity: true
     replacement_regulations: true
@@ -849,7 +849,7 @@ states:
   WY:
     name: Wyoming
     rate_filing: file_and_use
-    free_look_period_days: 10
+    free_look_period_days: 30
     illustration_standards: NAIC_compliant
     suitability_annuity: true
     replacement_regulations: true

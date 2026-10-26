@@ -100,6 +100,13 @@ def _resolve_line(line: str) -> Optional[str]:
     return _LINE_ALIASES.get(normalized, _LINE_ALIASES.get(line.lower().strip()))
 
 
+def _cited_surplus_tax(code: str, yaml_rate: float) -> float:
+    """Cited commercial table wins. YAML remains the rate for states without a cite."""
+    from insureflow.commercial.lobs.state_law import SURPLUS_LINES_TAX
+
+    return SURPLUS_LINES_TAX.get(code.upper(), yaml_rate)
+
+
 class StateRegulatoryEngine:
     """Loads per-state regulatory rules (general + line-specific) and produces compliance flags."""
 
@@ -143,10 +150,18 @@ class StateRegulatoryEngine:
                 continue
             self._line_rules[line_key] = {}
             for code, raw in states_data.items():
-                self._line_rules[line_key][code.upper()] = {
+                stored = {
                     "name": raw.get("name", code),
                     **{k: v for k, v in raw.items() if k != "name"},
                 }
+                state = code.upper()
+                if line_key == "life":
+                    from insureflow.life.lobs.state_law import LIFE_FREE_LOOK_DAYS
+
+                    stored["free_look_period_days"] = LIFE_FREE_LOOK_DAYS.get(state, stored.get("free_look_period_days", 10))
+                if "surplus_lines_tax_rate" in stored:
+                    stored["surplus_lines_tax_rate"] = _cited_surplus_tax(state, float(stored.get("surplus_lines_tax_rate") or 0.0))
+                self._line_rules[line_key][state] = stored
 
     @staticmethod
     def _parse_general_rule(code: str, raw: dict[str, Any]) -> StateRule:
@@ -184,7 +199,7 @@ class StateRegulatoryEngine:
             hurricane_license_required=bool(raw.get("hurricane_license_required", False)),
             workers_comp_state_fund=bool(raw.get("workers_comp_state_fund", False)),
             workers_comp_notes=raw.get("workers_comp_notes", ""),
-            surplus_lines_tax_rate=float(raw.get("surplus_lines_tax_rate", 0.0)),
+            surplus_lines_tax_rate=_cited_surplus_tax(code, float(raw.get("surplus_lines_tax_rate", 0.0))),
             surplus_lines_stamping_fee=float(raw.get("surplus_lines_stamping_fee", 0.0)),
             admitted_only=bool(raw.get("admitted_only", False)),
             admitted_notes=raw.get("admitted_notes", ""),

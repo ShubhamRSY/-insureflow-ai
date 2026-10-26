@@ -141,7 +141,7 @@ include = ["insureflow*", "evaluations*"]
 target-version = "py311"
 line-length = 200
 # underwriting_pipeline/ and lint_holdout.py are linted (F rules) by the pipeline CI job.
-exclude = ["-insureflow-ai", "underwriting_pipeline", "tests/pipeline", "deliverables", "simulation"]
+extend-exclude = ["-insureflow-ai", "underwriting_pipeline", "tests/pipeline", "deliverables", "simulation"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W"]
