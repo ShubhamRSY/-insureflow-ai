@@ -1,0 +1,157 @@
+{
+  "complete": false,
+  "missing": [
+    "operations",
+    "loss_run_valued_through"
+  ],
+  "request": "Submission SUB-136\nNothing has been declined. Nothing has been bound.\n\nMissing:\n- description of operations\n- currently valued carrier loss runs (a no-known-loss letter does not count)\n\nAlso send:\n- liquor sales\n",
+  "conflicts": [],
+  "extra": [
+    "liquor sales"
+  ],
+  "fields": [
+    {
+      "field_id": "named_insured",
+      "value": "Taqueria La Esquina LLC",
+      "source": "application.md",
+      "start": 139,
+      "end": 177,
+      "confidence": 1.0,
+      "model_confidence": 1.0,
+      "ocr_cited_confidence": null,
+      "needs_review": false,
+      "reason": null,
+      "quote": "Named insured: Taqueria La Esquina LLC"
+    },
+    {
+      "field_id": "premises_address",
+      "value": "1810 San Bernardo Ave, Laredo, TX 78040",
+      "source": "application.md",
+      "start": 212,
+      "end": 269,
+      "confidence": 1.0,
+      "model_confidence": 1.0,
+      "ocr_cited_confidence": null,
+      "needs_review": false,
+      "reason": null,
+      "quote": "Premises address: 1810 San Bernardo Ave, Laredo, TX 78040",
+      "address_check": "ok"
+    },
+    {
+      "field_id": "effective_date",
+      "value": "2027-02-01",
+      "source": "application.md",
+      "start": 270,
+      "end": 296,
+      "confidence": 1.0,
+      "model_confidence": 1.0,
+      "ocr_cited_confidence": null,
+      "needs_review": false,
+      "reason": null,
+      "quote": "Effective date: 2027-02-01"
+    },
+    {
+      "field_id": "operations",
+      "value": null,
+      "start": null,
+      "end": null,
+      "source": null,
+      "confidence": 0.0,
+      "needs_review": true
+    },
+    {
+      "field_id": "sales_or_payroll",
+      "value": "940000",
+      "source": "application.md",
+      "start": 544,
+      "end": 566,
+      "confidence": 1.0,
+      "model_confidence": 1.0,
+      "ocr_cited_confidence": null,
+      "needs_review": false,
+      "reason": null,
+      "quote": "Annual sales: $940,000"
+    },
+    {
+      "field_id": "tiv_building",
+      "value": "510000",
+      "source": "application.md",
+      "start": 567,
+      "end": 589,
+      "confidence": 1.0,
+      "model_confidence": 1.0,
+      "ocr_cited_confidence": null,
+      "needs_review": false,
+      "reason": null,
+      "quote": "Building TIV: $510,000"
+    },
+    {
+      "field_id": "construction",
+      "value": "Masonry",
+      "source": "application.md",
+      "start": 649,
+      "end": 670,
+      "confidence": 1.0,
+      "model_confidence": 1.0,
+      "ocr_cited_confidence": null,
+      "needs_review": false,
+      "reason": null,
+      "quote": "Construction: Masonry"
+    },
+    {
+      "field_id": "year_built",
+      "value": "1985",
+      "source": "application.md",
+      "start": 671,
+      "end": 687,
+      "confidence": 1.0,
+      "model_confidence": 1.0,
+      "ocr_cited_confidence": null,
+      "needs_review": false,
+      "reason": null,
+      "quote": "Year built: 1985"
+    },
+    {
+      "field_id": "loss_run_valued_through",
+      "value": null,
+      "start": null,
+      "end": null,
+      "source": null,
+      "confidence": 0.0,
+      "needs_review": true
+    }
+  ],
+  "folder": "SUB-136",
+  "sprinklers": "no",
+  "cooking": {
+    "equipment": {
+      "state": "not_stated",
+      "terms": [],
+      "source": null,
+      "start": null,
+      "end": null,
+      "quote": null
+    },
+    "hood_suppression": {
+      "state": "not_stated",
+      "terms": [],
+      "source": null,
+      "start": null,
+      "end": null,
+      "quote": null
+    }
+  },
+  "needs_human": [],
+  "unread": [],
+  "locations": [],
+  "error": null,
+  "model_version": "qwen/qwen3.8-27b",
+  "prompt_version": "b025802c0dfa",
+  "ocr_settings": "tesseract psm6; osd turn; deskew +-12; rule lift; x2 lanczos; pdf 200dpi; fill in image mode",
+  "host": "api.groq.com",
+  "temperature": 0,
+  "cache_key": "3a19ceaa9eb12bac2fd9f77ea563e82169ad1ea21630c0a1ff03c03c6d1ca88d",
+  "retries": [],
+  "status": "incomplete",
+  "status_reason": null
+}

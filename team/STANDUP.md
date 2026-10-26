@@ -1677,3 +1677,86 @@ Blocked: No.
 - Done: P-038 (D-086) UI check. APPROVE, no High findings. Other value and file are visible in the review note; the tick at approve works. 3 Medium, 1 Low logged in DISCUSSION.
 - Next: none on P-038.
 - Blockers: none.
+
+### 2026-10-15 — @model-risk
+- Done: D-088 check of P-040/P-041 (201232d). REJECT as built: H1 letter test is a phrase list (a reheaded SUB-112 letter goes review pending and sendable); H2 open-conflict files now scored. Memo deliverables/model-risk/check-P-040-P-041.md.
+- Next: re-check (High only) once H1 and H2 are fixed with self-checks.
+- Blockers: none. T-027 veto stands.
+
+### 2026-10-15 — @senior-underwriter
+- Done: D-088 UI check of P-040/P-041 (D-065 item 3). APPROVE, no High findings. Cards SUB-111 and SUB-112 say why not complete, what to check, why no send. 5 Medium, 2 Low in DISCUSSION.
+- Next: none on D-088 UI.
+- Blockers: none.
+
+### 2026-10-15 — @model-risk
+- Done: D-089 check of P-042/P-043/B-324/B-325 (964c159). REJECT P-043 as built. H1: a summary by the applicant or agent still passes as a carrier loss run (12 of 14 probe phrasings) because nothing checks that the carrier issued it. P-042, B-324 and B-325 pass. Memo: deliverables/model-risk/check-P-042-P-043-B-324.md.
+- Next: re-check (High only) once there is a positive carrier-issuer test with self-checks.
+- Blockers: none. T-027 veto stands.
+
+### 2026-10-15 — @senior-underwriter
+- Done: D-089 UI check of P-042/P-043/B-324 (D-065 item 3). APPROVE, no High findings. SUB-107 and SUB-113 cards state each block in plain words and show the resolve form. 4 Medium, 2 Low posted in DISCUSSION.
+- Next: none on D-089 UI.
+- Blockers: none. P-043 model-risk REJECT is separate and stands.
+
+### 2026-10-15 — @model-risk
+- Done: D-090 check of P-044 (1c2f02d). APPROVE, no High findings. 2 Medium and 2 Low are in the backlog (M1: `_` lines skipped anywhere in the file). Memo: deliverables/model-risk/check-P-044.md.
+- Next: re-check M1 and M2 when they are fixed. Before the next hold-out, the dev set needs one synthetic A/B/C file.
+- Blockers: none. The T-027 veto stands.
+
+### 2026-10-15 — @senior-underwriter
+- Done: D-090 UI check of the P-044 reason text (D-065 item 3). APPROVE, no High findings. SUB-107 and SUB-112 cards give a plain reason and next step. 3 Medium, 2 Low posted in DISCUSSION.
+- Next: none on D-090 UI.
+- Blockers: none.
+
+### 2026-10-15 — @senior-underwriter
+- Done: D-091 gold for dev files SUB-147 to SUB-152, written by hand before any extraction. Accept: 147 (A pdf), 148 (B scan), 149 (C) = 2026-09-30, complete. Review: 150 (applicant letter), 151 (B, no valuation date), 152 (unknown layout) = not a recognised carrier loss run, complete - review pending.
+- Next: none from me; the run is the next step.
+- Blockers: none. Note for @model-risk: 150 to 152 have Status incomplete (no usable carrier-verified loss run) while the pipeline is expected at complete - review pending (B-325).
+
+### 2026-10-15 — @model-risk
+- Done: D-091 check (deliverables/model-risk/check-D-091.md). Dev check SUB-147–152 APPROVE (re-run from cache, 0 false completes reproduced); T-102 mix APPROVE WITH CHANGES (M3–M5); R-030 APPROVE (add M6 "_" line skip, M7 date validity). No High, no veto.
+- Next: confirm T-102 is updated with M3–M5 before any SUB-127–146 file is created.
+- Blockers: none. T-027 veto stands; nothing here is a production approval.
+
+### 2026-10-15 — @senior-underwriter
+- Done: D-092 1c dev gold correction. SUB-150 and SUB-151 both open with a Carrier header and have no valued-as-of date: expected loss run "loss run found but no valued-as-of date; ask the producer for a dated carrier loss run", expected pipeline status incomplete. Gold note added to each. No other gold, code or inbox touched.
+- Next: none from me.
+- Blockers: none.
+
+### 2026-10-15 — @model-risk
+- Done: D-092 check (deliverables/model-risk/check-D-092.md). P-045/B-343: CHANGES REQUIRED. H1: an undated carrier run keeps an extracted date, giving review pending instead of incomplete. Self-checks ok; cached SUB-147–152 reproduced with 0 false completes. T-102 mix CONFIRMED.
+- Next: verify the H1 fix once a P-### is approved.
+- Blockers: H1 open; T-027 veto stands; nothing here is a production approval.
+
+### 2026-10-15 — @senior-underwriter
+- Done: D-092 item 4. Hold-out gold SUB-127 to SUB-146 written by hand from the documents only (scans and the image-only PDF rendered and read), before any extraction. Status 6 complete, 14 incomplete. Each file also has Expected loss run and Expected pipeline status. No code, inbox or scorer touched.
+- Next: @model-risk may check the gold; freeze and commit is the orchestrator's step.
+- Blockers: none. Judgment calls to see: SUB-137 read as the copied-header case (missing, D-092 1c); SUB-131 sq ft 2,100 vs 2,800 treated as a conflict.
+
+### 2026-10-15 — @senior-underwriter
+- Done: D-093 gold for development file SUB-153, written by hand before any extraction (deliverables/senior-underwriter/gold-set/SUB-153.md). Carrier A run dated 2026-09-30 accepted; Carrier B run has no valuation line (undated). Status "complete — review pending" per P-046; route Carrier A. SUB-127 to SUB-146 and their gold not opened. No code run.
+- Next: @model-risk check; commit is the orchestrator's step.
+- Blockers: none. Judgment call: the missing valuation line makes the Carrier B run undated, not unrecognised; the reason on the card should say undated.
+
+### 2026-10-15 — @model-risk
+- Done: P-046 (D-093) check of 57d56b9: REJECT as frozen hold-out code, 2 High (H1 letter-like word excuses an undated or copy carrier run; H2 a non-"loss"-named or scanned run is ignored). Self-checks pass; SUB-153 behaves as gold. deliverables/model-risk/check-P-046.md.
+- Next: re-check once a new P-### closing H1/H2 is approved and built.
+- Blockers: the hold-out SUB-127–146 should not run on 57d56b9 until H1/H2 are closed.
+### 2026-10-15 — @senior-underwriter
+- Done: D-094 item 2: operations gold rule written (deliverables/senior-underwriter/operations-gold-rule.md); new gold only, not applied to published scores. Next: gold for new sets follows it. Blockers: none.
+
+- 2026-10-15 @model-risk: D-094/P-047 check written (deliverables/model-risk/check-P-047.md): APPROVE WITH CHANGES, H1 open (operations check and bar/liquor referral read only the cited line). Not a production approval.
+- 2026-10-15 @model-risk: D-094/P-047 H1 look-again at 086a0e0: H1 still open (rule lines read only under exact labels; SUB-122 "Bar / liquor:" missed at 1.0). Probes pass, re-score recomputes. No new High. Not a production approval.
+- 2026-10-15 @model-risk: D-094/P-047 H1 look-again 2 at b73bd40: H1 CLOSED (any rule-item label read; SUB-122 both lines flag at 0.74; dev cache re-score 0 mismatches, 0 silent). No new High; backlog M8, M9, L6, L7. Not a production approval.
+- 2026-10-15 @senior-underwriter: D-094/P-047 UI check: APPROVE, no High; backlog M1-M4 (context line not on card, 'no cooking' wording, vague labels, no next-step text), L1-L2.
+
+- 2026-10-16 @head-of-underwriting: D-096 item 1 / P-049 reworked into a 15-rule final list (14 keep-write, 1 remove). Restaurants -> senior_referral justified (AG:39/62/66). Code bugs named: workbench.py 184, 186, 194. Rules file: carrier-match.md. T-103 rows 3, 5, 6, 10, 17, 19 change. Waiting on the user's approval; nothing built.
+- 2026-10-15 @senior-underwriter (written by the orchestrator, D-096 item 5): D-095 B-364 gold check: SUB-134 → no_match, SUB-139 → senior_referral, provisional routes on held dev gold (deliverables/senior-underwriter/B-364-gold-check.md); P-048 UI check APPROVE WITH CHANGES, no High (B-373).
+- 2026-10-15 @head-of-underwriting (written by the orchestrator, D-096 item 5): D-095 B-364: agreed with every dev gold change; raised P-049 for routing rules not written down.
+- 2026-10-16 @model-risk (written by the orchestrator, D-096 item 5): D-095 P-048 check APPROVE WITH CHANGES; H1 (B-363) closed at 4b313be after look-again; T-103 mix approved with conditions 1–3 (deliverables/model-risk/check-P-048.md).
+- 2026-10-16 @model-risk: D-096 check (check-P-050.md). P-050 workbench: APPROVE WITH CHANGES. Scorer v3 and the dev script: OBJECTION, H1 (run.py NameError), H2 (gate passes below 18/20 when calls fail), H3 (held provisional routes counted unsafe; the TIV-missing gold rule must be set before T-103 gold). Dev v3 re-score: gate FAIL, 1 unsafe (SUB-138), 16/20. M1–M3 and L1–L3 to the backlog.
+- 2026-10-16 @senior-underwriter: D-096 P-050 UI check APPROVE WITH CHANGES, no High. Route is clearly not a send. M1 label implies TIV alone clears a six-field hold; M2 no "ask the producer for" line; M3 senior_referral shows a suggested carrier. L1-L2 to backlog.
+- 2026-10-16 @head-of-underwriting: D-097 item 1: carrier-match.md rewritten (R1..R15, word lists W1 no_match, W2 senior_referral, checked first). AG and CAG wording edits done. B-377 logged. Ready for the build.
+- 2026-10-16 @senior-underwriter: D-097 items 1-2. W2 lists reviewed (negation and "vacant" scope notes; add "no utilities" to W2e). Dev gold updated, route first: SUB-130/132/136/140 carrier_b to senior_referral; 133 carrier_c to senior_referral; 138 hold to senior_referral; 143 hold to carrier_a; 144 no_match to senior_referral. D-097 notes added to each file.
+- 2026-10-16 @model-risk: D-097 check (check-P-049.md). Scorer v4 APPROVE. P-049 OBJECTION, H1: AG:46 pubs/lounges and AG:51 "no utilities" reach carrier_a. Dev v4 re-score at 213d884 (cache, 0 calls): gate PASS, 0 unsafe, 18/20, 0 false completes. M1-M4, L1-L4 to backlog.
+- 2026-10-16 @senior-underwriter: D-097 UI check of P-049 notes: APPROVE WITH CHANGES. One High: card says "underwriter confirms" but senior_referral has no confirm/send action; add a plain line "no send from this screen" before the demo (not a blocker with that line). M1-M4, L1-L2 in DISCUSSION.md.

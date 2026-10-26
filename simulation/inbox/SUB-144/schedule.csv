@@ -1,0 +1,3 @@
+source,loc,address,city,zip,bldg_tiv,construction,year_built,sq_ft,sprinklers,cooking
+FICTIONAL,1,2801 N Mays St,Round Rock,78664,740000,Masonry,2002,6800,Yes,none
+FICTIONAL,2,1250 Cypress Creek Rd,Cedar Park,78613,410000,Joisted masonry,2015,4100,No,none

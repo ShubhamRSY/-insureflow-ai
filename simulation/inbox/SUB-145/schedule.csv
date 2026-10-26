@@ -1,0 +1,4 @@
+source,loc,address,city,zip,bldg_tiv,construction,year_built,sq_ft,sprinklers,cooking
+FICTIONAL,1,3300 Lakeview Dr,Amarillo,79106,2300000,Joisted masonry,1994,15300,Yes,none
+FICTIONAL,2,3300 Lakeview Dr Bldg B,Amarillo,79106,2250000,Joisted masonry,1994,15400,Yes,none
+FICTIONAL,3,3300 Lakeview Dr Bldg C,Amarillo,79106,2250000,Joisted masonry,1994,15300,Yes,none

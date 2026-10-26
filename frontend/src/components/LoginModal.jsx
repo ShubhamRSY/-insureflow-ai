@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { endpoints, auth } from '../lib/api';
@@ -8,6 +8,8 @@ export default function LoginModal({ open, onClose, onSuccess }) {
   const navigate = useNavigate();
   const [mode, setMode] = useState('login');
   const [error, setError] = useState('');
+  const [clearing, setClearing] = useState(false);
+  const clearRef = useRef(false);
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const [setupRequired, setSetupRequired] = useState(false);
@@ -167,7 +169,11 @@ export default function LoginModal({ open, onClose, onSuccess }) {
               <p className="text-xs text-slate-500 mb-2">Stuck? Clear old data and start fresh:</p>
               <button
                 type="button"
+                disabled={clearing}
                 onClick={async () => {
+                  if (clearRef.current) return;
+                  clearRef.current = true;
+                  setClearing(true);
                   try {
                     await endpoints.clearStaleSession();
                     localStorage.clear();
@@ -176,9 +182,12 @@ export default function LoginModal({ open, onClose, onSuccess }) {
                     setSuccess('Cleared. Fill in the form above to create your admin.');
                   } catch (err) {
                     setError(err.message || 'Could not clear — accounts may already exist. Try logging in.');
+                  } finally {
+                    clearRef.current = false;
+                    setClearing(false);
                   }
                 }}
-                className="w-full rounded-xl border border-slate-600 px-3 py-2 text-xs text-slate-400 hover:border-red-500 hover:text-red-400 transition-colors"
+                className="w-full rounded-xl border border-slate-600 px-3 py-2 text-xs text-slate-400 hover:border-red-500 hover:text-red-400 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Clear old login data
               </button>

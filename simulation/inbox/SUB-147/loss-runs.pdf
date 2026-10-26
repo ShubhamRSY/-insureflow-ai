@@ -1,0 +1,32 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>
+endobj
+4 0 obj
+<< /Length 456 >>
+stream
+BT /F1 10 Tf 40 750 Td 13 TL (CARRIER A \227 LOSS RUN \(FICTIONAL\)) Tj T* (Named insured: Marlow Creek Accounting PLLC) Tj T* (Policy period: 2024-03-01 to 2025-03-01) Tj T* (Policy period: 2025-03-01 to 2026-03-01) Tj T* (Policy period: 2026-03-01 to 2027-03-01) Tj T* (Valued as of: 2026-09-30) Tj T* (| Date of loss | Cause | Paid | Reserve | Status |) Tj T* (|---|---|---|---|---|) Tj T* (| 2025-06-14 | water damage | $4,200 | $0 | closed |) Tj T* ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000000748 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+843
+%%EOF

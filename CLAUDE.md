@@ -15,7 +15,7 @@ These apply to every session and every agent, and override older instructions wh
 1. Sessions: maximum 2–3 hours. End with /wrap-up, then the user runs /clear. Each new session starts by reading only `team/NEXT-SESSION.md`.
 2. Context: suggest /compact when the conversation gets long, and before any large task.
 3. Subagents only when needed: use them for independent reviews (@model-risk, @compliance, @responsible-ai) and large builds. Small edits, board updates, standups, decision records and summaries are done in the main session without a subagent.
-4. Cheaper models for simple roles: `model: haiku` for @pm, @account-manager, @producer, @carrier-underwriter; `model: sonnet` for @software-engineer, @ai-engineer-assistant, @data-engineer, @ml-engineer, @data-scientist, @senior-underwriter, @actuary, @head-of-underwriting; the strongest model only for @model-risk, @compliance, @responsible-ai. Set in `.claude/agents/*.md`.
+4. Cheaper models for simple roles: `model: haiku` for @pm, @account-manager, @producer, @carrier-underwriter; `model: sonnet` for @software-engineer, @frontend-engineer, @senior-test-engineer, @ai-engineer-assistant, @data-engineer, @ml-engineer, @data-scientist, @senior-underwriter, @actuary, @head-of-underwriting; the strongest model only for @model-risk, @compliance, @responsible-ai. Set in `.claude/agents/*.md`.
 5. Read less: agents read only the files their task needs. `team/DISCUSSION.md`: last 20 entries only. No full re-reads of large documents; no whole-repo citation sweeps unless the user asks.
 6. Reviews: High findings only in detail; Medium/Low go to the backlog in one line each. Batch reviews per role where independence allows.
 7. Short output: every turn summary is at most 10 lines. "For the AI Engineer" at most 8 lines.
@@ -35,6 +35,16 @@ These apply to every session and every agent, and override older instructions wh
 ### Sandbox and test runs (D-069, standing)
 
 Sandbox, screenshot and test runs operate only on a temporary copy. They never write the real workbench page (`underwriting_pipeline/app/workbench.html`), real logs (`team/`, `deliverables/**/*.jsonl`, the token log) or real outboxes (`simulation/to-carrier/`, `simulation/to-producer/`, `simulation/pending-approval/`). Point every path at a temp directory; if a real file changes, the run is wrong and is fixed, not restored by hand.
+
+### Plugins (D-097, standing)
+
+- Before any review request, run pyright-lsp diagnostics and the code-review plugin on the changed files, and fix the findings first.
+- For library API questions (pdfplumber, pytesseract, openpyxl, pdf2image), use context7 instead of guessing. If the context7 plugin is not authorized, use the `ctx7` CLI.
+- Use playwright for UI screenshots (D-065) and frontend-design for workbench UI changes.
+- Use commit-commands for wrap-up commits: `ai-team` only, never `main`, secret scan first.
+- Use example-skills (pdf/xlsx/docx) only for demo deliverables.
+- Never run code-simplifier on frozen hold-out code (frozen `eval_holdout_*.py` scorers, hold-out gold, `simulation/inbox/` hold-out files).
+- Use superpowers workflows only when the user asks.
 
 ### Decisions come only from this session
 

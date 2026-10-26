@@ -1,145 +1,45 @@
-# Carrier match — class lists and caps (T-082)
+# Carrier match rules (P-049, approved D-097; P-051, approved D-098)
+- Owner: @head-of-underwriting. Date: 2026-10-16. Replaces the T-082 text (stale). AG = appetite-guide.md, CAG = carrier-appetite.md.
+- Carrier A is the only direct route. Carrier B and C are suggested markets only; the underwriter confirms. The match never declines and never sends.
+- Order of checks (D-097 1d): (1) hold gates R5, R6; (2) prohibited words W1; (3) referral words W2; (4) class words and routes R9-R14. W1 and W2 are checked first and always win over appetite (class) words. Whole words and exact phrases only, no substrings (`bar` does not match `barber`). Case-insensitive. English and the listed Spanish translations only (R3).
+- The code shows the ID in the note, e.g. "restaurant / cooking occupancy (R10; AG:39, AG:62)".
 
-- Author: @head-of-underwriting
-- Date: 2026-10-13
-- Status: IN_REVIEW — revised after the four 2026-10-13 reviews. The class lists and the routing rules are decided by D-041 and revised by D-042; the Carrier B and Carrier C caps are **provisional** and are @actuary's to confirm; the @responsible-ai fairness veto is **open**. These class lists, caps, and the Carrier B wording are the rules for T-083, but T-083 must not be coded against the lists until the fairness veto is resolved. The match is a recommendation; the underwriter chooses.
-- Source: `deliverables/head-of-underwriting/carrier-appetite.md` (the guide the carriers shared). Carriers A, B, and C are placeholders. Synthetic only.
-- Task: T-082. Line 4 of `team/DEMO-BLOCKERS.md`. Reviewed by @senior-underwriter, @actuary, @compliance, and @responsible-ai (decision rights, below). No code is changed by this task.
+## Word lists
+| List | Exact words | Route | Note text | Written source |
+|---|---|---|---|---|
+| W1 prohibited | bar, bars, tavern, taverns, nightclub, nightclubs, hookah, adult entertainment, cannabis, marijuana, marihuana, dispensary, fireworks, firework, explosives, explosive, ammunition, armed security, armed guard, bail bonds, student housing, subsidized housing, sawmill, sawmills, pallet manufacturing, plastics manufacturing, recycling, pub, pubs, lounge, lounges (P-051, AG:46); Spanish: cantina, taberna, antro, discoteca, dispensario, fuegos artificiales, explosivos, seguridad armada, guardia armado, alojamiento estudiantil, vivienda subsidiada | no_match, **never overridable** (D-057/D-060; P-051 d); a recommendation, never a decline: only a human declines | "prohibited class (R1; AG:45-50)" | AG:45-50, Knock-out 1 |
+| W1b bar word + restaurant evidence or another operation | bar words: bar, bars, tavern, taverns, nightclub, nightclubs, pub, pubs, lounge, lounges (with restaurant evidence, R9: R2; with an R14 allow-list, R11, R12 or OTHER word: R16) | senior_referral; never a market confirm (P-052) | "possible bar/liquor exposure - confirm liquor sales (R2; AG:46, AG:39)" | AG:46; D-079 |
+| W2a hazardous goods | fertilizer, fertilizers, pesticide, pesticides, herbicide, chemical, chemicals, hazardous, flammable, solvent, solvents, propane, fuel, fertilizante, pesticida, químico, químicos | senior_referral | "wholesale/retail with hazardous goods - not Carrier A (R14; AG:31)" | AG:31 "no hazardous commodities" |
+| W2b lab or medical | laboratory, laboratories, lab, medical, clinic, clinics, therapy, therapist, physician, doctor, dental, dentist, pediatric, chiropractic, hospital, médico, clínica, terapia, pediátrico | senior_referral | "lab or medical occupancy - not Carrier A (R14; AG:29)" | AG:29 "no lab or medical occupancy" |
+| W2c cold storage | cold storage, refrigerated, freezer, freezers, almacenamiento en frío, refrigerado | senior_referral | "cold storage - not Carrier A (R14; AG:31)" | AG:31 "no cold storage" |
+| W2d liquor sales | liquor, liquor store, package store, licor | senior_referral | "liquor sales, share of receipts not checked - not Carrier A (R14; AG:30)" | AG:30 "no liquor sales > 10%" |
+| W2e vacant | vacant, vacío, unoccupied, no utilities, without utilities, utilities off, utilities disconnected (the utilities phrases are read before the negation drop; P-051 c) | senior_referral | "vacant, unoccupied or no utilities: renovation with signed GC contract is a referral, true vacancy is prohibited; a person decides (R14; AG:40, AG:51)" | AG:40, AG:51 |
 
-The match is a recommendation. The underwriter picks the carrier. **No class is an automatic decline, and `no_match` is not a decline to the producer.** The system must not send a package because a rule matched, and must not email the producer a decline.
+Why senior_referral for W2 and no_match for W1: AG:29-31 say these exclusions only remove the file from the auto-quote band ("No other class is a target", AG:33); they do not prohibit it. AG:45-50 list W1 as prohibited, where only a human declines. A W2 file is a real risk with a hazard a person must judge, so it is not "no market". A W2 word stops a file reaching carrier_a even when an office/retail/wholesale word is also present ("feed, seed and fertilizer wholesale" and "pediatric physical and speech therapy offices" go to senior_referral). W2 never routes to carrier_b or carrier_c.
 
-## How the rule matches
+## Rules
+| ID | Rule | Word list | Route and note text | Source |
+|---|---|---|---|---|
+| R1 | Prohibited class word | W1 | no_match "prohibited class (R1; AG:45-50)"; recommendation, never a decline | AG:45-50, KO 1; D-059 item 5 |
+| R2 | Bar word with restaurant evidence | W1b | senior_referral "possible bar/liquor exposure (R2; AG:46, AG:39)" | AG:46; D-079 |
+| R3 | Spanish names of a sourced class read as that class; Spanish words only for classes already in the guide. @responsible-ai review owed (B-197) before pilot | Spanish words in W1, W2, R9-R12, R14 | as the class | D-060 |
+| R4 | Synonyms: armed guard = armed security; marijuana/marihuana/dispensary = cannabis; firework(s), explosive(s) | in W1 | as R1 | AG:47-49 |
+| R5 | No readable operations, open conflict, or review pending | none | hold "missing information" / "open conflict (R5; KO 3, 4)" | KO 3, 4; D-021, P-041 |
+| R6 | TIV missing, blank, zero, negative or an area | none | hold "TIV missing (R6; KO 4)"; P-050 adds the provisional class route, sends blocked | KO 4; D-061, D-062, P-050 |
+| R7 | Two carrier classes match | none | senior_referral "class matches more than one carrier (R7; KO 7)" | KO 7; D-059 item 7 |
+| R8 | Readable class on no list | none | no_match "readable class on no carrier list (R8; KO 8)", overridable with a reason | KO 8; D-059 item 5 |
+| R9 | Restaurant evidence = stated cooking equipment "yes" or a generic word: restaurant, restaurants, food service, foodservice, kitchen, kitchens, eatery, eateries, cafe, café, cafeteria, catering, bakery, bakeries, coffee shop, coffee shops, deli, delis (Spanish: restaurante, restaurantes, servicio de alimentos, cocina, comedor, banquetes). Never a cuisine word | list in rule | feeds R10 | D-078, D-079 |
+| R10 | Restaurant or cooking occupancy | R9 | senior_referral, suggested carrier_b: "restaurant / cooking occupancy (R10; AG:39, AG:62); suggested market: Carrier B, underwriter confirms; its 3 clean loss years are not checked" | AG:39, AG:62; CAG market only |
+| R11 | Contractor | contractor, contractors, roofing, roofer, handyman, painter, painting, carpenter, carpentry, flooring, drywall, plumbing, electrician, HVAC, glazier, mason (Spanish: contratista, techado, techador, pintor, pintura, carpintero, carpintería). A trade not listed is still a contractor | senior_referral, suggested carrier_b: "contractor (R11; AG:38, AG:62); suggested market: Carrier B, underwriter confirms" (add "; outside pilot TIV limit (R13; AG:16)" if over $5M) | AG:38, AG:62; D-060 |
+| R12 | Habitational, 1 unit or more, sprinklered or not | habitational, apartment, apartments, flats, multifamily, duplex, triplex, fourplex (Spanish: habitacional, apartamento(s), multifamiliar) | senior_referral, suggested carrier_c: "habitational (R12; AG:37, AG:62); suggested market: Carrier C, underwriter confirms". Sprinkler answer missing: hold. Sprinklers "no" with cooking shown: add "AG:61 knock-out candidate, a person decides", never a decline | AG:37 "All habitational ... Senior referral", AG:62. **D-059 item 6 (sprinklered habitational to carrier_c) is replaced (D-097): AG:37 and AG:62 refer every habitational file; sprinklers set the suggested market and the AG:61 knock-out only.** |
+| R13 | TIV over $5,000,000 per location (at exactly $5,000,000 it still passes) | none | senior_referral "outside pilot TIV limit (R13; AG:16)" | AG:16; D-060 |
+| R14 | Allow-list (P-051 a): exactly one allow-list group, no other class, no OTHER word, no W1 or W2 word, TIV <= $5,000,000. Every class not on the list never reaches Carrier A | Office (AG:29 "Office: tenants and office-building lessors"): office, offices, office building, oficina, oficinas. Retail (AG:30 "Retail: dry goods, clothing, professional services storefront"): retail, retail store, dry retail, dry goods, storefront, clothing, clothing store, boutique, apparel, thrift shop(s), thrift store(s), comercio minorista, tienda minorista, tienda de ropa, ropa. Wholesale (AG:31 "Wholesale: light"): wholesale, light wholesale, mayoreo, mayorista | carrier_a (the only direct route): "Carrier A (R14; AG:29-31); verify: no restaurant, liquor <= 10%, no cold storage, no hazardous goods, no lab or medical" | AG:29-31, CAG:5 |
+| R16 | Second distinct operation (P-051 b): two allow-list groups (office + retail), an allow-list word beside an OTHER word, or a bar word beside another operation | OTHER (AG:33 "No other class is a target"): gym(s), fitness, salon(s), spa(s), daycare, day care, school(s), church(es), hotel(s), motel(s), theater, theatre, auto repair, car wash, gas station, manufacturing, factory. Closed list (B-379) | senior_referral "more than one operation (R16; AG:33)" / "a second operation that is not a target class (R16; AG:33)" / "bar, pub or lounge beside another operation (R16; AG:46, AG:33)". An OTHER word alone: R8 | AG:33, AG:46; D-098 |
+| R15 | Removed: the Carrier B TIV cap $2,000,000 had no source and no @actuary sign-off. Delete CAP_B and its branch | none | none | P-049 |
 
-- A class word matches only as a **whole word**; a class phrase matches only as the **exact phrase**. `bar` does not match `barber shop` or `barbecue`; `taco` does not match `tacos`, so both spellings are listed.
-- The lists are **language-neutral**. Each class token also matches the Spanish and spelling variants listed beside it, so a Spanish-language submission matches the same carrier a reader of the English would pick. No class is sent to `hold` or `no_match` because of the language it is written in. (@responsible-ai H1.)
-- Prohibited classes are checked first and win over every other rule.
-- **Collision check before routing.** If the read class or operations match class words of **two or more carriers**, the result is a **senior referral / `hold`** — never silently the earlier carrier in the order below. Example: "office with kitchen" is an office (Carrier A); `kitchen` is not a class word, so it does not pull the file to Carrier B. A genuine two-class file (for example, an office that also prepares food for sale) is a senior referral. (@senior-underwriter H2.)
-- If the class is not readable (no operations or class text), the result is `hold`, never `no_match`.
-- **Residual unmatched class.** A readable class that matches no Carrier A, B, or C list, is not prohibited, and is within every cap is `no_match` — **not a decline**. `no_match` is the "no placeholder market" state and the file stays with a person. There is no fourth routing bucket. (@senior-underwriter H1.)
-- A cap is **inclusive**: a file at exactly the cap still matches that carrier; one dollar over does not.
-- Order, after the collision check and the prohibited check: Carrier B (restaurant / light contractor) → Carrier A (office / retail / wholesale) → Carrier C (broader fallback) → `no_match` if it is over every cap, matches no list, or both.
+Open for later (backlog, not in this file): territory, locations 4-10, premium and revenue gates, liquor > 10% (AG:13-18, 30). B-377: parse loss-run claim years; then Carrier B's 3 clean years can be checked and restaurants may route directly (D-097 1a).
 
-## Carrier A — offices, dry retail, light wholesale
-
-Whole-word class list:
-
-- `office`, `offices` (`oficina`, `oficinas`)
-- `retail`, `retail store`, `storefront`, `dry retail` (`tienda`, `tienda minorista`, `comercio`, `local`, `escaparate`)
-- `wholesale`, `light wholesale`, `warehouse` (light storage only) (`mayoreo`, `mayorista`, `almacén`, `bodega`)
-- Low-hazard personal services: `barber shop`, `barbershop`, `hair salon`, `beauty salon`, `nail salon`, `tailor`, `shoe repair`, `dry cleaner` (drop-off and pickup only) (`barbería`, `peluquería`, `salón de belleza`, `salón de uñas`, `sastrería`, `reparación de calzado`, `lavandería`, `tintorería`)
-
-Not Carrier A: any `restaurant` or food service, any `contractor` or `roofing`, any `habitational`, and any prohibited class.
-
-Cap: **TIV up to and including $5,000,000.** At exactly $5,000,000 the file still matches Carrier A. Over $5,000,000 it is not Carrier A; an office between $5,000,000 and Carrier C's cap is recommended Carrier C (senior referral).
-
-## Carrier B — restaurants and light contractors
-
-Whole-word class list:
-
-- Food service: `restaurant`, `restaurants`, `cafe`, `coffee shop`, `diner`, `deli`, `bakery`, `pizzeria`, `pizza`, `steakhouse`, `barbecue`, `bbq`, `taqueria`, `tacos`, `taco` (`restaurante`, `cafetería`, `café`, `comedor`, `lonchería`, `panadería`, `pastelería`, `pizzería`, `asador`, `parrilla`, `asadero`, `taquería`, `antojitos`). **`kitchen` was removed** — it is a facility word, not a class, and it pulled an "office with kitchen" to Carrier B; `cocina` is not added for the same reason. A file is food service only when its operations name a food-service **class**, not a room.
-- Light contractors (no roofing): `light contractor`, `handyman`, `painter`, `painting`, `carpenter`, `carpentry`, `flooring`, `tile`, `drywall`, `insulation`, `janitorial`, `cleaning`, `landscaping`, `lawn care`, `pest control`, `locksmith`, `sign installation` (`contratista`, `albañil`, `pintor`, `pintura`, `carpintero`, `carpintería`, `pisos`, `azulejo`, `tablaroca`, `aislamiento`, `limpieza`, `jardinería`, `control de plagas`, `cerrajería`, `rotulación`)
-
-The food-service words identify a **class** only; they are not a cooking-hazard score. Cooking points are P-015's, not this file's.
-
-Not Carrier B: `roofing` and `roofer` (roofing is not light contracting); any office, retail, or wholesale; any habitational; any prohibited class.
-
-Loss gate: **3 clean loss years**, satisfied **only** by a read, verifiable carrier loss run with a valued-through date that shows no claim inside 3 years. While no such run has been read, the card shows Carrier B with the words **"3 clean years not checked"**. A missing loss run, or a **no-known-loss letter, never satisfies the gate** — a letter is an assertion, not a loss run. If a loss run is later read and shows a claim inside 3 years, the recommendation moves off Carrier B to Carrier C (senior referral). No automatic decline. T-083 must enforce the gate on the **presence of a read loss run**, never on the absence of a claim: the gate cannot pass on an empty or missing loss-history field. (@actuary H2; the loss-run reading rule is T-033.)
-
-Cap: **TIV up to and including $2,000,000 — provisional.** The number is a placeholder working cap, **pending @actuary's signoff**; it is not a priced or filed figure and @actuary may confirm or correct it. At exactly $2,000,000 it still matches Carrier B. Over $2,000,000 it is not Carrier B; it is recommended Carrier C (also provisional).
-
-## Carrier C — broader appetite, higher price
-
-Whole-word class list:
-
-- Habitational **with sprinklers**: `apartment`, `apartments`, `habitational`, `flats`, `multifamily`, `duplex`, `triplex`, `fourplex` (`apartamento`, `apartamentos`, `habitacional`, `departamento`, `departamentos`, `multifamiliar`, `dúplex`, `tríplex`). Sprinklers must read `yes` from the sprinkler field. Habitational with no sprinkler answer is `hold` (missing answer), not a decline. Habitational with sprinklers read `no` is **not Carrier C** — it is a **senior referral**, never a silent match and never a decline.
-- Roofing and non-light trade contractors: `roofing`, `roofer`, `roofing contractor` (`techado`, `techador`, `impermeabilización`, `contratista de techos`)
-- Offices, retail, and wholesale over Carrier A's $5,000,000 cap and up to Carrier C's cap
-- Restaurants and light contractors over Carrier B's $2,000,000 cap, or whose read loss run is not clean
-
-Not Carrier C: any prohibited class; anything over Carrier C's cap.
-
-Cap: **TIV up to and including $10,000,000 — provisional.** The number is a placeholder working cap, **pending @actuary's signoff**; @actuary may confirm or correct it. At exactly $10,000,000 it still matches Carrier C. Over $10,000,000 it is `no_match` (outside the placeholder panel). Carrier C is **not priced**: no price or rate is set here, and none may be set until a filing exists. (@actuary H1.)
-
-Carrier C is the fallback. It is not a substitute for Carrier A or B when those fit: Carrier A first for offices / retail / wholesale, Carrier B first for restaurants / light contractors.
-
-## No match for all three (not a decline)
-
-`no_match` for Carrier A, B, and C:
-
-- `fireworks`, `explosives` (`fuegos artificiales`, `explosivos`)
-- `cannabis`, `dispensary`, `marijuana`, `dispensario`, `marihuana` (dispensary, retail, cultivation, any cannabis business)
-- `armed security`, `armed guard` (`seguridad armada`, `guardia armado`)
-- `student housing`, `fraternity housing`, `sorority housing` (`alojamiento estudiantil`) — see the proxy review below
-- `subsidized housing` (`vivienda subsidiada`) — see the proxy review below
-- `bar`, `bars`, `nightclub`, `tavern` (`cantina`, `taberna`, `antro`, `discoteca`)
-- any risk over $10,000,000 TIV
-- **any readable class that matches no Carrier A, B, or C list**, is not prohibited, and is within every cap (the residual branch above)
-
-Say `no_match`. **Do not email the producer a decline.** The file stays with a person.
-
-### Proxy review — housing classes (@responsible-ai H2)
-
-`subsidized housing`, `student housing`, `fraternity housing`, and `sorority housing` are on the no-match list for a **class-based business reason**, not a person one: in this pilot we do not write the occupancy, turnover, and loss profile of those housing classes, and they are not in any carrier's placeholder appetite. The rule reads a **class word**, never a person or a protected characteristic, and the match is a recommendation a human can override.
-
-That entry is not enough by itself. Because those class words can track race, national origin, familial status, disability, and source of income, the resolution @responsible-ai named is a **recommendation-mix test by housing class** in the fairness test (T-067), run before these lists ship. The **fairness veto stands until @responsible-ai resolves it**; T-083 must not be coded against these lists until then. The other resolution @responsible-ai named — routing `subsidized housing` to Carrier C with sprinklers — is a **wider-appetite trade-off that is @actuary's and mine**; I am not taking it unilaterally here, and it stays open for @actuary to price and for me to decide with @actuary.
-
-## Hold (not `no_match`, not a decline)
-
-`hold` when the class or a required answer is missing: no readable operations or class text; habitational with no sprinkler answer. A hold is a missing-information state, not an appetite decision.
-
-## The eight cases
-
-| Case | Class | Answer | Why |
-|---|---|---|---|
-| cannabis dispensary retail | prohibited | `no_match` | cannabis is prohibited for all three; `retail` does not save it. (Today's code: `carrier_a` — wrong.) |
-| armed security office | prohibited | `no_match` | armed security is prohibited; `office` does not save it. (Today: `carrier_a` — wrong.) |
-| sprinklered student housing | prohibited | `no_match` | student housing is prohibited even with sprinklers; it is not Carrier C habitational. (Today: `carrier_c` — wrong.) |
-| roofing contractor | non-light trade | `carrier_c` | roofing is not light contracting, so not B; Carrier C is the broader market (senior referral). (Today: `carrier_b` — wrong.) |
-| an $8,000,000 office | office over cap | `carrier_c` | over Carrier A's $5,000,000 cap, within Carrier C's $10,000,000 cap. (Today: `carrier_a` — wrong.) |
-| barbecue restaurant | food service | `carrier_b` + `3 clean years not checked` | a restaurant, not a bar; `barbecue` is a whole word, `bar` is not inside it. (Today: `no_match` — wrong.) |
-| barber shop | personal service | `carrier_a` | low-hazard retail / personal service; `barber` is not `bar`. (Today: `no_match` — wrong.) |
-| taqueria | food service | `carrier_b` + `3 clean years not checked` | a food-service restaurant. (Today: `hold` — wrong.) |
-
-## Caps at a glance
-
-| Carrier | Cap (TIV) | At exactly the cap | Over the cap |
-|---|---|---|---|
-| A | $5,000,000 | still matches Carrier A | not A; an office $5M–$10M is recommended Carrier C |
-| B | $2,000,000 **provisional** | still matches Carrier B | not B; recommended Carrier C |
-| C | $10,000,000 **provisional** | still matches Carrier C | `no_match` (outside the placeholder panel) |
-
-The Carrier B and Carrier C caps are **placeholder working caps pending @actuary's signoff** and are not priced. Carrier C carries no price and may not be priced until a filing exists (D-041; @actuary H1).
-
-## Consultation and review (decision rights)
-
-Risk appetite and underwriting rules are mine to decide; @senior-underwriter and @actuary must be consulted. On 2026-10-13 four reviewers returned **APPROVE WITH CHANGES**; their findings are addressed below.
-
-- **@senior-underwriter — replied and recorded.** On file, T-019 High-3: whole-word class lists, the no-match classes, roofing, the $5M cap, "3 clean years not checked" beside Carrier B, one test each. Adopted. Its 2026-10-13 T-082 reply is recorded in `team/DISCUSSION.md`; its two High findings (the residual unmatched-class branch and `kitchen`) are closed in this revision.
-- **@actuary — cap signoff still pending; this is the one open consultation.** On file, T-018 review: "Three clean loss years is the gate for Carrier B, not a vibe. A letter is not three clean years. Do not price Carrier C's 'higher price' until there is a filing, which we do not have." Adopted, and its H2 (verifiable loss run) is now stated in the loss gate. Its H1 is open on this file: the Carrier B and Carrier C caps ($2,000,000 and $10,000,000) are **placeholder working caps**, now marked **provisional pending @actuary's signoff**; @actuary has not yet confirmed or corrected them. **Criterion 5 stays unticked until @actuary's cap reply is recorded in `team/DISCUSSION.md`** (@compliance Medium-1).
-- **@compliance — no misrepresentation risk; guardrails kept.** Its Medium-1 is this consultation record; the non-decline guardrails it named are unchanged.
-- **@responsible-ai — fairness veto standing on H1 and H2.** H1 is addressed by the language-neutral lists (Spanish and spelling variants) plus the required EN-vs-ES counterfactual in T-067; H2 is addressed by the housing proxy-review entry plus the required recommendation-mix test. The **veto is lifted only by @responsible-ai** and is not lifted here.
-
-## Changes from the accepted T-018 text (recorded as D-041)
-
-- Added whole-word / exact-phrase class lists for Carrier A, B, and C.
-- Added a TIV cap to Carrier B ($2,000,000) and Carrier C ($10,000,000). T-018 stated only the $5M cap (Carrier A).
-- Carrier C's "broader appetite" is read to include roofing / non-light trade contractors and offices of $5,000,000–$10,000,000. T-018 named only sprinklered habitational for Carrier C.
-- Fixed the Carrier B line to "3 clean years not checked".
-- No change to the no-match list and no change to "no automatic decline".
-
-## This revision — review changes (recorded as D-042)
-
-From the four 2026-10-13 reviews, documentation only:
-
-- **Residual unmatched-class branch defined** (@senior-underwriter High-1): a readable class on no list, not prohibited, within every cap → `no_match`, not a decline.
-- **`kitchen` removed** from Carrier B and a **collision rule** added (@senior-underwriter High-2): a class matching two carriers is a senior referral / `hold`, never silently the earlier carrier.
-- **Language-neutral lists** (@responsible-ai High-1): Spanish and spelling variants added to every class token; a Spanish submission matches the same carrier as the English. The EN-vs-ES counterfactual is required in T-067.
-- **Housing proxy-review entry** (@responsible-ai High-2) plus the recommendation-mix test routed to T-067; the veto stays open.
-- **Caps marked provisional** (@actuary High-1) and the **loss gate tightened to a verifiable read loss run** (@actuary High-2).
-- **Consultation record** (@compliance Medium-1): @senior-underwriter's reply recorded; @actuary's cap reply still pending, so criterion 5 stays unticked.
-
-## What I will not defend (unchanged)
-
-- Submitting to a carrier without the workbench decision.
-- Treating Carrier B as if it refused restaurants.
-- A `no_match` emailed to the producer as a decline.
+## Senior-referral market confirm (P-052, D-098)
+- Only an underwriter with `"senior": true` in underwriters.json (UW-001 Dana Reyes, synthetic) may confirm a market on a senior_referral file: they pick carrier_a, carrier_b or carrier_c and write a reason. Logged in market_confirms.jsonl with the run hash; a new run needs a new confirm.
+- Never on a held file, a refused status, an unread page, an open conflict, or a file with a W1 word (R1, R2, R16 bar cases).
+- It opens no gate: the send still needs the approve on this run, the acknowledgments and the exact line "send to carrier SUB-###". The account manager cannot send a senior referral.

@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import csv
 import logging
+import zlib
 from collections import defaultdict
 from pathlib import Path
 from typing import Any
@@ -163,7 +164,7 @@ def build_lob_training_from_book(
             n_book = min(int(samples_per_model * book_weight), len(book_rows) * 8)
             # Upsample book rows
             rows: list[dict[str, Any]] = []
-            rng = np.random.RandomState(abs(hash(insurance_line + mt)) % (2**31))
+            rng = np.random.RandomState(zlib.adler32(f"{insurance_line}{mt}".encode()) % (2**31))
             for i in range(n_book):
                 src = book_rows[i % len(book_rows)]
                 row = {k: float(src.get(k, 0.0) or 0.0) for k in DEFAULT_FEATURE_NAMES}

@@ -37,7 +37,7 @@ Return one JSON object and nothing else.
 Use only facts copied from the documents. If a fact is not there, value is null and confidence is 0.
 Never guess. A no-known-loss letter is not a loss-run date; leave loss_run_valued_through null.
 Spanish and unlabeled email prose are allowed. Put the English value in value. quote must be copied character for character from one file, with no added words and no added accents.
-For operations, keep the specific English words from the source and do not shorten them to one class word. If they cook a named food, the value must contain that food word and the word restaurant. If the source is Spanish, translate it and still quote the Spanish line exactly. A bar or night club is a bar and nightclub. mamposteria means masonry, and the construction value is the English word.
+For operations, keep the specific English words from the source and do not shorten them to one class word. Keep every stated detail: business type; alcohol (full liquor license, beer and wine, beer only, no alcohol); seat count; unit count and stories or floor; cooking (kitchen, fryer, grill, open flame, no cooking); hours; live music or entertainment; delivery or catering; 24-hour; on-site processing or repair; patio; security staff; hazardous or flammable materials. Leave out only marketing adjectives. The quote must contain every detail in the value. If they cook a named food, the value must contain that food word and the word restaurant. If the source is Spanish, translate it and still quote the Spanish line exactly. A bar or night club is a bar and nightclub. mamposteria means masonry, and the construction value is the English word.
 sales_or_payroll is gross annual revenue (sales), returned as a single number copied from the document, with no labels or other figures. Payroll is never part of sales.
 loss_run_valued_through is only the valued-through date copied from the file. Never invent a date. If the file does not show that date, use null even if you think runs exist.
 If square feet or the premises address differ across files, do not pick a side. Leave that field null and add a conflict whose values include both numbers or both addresses, each with an exact quote.
@@ -458,11 +458,16 @@ def accept_field(item: dict, docs: dict[str, str], ocr_confidence: dict | None =
         return base
     text = docs.get(source, "")
     span = find_quote(text, quote)  # P-016 N: the old fallback to the value's own characters is gone
-    if span is None:
+    spans = [span] if span else None
+    if span is None and "\n" in (quote or ""):  # P-048 (d) (B-365): one quote may cite non-adjacent lines of the same document; each must be found
+        parts = [find_quote(text, part) for part in quote.split("\n") if part.strip()]
+        spans = sorted(parts) if parts and all(parts) else None
+    if not spans:
         base["confidence"] = 0.0
         base["reason"] = REASON_QUOTE.format(source or "no file")
         return base
-    cited_text = text[span[0] : span[1]]
+    span = spans[0]
+    cited_text = "\n".join(text[a:b] for a, b in spans)  # only the cited lines, never the lines between them (B-365 L1)
     if field_id == "loss_run_valued_through" and "no known loss" in cited_text.lower():
         return base
     problem = value_in_span(field_id, value, cited_text)
@@ -488,12 +493,14 @@ def accept_field(item: dict, docs: dict[str, str], ocr_confidence: dict | None =
         "needs_review": flag,
         "reason": reason,
         "quote": cited_text,
+        **({"spans": spans} if len(spans) > 1 else {}),  # P-048 (d): each cited part, for the operations check
     }
 
 
 # D-028: reply_not_usable (the host answered, the reply was empty or not JSON) is a failed attempt and its own cause.
 FAILURE_KINDS = ("rate_limit_429", "timeout", "other", "reply_not_usable")
 CALL_LOG: list[dict] = []  # every failed attempt in this process: {"kind": one of FAILURE_KINDS, "detail": ...}
+ATTEMPTS: list[dict] = []  # D-094 item 5: every failed attempt and every retry, with its files, so each file's report lists its own
 _swept: set[Path] = set()  # cache folders whose leftover temp files this process has already removed
 _TMP = re.compile(r"[0-9a-f]{64}\.json\.\d+\.tmp")  # the only name the atomic write in llm_extract gives its temp file
 
@@ -555,6 +562,7 @@ def _failed(settings: dict, kind: str, detail: str, attempt: int | None = None, 
     """
     if kind in FAILURE_KINDS:
         CALL_LOG.append({"kind": kind, "detail": detail})
+    ATTEMPTS.append({"kind": kind, "attempt": attempt, "retry_in": retry_in, "detail": detail, "files": settings.get("files", [])})
     _log_row({"model": settings["model"], "files": settings.get("files", []), "key": settings.get("cache_key"), "event": kind, "attempt": attempt, "retry_in": retry_in, "detail": detail, "total_tokens": 0})
 
 
@@ -1034,7 +1042,9 @@ if __name__ == "__main__":
         with tempfile.TemporaryDirectory() as tmp:
             CACHE = Path(tmp)
             left = host(http(429, "Rate limit reached (TPD)", "12"), TimeoutError("timed out"), answer)
+            tried = len(ATTEMPTS)
             assert llm_extract(page)["fields"][0]["value"] == "Example LLC" and not left
+            assert [(a["kind"], a["attempt"], a["files"]) for a in ATTEMPTS[tried:]] == [("rate_limit_429", 1, ["a.md"]), ("timeout", 2, ["a.md"])], "D-094 item 5: each retry is listed for its file"
             log = rows()
             assert [row.get("event") for row in log] == ["rate_limit_429", "timeout", None], f"a 429 or a retry is missing from the token log: {log}"
             assert log[0]["attempt"] == 1 and log[0]["retry_in"] == 13 and "tokens per day" in log[0]["detail"] and log[0]["files"] == ["a.md"]
@@ -1338,6 +1348,12 @@ if __name__ == "__main__":
     def one(field, value, quote, text, conf=0.9, scan=None, words=None):
         return accept_field({"field_id": field, "value": value, "source": "f", "quote": quote, "confidence": conf}, {"f": text}, {"f": scan} if scan is not None else None, {"f": words} if words else None)
 
+    # P-048 (d) (B-365, SUB-136 shape): two non-adjacent lines of one document are one citation; the lines between are not quoted.
+    app = "Operations: Mexican restaurant, 70 seats, beer and wine only.\nAnnual sales: $940,000\nCooking operations: two deep fryers, 6-burner range."
+    two = one("operations", "Mexican restaurant, 70 seats, beer and wine, two deep fryers", "Operations: Mexican restaurant, 70 seats, beer and wine only.\nCooking operations: two deep fryers", app)
+    assert two["value"] and two["quote"] == "Operations: Mexican restaurant, 70 seats, beer and wine only.\nCooking operations: two deep fryers" and len(two["spans"]) == 2 and "940" not in two["quote"], two
+    assert one("operations", "Mexican restaurant", "Operations: Mexican restaurant\nLiquor: full bar", app)["reason"] == "quote not found in f", "every part must be found"
+    assert "spans" not in one("operations", "Mexican restaurant", "Operations: Mexican restaurant", app), "a one-part quote is as before"
     # N (no value fallback): the quote is not in the file, so no value, even if the value's characters are there.
     for field, value, text in (("year_built", "1990", "Phone 210-555-1990"), ("tiv_building", "850000", "Policy no. 8500001"), ("construction", "Masonry", "Prior carrier: Masonry Mutual")):
         row = one(field, value, "an invented quote", text)

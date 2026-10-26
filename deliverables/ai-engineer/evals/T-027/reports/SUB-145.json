@@ -1,0 +1,160 @@
+{
+  "posts": 2,
+  "report": {
+    "complete": false,
+    "missing": [
+      "loss_run_valued_through"
+    ],
+    "request": "Submission SUB-145\nNothing has been declined. Nothing has been bound.\n\nMissing:\n- currently valued carrier loss runs (a no-known-loss letter does not count)\n",
+    "conflicts": [],
+    "extra": [],
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Lakeview Gardens Partners LP",
+        "source": "application.md",
+        "start": 139,
+        "end": 182,
+        "confidence": 1.0,
+        "model_confidence": 1.0,
+        "ocr_cited_confidence": null,
+        "needs_review": false,
+        "reason": null,
+        "quote": "Named insured: Lakeview Gardens Partners LP"
+      },
+      {
+        "field_id": "premises_address",
+        "value": "3300 Lakeview Dr, Amarillo, TX 79106",
+        "source": "application.md",
+        "start": 217,
+        "end": 271,
+        "confidence": 1.0,
+        "model_confidence": 1.0,
+        "ocr_cited_confidence": null,
+        "needs_review": false,
+        "reason": null,
+        "quote": "Premises address: 3300 Lakeview Dr, Amarillo, TX 79106",
+        "address_check": "ok"
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-05-01",
+        "source": "application.md",
+        "start": 272,
+        "end": 298,
+        "confidence": 1.0,
+        "model_confidence": 1.0,
+        "ocr_cited_confidence": null,
+        "needs_review": false,
+        "reason": null,
+        "quote": "Effective date: 2027-05-01"
+      },
+      {
+        "field_id": "operations",
+        "value": "Residential apartments, 40 units in three two-story buildings, long-term leases, 94 percent occupied. Pools closed for season.",
+        "source": "application.md",
+        "start": 428,
+        "end": 566,
+        "confidence": 1.0,
+        "model_confidence": 1.0,
+        "ocr_cited_confidence": null,
+        "needs_review": false,
+        "reason": null,
+        "quote": "Operations: Residential apartments, 40 units in three two-story buildings, long-term leases, 94 percent occupied. Pools closed for season."
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "780000",
+        "source": "application.md",
+        "start": 590,
+        "end": 633,
+        "confidence": 1.0,
+        "model_confidence": 1.0,
+        "ocr_cited_confidence": null,
+        "needs_review": false,
+        "reason": null,
+        "quote": "Annual sales: $780,000 (gross annual rents)"
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "6800000",
+        "source": "application.md",
+        "start": 634,
+        "end": 676,
+        "confidence": 1.0,
+        "model_confidence": 1.0,
+        "ocr_cited_confidence": null,
+        "needs_review": false,
+        "reason": null,
+        "quote": "Building TIV: $6,800,000 (three buildings)"
+      },
+      {
+        "field_id": "construction",
+        "value": "Joisted masonry",
+        "source": "application.md",
+        "start": 737,
+        "end": 766,
+        "confidence": 1.0,
+        "model_confidence": 1.0,
+        "ocr_cited_confidence": null,
+        "needs_review": false,
+        "reason": null,
+        "quote": "Construction: Joisted masonry"
+      },
+      {
+        "field_id": "year_built",
+        "value": "1994",
+        "source": "application.md",
+        "start": 767,
+        "end": 783,
+        "confidence": 1.0,
+        "model_confidence": 1.0,
+        "ocr_cited_confidence": null,
+        "needs_review": false,
+        "reason": null,
+        "quote": "Year built: 1994"
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "start": null,
+        "end": null,
+        "source": null,
+        "confidence": 0.0,
+        "needs_review": true
+      }
+    ],
+    "folder": "SUB-145",
+    "sprinklers": "yes",
+    "cooking": {
+      "equipment": {
+        "state": "not_stated",
+        "terms": [],
+        "source": null,
+        "start": null,
+        "end": null,
+        "quote": null
+      },
+      "hood_suppression": {
+        "state": "not_stated",
+        "terms": [],
+        "source": null,
+        "start": null,
+        "end": null,
+        "quote": null
+      }
+    },
+    "needs_human": [],
+    "unread": [],
+    "locations": [],
+    "error": null,
+    "model_version": "qwen/qwen3.8-27b",
+    "prompt_version": "a7413a9c72b0",
+    "ocr_settings": "tesseract psm6; osd turn; deskew +-12; rule lift; x2 lanczos; pdf 200dpi; fill in image mode",
+    "host": "api.groq.com",
+    "temperature": 0,
+    "cache_key": "1c7f761d26fb99a45c51a3c5bda61f6166f3cd1f74cdd454a77a07219e2ff777",
+    "status": "incomplete",
+    "status_reason": null
+  }
+}

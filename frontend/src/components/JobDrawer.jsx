@@ -3,10 +3,13 @@ import { Badge } from './ui';
 import { extractMortgage, endpoints, fmtCurrency } from '../lib/api';
 import { insuranceLineLabel } from '../lib/insuranceLines';
 import InsuranceMemoView from './InsuranceMemoView';
+import { useState, useRef } from 'react';
 import SubmissionJourney from './SubmissionJourney';
 import { toast } from '../lib/toast';
 
 export default function JobDrawer({ job, vertical, jobId, onClose }) {
+  const [sharing, setSharing] = useState(false);
+  const shareRef = useRef(false);
   if (!jobId) return null;
 
   const processing = job?.status === 'processing';
@@ -65,14 +68,20 @@ export default function JobDrawer({ job, vertical, jobId, onClose }) {
                 URL.revokeObjectURL(url);
               } catch (e) { toast.error(e.message || 'Report not available'); }
             }} className="btn-secondary btn-sm text-xs"><FileText className="h-3.5 w-3.5" /> Full Report</button>
-            <button type="button" onClick={async () => {
+            <button type="button" disabled={sharing} onClick={async () => {
+              if (shareRef.current) return;
+              shareRef.current = true;
+              setSharing(true);
               try {
                 const r = await endpoints.createBrokerShare(bundleId);
                 const link = `${window.location.origin}/dashboard/broker/status/${r.token}`;
                 await navigator.clipboard?.writeText(link);
                 toast.success(`Share link copied! ${link}`);
-              } catch (e) { toast.error(e.message); }
-            }} className="btn-secondary btn-sm text-xs"><ExternalLink className="h-3.5 w-3.5" /> Broker Share</button>
+              } catch (e) { toast.error(e.message); } finally {
+                shareRef.current = false;
+                setSharing(false);
+              }
+            }} className="btn-secondary btn-sm text-xs disabled:cursor-not-allowed disabled:opacity-50"><ExternalLink className="h-3.5 w-3.5" /> Broker Share</button>
           </div>
         )}
           </>

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import zlib
 from typing import Any
 
 from insureflow.insurance.commercial_lobs import COMMERCIAL_LINES, get_commercial_line
@@ -121,8 +122,8 @@ def lob_profile(insurance_line: str) -> dict[str, Any]:
 
 
 def lob_training_seed(insurance_line: str) -> int:
-    """Stable per-LOB RNG seed."""
-    return abs(hash(insurance_line)) % (2**31 - 1)
+    """Stable per-LOB RNG seed. hash() is salted per process."""
+    return zlib.adler32(insurance_line.encode()) % (2**31 - 1)
 
 
 def lob_risk_factors(insurance_line: str, fv: FeatureVector) -> list[str]:

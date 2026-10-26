@@ -1,0 +1,143 @@
+{
+  "complete": false,
+  "missing": [
+    "effective_date",
+    "sales_or_payroll",
+    "tiv_building",
+    "construction",
+    "year_built",
+    "loss_run_valued_through"
+  ],
+  "request": "Submission SUB-142\nNothing has been declined. Nothing has been bound.\n\nMissing:\n- effective date\n- sales or payroll\n- building limit\n- construction type\n- year built\n- currently valued carrier loss runs (a no-known-loss letter does not count)\n",
+  "conflicts": [],
+  "extra": [],
+  "fields": [
+    {
+      "field_id": "named_insured",
+      "value": "Alamo Roof & Gutter Pros LLC",
+      "source": "email.md",
+      "start": 152,
+      "end": 180,
+      "confidence": 1.0,
+      "model_confidence": 1.0,
+      "ocr_cited_confidence": null,
+      "needs_review": false,
+      "reason": null,
+      "quote": "Alamo Roof & Gutter Pros LLC"
+    },
+    {
+      "field_id": "premises_address",
+      "value": "2270 Fredericksburg Rd San Antonio 78201",
+      "source": "email.md",
+      "start": 232,
+      "end": 272,
+      "confidence": 1.0,
+      "model_confidence": 1.0,
+      "ocr_cited_confidence": null,
+      "needs_review": true,
+      "reason": "address check: ZIP 78201 is listed for San Antonio, not the city written before TX",
+      "quote": "2270 Fredericksburg Rd San Antonio 78201",
+      "address_check": "address invalid"
+    },
+    {
+      "field_id": "effective_date",
+      "value": null,
+      "start": null,
+      "end": null,
+      "source": null,
+      "confidence": 0.0,
+      "needs_review": true
+    },
+    {
+      "field_id": "operations",
+      "value": "Roofing contractor, 5 employees, shop and yard",
+      "source": "email.md",
+      "start": 182,
+      "end": 228,
+      "confidence": 1.0,
+      "model_confidence": 1.0,
+      "ocr_cited_confidence": null,
+      "needs_review": false,
+      "reason": null,
+      "quote": "Roofing contractor, 5 employees, shop and yard"
+    },
+    {
+      "field_id": "sales_or_payroll",
+      "value": null,
+      "start": null,
+      "end": null,
+      "source": null,
+      "confidence": 0.0,
+      "needs_review": true
+    },
+    {
+      "field_id": "tiv_building",
+      "value": null,
+      "start": null,
+      "end": null,
+      "source": null,
+      "confidence": 0.0,
+      "needs_review": true
+    },
+    {
+      "field_id": "construction",
+      "value": null,
+      "start": null,
+      "end": null,
+      "source": null,
+      "confidence": 0.0,
+      "needs_review": true
+    },
+    {
+      "field_id": "year_built",
+      "value": null,
+      "start": null,
+      "end": null,
+      "source": null,
+      "confidence": 0.0,
+      "needs_review": true
+    },
+    {
+      "field_id": "loss_run_valued_through",
+      "value": null,
+      "start": null,
+      "end": null,
+      "source": null,
+      "confidence": 0.0,
+      "needs_review": true
+    }
+  ],
+  "folder": "SUB-142",
+  "sprinklers": "no",
+  "cooking": {
+    "equipment": {
+      "state": "not_stated",
+      "terms": [],
+      "source": null,
+      "start": null,
+      "end": null,
+      "quote": null
+    },
+    "hood_suppression": {
+      "state": "not_stated",
+      "terms": [],
+      "source": null,
+      "start": null,
+      "end": null,
+      "quote": null
+    }
+  },
+  "needs_human": [],
+  "unread": [],
+  "locations": [],
+  "error": null,
+  "model_version": "qwen/qwen3.8-27b",
+  "prompt_version": "b025802c0dfa",
+  "ocr_settings": "tesseract psm6; osd turn; deskew +-12; rule lift; x2 lanczos; pdf 200dpi; fill in image mode",
+  "host": "api.groq.com",
+  "temperature": 0,
+  "cache_key": "dce244da2806df63a29b0aa50ae8b729ac30e17e161994783b68223b292f8ae0",
+  "retries": [],
+  "status": "incomplete",
+  "status_reason": null
+}

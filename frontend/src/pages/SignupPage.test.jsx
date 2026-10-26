@@ -224,4 +224,32 @@ describe('SignupPage', () => {
       expect(screen.getByText('Card number is invalid')).toBeInTheDocument();
     });
   });
+
+  it('ignores a second click while the paid-plan request is in flight', async () => {
+    let resolveSignup;
+    endpoints.signup.mockImplementation(() => new Promise((resolve) => { resolveSignup = resolve; }));
+    endpoints.me.mockResolvedValue({ username: 'jdoe' });
+    endpoints.startCheckout.mockResolvedValue({ checkout_id: 'chk_1', tier: 'pro', amount_due: 999, currency: 'USD', status: 'pending' });
+    renderPage();
+    fillStep1();
+
+    await waitFor(() => {
+      expect(screen.getByText('Pro')).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByText('Pro').closest('button'));
+    const continueBtn = screen.getByText('Continue to payment');
+    fireEvent.click(continueBtn);
+    fireEvent.click(continueBtn);
+
+    await waitFor(() => {
+      expect(endpoints.signup).toHaveBeenCalledTimes(1);
+    });
+
+    resolveSignup({ token: 'tok-1', api_key: 'key-123', org_id: 'org-1' });
+    await waitFor(() => {
+      expect(screen.getByText('Checkout')).toBeInTheDocument();
+    });
+    expect(endpoints.signup).toHaveBeenCalledTimes(1);
+    expect(endpoints.startCheckout).toHaveBeenCalledTimes(1);
+  });
 });

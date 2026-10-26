@@ -197,17 +197,15 @@ def _insurance_target(summary: dict[str, Any], model_type: str, bundle: dict[str
     financial = structured.get("financial") or {}
     loss_run = financial.get("loss_run") or {}
     quote = summary.get("quote") or {}
-    tiv = _as_float(summary.get("tiv")) or _as_float(quote.get("tiv")) or _as_float((structured.get("schedule_of_values") or [{}])[0].get("total_value") if structured.get("schedule_of_values") else 0)
     ratio = _latest_loss_ratio(financial)
     premium = _as_float(quote.get("adjusted_premium")) or _as_float(quote.get("base_premium"))
     incurred = _as_float(loss_run.get("total_incurred")) or _as_float(loss_run.get("total_paid"))
     claims = _as_float(loss_run.get("total_claims"))
 
-    # Expected loss ≈ LR * TIV when we have both; else premium * LR; else incurred / years
-    if ratio > 0.0 and tiv > 0.0:
-        return ratio * tiv
+    # Expected loss dollars are loss ratio times premium. Ratio times TIV
+    # mixes a premium ratio with a property value and is not a loss amount.
     if ratio > 0.0 and premium > 0.0:
-        return premium * max(ratio, 0.5)
+        return premium * ratio
     if incurred > 0.0 and claims > 1.0:
         return incurred / claims  # severity proxy — more diverse than raw incurred
     if incurred > 0.0:

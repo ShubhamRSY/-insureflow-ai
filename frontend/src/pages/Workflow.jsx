@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Badge, EmptyState } from '../components/ui';
 import { ClipboardCheck, Shield, Search, FileCheck, Loader2, Clock } from 'lucide-react';
 import { endpoints, fmtCurrency } from '../lib/api';
@@ -37,6 +37,8 @@ export default function WorkflowPage({ onRefresh, authorityData, onOpenJob }) {
   const [form, setForm] = useState(EMPTY_FORM);
   const [workflowDetail, setWorkflowDetail] = useState(null);
   const [detailBundleId, setDetailBundleId] = useState(null);
+  const [busyId, setBusyId] = useState(null);
+  const busyRef = useRef(false);
 
   const load = useCallback(async () => {
     try {
@@ -61,6 +63,9 @@ export default function WorkflowPage({ onRefresh, authorityData, onOpenJob }) {
   }, [pending, query]);
 
   const handleSignOff = async (bundleId) => {
+    if (busyRef.current) return;
+    busyRef.current = true;
+    setBusyId(bundleId);
     try {
       await endpoints.signOff(bundleId, form);
       setShowSignOff(null);
@@ -69,16 +74,25 @@ export default function WorkflowPage({ onRefresh, authorityData, onOpenJob }) {
       onRefresh?.();
     } catch (e) {
       toast.error(e.message);
+    } finally {
+      busyRef.current = false;
+      setBusyId(null);
     }
   };
 
   const handleBind = async (bundleId) => {
+    if (busyRef.current) return;
+    busyRef.current = true;
+    setBusyId(bundleId);
     try {
       await endpoints.bindPolicy(bundleId);
       await load();
       onRefresh?.();
     } catch (e) {
       toast.error(e.message);
+    } finally {
+      busyRef.current = false;
+      setBusyId(null);
     }
   };
 
@@ -183,7 +197,7 @@ export default function WorkflowPage({ onRefresh, authorityData, onOpenJob }) {
                     <button type="button" onClick={() => { setShowSignOff(id); setForm((f) => ({ ...f, action: 'request_info' })); }} className="btn-secondary text-xs">Request info</button>
                     <button type="button" onClick={() => { setShowSignOff(id); setForm((f) => ({ ...f, action: 'refer' })); }} className="btn-secondary text-xs">Refer</button>
                     {(p.state === 'approved' || p.state === 'quoted') && (
-                      <button type="button" onClick={() => handleBind(id)} className="btn-success"><FileCheck className="h-3 w-3 inline" /> Bind</button>
+                      <button type="button" onClick={() => handleBind(id)} disabled={busyId === id} className="btn-success disabled:cursor-not-allowed disabled:opacity-50"><FileCheck className="h-3 w-3 inline" /> Bind</button>
                     )}
                     <button type="button" onClick={async () => { setDetailBundleId(id); try { const d = await endpoints.workflowDetail(id); setWorkflowDetail(d); } catch (e) { toast.error(e.message); } }} className="btn-secondary text-xs"><Search className="h-3 w-3 inline" /> Detail</button>
                   </div>
@@ -221,10 +235,10 @@ export default function WorkflowPage({ onRefresh, authorityData, onOpenJob }) {
                         value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
                       />
                       <div className="flex gap-2">
-                        <button type="button" onClick={() => handleSignOff(id)} className="btn-primary btn-sm text-xs">
+                        <button type="button" onClick={() => handleSignOff(id)} disabled={busyId === id} className="btn-primary btn-sm text-xs disabled:cursor-not-allowed disabled:opacity-50">
                           Confirm {decisionLabel(form.action)}
                         </button>
-                        <button type="button" onClick={() => setShowSignOff(null)} className="btn-secondary text-xs">Cancel</button>
+                        <button type="button" onClick={() => setShowSignOff(null)} disabled={busyId === id} className="btn-secondary text-xs disabled:cursor-not-allowed disabled:opacity-50">Cancel</button>
                       </div>
                     </div>
                   )}

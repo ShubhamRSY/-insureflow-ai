@@ -1,0 +1,6 @@
+{
+  "enabledPlugins": {
+    "example-skills@anthropic-agent-skills": true,
+    "claude-md-management@claude-plugins-official": true
+  }
+}

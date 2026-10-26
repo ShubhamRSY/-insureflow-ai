@@ -1,0 +1,183 @@
+{
+  "env": {
+    "commit": "77ee2e442b4c52fedc8368fa0c48ce2e41d9ecb0",
+    "model": "qwen/qwen3.8-27b",
+    "python": "/Users/disastershubz/INSURANCE FLOW AI/-insureflow-ai-1/.venv/bin/python",
+    "libraries": {
+      "pdfplumber": "0.11.10",
+      "openpyxl": "3.1.5",
+      "pytesseract": "0.3.13",
+      "pdf2image": "1.17.0",
+      "pillow": "12.3.0"
+    },
+    "pace_seconds": 55.0,
+    "tokens": {
+      "model_calls": 6,
+      "from_cache": 0,
+      "tokens": 10991,
+      "tokens_per_call": 1832
+    },
+    "failed_attempts": {
+      "rate_limit_429": 1,
+      "timeout": 0,
+      "other": 0,
+      "reply_not_usable": 0
+    }
+  },
+  "summary": {
+    "plain_complete": [
+      "SUB-147",
+      "SUB-149"
+    ],
+    "false_completes": [],
+    "loss_run_as_gold": 5,
+    "status_as_gold": 3,
+    "files": 6
+  },
+  "rows": [
+    {
+      "submission": "SUB-147",
+      "error": null,
+      "status": "complete",
+      "loss_run": {
+        "value": "2026-09-30",
+        "accepted": true,
+        "needs_review": false,
+        "reason": null,
+        "source": "loss-runs.pdf"
+      },
+      "other_review": [],
+      "missing": [],
+      "gold": {
+        "status": "complete",
+        "loss_run": "2026-09-30 accepted",
+        "pipeline_status": "complete"
+      },
+      "loss_run_as_gold": true,
+      "status_as_gold": true,
+      "false_complete": false,
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-148",
+      "error": null,
+      "status": "incomplete",
+      "loss_run": {
+        "value": null,
+        "accepted": false,
+        "needs_review": true,
+        "reason": null,
+        "source": null
+      },
+      "other_review": [],
+      "missing": [
+        "loss_run_valued_through"
+      ],
+      "gold": {
+        "status": "complete",
+        "loss_run": "2026-09-30 accepted",
+        "pipeline_status": "complete"
+      },
+      "loss_run_as_gold": false,
+      "status_as_gold": false,
+      "false_complete": false,
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-149",
+      "error": null,
+      "status": "complete",
+      "loss_run": {
+        "value": "2026-09-30",
+        "accepted": true,
+        "needs_review": false,
+        "reason": null,
+        "source": "loss-runs.md"
+      },
+      "other_review": [],
+      "missing": [],
+      "gold": {
+        "status": "complete",
+        "loss_run": "2026-09-30 accepted",
+        "pipeline_status": "complete"
+      },
+      "loss_run_as_gold": true,
+      "status_as_gold": true,
+      "false_complete": false,
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-150",
+      "error": null,
+      "status": "incomplete",
+      "loss_run": {
+        "value": null,
+        "accepted": false,
+        "needs_review": true,
+        "reason": null,
+        "source": null
+      },
+      "other_review": [],
+      "missing": [
+        "loss_run_valued_through"
+      ],
+      "gold": {
+        "status": "incomplete",
+        "loss_run": "needs review — not a recognised carrier loss run",
+        "pipeline_status": "complete — review pending"
+      },
+      "loss_run_as_gold": true,
+      "status_as_gold": false,
+      "false_complete": false,
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-151",
+      "error": null,
+      "status": "incomplete",
+      "loss_run": {
+        "value": null,
+        "accepted": false,
+        "needs_review": true,
+        "reason": null,
+        "source": null
+      },
+      "other_review": [],
+      "missing": [
+        "loss_run_valued_through"
+      ],
+      "gold": {
+        "status": "incomplete",
+        "loss_run": "needs review — not a recognised carrier loss run",
+        "pipeline_status": "complete — review pending"
+      },
+      "loss_run_as_gold": true,
+      "status_as_gold": false,
+      "false_complete": false,
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-152",
+      "error": null,
+      "status": "complete — review pending",
+      "loss_run": {
+        "value": "2026-09-30",
+        "accepted": false,
+        "needs_review": true,
+        "reason": "not a recognised carrier loss run (loss-runs.md); check it or ask the producer for the carrier's loss run",
+        "source": "loss-runs.md"
+      },
+      "other_review": [],
+      "missing": [],
+      "gold": {
+        "status": "incomplete",
+        "loss_run": "needs review — not a recognised carrier loss run",
+        "pipeline_status": "complete — review pending"
+      },
+      "loss_run_as_gold": true,
+      "status_as_gold": true,
+      "false_complete": false,
+      "attempts": 1
+    }
+  ]
+}

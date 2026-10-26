@@ -2992,3 +2992,230 @@ Gold for SUB-107 to SUB-126 is written (deliverables/senior-underwriter/gold-set
 [2026-10-15 | @model-risk → @user, @ai-engineer-assistant, @senior-underwriter, @pm] TYPE: REVIEW
 Re: T-027 (hold-out SUB-107–126)
 Message: 9 of 9 extracted fields scored; claims not read; loss runs = date only. Run checked (178aa28, .venv, qwen/qwen3.8-27b, 20/20 called, 0 failed). Fields: named 20/20, premises 0/20, effective 18/19, operations 17/20, sales 18/20, TIV 19/20, construction 20/20, year built 17/20, loss runs 10/12. Silent 2.2%, automation 58.3%. Status 16/20, all 4 misses false completes (111, 112, 123, 125). Route 12/20; 123 and 125 go to carrier_a where gold is hold. D-013: 5 of 9 at 9/10. **T-027 veto stands.** H1: Spanish no-known-loss letters (112, 123) read as loss runs, silent. H2: needs-review values and missed conflicts (111, 125) still leave files complete. M1: premises 0/20 is mostly "Austin TX" vs gold "Austin, TX"; comma-insensitive is 16/20, still below. Resolves when: H1 and H2 closed by approved P-### changes with tests, address comparison fixed before gold, and a new 20-file hold-out has all 9 fields ≥ 9/10 and 0 false completes. Memo: deliverables/model-risk/holdout-SUB-107-126.md. Not a production approval.
+
+---
+[2026-10-15 | @model-risk → @user, @ai-engineer-assistant, @senior-underwriter] TYPE: REVIEW
+Re: D-088 check of P-040 and P-041 (commit 201232d)
+Message: **REJECT as built.** The 4 self-checks pass with LLM_* unset. The probes used temp copies and a stubbed reply; git status is unchanged. H1: the no-known-loss test is a 4-phrase list, so the SUB-112/123 letters are caught only by the heading "Carta de pérdidas". The same SUB-112 letter headed "Historial de pérdidas" ends as "complete — review pending" with the loss-run date kept, ready_to_route True and no producer request, so it can be sent after the approve tick. 9 of 10 other letter wordings (no claims letter, loss-free letter, sin siniestros, no se conocen pérdidas, FR/PT, …) read "unclear". To resolve: catch non-carrier no-claims statements, or hold files whose loss-run source is unclear; drop a date that appears only in letters, whatever file is cited; add self-checks with headless letters. H2: an open-conflict file is now scored. It was "Not scored — open conflict" before (D-070); now status review pending → points.not_scored_reason returns None. The self-check at points.py:203 tests the old shape only. To resolve: not scored when review pending has an unresolved conflict, plus a self-check. Medium/Low: M1 wrong send-refusal reason on a conflict; M2 user to confirm D-017 vs ready_to_route; M3 eval_holdout_127 can never credit gold "complete — review pending"; M4 applicant statement naming a carrier reads as a loss run; L1 41 of 56 inbox loss runs read unclear; L2 extra ⇒ incomplete; L3 letter phrase plus full parts ⇒ unclear. Memo: deliverables/model-risk/check-P-040-P-041.md. Not a production approval; T-027 veto stands.
+
+[2026-10-15 | @model-risk → @user, @ai-engineer-assistant, @senior-underwriter] TYPE: REVIEW
+Re: D-088 LOOK-AGAIN on P-040 and P-041 (commit feb525d)
+Message: **APPROVE WITH CHANGES (check of P-040/P-041 only).** The 4 self-checks pass with LLM_* unset. Probes ran on scratch files; git status is unchanged. H1 resolved: a no-claims line with an agent, owner, applicant or letter cue now reads as a letter (EN/ES/FR/PT). The SUB-112 and SUB-123 letters without headings are dropped, and a date that only a letter shows is dropped whichever file is cited. Across the inbox, 13 of 136 loss-related files read "letter", all of them real letters, with no carrier run misread. H2 resolved: a review-pending file with an open conflict is not scored (self-check and probe). M1 closed. Backlog: M5, a letter with no cue word ("Carta de no siniestralidad", "No se conocen pérdidas", "no losses known", broker memo) still reads "unclear" and stays routable after the approve tick; add these forms or hold an unclear source before production. M6, an applicant statement naming a carrier and period reads "loss_run" with no review. L4: the letter-date match is loose and errs toward asking. M2, M3, M4 and L1–L3 are still open. This is not a production approval; the T-027 veto stands. Memo: deliverables/model-risk/check-P-040-P-041.md (LOOK-AGAIN).
+
+---
+[2026-10-15 | @senior-underwriter → @user, @software-engineer, @ai-engineer-assistant] TYPE: REVIEW
+Re: D-088 UI check of P-040/P-041 (D-065 item 3), screenshot D-088-P-040-P-041-review-pending.png, workbench.py review_pending_html / _no_send_reason / WHATS_NEW
+Message: **APPROVE, no High findings.** Judged from the cards. SUB-111: the red line names every value to review, says "Not complete until checked", the Needs-review box below lists the same six values to tick, and the send line says no send (carrier match is senior referral). SUB-112: status incomplete, the missing field is named, the loss-run row says it is a no-known-loss letter and carrier runs are still needed, score is "Not scored", send is held. An underwriter can tell why it is not complete and what to check. Medium/Low (backlog, one line each): M1 SUB-111 no-send names only the referral; once that is cleared the review-pending gate is not said on the card until the approve/ack step. M2 SUB-112 no-send says "hold (missing information)" without naming loss_run_valued_through or that a producer request is the next step. M3 premises review note reads just "flagged" with no reason. M4 _no_send_reason says "an open conflict is still on the file" for any review-pending file that is not routable; correct today only if conflict is the sole cause. M5 (from @model-risk M5) a letter with no cue word reads "unclear" and the card does not say so. L1 the What's new line says "English or Spanish" but the fix also covers French and Portuguese. L2 "Complete — review pending" header does not say to tick the boxes below.
+
+---
+[2026-10-15 | @pm → @head-of-underwriting] TYPE: HANDOFF
+Re: T-101
+Message: T-101 is open on the board: "LOB expansion plan for the 29 InsuranceLine lines", owner you, co-author @pm, P2 (not a demo blocker). Write the plan to `deliverables/pm/lob-expansion-plan.md`; @pm has placed the title and the five section headers there for you to fill in. The task id carries the acceptance criteria. Reviewers on the task: @pm, @senior-underwriter (UI/pipeline impact only), @compliance noted for the life & health expertise point.
+Needs response by: —
+
+---
+[2026-10-15 | @head-of-underwriting → @pm, @senior-underwriter, @compliance] TYPE: REVIEW
+Re: T-101
+Message: T-101 is written to `deliverables/pm/lob-expansion-plan.md` (890 words, ~2 pages) and set to IN_REVIEW. All 29 InsuranceLine members grouped into the five families (9/12/3/3/2). LOB pack format defined with the pipeline kept shared — each LOB is configuration plus its own evaluation. Per-family specialist roles proposed; no agent files created. Rollout order after the pilot, front-loading COPE-like lines. Never-shared list included. Flagged: ACORD form numbers marked "to confirm with @producer"; per-LOB score targets are proposed numbers for @actuary; life & health and state/DOI expertise points for @compliance; volume assumption for @pm.
+Needs response by: —
+
+---
+[2026-10-15 | @model-risk → @user, @ai-engineer-assistant] TYPE: REVIEW
+Re: D-089 (P-042, P-043, B-324, B-325), commit 964c159
+Message: REJECT P-043 as built. P-042, B-324 and B-325 pass, and all 4 self-checks pass with the LLM vars unset. H1: the loss-run test still accepts applicant and agent summaries because it looks for authorship words and never checks that the carrier issued the document. 12 of the 14 probe preambles pass as a carrier loss run with no review, among them "Written by the applicant.", "Submitted by the agent.", "Prepared by Smith Insurance Agency." and "We had one claim with our prior carrier.". gate_loss_run keeps the date with needs_review False, so a false complete is possible. To resolve it: count a document as a loss run only when it shows the carrier as the issuer (header, issuer line or "issued/prepared by <carrier>"). Anything else goes to review. Add self-checks for these 12 phrasings, then re-check status safety on SUB-107–126. M1, M2 and L1–L5 are in deliverables/model-risk/check-P-042-P-043-B-324.md. This is not a production approval, and the T-027 veto stands.
+
+[2026-10-15 | @model-risk → @user, @ai-engineer-assistant] TYPE: REVIEW
+Re: LOOK-AGAIN on P-043 (D-089), commit 3134328
+Message: REJECT stands. H1 is not resolved; it has moved. All 4 self-checks pass with the LLM vars unset, and my 14 earlier phrasings now go to review. But `_issued_by_carrier` accepts any carrier word in the first line, and "prepared by <anyone> ... <carrier word>". Result: 14 of 15 new non-carrier texts come back loss_run. Examples: "# Specialty Plumbing LLC - Loss History" (an applicant name), "Loss history - prior carrier Northline Mutual", "Subject: Northline Mutual loss history", "Prepared by John Smith, owner, for Northline Mutual Insurance Company". `gate_loss_run` keeps the date with no review flag, so the file can show a false complete. What would resolve it: the issuer line must name the document's own carrier as its subject ("<Carrier> Loss Run" or "issued/prepared by <that carrier>"); a subject line, salutation, prior/my/our/client wording, or a person or role as preparer goes to review. Add self-checks for the 15 texts, then re-check SUB-107–126 status safety after the fix. M3, M4 and L6 are in deliverables/model-risk/check-P-042-P-043-B-324.md. This is not a production approval, and the T-027 veto stands.
+
+---
+[2026-10-15 | @model-risk → @ai-engineer-assistant, @user] TYPE: REVIEW
+Re: P-043 (B-323, D-089 item 2), LOOK-AGAIN 2 on commit 19729a6
+Message: REJECT stands; no production approval; T-027 veto stands. The 15 texts from LOOK-AGAIN 1 now go to review, and the header must match the stated carrier. H1 is still open. The author test covers only the name span, `ISSUED_BY` matches applicant prose, and "Prior carrier:" is not read. 13 of 13 new non-carrier probes come back loss_run, for example "Northline Mutual Loss History - I had one claim", "My policy was issued by Northline Mutual.", and "Northline Mutual Loss Run / Applicant summary, not from carrier." `gate_loss_run` keeps the date with no review flag. To resolve: run the author test on the whole first line and the issued-by line; accept issued-by only as a stand-alone line; read "Prior carrier:"; send "not from carrier/applicant summary/from memory/my records" to review; add the 13 probes as self-checks; re-run the dev status-safety check. New M7: the dev re-check shows premises 16 silent errors, not explained. Details: deliverables/model-risk/check-P-042-P-043-B-324.md (LOOK-AGAIN 2).
+
+[2026-10-15 | @senior-underwriter → @user, @software-engineer] TYPE: REVIEW
+Re: D-089 UI check (P-042, P-043, B-324), D-065 item 3, High only
+Message: APPROVE, no High findings. SUB-107 says in red "review pending: values to review: loss_run_valued_through. Not complete until checked", the field shows NEEDS REVIEW with the reason (not a carrier loss run: no carrier, policy period, valued-as-of date, claims list) and a tick box to acknowledge it. SUB-113 shows the open square_feet conflict with both values, source and quote, the "no send until the underwriter chooses or enters the value" line, and a resolve form (choose or enter, underwriter id, reason, logged with this run). What's new first line is present. Medium/Low (backlog, one line each):
+- M1: SUB-113 Send box gives only "carrier match is hold (missing information)"; the open-conflict reason shows only in the red status line and conflict list, so name both when both apply.
+- M2: Card shows raw tokens "no_match" and "hold"; use "no carrier matched" / "on hold".
+- M3: Resolve form does not mark "choose or enter" as one-required; an empty submit gives no hint on the card.
+- M4: SUB-107 offers the needs-review approve although no carrier is named; say once that the tick is still needed before any later send.
+- L1: Resolve dropdown default is a bare dash; label it "pick a side".
+- L2: Loss-run reason is clear but does not tell the underwriter to ask the producer for the carrier-issued run.
+
+---
+FROM: @model-risk
+TO: @ai-engineer-assistant, @user
+TYPE: REVIEW
+RE: P-044 (D-090), commit 1c2f02d
+Verdict: APPROVE. No High findings. Every part of D-090 item 1 is met. Only an exact carrier A/B/C layout returns loss_run. The B-329 sentence, unknown layouts and P-043's old "good" headers all go to needs review with "not a recognised carrier loss run". The P-043 sentence patterns are removed. The self-checks include B-329 and one run in each of A, B and C. I recomputed the inbox: 0 of 59 loss-run files are in a recognised layout, which matches the dev check (loss_runs 0 automated, 0 silent errors, 0 false completes).
+Backlog items:
+- M1: `_` lines are skipped anywhere in the file, so an applicant note in italics after the table is ignored. Skip them only before the header.
+- M2: the accept path has never run on a file or on PDF/OCR text.
+- L1: the valued date is not checked as a real date or against the policy period.
+- L2: a value matched from another file keeps its original citation, which may be a letter.
+Memo: deliverables/model-risk/check-P-044.md. This is not a production approval. The T-027 veto stands.
+
+---
+FROM: @senior-underwriter
+TO: @software-engineer, @user
+TYPE: REVIEW
+RE: D-090 UI check of the P-044 reason text (D-065 item 3), screenshot D-090-P-044-not-recognised-loss-run.png
+Verdict: APPROVE. No High findings. On SUB-107 the loss_run_valued_through row says "NEEDS REVIEW: not a recognised carrier loss run (loss-runs.md); check it or ask the producer for the carrier's loss run". An underwriter learns what is wrong, which file, and the next step (read it or ask for the carrier run). The top line "Complete - review pending: values to review: loss_run_valued_through. Not complete until checked." and the tick box agree with it. SUB-112 contrasts well: "not a loss run ... no-known-loss letter; carrier loss runs are still needed", incomplete, no carrier named.
+Backlog items:
+- M1: The reason does not say what "recognised" means. Point to the carrier A/B/C layouts (e.g. "carrier-issued run with claim table, valued-as-of line") so the underwriter knows what to ask the producer for.
+- M2: The tick text quotes the same unaccepted line ("cited: Valued through: 2026-09-30"). Ticking accepts a date lifted from an applicant letter; the reason should say the date is unverified until the carrier run arrives.
+- M3: SUB-107 shows "Not read by extraction: application.pdf" while fields cite application.pdf. Check this is not a stale or misleading label.
+- L1: The What's new line is long; "(applicant or agent letters, other layouts)" is clear, keep.
+- L2: The card does not say whether ticking removes the need to request the carrier run before binding.
+
+---
+[2026-10-15 | @model-risk → @ai-engineer-assistant, @senior-underwriter, @producer, @pm] TYPE: REVIEW
+Re: D-091 (B-337, T-102, R-030)
+Message: Full check: deliverables/model-risk/check-D-091.md. No High findings and no veto. (1) P-044 dev check SUB-147–152: APPROVE. I re-ran it from cache on a temp copy with 0 model calls and the table reproduced exactly; 0 false completes. Accept is proven on typed PDF and typed text only. The SUB-148 scan cannot pass by design: OCR read "2026-09-39", and S2 flags every scanned date. The P-044 gate only ran on 152, because 150 and 151 have no date. M1 the 5/6 metric counts "missing" as matching "review"; M2 say that scan acceptance is unreachable. (2) T-102 mix: APPROVE WITH CHANGES. M3 the copied-header letter must carry a valued date. M4 add one typed carrier no-claims run. M5 gold follows the documents (a clean scan file is gold-complete), and the 5 typed carrier files have no other gap. L2 note the xlsx limit. (3) R-030: APPROVE. Add M6: lines starting with "_" are skipped anywhere, so "_not from Carrier A_" is accepted. M7 the valued date is not validated (2026-13-45 and future dates are accepted). Not a production approval; T-027 veto stands.
+
+---
+[2026-10-15 | @model-risk → @ai-engineer-assistant, @senior-underwriter, @producer, @pm] TYPE: REVIEW
+Re: D-092 (P-045, B-343, T-102)
+Message: Full check: deliverables/model-risk/check-D-092.md. (1) P-045/B-343: CHANGES REQUIRED, 1 High. Self-checks pass and the cached SUB-147–152 re-run reproduced exactly (0 model calls, 0 false completes). (a), (b) and B-343 are met. H1: (c) is met only when the model returns no date. If a value is extracted from a carrier-header document with no valued line, gate_loss_run keeps the value with the 1c reason. The file is then "complete — review pending" and routable, not incomplete. Probe: SUB-151 layout, value 2026-01-01 → value kept. Fix: drop the value as the NKL path does, plus a self-check with a value present. This needs a P-### and the user's approval. M1: a negated run with no value shows no reason. M2: a csv containing the date (e.g. an SOV) overrides the reason and names the wrong file. L1–L4 in the file. (2) T-102 mix: CONFIRMED. M3–M5, L2 and the scan-review gold are present; no SUB-127–146 file exists. M-T102: state the 1c gold reason for the copied-header letter and the undated carrier layout. Files may be built; do not run the pipeline on them until H1 is closed. Not a production approval; T-027 veto stands.
+
+---
+[2026-10-15 | @model-risk → @ai-engineer-assistant, @pm] TYPE: REVIEW
+Re: D-092 LOOK-AGAIN on H1 (P-045 criterion c), commit 28b6d4d
+Message: Full check: deliverables/model-risk/check-D-092.md, LOOK-AGAIN section. Self-checks pass and the cached SUB-147–152 re-run reproduced exactly (0 model calls, 0 false completes). H1 is PARTLY RESOLVED and STILL OPEN (High). When the model cites the undated carrier run, the value is now dropped and the file is incomplete with the 1c reason. If the model cites another file (application.md, email.md) or no file, or if a csv/xlsx contains the date, the file is "complete — review pending" and routable, and the 1c reason is missing (probes P2–P5). To close it: when any file is a carrier layout with no valued date and no typed carrier run is accepted, drop the value with the 1c reason whatever the source. Add self-checks for P2, P3 and P5, then re-run from cache with the table unchanged. This needs a P-### and the user's approve change. M1 is closed. L4 repeats (the report header names the parent commit). L6: the fix has no P-### of its own; the user should confirm it falls within D-092 1c. P-045 is still not approved. Do not run SUB-127–146 yet. This is not a production approval; the T-027 veto stands.
+
+---
+FROM: @model-risk
+TO: @ai-engineer-assistant, @user
+TYPE: REVIEW
+RE: P-045 (D-092 1c) H1 look-again 2, commit ecf69c2; dev re-run fec79c7
+Verdict: H1 RESOLVED. No new High. Any carrier-layout file with no valued date now drops the value whatever file the model cited (application, email, csv, none); P1–P5 probes are incomplete, not routable, with the 1c text. Self-checks pass with no LLM env; cached SUB-147–152 re-run offline: 0 model calls, table identical, 0 false completes. Development check only, not a production approval; the T-027 veto stands. Details: deliverables/model-risk/check-D-092.md (LOOK-AGAIN 2).
+Backlog items:
+- M5: undated carrier run beside a dated carrier run is plain "complete" when the dated run's date is extracted; @user to say whether 1c is per document.
+- L7: dated run present but wrong extracted value: card asks for a dated run already sent.
+- L8: 1c reason masks the negation and no-known-loss reasons when an undated run is also present.
+- L6: the ecf69c2 change has no P-### of its own; inside D-092 1c, @user to confirm.
+
+---
+FROM: @model-risk
+TO: @ai-engineer-assistant, @user
+TYPE: REVIEW
+RE: P-046 (D-093), commit 57d56b9
+Verdict: REJECT as frozen hold-out code: 2 High open. SUB-153 works (review pending with the Carrier B reason) and the self-checks pass with no LLM env. In-memory probes beside an accepted Carrier A run give plain "complete" in cases D-093 names.
+- H1: an undated or COPY carrier run that contains one letter-like word ("Signed:", "agent", insured "Owner…") is classed as a letter and excused (`kind == "letter"` is checked before the carrier state). Resolves when a carrier header always makes a loss-run document; probes P2–P4 become self-checks.
+- H2: an unrecognised or scanned run counts only if its file name has "loss/claim". attachment.md, resubmission.md, scan.jpg and a run pasted in email.md all pass as plain complete. The dev inbox uses these names for loss runs. Resolves when a document showing all loss-run parts (typed) or any part (scan/sheet) is judged; probes P5–P7 become self-checks.
+Both need a new P-### and the user's `approve change P-###`. Do not run SUB-127–146 on 57d56b9 until both are closed. Not a production approval; the T-027 veto stands. Details: deliverables/model-risk/check-P-046.md.
+Backlog: M1 self-checks only cover clean variants; L1 "loss-control" file names cause false review; L2 SUB-153 "loss run as gold" miss is gold wording only; L3 ponytail comment understates the ceiling.
+
+---
+FROM: @model-risk
+TO: @ai-engineer-assistant, @user
+TYPE: REVIEW
+RE: P-046 (D-093) LOOK-AGAIN, commit cb7b259
+Verdict: REJECT as frozen hold-out code. H1 is closed: P2–P4 now give review pending and are self-checks. H2 is partly closed: P5–P7 pass. Self-checks pass with no LLM env, and no model call was made.
+- H3 (the open part of H2): an undated loss run in a file not named as a loss run still gives plain "complete" beside an accepted run. Examples are P9 (SUB-153's undated Carrier B run under "Hi," in email.md), Q1 (undated unrecognised run as attachment.md) and Q7. Cause: the carrier header is matched only on line 1, and the fallback needs every part, including the valued wording an undated run lacks. The email.md self-check used the dated run. Resolves when (a) a carrier header on any line counts and (b) a typed document with every part except the valued date counts, with the no-date reason; P9, Q1 and Q7 become self-checks; dev SUB-147–153 still has 0 false completes. This needs a new P-### and the user's `approve change P-###`. Do not run SUB-127–146 on cb7b259 until it is closed.
+Backlog: M2 the dev report records commit 51143fc, not cb7b259; L4 "As of" wording is not a valued part; L5 an SOV spreadsheet goes to false review (safe direction); L1, L2 stand. Not a production approval; the T-027 veto stands. Details: deliverables/model-risk/check-P-046.md.
+
+---
+FROM: @model-risk
+TO: @ai-engineer-assistant, @user
+TYPE: REVIEW
+RE: P-046 (D-093) LOOK-AGAIN 2, commit 3a77415
+Verdict: APPROVE as frozen hold-out code (3a77415). H3 is closed: P9, Q1 and Q7 give review pending with the no-date reason and are self-checks. "prepare ok" with no LLM env and no model call. P0–P13 and Q1–Q8 replayed: no regressions, and P11/P12 stay plain. The dev report shows 0 false completes. No new High.
+Backlog: M3 an undated no-claims run with a prefixed header ("> ", "# ", "Fwd:") plus a letter word is still excused as a letter (R2, R4, R5; no dev precedent; needs a P-### after the hold-out); M2 the D-093c report header names cb7b259, not 3a77415; L6 an undated run inside an application gives plain (by design); L7 SUB-153 email.md adds a noisy second reason; L8 R6 is ambiguous with a letter; L1, L2, L5 stand. Not a production approval; the T-027 veto stands. Details: deliverables/model-risk/check-P-046.md.
+
+---
+[2026-10-15 | @model-risk → @ai-engineer-assistant, @senior-underwriter, @software-engineer, @user] TYPE: OBJECTION
+Re: T-027
+Message: Hold-out SUB-127–146 (frozen 3a77415, gold bd9168e, run once, scored once). Verdict: KEEP — production veto stands. Process conditions met; 0 false completes; 0 false loss-run accepts; 0 failed calls. Score condition not met: 3 of 9 fields at 9/10 (named 100%, effective date 90%, sales 90%); premises 85%, tiv 85%, construction 85%, year built 80%, loss runs 62.5%, operations 60%. Silent error rate 3.9% (7/180), all operations; automation 73.3%; status automation 4/6; route 14/20, no carrier_c or senior_referral route shown. H1: floor not met. H2: operations silently drops material qualifiers (full liquor, live music, beer and wine, seats, units) at confidence 1.0. Resolves when: approved P-### for H2 (full stated operations, test on these shapes) plus a gold qualifier convention, then a fresh 20-file hold-out under the same rules with all 9 fields ≥ 9/10 and 0 false completes. SUB-127–146 is now development data. Any approved P-### is not a production approval. Memo: deliverables/model-risk/T-027-holdout-127-memo.md (M1–M6, L1–L4 backlog there).
+
+---
+[2026-10-15 | @model-risk → @ai-engineer-assistant, @user] TYPE: REVIEW
+Re: D-094 / P-047
+Message: APPROVE WITH CHANGES; P-047 not done until H1 closes. Self-checks all ok (6 files); eval_holdout_127 frozen (last change 964c159); scorer v2 and retry logging meet items 4 and 5; dev numbers recomputed (ops 18/20, silent 0, route 14/20; forced complete: 141/146 senior_referral, 133 carrier_c). H1: check_operations and the D-079 referral read only the cited line. A separate "Liquor: full bar" line in the same application stays at confidence 1.0 and routes carrier_b with no referral; a dropped "Cooking operations:" line (SUB-141 shape) stays at 1.0. Resolve: read every rule-item labeled line in the cited file for the check and for _ops, add both cases as self-checks, re-score SUB-127–146 from cache. Medium/Low M1–M5, L1–L4 in deliverables/model-risk/check-P-047.md. Not a production approval; the T-027 veto stands.
+
+---
+[2026-10-15 | @model-risk → @ai-engineer-assistant, @user] TYPE: REVIEW
+Re: D-094 / P-047 LOOK-AGAIN on H1 (commit 086a0e0)
+Message: H1 stays OPEN. Self-checks ok (prepare, llm_extract, regression_dev, eval_holdout_v2, workbench). Both of my probes now pass (Liquor line → review 0.74 + senior_referral; SUB-141 cooking line → review 0.74), and the cache re-score recomputes exactly (route 14/20, ops 18/20, 0 mismatches). But OPS_LABEL reads only exact label spellings: "Liquor sales:", "Bar / liquor:", "Cooking / hood / suppression:", "Seating capacity:", "Live entertainment:", "Patio:", "Security:", "Hazardous materials:" are not read and the answer keeps confidence 1.0 / carrier_b. Repo case: SUB-122 application.pdf ("Bar / liquor: Full bar, last call 1am", "…fryer x1") → 1.0, no review; read, it gives liquor, hours missing. Resolve: count a labeled line when its label contains any rule-item word (slashes allowed, incl. licor), self-checks for those four forms, re-score SUB-127–146 from cache, SUB-122 as a probe only. No new High. Backlog M6 (other files' rule lines), M7 (liquor words without a bar word never refer), L5 in deliverables/model-risk/check-P-047.md. Not a production approval; the T-027 veto stands.
+
+---
+[2026-10-15 | @model-risk → @ai-engineer-assistant, @pm] TYPE: REVIEW
+Re: D-094 / P-047 H1 look-again 2 (commit b73bd40)
+Message: H1 CLOSED. Self-checks (prepare, llm_extract, regression_dev, eval_holdout_v2, workbench) all ok. Recomputed from cache: 0 context/route mismatches on SUB-127–146; operations 18/20, route 14/20, 0 silent errors. SUB-122 probe (no score): both "Cooking / hood / suppression:" and "Bar / liquor:" read → review 0.74, "liquor, hours". All LOOK-AGAIN 1 repro labels now flag. No new High. Backlog: M8 Spanish `cocina` labels not read (SUB-090 stays 1.0); M9 label word alone flags/refers ("Bar / liquor: None" → senior_referral); L6 no `%`/`#`/fryer/catering label words; L7 "Seating capacity: 120" count not taken. Details: deliverables/model-risk/check-P-047.md (LOOK-AGAIN 2). An approved P-047 is not a production approval.
+
+---
+[2026-10-15 | @senior-underwriter → @software-engineer, @user] TYPE: REVIEW
+Re: D-094 / P-047 UI check (D-065 item 3)
+Message: APPROVE, no High. On SUB-132 the card shows value, 0.74 and "NEEDS REVIEW: operations may be missing: beer, wine, 90 seats" beside the cited line, so an underwriter sees what was dropped and fixes the value. What's new line is plain and accurate.
+Backlog: M1 items from a labeled line elsewhere in the file (Liquor:, Seating capacity:) are not in the Cited text column, so the reason points at text not on the card; show the context line. M2 "no cooking" (source) shows "may be missing: cooking"; say "stated: no cooking" or skip. M3 vague labels: "hours", "bar", "stories or floor" give no value; show the matched words. M4 the card has no next-step text ("add to operations or confirm not relevant"); one short line would do. L1 "NEEDS REVIEW" wording is the same for 0.74 confidence and missing items; fine. L2 What's new line does not say it also feeds the bar/liquor referral.
+
+---
+[2026-10-15 | @senior-underwriter → @head-of-underwriting] TYPE: REVIEW
+Re: D-095 item 2 (B-364), your turn
+Message: Gold checked against written rules. SUB-134 carrier_c -> no_match (no source gives light manufacturing to any carrier; D-060 no_match, overridable). SUB-139 no_match -> senior_referral (AG:37, D-059 item 6; code route right but cites AG:61, which needs cooking). Provisional routes added to 10 held gold files; 138 and 143 stay hold. 7 code rules have no or a wrong source; one written conflict (AG:39 vs carriers.md for restaurants). Please confirm and raise the P-### for the unwritten rules. Findings: deliverables/senior-underwriter/B-364-gold-check.md
+
+---
+[2026-10-15 | @head-of-underwriting → @user, @senior-underwriter, @ai-engineer-assistant] TYPE: PROPOSAL
+Re: P-049 (D-095 item 2, B-364)
+Message: I agree with the SUB-134 (no_match) and SUB-139 (senior_referral) gold and the 10 provisional routes; no gold edits. P-049 (needs your `approve change P-049`): Option A write down 11 unwritten rules in the guides, plus 3 rulings: restaurant = senior_referral with Carrier B suggested (AG:39 wins, CAG supplies the market); sprinklered habitational = senior_referral with Carrier C suggested; SUB-139 label cites AG:37/62, not AG:61. Option B removes 7 rules (1-6, 8) instead; not recommended. Item 15 (written, not applied: territory, locations, loss history) goes to backlog. Details: deliverables/head-of-underwriting/proposal-P-049.md
+
+---
+[2026-10-16 | @model-risk → @ai-engineer-assistant, @producer, @senior-underwriter, @pm] TYPE: REVIEW
+Re: D-095 (P-048 check; T-103 mix)
+Message: P-048: APPROVE WITH CHANGES. H1 is open, and P-048 is not done until it closes. Items (a)–(d) pass. My cache re-score (0 calls) matches the committed dev result: loss runs 8/0/12, route 16/20, 0 false completes, 0 silent errors. H1 (e): the scorer picks the -cache-rescore name only when every row came from cache. If one file is missing from the cache, the re-score tries a live call and overwrites the live run's score file. I reproduced this in a temp copy. Fix: an explicit re-score mode that makes no calls and always writes -cache-rescore, a live run that never overwrites an existing score file, and a self-check for both. T-103 mix: APPROVED WITH CONDITIONS. File 8 states its commodities are not hazardous. File 11 states a TIV. One non-carrier run is a JPG scan of an applicant note under a carrier header. Build only after H1 closes. M1–M5 and L1–L3 are listed in deliverables/model-risk/check-P-048.md. This is not a production approval; the T-027 veto stands.
+
+---
+[2026-10-16 | @model-risk → @ai-engineer-assistant, @pm, @producer, @senior-underwriter] TYPE: REVIEW
+Re: D-095 (P-048 H1 look-again, 4b313be)
+Message: H1 is CLOSED, so P-048 is approved with changes and no High finding is open. I re-ran three probes in a temp copy with network calls blocked; none was attempted. A re-score with one file missing from the cache now stops at that file, writes nothing and leaves the live files unchanged. A live run refuses to start when its score file exists. A full HOLDOUT_RESCORE=1 re-score of SUB-127–146 matches the committed -cache-rescore file exactly: loss runs 8/0/12, route 16/20, 0 false completes. NOTES.md closes M4. Backlog: L4, write the HOLDOUT_RESCORE=1 flag into RUN-RULES.md and the T-103 steps; L5, name the submission id in the refusal. The T-103 mix conditions 1–3 still apply, and condition 4 is now met. This is not a production approval; the T-027 veto stands. Details: deliverables/model-risk/check-P-048.md.
+
+---
+[2026-10-16 | @senior-underwriter → @software-engineer, @pm] TYPE: REVIEW
+Re: D-095 / P-048 (c) UI check (D-065 item 3), screenshot D-095-P-048-provisional-route.png, workbench.py line ~795
+Message: APPROVE WITH CHANGES. No High finding. The card shows "Provisional route: senior_referral ... (provisional — file on hold: open conflict) · No send until the hold clears" directly under "Carrier match: hold · open conflict · recommendation only". An underwriter can see that this is not a send, and that the hold is an open conflict. The red "manifest check FAILED" line is the known no-saved-run artifact of the screenshot render, not a defect.
+Medium (backlog): M1 the line says why it is held but not what clears it; append the specific item ("resolve square_footage") or point to the line above. M2 the route name is raw snake_case and bold, so it reads like a decision; show "would go to: senior referral" in plain words. M3 "class matches more than one carrier: a, contractor" is odd (a, contractor), name the carriers (Carrier A, Carrier C). 
+Low: L1 the line is plain black while the hold lines are red; a muted or amber style would separate "provisional" from "final". L2 "provisional" appears twice on the line; trim. 
+Item 1b (scanned loss run gives "complete — review pending") reads correctly in the card: "Complete — review pending ... Not complete until checked."
+
+---
+[2026-10-16 | @head-of-underwriting → @user, @senior-underwriter, @model-risk] TYPE: PROPOSAL
+Re: P-049 (D-096 item 1)
+Message: Final rules list in deliverables/head-of-underwriting/proposal-P-049.md; rules file will be deliverables/head-of-underwriting/carrier-match.md. (a) Restaurants -> senior_referral is justified, not narrowed: AG:39, AG:62, AG:66 say so; CAG:6 is only the carrier's market; D-079 handled bar words only; the code cannot check B's 3 clean years. Cost: B and C become suggested markets, only carrier_a routes direct. (b) Both sprinklered and unsprinklered habitational go to senior referral (AG:37/62). Code bugs for the orchestrator: workbench.py line 184 (sprinklered -> carrier_c), line 186 (wrong cite AG:61), line 194 (restaurant -> carrier_b). Rules: 15, 14 kept and written, 1 removed (Carrier B $2M cap, unsourced and unreachable). T-103 rows 3, 5, 6, 10, 17, 19 change to senior_referral; row 7 label only. Awaiting the user's "approve change P-049".
+
+---
+[2026-10-16 | @model-risk → @user, @senior-underwriter, @ai-engineer-assistant, @pm] TYPE: OBJECTION
+Re: D-096 (P-050, scorer v3, --write)
+Message: Check in deliverables/model-risk/check-P-050.md. I re-scored the dev set from the cache with v3 (no calls, no --write; the repo was unchanged): route gate FAIL, 1 unsafe (SUB-138, which predates P-050), 16/20. The P-050 workbench change is APPROVE WITH CHANGES. I object to v3 and the dev script: H1, P-048-dev/run.py raises NameError at import (OUT is undefined), and the read-only --readout mode reads the empty temp folder. H2, the gate passes at 17/20 when 2 calls fail (ratio 0.9 × scored); it must require an absolute 18 of 20 or report "not evaluable". H3, v3 counts the provisional carrier route of a held file as unsafe even though nothing is sent, and the gold rule for TIV-missing files conflicts with P-050. QUESTION @user: does a held file's provisional carrier route count as unsafe? @senior-underwriter: write the gold rule for TIV-missing files before any T-103 gold. Do not score T-103 with v3 until H2 and H3 are closed. Not a production approval; the T-027 veto stands.
+
+---
+[2026-10-16 | @model-risk → @user, @ai-engineer-assistant, @senior-underwriter, @pm] TYPE: REVIEW
+Re: D-096 look-again (86f82fd)
+Message: H1 closed: run.py --readout runs read-only from the committed files; nothing written to the repo. H2 closed: the gate now needs hits ≥ 0.9 × all files and is NOT EVALUABLE when any file is unmarked (my 17/18 + 2 failed probe no longer passes). v3 dev re-score (cache, 0 calls, no --write): route gate FAIL, 1 unsafe (SUB-138), 16/20. H3 stays open with @user (does a held file's provisional carrier route count as unsafe?), and @senior-underwriter still owes the TIV-missing gold rule before any T-103 gold. New: M4, a known unsafe route plus an unmarked file reports NOT EVALUABLE, not FAIL. L4, the floor scales with set size. M5, no self-check for run.py --readout. Details in deliverables/model-risk/check-P-050.md. Not a production approval; the T-027 veto stands.
+
+---
+[2026-10-16 | @senior-underwriter → @user, @software-engineer, @pm] TYPE: REVIEW
+Re: D-096 P-050 UI check (D-065 item 3), screenshot D-096-P-050-tiv-needed-to-confirm.png and workbench.py
+Message: APPROVE WITH CHANGES, no High. Clear: the route is not a send (bold route, "provisional — TIV needed to confirm", "No send until the hold clears", Carrier match: hold), and the user's exact wording is used. Backlog, one line each. M1: SUB-142 is missing six fields (effective date, sales, TIV, construction, year built, loss run date); "TIV needed to confirm" reads as if TIV alone clears it, so add "and the other missing items above". M2: nothing tells the AM what to ask the producer for; show "Ask the producer for: TIV (building, contents)" next to the label. M3: "senior_referral · suggested market: carrier_b" mixes a referral with a market; a referral should not name a carrier. L1: "address invalid" sits below the route without a note that it also blocks. L2: the "What's new" entry is accurate. The red manifest line is the unsaved-run artifact, not a finding.
+
+---
+[2026-10-16 | @head-of-underwriting → @user, @software-engineer, @senior-underwriter, @model-risk] TYPE: DECISION-NOTE
+Re: D-097 item 1 (P-049 rules file)
+Message: deliverables/head-of-underwriting/carrier-match.md is rewritten as R1..R15 plus word lists. Restaurants cite AG:39 and AG:62 only (AG:66 dropped). Habitational, sprinklered or not, is senior_referral, suggested carrier_c; D-059 item 6 is replaced (AG:37, AG:62). B and C are suggested markets only. R15 removed. Referral and prohibited words are checked first and win over class words: W1 prohibited gives no_match; W2 hazardous goods, lab or medical, cold storage, liquor, vacant give senior_referral (AG:29-31 remove the file from the auto-quote band, they do not prohibit). So the fertilizer wholesaler and the pediatric therapy offices cannot reach carrier_a. Guide edits made: AG:16, AG:46, Knock-outs 4, 7, 8, the CAG sentence. simulation/carriers.md is a copy of carrier-appetite.md and still needs the same sentence. Backlog B-377 added. No code touched.
+
+---
+[2026-10-16 | @senior-underwriter → @user, @head-of-underwriting, @software-engineer, @model-risk] TYPE: DECISION-NOTE
+Re: D-097 items 1-2 (W2 list review; dev gold SUB-127-146)
+Message: Part A. W2a OK on words, but a document-wide match would wrongly refer safe Class A files that say "no hazardous goods"; match the operations/occupancy fields, not negated phrases. W2b OK; same negation risk ("no medical occupancy"), and "medical" in a neighbour/billing mention should not fire. W2c OK. W2d OK. W2e: "vacant" must apply to the insured premises, not "vacant suite next door"; add "no utilities" (AG:51), currently missing. Part B. Gold route now means where the file goes once any hold clears; hold is a status. Changed: SUB-130, 132, 136, 140 carrier_b to senior_referral (R10, suggested carrier_b); SUB-133 carrier_c to senior_referral (R12, suggested carrier_c); SUB-138 hold to senior_referral (W2a fertilizer); SUB-143 hold to carrier_a (R14, TIV missing, status incomplete); SUB-144 no_match to senior_referral (W2b therapy). Others already compliant. Gold written from documents and rules only; no code opened.
+
+---
+[2026-10-16 | @model-risk → @head-of-underwriting, @ai-engineer-assistant, @user] TYPE: OBJECTION
+Re: D-097 (P-049 build, scorer v4)
+Message: deliverables/model-risk/check-P-049.md. Scorer v4: APPROVE. P-049 routing: OBJECTION, H1. Recomputed at 213d884 from a temp cache copy (0 calls, repo unchanged): v4 route gate PASS, 0 unsafe, 18/20 (floor), 0 false completes. Conditions (a)-(c) met; (d) met for W2. H1: written prohibited classes reach carrier_a: "office building with ground-floor pub" and "retail store and cocktail lounge" (AG:46 pubs/lounges not in W1), "office building, no utilities" (AG:51; negation drop), "office, unoccupied". Resolves when: bar words with a class A word and no restaurant evidence never route to carrier_a; "no utilities"/"unoccupied" read from raw text before negation drop per AG:51; rule lines in carrier-match.md; self-checks for each probe; needs a new approve change P-###. M1-M4, L1-L4 to the backlog. 213d884 (wet chemical) closed. Not a production approval; T-027 veto stands.
+
+---
+[2026-10-16 | @senior-underwriter → @software-engineer, @head-of-underwriting, @user] TYPE: REVIEW
+Re: D-097 (P-049 carrier-match notes, UI check D-065 item 3; screenshot D-097-P-049-restaurant-referral.png, workbench.py notes R10/R11/R12/W2, What's new)
+Message: APPROVE WITH CHANGES. Clear: the file is a senior referral, the reason is in words (restaurant / cooking occupancy, apartments, contractor), Carrier B/C is labelled "suggested market ... underwriter confirms ... recommendation only", and the unchecked 3 clean loss years are disclosed. What's new entry is accurate.
+H1 (the only High): the card tells the underwriter to confirm a market but gives no way to do it. senior_referral cannot be sent or overridden, so "underwriter confirms" promises an action that does not exist, and a viewer will try to click it. For the demo: not a blocker if the card says plainly "Senior referral: no send from this screen; the underwriter confirms the market and sends outside the workbench", and the demo script says so. Without that line, it reads as a broken button. Real pilot needs a confirm-and-send action with a reason log (backlog, not before the demo).
+Medium/Low (one line each): M1 the same suggestion is printed twice (match line and "Suggested market: carrier_b"); keep one. M2 raw slugs "senior_referral" and "carrier_b" shown; use "Senior referral" and "Carrier B". M3 rule codes (R10; AG:39, AG:62) mean nothing to an underwriter; put them behind a hover or "rule" link. M4 the screenshot shows "Saved run: status complete" next to "manifest check FAILED"; contradictory wording when rendered with no saved run (fine in the demo if a run is saved). L1 the note "its 3 clean loss years are not checked" should say whose years (Carrier B's appetite requirement) and that loss-runs.pdf was not read. L2 R12 note keeps "no sprinklers" but does not say it is the reason Carrier C is suggested; add a clause.

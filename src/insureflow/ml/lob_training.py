@@ -30,12 +30,14 @@ def _lob_csv_path(data_root: Path, insurance_line: str, model_type: str) -> Path
 
 def _write_lob_csv(path: Path, rows: list[dict[str, Any]]) -> int:
     path.parent.mkdir(parents=True, exist_ok=True)
-    fieldnames = DEFAULT_FEATURE_NAMES + ["target"]
+    fieldnames = [*DEFAULT_FEATURE_NAMES, "target", "label_source"]
     with path.open("w", newline="", encoding="utf-8") as fh:
         writer = csv.DictWriter(fh, fieldnames=fieldnames)
         writer.writeheader()
         for row in rows:
-            writer.writerow({k: float(row.get(k, 0.0)) for k in fieldnames})
+            out = {k: float(row.get(k, 0.0)) for k in (*DEFAULT_FEATURE_NAMES, "target")}
+            out["label_source"] = row.get("label_source") or "feature_derived"
+            writer.writerow(out)
     return len(rows)
 
 
@@ -150,6 +152,7 @@ def _rows_from_global_base(
         else:
             target = 0.0
         row["target"] = float(target)
+        row["label_source"] = "feature_derived"
         out.append(row)
 
     if model_type in ("fraud_detection", "churn_prediction"):
@@ -246,7 +249,10 @@ def train_all_lob_models(
                 logger.warning("Train failed %s/%s: %s", insurance_line, mt_name, exc)
                 continue
 
-            passed, reason = passes_quality_gate(mt, result.metrics, meta.get("n_samples", 0))
+            if meta.get("label_source") == "feature_derived":
+                passed, reason = False, "feature-derived labels are not promotable"
+            else:
+                passed, reason = passes_quality_gate(mt, result.metrics, meta.get("n_samples", 0))
             model.gate_passed = passed
             if passed:
                 from insureflow.ml.models import ModelStatus

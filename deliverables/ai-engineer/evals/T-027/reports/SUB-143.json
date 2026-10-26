@@ -1,0 +1,145 @@
+{
+  "posts": 1,
+  "report": {
+    "complete": false,
+    "missing": [
+      "effective_date",
+      "sales_or_payroll",
+      "tiv_building",
+      "construction",
+      "year_built",
+      "loss_run_valued_through"
+    ],
+    "request": "Submission SUB-143\nNothing has been declined. Nothing has been bound.\n\nMissing:\n- effective date\n- sales or payroll\n- building limit\n- construction type\n- year built\n- currently valued carrier loss runs (a no-known-loss letter does not count)\n",
+    "conflicts": [],
+    "extra": [],
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Sol y Luna Boutique",
+        "source": "email.md",
+        "start": 143,
+        "end": 171,
+        "confidence": 0.95,
+        "model_confidence": 0.95,
+        "ocr_cited_confidence": null,
+        "needs_review": false,
+        "reason": null,
+        "quote": "duena de Sol y Luna Boutique"
+      },
+      {
+        "field_id": "premises_address",
+        "value": "1204 Mesa St, El Paso TX 79901",
+        "source": "email.md",
+        "start": 200,
+        "end": 230,
+        "confidence": 0.95,
+        "model_confidence": 0.95,
+        "ocr_cited_confidence": null,
+        "needs_review": false,
+        "reason": null,
+        "quote": "1204 Mesa St, El Paso TX 79901",
+        "address_check": "ok"
+      },
+      {
+        "field_id": "effective_date",
+        "value": null,
+        "start": null,
+        "end": null,
+        "source": null,
+        "confidence": 0.0,
+        "needs_review": true
+      },
+      {
+        "field_id": "operations",
+        "value": "clothing store",
+        "source": "email.md",
+        "start": 173,
+        "end": 187,
+        "confidence": 0.9,
+        "model_confidence": 0.9,
+        "ocr_cited_confidence": null,
+        "needs_review": true,
+        "reason": "value is not in the cited text (translated or reworded)",
+        "quote": "tienda de ropa"
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": null,
+        "start": null,
+        "end": null,
+        "source": null,
+        "confidence": 0.0,
+        "needs_review": true
+      },
+      {
+        "field_id": "tiv_building",
+        "value": null,
+        "start": null,
+        "end": null,
+        "source": null,
+        "confidence": 0.0,
+        "needs_review": true
+      },
+      {
+        "field_id": "construction",
+        "value": null,
+        "start": null,
+        "end": null,
+        "source": null,
+        "confidence": 0.0,
+        "needs_review": true
+      },
+      {
+        "field_id": "year_built",
+        "value": null,
+        "start": null,
+        "end": null,
+        "source": null,
+        "confidence": 0.0,
+        "needs_review": true
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "start": null,
+        "end": null,
+        "source": null,
+        "confidence": 0.0,
+        "needs_review": true
+      }
+    ],
+    "folder": "SUB-143",
+    "sprinklers": "no",
+    "cooking": {
+      "equipment": {
+        "state": "not_stated",
+        "terms": [],
+        "source": null,
+        "start": null,
+        "end": null,
+        "quote": null
+      },
+      "hood_suppression": {
+        "state": "not_stated",
+        "terms": [],
+        "source": null,
+        "start": null,
+        "end": null,
+        "quote": null
+      }
+    },
+    "needs_human": [],
+    "unread": [],
+    "locations": [],
+    "error": null,
+    "model_version": "qwen/qwen3.8-27b",
+    "prompt_version": "a7413a9c72b0",
+    "ocr_settings": "tesseract psm6; osd turn; deskew +-12; rule lift; x2 lanczos; pdf 200dpi; fill in image mode",
+    "host": "api.groq.com",
+    "temperature": 0,
+    "cache_key": "14567b723e912386c1c51159fcb310d809deea41902f9f67edfd08c3d48e383e",
+    "status": "incomplete",
+    "status_reason": null
+  }
+}

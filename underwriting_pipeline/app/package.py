@@ -56,6 +56,65 @@ def underwriters() -> set[str]:
     return ids
 
 
+def seniors() -> dict[str, str]:
+    """P-052 (D-098): id -> name of the listed underwriters with "senior": true. Only they may confirm a senior-referral market."""
+    ids = underwriters()
+    return {u["id"].strip(): u.get("name", "") for u in json.loads(UNDERWRITERS.read_text())["underwriters"] if u.get("senior") is True and (u.get("id") or "").strip() in ids}
+
+
+def confirms_path() -> Path:
+    return DECISIONS_LOG.with_name("market_confirms.jsonl")  # a sibling file: a confirm is not a decision, so the latest approve still gates the send
+
+
+def confirm_problem(report: dict) -> str:
+    """P-052: empty when a senior may confirm a market on this (reviewed) file. Never on a held file or one with a prohibited word."""
+    from workbench import PROHIBITED, _has, _ops, match
+
+    if report.get("status") in prepare.REFUSED_STATUSES:
+        return f"this file's status is {report.get('status')}"
+    route = match(report)["route"]
+    if route != "senior_referral":
+        return f"the carrier match is {route}; a market confirm is only for a senior referral"
+    if _has(_ops(report), PROHIBITED):
+        return "a prohibited word (bar, pub, lounge or another W1 word) is on the file; no market confirm (D-057, D-060)"
+    if report.get("needs_human"):
+        return "an unread page is still on the file"
+    return conflict_problem(report)
+
+
+def market_confirmation(submission: str, run_hash: str) -> dict | None:
+    """P-052: the latest confirm by a listed senior on this saved run (same run_hash), or None. Another run's confirm does not count."""
+    path, ok = confirms_path(), seniors()
+    rows = [json.loads(l) for l in path.read_text().splitlines() if l.strip()] if path.is_file() else []
+    rows = [r for r in rows if isinstance(r, dict) and r.get("submission") == submission and r.get("underwriter_id") in ok
+            and r.get("carrier") in CARRIERS and (r.get("reason") or "").strip() and run_hash and r.get("run_hash") == run_hash]
+    return rows[-1] if rows else None
+
+
+def confirm_market(submission: str, underwriter_id: str, carrier: str, reason: str, shown_hash: str = "") -> dict:
+    """P-052 (D-098): a senior underwriter picks the carrier for a senior_referral file, with a reason. Logged with the run hash.
+    It opens no send gate: the send still needs the approve on this run, the acknowledgments and the typed line."""
+    submission, who, carrier, reason = (submission or "").strip(), (underwriter_id or "").strip(), (carrier or "").strip().lower(), (reason or "").strip()
+    if who not in seniors():
+        raise ValueError("only a senior underwriter on underwriters.json may confirm a market")
+    if carrier not in CARRIERS:
+        raise ValueError("pick carrier_a, carrier_b or carrier_c")
+    if not reason:
+        raise ValueError("a market confirm needs a written reason")
+    report = reviewed(submission)
+    if shown_hash and shown_hash != report.get("saved_hash"):
+        raise ValueError("the saved run changed since this card was opened; reload the page and review again")
+    problem = confirm_problem(report)
+    if problem:
+        raise ValueError(problem)
+    row = {"submission": submission, "action": "confirm_market", "underwriter_id": who, "underwriter_name": seniors()[who], "carrier": carrier,
+           "reason": reason, "run_hash": report["saved_hash"], "at": datetime.now().astimezone().isoformat(timespec="seconds")}
+    confirms_path().parent.mkdir(parents=True, exist_ok=True)
+    with confirms_path().open("a") as handle:
+        handle.write(json.dumps(row) + "\n")
+    return row
+
+
 def decisions(submission: str, log_path: Path) -> list[dict]:
     """D-055: this file's decisions by a listed underwriter, in seq order. Raises on a repeated seq (fail closed)."""
     allowed = underwriters()
@@ -87,9 +146,40 @@ def _edits(submission: str) -> dict:
     return out
 
 
+def resolutions(submission: str, run_hash: str) -> dict:
+    """B-324 (D-089): conflict field -> the latest "resolve" row by a listed underwriter on this run (same run_hash). Another run's do not count."""
+    out = {}
+    for row in decisions(submission, DECISIONS_LOG):
+        field, value = (row.get("conflict_field") or "").strip(), (row.get("new_value") or "").strip()
+        if (row.get("action") or "").strip() == "resolve" and field and value and run_hash and row.get("run_hash") == run_hash:
+            out[field] = row
+    return out
+
+
+def with_resolutions(report: dict, submission: str = "") -> dict:
+    """B-324: open conflicts the underwriter resolved on this run read as resolved, with the chosen or entered value; a resolved
+    required field takes that value. Nothing else changes."""
+    done = resolutions(submission or report.get("submission") or "", report.get("saved_hash") or "")
+    if not done:
+        return report
+    conflicts = [{**c, "resolution": "resolved", "resolved_value": done[c["field"]]["new_value"].strip(), "resolved_by": done[c["field"]]["underwriter_id"]}
+                 if c.get("resolution") != "resolved" and c.get("field") in done else c for c in report.get("conflicts") or []]
+    fields = [{**r, "value": done[r["field_id"]]["new_value"].strip(), "resolved_by": done[r["field_id"]]["underwriter_id"]} if r.get("field_id") in done else r
+              for r in report.get("fields") or []]
+    return {**report, "conflicts": conflicts, "fields": fields}
+
+
+def conflict_problem(report: dict) -> str:
+    """B-324 (D-089): empty when no conflict is open (after logged resolutions on this run). Every actor, the user included."""
+    open_ = [c.get("field") or "?" for c in report.get("conflicts") or [] if c.get("resolution") != "resolved"]
+    if not open_:
+        return ""
+    return f"open conflict on {', '.join(open_)}: the underwriter must choose or enter the value on the card (logged with this run) before a send"
+
+
 def reviewed(submission: str) -> dict:
     """The saved run (G2, hash-checked) with the underwriter's edits applied. Fields are all of prepare.FIELDS."""
-    run = prepare.read_saved_run(submission)
+    run = with_resolutions(prepare.read_saved_run(submission), submission)  # B-324: logged resolutions on this run
     edits = _edits(submission)
     fields = []
     by_id = {r.get("field_id"): r for r in run.get("fields") or []}
@@ -126,6 +216,9 @@ def build_package(submission: str, carrier_override: str = "", override_reason: 
         if not (override_reason or "").strip():
             raise ValueError("a carrier override needs a written reason")
         carrier, label = chosen, f"{OVERRIDE_LABEL}\nOverride reason: {override_reason.strip()}\n"
+    elif carrier == "senior_referral" and not confirm_problem(report) and market_confirmation(submission, report.get("saved_hash") or ""):  # P-052
+        c = market_confirmation(submission, report["saved_hash"])
+        carrier, label = c["carrier"], f"Senior referral — market confirmed by {c['underwriter_id']} {c.get('underwriter_name', '')}\nConfirm reason: {c['reason']}\n"
     elif carrier not in CARRIERS:
         raise ValueError(f"no carrier is named for this file (match is {carrier})")
     from workbench import snippet
@@ -212,7 +305,7 @@ def agency_problem(target) -> str:
     if not submission:
         return "the account manager needs the extraction report"
     try:
-        report = prepare.read_saved_run(submission)
+        report = with_resolutions(prepare.read_saved_run(submission), submission)  # B-324
     except ValueError:
         return "the saved extraction run for this file cannot be read"
     status = report.get("status")
@@ -222,12 +315,9 @@ def agency_problem(target) -> str:
         return "every value on this file was rejected"
     if report.get("needs_human"):
         return "an unread page is still on the file"
-    open_conflicts = [
-        item for item in report.get("conflicts") or [] if item.get("resolution") != "resolved"
-    ]
-    if open_conflicts:
-        return "an open conflict is still on the file"
-    if not report.get("complete"):
+    if conflict_problem(report):
+        return conflict_problem(report)
+    if not prepare.ready_to_route(report):  # P-041 (D-088): review pending is gated as complete was
         return "the file is not complete"
     if _route(report) not in {"carrier_a", "carrier_b", "carrier_c"}:
         return "the file is not in appetite"
@@ -321,6 +411,9 @@ def send_to_carrier(
     problem = ack_problem(submission, report)  # D-068 (B-244): every actor, user included
     if problem:
         raise ValueError(problem)
+    problem = conflict_problem(with_resolutions(report, submission))  # B-324 (D-089): every actor, user included
+    if problem:
+        raise ValueError(problem)
     dest = out_dir / f"{submission}.md"
     resend = (resend_reason or "").strip()
     if dest.exists() and not resend:
@@ -346,14 +439,14 @@ if __name__ == "__main__":
     import json
     import tempfile
 
-    def save(ext: Path, submission: str, status: str, complete=False, fields=None, needs_human=None, sprinklers=None):
+    def save(ext: Path, submission: str, status: str, complete=False, fields=None, needs_human=None, sprinklers=None, conflicts=None):
         """A saved run shaped like prepare.write_drafts() writes, no model call. The hash is the reader's."""
         payload = {
             "submission": submission,
             "status": status,
             "error": "model call failed: HTTP 429 rate limit" if status == "extraction_failed" else None,
             "complete": bool(complete),
-            "conflicts": [],
+            "conflicts": conflicts or [],
             "needs_human": needs_human or [],
             "sprinklers": sprinklers,
             "fields": fields or [],
@@ -547,6 +640,41 @@ if __name__ == "__main__":
             row = json.loads(sends.read_text().splitlines()[-1])
             assert row["carrier_override"] == "carrier_b" and row["override_reason"].startswith("client asked") and row["submission"] == "SUB-401"
 
+            # P-052 (D-098): only a senior confirms a senior_referral market, with a reason, bound to the run; the send gate still applies.
+            save(ext, "SUB-410", "complete", complete=True, fields=full(operations="family restaurant, 60 seats"))
+            save(ext, "SUB-411", "complete", complete=True, fields=full(operations="office building with ground-floor pub"))
+            save(ext, "SUB-412", "complete", complete=True, fields=full(operations="apartments, 8 units"))  # held: sprinkler answer missing
+            assert set(seniors()) == {"UW-001"} and "UW-002" in underwriters()
+            for args in (("SUB-410", "UW-002", "carrier_b", "x"), ("SUB-410", "user", "carrier_b", "x"), ("SUB-410", "UW-001", "carrier_z", "x"),
+                         ("SUB-410", "UW-001", "carrier_b", " "), ("SUB-411", "UW-001", "carrier_b", "x"), ("SUB-412", "UW-001", "carrier_c", "x"),
+                         ("SUB-401", "UW-001", "carrier_b", "x"), ("SUB-410", "UW-001", "carrier_b", "x", "stale-hash")):
+                try:
+                    confirm_market(*args)
+                    raise SystemExit(f"confirm {args} must be refused")
+                except ValueError:
+                    pass
+            assert not confirms_path().exists() and market_confirmation("SUB-410", _current_hash("SUB-410")) is None
+            try:
+                send_to_carrier("SUB-410", "user", dest_dir, user_line=LINE("SUB-410"))
+                raise SystemExit("no confirm: a senior referral names no carrier")
+            except ValueError:
+                pass
+            c = confirm_market("SUB-410", "UW-001", "carrier_b", "3 clean years seen on the loss runs", _current_hash("SUB-410"))
+            assert c["run_hash"] == _current_hash("SUB-410") and c["underwriter_name"].startswith("Dana Reyes")
+            for gate in ("no approve", "account-manager", "no line"):
+                try:
+                    if gate == "account-manager":
+                        decide("SUB-410", "approve")
+                    send_to_carrier("SUB-410", "account-manager" if gate == "account-manager" else "user", dest_dir, reason="x", user_line="" if gate == "no line" else LINE("SUB-410"))
+                    raise SystemExit(f"{gate}: the normal send gate must still refuse")
+                except ValueError:
+                    pass
+            body = send_to_carrier("SUB-410", "user", dest_dir, user_line=LINE("SUB-410")).read_text()
+            assert "Carrier: carrier_b" in body and "market confirmed by UW-001" in body and "3 clean years" in body
+            assert agency_problem("SUB-410") == "the file is not in appetite", "the account manager still cannot send a senior referral"
+            save(ext, "SUB-410", "complete", complete=True, fields=full(operations="family restaurant, 70 seats"))  # a new run: the old confirm does not count
+            assert market_confirmation("SUB-410", _current_hash("SUB-410")) is None
+
             # T-079 / D-053: the log decides, for every actor, with no decision passed in.
             for sub in ("SUB-301", "SUB-302", "SUB-303", "SUB-304"):
                 save(ext, sub, "complete", complete=True, fields=office, sprinklers="no")
@@ -564,7 +692,7 @@ if __name__ == "__main__":
                         (dest_dir / f"{sub}.md").unlink()  # B-233: the next actor sends afresh
                     except ValueError:
                         assert not ok, f"{sub} must pass for {actor}"
-            assert len(log.read_text().splitlines()) == 16  # history untouched by the sends
+            assert len(log.read_text().splitlines()) == 17  # history untouched by the sends (16 + the P-052 approve)
 
             # D-055: highest seq wins, not line order; an unlisted id or an AI role is not a decision;
             # a repeated seq refuses; no seq is not a decision; underwriters.json may not list an AI role.
@@ -665,6 +793,32 @@ if __name__ == "__main__":
                 raise SystemExit("a document added after extraction must refuse the send")
             except ValueError as exc:
                 assert "changed since extraction" in str(exc), exc
+
+            # B-324 (D-089): a review-pending file with an open conflict is not sent by anyone until the underwriter resolves it on this run.
+            sq = {"field": "square_feet", "values": [{"value": "16800", "source": "email.md"}, {"value": "14200", "source": "application.md"}], "resolution": "unresolved"}
+            save(ext, "SUB-330", prepare.REVIEW_PENDING, fields=office, sprinklers="no", conflicts=[sq])
+            decide("SUB-330", "approve")
+            assert "open conflict on square_feet" in agency_problem("SUB-330")
+            for actor in ("user", "account-manager"):
+                try:
+                    send_to_carrier("SUB-330", actor, dest_dir, reason="ready", user_line=LINE("SUB-330"))
+                    raise SystemExit(f"B-324: an open conflict must refuse the send for {actor}")
+                except ValueError as exc:
+                    assert "open conflict on square_feet" in str(exc), exc
+            resolve = lambda run_hash: log.open("a").write(json.dumps({"seq": next(seq), "submission": "SUB-330", "action": "resolve", "underwriter_id": "UW-001", "reason": "",
+                                                                       "conflict_field": "square_feet", "new_value": "14200", "run_hash": run_hash}) + "\n")
+            resolve("another-run")
+            decide("SUB-330", "approve")
+            assert conflict_problem(with_resolutions(prepare.read_saved_run("SUB-330"))), "another run's resolution does not count"
+            resolve(_current_hash("SUB-330"))
+            assert with_resolutions(prepare.read_saved_run("SUB-330"))["conflicts"][0]["resolved_value"] == "14200"
+            try:
+                send_to_carrier("SUB-330", "user", dest_dir, user_line=LINE("SUB-330"))
+                raise SystemExit("a resolve after the approve: the latest decision must be an approve again")
+            except ValueError as exc:
+                assert "not approve" in str(exc), exc
+            decide("SUB-330", "approve")
+            assert send_to_carrier("SUB-330", "user", dest_dir, user_line=LINE("SUB-330")).is_file(), "resolved on this run, then approved: sent"
         finally:
             prepare.EXTRACT_DIR, DECISIONS_LOG, SENDS_LOG, prepare.INBOX_DIR = saved_dir, saved_log, saved_sends, saved_inbox
     # P-029 (D-072): an ambiguous cooking line joins the one needs-review list, so the send gate waits for its acknowledgment.

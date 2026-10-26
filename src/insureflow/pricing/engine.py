@@ -50,6 +50,7 @@ class PricingTier(BaseModel):
     max_users: int  # max API keys / users
     max_submissions_per_day: int  # daily rate limit
     features: list[str] = Field(default_factory=list)
+    is_paid: bool = False  # paid tiers require checkout before entitlements activate
 
 
 TIERS: dict[str, PricingTier] = {
@@ -78,6 +79,7 @@ TIERS: dict[str, PricingTier] = {
             "workers_comp_compliance",
             "regulatory_intelligence",
         ],
+        is_paid=True,
     ),
     "pro": PricingTier(
         name="pro",
@@ -103,6 +105,7 @@ TIERS: dict[str, PricingTier] = {
             "webhook_support",
             "priority_support",
         ],
+        is_paid=True,
     ),
     "enterprise": PricingTier(
         name="enterprise",
@@ -112,8 +115,17 @@ TIERS: dict[str, PricingTier] = {
         max_users=-1,  # unlimited
         max_submissions_per_day=-1,  # unlimited
         features=["everything"],
+        is_paid=True,  # custom pricing, still requires a signed order / checkout
     ),
 }
+
+
+PAID_TIERS: frozenset[str] = frozenset(name for name, tier in TIERS.items() if tier.is_paid)
+
+
+def is_paid_tier(tier: str) -> bool:
+    """True when a plan cannot be granted without a completed checkout."""
+    return (tier or "").strip().lower() in PAID_TIERS
 
 
 # ---------------------------------------------------------------------------
@@ -192,7 +204,8 @@ class PricingStore:
         self._data: dict[str, Any] = {
             "api_keys": {},  # key_hash -> APIKey dict
             "usage": {},  # org_id -> [UsageRecord dict]
-            "subscriptions": {},  # org_id -> {tier, started_at}
+            "subscriptions": {},  # org_id -> {tier, started_at, status, checkout_id}
+            "checkouts": {},  # checkout_id -> checkout session dict
         }
         self._load()
 
@@ -275,21 +288,126 @@ class PricingStore:
 
     # -- Subscriptions --
 
-    def set_subscription(self, org_id: str, tier: str) -> None:
+    def set_subscription(
+        self,
+        org_id: str,
+        tier: str,
+        status: str = "active",
+        checkout_id: str = "",
+    ) -> None:
+        """Set an org's plan. Paid plans start ``pending`` until checkout completes."""
         with self._lock:
-            self._data.setdefault("subscriptions", {})[org_id] = {
+            existing = self._data.setdefault("subscriptions", {}).get(org_id, {})
+            started_at = existing.get("started_at") or datetime.now(tz=timezone.utc).isoformat()
+            if existing.get("tier") != tier:
+                started_at = datetime.now(tz=timezone.utc).isoformat()
+            self._data["subscriptions"][org_id] = {
                 "tier": tier,
-                "started_at": datetime.now(tz=timezone.utc).isoformat(),
+                "started_at": started_at,
+                "status": status,
+                "checkout_id": checkout_id or existing.get("checkout_id", ""),
             }
             self._save()
 
-    def get_subscription(self, org_id: str) -> str:
+    def get_subscription_record(self, org_id: str) -> dict[str, Any]:
+        """Full subscription record. Missing record means an active free plan."""
         with self._lock:
             sub: dict[str, Any] | None = self._data.get("subscriptions", {}).get(org_id)
             if sub is None:
-                return "free"
-            tier: str = sub.get("tier", "free")
-            return tier
+                return {"tier": "free", "status": "active", "started_at": "", "checkout_id": ""}
+            return {
+                "tier": sub.get("tier", "free"),
+                "status": sub.get("status", "active"),
+                "started_at": sub.get("started_at", ""),
+                "checkout_id": sub.get("checkout_id", ""),
+            }
+
+    def get_subscription(self, org_id: str) -> str:
+        """Active tier for entitlement checks. A pending paid plan reads as ``free``."""
+        record = self.get_subscription_record(org_id)
+        if record.get("status", "active") != "active":
+            return "free"
+        tier: str = record.get("tier", "free")
+        return tier
+
+    # -- Checkout sessions --
+
+    def get_checkout(self, checkout_id: str) -> dict[str, Any] | None:
+        with self._lock:
+            record = self._data.get("checkouts", {}).get(checkout_id)
+            return dict(record) if record else None
+
+    def complete_checkout(self, checkout_id: str, card_last4: str = "") -> dict[str, Any] | None:
+        """Atomically mark a *pending* checkout paid and activate the subscription.
+
+        Holds a single lock across the read + subscription write + checkout update
+        so two concurrent confirms cannot both pass a ``status == pending`` check
+        and double-activate the plan. Returns ``None`` when the checkout is missing
+        or was already completed/cancelled (the caller turns that into a 409).
+        """
+        with self._lock:
+            record = self._data.get("checkouts", {}).get(checkout_id)
+            if record is None or record.get("status") != "pending":
+                return None
+            org_id = record.get("org_id", "")
+            tier = record.get("tier", "free")
+            now = datetime.now(tz=timezone.utc).isoformat()
+            existing = self._data.setdefault("subscriptions", {}).get(org_id, {})
+            started_at = existing.get("started_at") or now
+            if existing.get("tier") != tier:
+                started_at = now
+            self._data["subscriptions"][org_id] = {
+                "tier": tier,
+                "started_at": started_at,
+                "status": "active",
+                "checkout_id": checkout_id,
+            }
+            record.update({"status": "completed", "card_last4": card_last4, "updated_at": now})
+            self._save()
+            return dict(record)
+
+    def cancel_checkout(self, checkout_id: str) -> dict[str, Any] | None:
+        """Transition a *pending* checkout to cancelled. Returns None if not pending."""
+        with self._lock:
+            record = self._data.get("checkouts", {}).get(checkout_id)
+            if record is None or record.get("status") != "pending":
+                return None
+            record["status"] = "cancelled"
+            record["updated_at"] = datetime.now(tz=timezone.utc).isoformat()
+            self._save()
+            return dict(record)
+
+    def open_checkout(self, org_id: str, tier: str, amount: float, currency: str = "USD") -> dict[str, Any]:
+        """Get or create the single open checkout for an org+tier, atomically.
+
+        Under one lock: reuse an existing pending session for the same tier, cancel
+        any other pending session for the org, otherwise mint a new one. Two
+        concurrent calls therefore can never both create a session.
+        """
+        with self._lock:
+            pending = [rec for rec in self._data.get("checkouts", {}).values() if rec.get("org_id") == org_id and rec.get("status") == "pending"]
+            for rec in pending:
+                if rec.get("tier") == tier:
+                    return {**rec, "reused": True}
+            now = datetime.now(tz=timezone.utc).isoformat()
+            for rec in pending:
+                rec["status"] = "cancelled"
+                rec["updated_at"] = now
+            checkout_id = f"chk_{secrets.token_hex(8)}"
+            record = {
+                "checkout_id": checkout_id,
+                "org_id": org_id,
+                "tier": tier,
+                "amount": amount,
+                "currency": currency,
+                "status": "pending",
+                "card_last4": "",
+                "created_at": now,
+                "updated_at": now,
+            }
+            self._data.setdefault("checkouts", {})[checkout_id] = record
+            self._save()
+            return {**record, "reused": False}
 
     # -- Usage Tracking --
 
@@ -476,7 +594,46 @@ class PricingEngine:
             "new_tier": new_tier,
             "tier_details": TIERS[new_tier].model_dump(),
             "message": f"Upgraded from {old_tier} to {new_tier}",
+            "status": "active",
         }
+
+    def get_subscription_record(self, org_id: str) -> dict[str, Any]:
+        return self._store.get_subscription_record(org_id)
+
+    def start_checkout(self, org_id: str, tier: str) -> dict[str, Any]:
+        """Open — or reuse — a checkout session for a paid tier.
+
+        Idempotent: repeated calls for the same org and tier return the existing
+        open session instead of minting a new one, so a double-click (or a network
+        retry) cannot create duplicate sessions or billing events. If the org has an
+        open session for a *different* tier it is superseded, so only one pending
+        checkout ever exists per org — a stray cancel can then never clobber a plan
+        that was actually paid for.
+        """
+        tier = (tier or "").strip().lower()
+        if tier not in TIERS:
+            return {"error": f"Invalid tier: {tier}. Valid tiers: {list(TIERS.keys())}"}
+        if not TIERS[tier].is_paid:
+            return {"error": f"Plan '{tier}' is free and does not require checkout"}
+        amount = TIERS[tier].monthly_base
+        # Don't suspend a plan that is already paid and active; only mark pending
+        # when the org is not currently on an active paid tier.
+        current = self._store.get_subscription_record(org_id)
+        already_paid = current.get("status") == "active" and current.get("tier") in TIERS and TIERS[current["tier"]].is_paid
+        if not already_paid:
+            self._store.set_subscription(org_id, tier, status="pending")
+        return self._store.open_checkout(org_id, tier, amount)
+
+    def get_checkout(self, checkout_id: str) -> dict[str, Any] | None:
+        return self._store.get_checkout(checkout_id)
+
+    def complete_checkout(self, checkout_id: str, card_last4: str = "") -> dict[str, Any] | None:
+        """Mark a pending checkout paid and activate the org's subscription (atomic)."""
+        return self._store.complete_checkout(checkout_id, card_last4=card_last4)
+
+    def cancel_checkout(self, checkout_id: str) -> dict[str, Any] | None:
+        """Cancel an *open* checkout. Returns None if it is already completed/cancelled."""
+        return self._store.cancel_checkout(checkout_id)
 
     def get_pricing_plans(self) -> dict[str, Any]:
         """Return all available pricing plans."""
@@ -490,6 +647,8 @@ class PricingEngine:
                     "max_users": tier.max_users,
                     "max_submissions_per_day": tier.max_submissions_per_day,
                     "features": tier.features,
+                    "is_paid": tier.is_paid,
+                    "checkout_required": tier.is_paid,
                 }
                 for name, tier in TIERS.items()
             },
