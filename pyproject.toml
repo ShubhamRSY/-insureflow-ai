@@ -140,7 +140,8 @@ include = ["insureflow*", "evaluations*"]
 [tool.ruff]
 target-version = "py311"
 line-length = 200
-exclude = ["-insureflow-ai"]
+# Team-simulation tree: frozen scorers + P-### gated AI code (D-017, D-097), not linted.
+extend-exclude = ["-insureflow-ai", "deliverables", "underwriting_pipeline", "simulation"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W"]

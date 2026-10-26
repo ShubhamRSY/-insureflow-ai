@@ -33,6 +33,7 @@ _ES_PRONE_LINES = frozenset(
     }
 )
 
+
 # Representative surplus-lines tax rates. Cited states live in
 # commercial.lobs.state_law.SURPLUS_LINES_TAX; every other state uses that
 # module's default so this file cannot drift from the quote path.
