@@ -803,9 +803,9 @@ def apply_locations(merged: dict, conflicts: list, texts: dict, scans: dict | No
 # answer could raise a conflict, and a second document that said a different figure was silently ignored.
 SALES_LABELS = ("sales or payroll:", "annual sales:", "gross sales:", "sales:", "gross revenue:", "annual revenue:", "revenue:", "turnover:")
 SALES_WORD = r"(?:gross\s+|annual\s+|net\s+|estimated\s+)?(?:sales|revenue|turnover)s?"
-AMOUNT_TOKEN = rf"(?:{llm_extract.HEDGE})?\s*:?\s*(?:{llm_extract.CURRENCY})?\s*\$?\s*(?:\d{{1,3}}(?:,\d{{3}})+|\d+(?:\.\d+)?)\s*{llm_extract.UNITS}?\b"  # P-074 (B, C): "1.42 million", "close to"
-SALES_BEFORE = re.compile(rf"(?P<amount>{AMOUNT_TOKEN})\s*(?:in|of)?\s*\b{SALES_WORD}\b", re.I)
-SALES_AFTER = re.compile(rf"\b{SALES_WORD}\b(?:\s+(?:of|was|were|is|at|totaled|totalled|stood at))?\s*[:\-]?\s*(?P<amount>{AMOUNT_TOKEN})", re.I)
+AMOUNT_TOKEN = rf"{llm_extract.AMOUNT_PREFIX}(?:\d{{1,3}}(?:,\d{{3}})+|\d+(?:\.\d+)?)(?:\s*{llm_extract.UNITS})?\b"  # P-074 (B, C): "1.42 million", "close to"
+SALES_BEFORE = re.compile(rf"(?P<amount>{AMOUNT_TOKEN})\s*(?:(?:in|of)\s*)?\b{SALES_WORD}\b", re.I)  # one quantifier per run of spaces (ReDoS)
+SALES_AFTER = re.compile(rf"\b{SALES_WORD}\b(?:\s+(?:of|was|were|is|at|totaled|totalled|stood at))?(?:\s*[:\-])?\s*(?P<amount>{AMOUNT_TOKEN})", re.I)
 SALES_MIN = 1000  # a sales figure is a real figure: a year or a percentage is not
 
 
