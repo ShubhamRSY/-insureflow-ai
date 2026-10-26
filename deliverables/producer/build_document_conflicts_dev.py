@@ -223,6 +223,71 @@ CASES = [
          route="hold until the underwriter chooses the sales figure",
          rec="Wholesale warehouse, no W1 or W2 word: the route is a recommendation only. The sales value is emptied and the file is held on the open conflict; nothing is declined and nothing is sent.",
          expect="P-074 (D-132), D2: the model's stated sides cannot be checked against the quotes it gave, so every side is stored as unverified and the conflict is open; the sales value is emptied; the file is held and not sent"),
+    dict(sid="SUB-299", name="Bayside Title Agency LLC", address="2210 Bayside Ave", city="Galveston", zip="77550",
+         ops="Office of a title and escrow agency", items="business_type=office; cooking per P-075 (D-133)",
+         notes="one premises; the application says cooking none and the hood line says hood only; the email says stove top and flat grill", sales="540000", tiv="880000", sqft="3300",
+         construction="Masonry", year="2007", sprinklers="Yes, hood only", cooking="None",
+         body='Since the application the tenant put in a stove top and a flat grill, and sells hot food at lunch.',
+         schedule=None, loss="published",
+         read='application.md (typed application, the line Cooking operations: None and the line Sprinklers: Yes, hood only), email.md (stove top, flat grill, hot food), loss-runs.md (published Carrier A layout)',
+         status='incomplete — hold: open conflict (cooking)',
+         missing="none",
+         conflict='cooking: Cooking operations: None (application.md) vs the email sentence naming a stove top and a flat grill (email.md)',
+         route='hold until the underwriter chooses',
+         rec='Not complete: the application says no cooking, the application and the email name cooking words. The underwriter decides. Not a decline.',
+         expect='P-075 (D-133), the SUB-348 shape: an open cooking conflict (application line against the email sentence), not complete, not routed, not sendable; nothing copied into operations'),
+    dict(sid="SUB-300", name="Tidewater Realty Group LLC", address="980 Tidewater Rd", city="Beaumont", zip="77701",
+         ops="Office of a real estate brokerage", items="business_type=office; cooking per P-075 (D-133)",
+         notes="one premises; the application says none; the schedule says cooking Yes", sales="610000", tiv="1020000", sqft="3700",
+         construction="Masonry", year="2010", sprinklers="Yes, full", cooking="None",
+         body='Quick note: the shop next door has a griddle, ask them.',
+         schedule=None, loss="published", sched_text='location\tsq_ft\tcooking\nMain building\t3700\tYes\n',
+         read='application.md (the line Cooking operations: None), email.md (a griddle), schedule.csv (a cooking column saying Yes), loss-runs.md (published Carrier A layout)',
+         status='incomplete — hold: open conflict (cooking)',
+         missing="none",
+         conflict='cooking: Cooking operations: None (application.md) vs the cooking column or the email griddle',
+         route='hold until the underwriter chooses',
+         rec='Not complete: a schedule column says cooking Yes and the email names a griddle. The underwriter decides. Not a decline.',
+         expect='P-075 (D-133), the SUB-349 shape: the schedule cooking column is not No or None and the email names a griddle; an open cooking conflict, held'),
+    dict(sid="SUB-301", name="Lakeview Staffing LLC", address="410 Lakeview Dr", city="Tyler", zip="75701",
+         ops="Office of a staffing agency, 48 seats", items="business_type=office; cooking per P-075 (D-133)",
+         notes="one premises; clean none line", sales="700000", tiv="1150000", sqft="4800",
+         construction="Masonry", year="2012", sprinklers="Yes, full", cooking="None",
+         body='Nothing to add; the loss run from Carrier A is attached.',
+         schedule=None, loss="published",
+         read='application.md (the line Cooking operations: None), email.md (nothing about cooking), loss-runs.md (published Carrier A layout)',
+         status='complete — review pending',
+         missing="none",
+         conflict='none (no cooking word in any document)',
+         route='carrier_a (R14)',
+         rec='Office, no cooking word in any document: the line is copied as written with a review note; the status is what it was. Not a decline.',
+         expect='P-075 (D-133), the T-119 shape: the stub reply drops the line; the rule copies Cooking operations: None as written, cited, with the review note; the status does not change; the frozen v11 ops_items_hit reads it as a hit (probe only)'),
+    dict(sid="SUB-302", name="Mesa Verde Consulting LLC", address="77 Mesa Verde Ln", city="Abilene", zip="79601",
+         ops="Office of a consulting firm", items="business_type=office; cooking per P-075 (D-133)",
+         notes="one premises; negations", sales="480000", tiv="760000", sqft="2900",
+         construction="Masonry", year="2004", sprinklers="Yes, full", cooking="None",
+         body='No fryer on site. The fryer was removed last year. No beer, we fry wings on Fridays.',
+         schedule=None, loss="published",
+         read='application.md (the line Cooking operations: None), email.md (no fryer; fryer removed last year; wings fried), loss-runs.md (published Carrier A layout)',
+         status='incomplete — hold: open conflict (cooking)',
+         missing="none",
+         conflict='cooking: Cooking operations: None (application.md) vs the email sentence about a fryer',
+         route='hold until the underwriter chooses',
+         rec='A negation never voids a cooking word: the file is held. Not a decline.',
+         expect='P-075 (D-133), the negation table: no fryer, fryer removed last year, no beer we fry wings each open the cooking conflict (the rule-level table in prepare.py checks each sentence alone)'),
+    dict(sid="SUB-303", name="Eastside Plumbing Supply LLC", address="1900 Eastside Blvd", city="Lubbock", zip="79401",
+         ops="Plumbing supplies, no cooking", items="business_type=office; cooking per P-075 (D-133)",
+         notes="one premises; the model carries no cooking", sales="1250000", tiv="1600000", sqft="9000",
+         construction="Metal", year="1999", sprinklers="Yes, full", cooking="None",
+         body='Nothing to add; the loss run from Carrier A is attached.',
+         schedule=None, loss="published",
+         read='application.md (the line Cooking operations: None), email.md, loss-runs.md; the stub reply carries operations as plumbing supplies, no cooking',
+         status='complete — review pending',
+         missing="none",
+         conflict='none (the model carried the line)',
+         route='carrier_a (R14)',
+         rec='The model carried no cooking itself and nothing else states cooking: unchanged. Not a decline.',
+         expect='P-075 (D-133), the SUB-350 shape: the model carried the line itself; nothing copied, nothing held, unchanged'),
 ]
 
 
@@ -247,10 +312,13 @@ def main() -> None:
         (d / "loss-runs.md").write_text((LOSS_PUBLISHED if c.get("loss") == "published" else LOSS).format(valued=VALUED, **fmt))
         if c.get("extra"):
             (d / c["extra"][0]).write_text(c["extra"][1])
+        if c.get("sched_text"):
+            (d / "schedule.csv").write_text(c["sched_text"])
         if c["schedule"]:
             (d / "schedule.csv").write_text(SCHED.format(sqft=c["schedule"][0], year=c["schedule"][1]))
         g = dict(c, eff=EFF, valued=VALUED)
         g.pop("loss", None)
+        g.pop("sched_text", None)
         g.pop("extra", None)
         (GOLD / f"{c['sid']}.md").write_text(GOLD_T.format(**g))
         for path in sorted(d.iterdir()) + [GOLD / f"{c['sid']}.md"]:

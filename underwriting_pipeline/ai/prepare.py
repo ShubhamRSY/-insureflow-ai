@@ -82,6 +82,7 @@ PLAIN = {
     "unit_count": "unit count",
     "apartment_count": "apartment count",
     "tenant_count": "tenant count",
+    "cooking": "cooking operations",  # P-075 (D-133)
 }
 
 
@@ -401,12 +402,7 @@ def _items(value: str) -> list[tuple[str, bool]]:
 
 def _without_name(blob: str, name: str | None, texts: dict) -> str:
     """P-015 T2: remove the named insured (the extracted value and any 'Named insured:' line) before cue words are looked for."""
-    names = {name} if name else set()
-    for text in texts.values():
-        for row in extract_labeled(text, LABELS["named_insured"]):
-            if row.get("value"):
-                names.add(row["value"])
-    for n in sorted(names, key=len, reverse=True):
+    for n in _insured_names(name, texts):
         blob = re.sub(re.escape(n), " ", blob, flags=re.I)
     return blob
 
@@ -1076,6 +1072,164 @@ def ops_missing_all(value: str, text: str) -> list[str]:
     return ops_missing(value, text) + ops_line_missing(value, text)
 
 
+# P-075 (D-133): copy the application's own "Cooking operations: None" line, cited; a cooking word in any other place opens a conflict.
+# The rule never reads silence as "no cooking": it copies a line that is there, and only after every document was scanned and found nothing.
+# ponytail: a finite word list, not a parser (@model-risk showed no list is complete). The copied line keeps a review note, so a missed word
+# cannot turn a held file into a clean complete. A negation never voids a word; only a clause that is exactly an agreeing phrase is exempt.
+COOKING_LINE = re.compile(r"(?im)^[ \t>*-]*(cooking operations[ \t]*:)(.*)$")
+COOKING_NONE_BODIES = {"none", "no", "nil", "no cooking", "no commercial cooking", "no kitchen"}
+COOKING_TABLE_EXT = (".csv", ".tsv", ".xlsx", ".xls")
+REASON_COOKING_COPIED = "cooking line copied from the application (P-075); check the other documents for cooking"  # never claims absence: the word list is finite (P-075 check H1)
+REASON_COOKING_CONFLICT = "cooking: the documents disagree"
+_CLAUSE = re.compile(r"[^.;,\n!?|]+")
+_COOK_NONE_PHRASES = sorted((b for b in COOKING_NONE_BODIES if b.startswith("no ")), key=len, reverse=True)  # "no cooking", "no kitchen"...
+_COOK_EXEMPT = {f"{lead}{body}" for lead in ("", "cooking operations: ") for body in COOKING_NONE_BODIES} | {
+    "no cooking on the premises", "no commercial cooking on the premises", "no cooking on site", "no kitchen on site", "no food prep", "no food preparation",
+    "no food preparation of any kind", "do not cook", "does not cook", "we do not cook", "the insured does not cook"}
+_COOK_STARTS = (
+    "cook", "fry", "frial", "fries", "fried", "frit", "freid", "frei", "grill", "griddle", "plancha", "parrill", "comal", "stove", "estufa", "hotplate", "hotdog", "burner", "oven", "horno",
+    "horne", "salamander", "smoker", "smoked", "smokehouse", "barbec", "bbq", "barbac", "rotiss", "tandoor", "panini", "toast", "waffle", "pancake", "skillet",
+    "steamer", "sous", "warmer", "warmed", "warming", "reheat", "bak", "boil", "kitchen", "cocin", "coce", "galley", "meal", "cafe", "restaurant", "dinn", "diner",
+    "eatery", "lunch", "brunch", "breakfast", "snack", "soup", "microwav", "microond", "ansul", "greas", "chef", "saut", "simmer", "roast", "brais", "hibachi",
+    "teppan", "tempura", "pizz", "taco", "burger", "quesadilla", "burrito", "bistro", "brasserie", "steak", "sandwich", "pastr", "bagel", "dough", "calzon", "popcorn",
+    "nacho", "induction", "crock", "kettle", "noodle", "omelet", "jerky", "kebab", "gyro", "shawarma", "falafel", "dumpling", "bacon", "sausage", "chicken", "cater",
+    "gastropub", "asam", "asar", "asad", "calent", "calien", "comida", "tortill", "taquer", "hervi", "fogon", "charcoal", "pretzel", "donut", "doughnut", "pasta",
+)
+_COOK_CONTAINS = ("broil", "grill", "griddl")
+_COOK_TOKENS = {"wok", "woks", "hood", "hoods", "sear", "sears", "seared", "searing", "deli", "delis", "delicatessen", "hob", "eggs", "egg", "pub", "pubs", "ul300"}
+_COOK_PHRASES = re.compile(
+    r"(?<!\w)(?:flat top|hot plate|hot (?:food|foods|dog|dogs|breakfast|lunch|meal|meals|soup|soups|plate|plates)|wood fire|wood fired|wood burning|open flame|open fire|"
+    r"steam (?:table|kettle|jacket|oven)|heat lamps?|heating lamps?|heat(?:s|ed|ing)? (?:up|food|soup|meals?|water)|heated (?:display|case|cabinet|food|tray|trays|counter|shelf|drawer)|"
+    r"food (?:prep\w*|service|truck|trucks|served|court|and drink|and beverage|handling)|serv(?:e|es|ed|ing) (?:hot )?food|we serve|prepared (?:on site|food|meals|in house)|"
+    r"ul ?300|nfpa 96|class k|wet chem(?:ical)?|coffee shop|smoke house|slow cooker|tilt skillet|warming (?:cabinet|oven|drawer))(?!\w)")
+_COOK_RANGE_SKIP = re.compile(r"(?<!\w)(?:price range|age range|range of|within range|wide range|full range)(?!\w)")
+
+
+def _cook_norm(text: str) -> str:
+    """Lower case, accents off, hyphens and punctuation to one space (the colon stays). Linear in the length."""
+    text = "".join(ch for ch in unicodedata.normalize("NFKD", text.lower()) if not unicodedata.combining(ch))
+    return " ".join(re.sub(r"[^\w:]+", " ", text.replace("-", " ")).split())
+
+
+def cooking_word(clause: str) -> str | None:
+    """The first cooking word or phrase in one clause, or None. A clause that is exactly an agreeing phrase is not read; anything else in it is."""
+    norm = _cook_norm(clause)
+    if not norm or norm in _COOK_EXEMPT:
+        return None
+    norm = _COOK_RANGE_SKIP.sub(" ", norm)
+    phrase = _COOK_PHRASES.search(norm)
+    if phrase:
+        return phrase.group(0)
+    for token in re.findall(r"[^\W\d_]+", norm):
+        if token in ("range", "ranges"):
+            return token
+        if token in _COOK_TOKENS or token.startswith(_COOK_STARTS) or any(part in token for part in _COOK_CONTAINS):
+            return token
+    return None
+
+
+def cooking_none_line(texts: dict, scans: dict | None = None) -> dict | None:
+    """P-075 (A): the typed application's "Cooking operations:" line whose whole body is a none-shape. None for a scan, N/A, blank or extra words."""
+    for name, text in texts.items():
+        if not name.lower().startswith("application") or name in (scans or {}):
+            continue
+        for match in COOKING_LINE.finditer(text):
+            body = " ".join(match.group(2).split()).casefold().rstrip(".").strip()
+            if body in COOKING_NONE_BODIES:
+                end = match.start(2) + len(match.group(2).rstrip())
+                return {"source": name, "start": match.start(1), "end": end, "quote": text[match.start(1) : end]}
+    return None
+
+
+def _insured_names(name: str | None, texts: dict) -> list[str]:
+    names = {name} if name else set()
+    for text in texts.values():
+        for row in extract_labeled(text, LABELS["named_insured"]):
+            if row.get("value"):
+                names.add(row["value"])
+    return sorted(names, key=len, reverse=True)
+
+
+def cooking_hits(texts: dict, skip: dict | None = None) -> list[dict]:
+    """P-075 (B): every document that states a cooking word, one hit per document (UI check H1), documents other than the application first. Not read: the matched none-line (skip) only. The insured's name IS read
+    (code review: "Main Street Pizza & Grill LLC" holds; a false hold at worst). Schedule files: the "cooking" column (a header alone is not read), every other cell is."""
+    hits = []
+    for doc, text in texts.items():
+        scan = text
+        table = doc.lower().endswith(COOKING_TABLE_EXT)
+        column, first_row = None, 0
+        if table:  # the header is within the first lines (an xlsx text starts with "sheet: Name"); its "cooking" cell is not a cooking word
+            offset = 0
+            for line in scan.split("\n")[:5]:
+                cells = line.split("\t")  # sources._csv_text already parsed the CSV (quotes); a comma inside a cell is not a separator
+                at = next((i for i, c in enumerate(cells) if c.strip().casefold() == "cooking"), None)
+                if at is not None:
+                    column, first_row = at, offset + len(line) + 1
+                    mark = re.search(r"(?i)(?<![\w])cooking(?![\w])", line)
+                    if mark:
+                        scan = scan[: offset + mark.start()] + " " * (mark.end() - mark.start()) + scan[offset + mark.end() :]
+                    break
+                offset += len(line) + 1
+        if skip and skip.get("source") == doc:
+            scan = scan[: skip["start"]] + " " * (skip["end"] - skip["start"]) + scan[skip["end"] :]
+        if column is not None:
+            offset = first_row
+            for line in text[first_row:].split("\n"):
+                cells = line.split("\t")
+                value = cells[column].strip().casefold() if column < len(cells) else ""
+                if value not in {"", "no", "none", "n/a", "na", "0", "false"}:
+                    hits.append({"source": doc, "start": offset, "end": offset + len(line), "quote": line.strip(), "word": value})
+                    break
+                offset += len(line) + 1
+            if hits and hits[-1]["source"] == doc:
+                continue
+        for clause in _CLAUSE.finditer(scan):
+            word = cooking_word(clause.group(0))
+            if not word:
+                continue
+            ls = text.rfind("\n", 0, clause.start()) + 1
+            le = text.find("\n", clause.end())
+            le = len(text) if le < 0 else le
+            start, end = max(ls, clause.start() - 120), min(le, clause.end() + 120)
+            hits.append({"source": doc, "start": start, "end": end, "quote": text[start:end].strip(), "word": word})
+            break
+    return sorted(hits, key=lambda h: h["source"].lower().startswith("application"))  # stable: the email or schedule sentence comes before the application's own other lines
+
+
+COOKING_OPS_NONE = re.compile(r"(?i)(?<!\w)(?:%s|cooking operations: ?(?:%s))(?!\w)" % ("|".join(map(re.escape, _COOK_NONE_PHRASES)), "|".join(map(re.escape, sorted(COOKING_NONE_BODIES, key=len, reverse=True)))))  # one list: COOKING_NONE_BODIES
+
+
+def apply_cooking_rule(merged: dict, conflicts: list, texts: dict, scans: dict | None = None) -> None:
+    """P-075 (D-133), before check_operations. B: the application line (or the operations answer) says none, and any document states cooking
+    -> an open `cooking` conflict, the file is held, nothing is copied. A: otherwise the line is copied as written, cited, with a review note.
+    The words "no cooking" are never written by this rule, and the confidence is not raised (D-124)."""
+    row = merged.get("operations") or {}
+    line = cooking_none_line(texts, scans)
+    ops_none = bool(COOKING_OPS_NONE.search(row.get("value") or ""))
+    if not line and not ops_none:
+        return
+    hits = cooking_hits(texts, line)
+    if hits:
+        if any(item.get("field") == "cooking" for item in conflicts):
+            return
+        first = {"value": line["quote"], "source": line["source"], "quote": line["quote"], "start": line["start"], "end": line["end"]} if line else {
+            "value": row["value"], "source": row.get("source"), "quote": row.get("quote") or row["value"]}
+        conflicts.append(_conflict("cooking", [first] + [{"value": h["quote"], "source": h["source"], "quote": h["quote"], "start": h["start"], "end": h["end"]} for h in hits]))
+        if row.get("value"):
+            row["reason"] = f"{row['reason']}; {REASON_COOKING_CONFLICT}" if row.get("reason") else REASON_COOKING_CONFLICT
+            row["needs_review"] = True
+            row["confidence"] = min(row.get("confidence") or 0.0, llm_extract.MIN_CONFIDENCE - 0.01)
+        return
+    if not line or not row.get("value") or ops_missing_all(row["value"], line["quote"]) == []:
+        return  # nothing to copy: no operations answer, or the answer already carries the line
+    row["value"] = f"{row['value']}; {line['quote']}"
+    row["also_quoted"] = (row.get("also_quoted") or []) + [{"quote": line["quote"], "source": line["source"], "start": line["start"], "end": line["end"]}]
+    row["rule_copied"] = True
+    row["needs_review"] = True  # the copied line never makes a file read complete (D-133 answer 1)
+    row["reason"] = f"{row['reason']}; {REASON_COOKING_COPIED}" if row.get("reason") else REASON_COOKING_COPIED
+    row["confidence"] = min(row.get("confidence") or 0.0, llm_extract.MIN_CONFIDENCE - 0.01)  # not raised (the withdrawn P-070 set 0.95)
+
+
 def check_operations(merged: dict, texts: dict) -> None:
     """P-047 (b), P-056 (f): the cited document names a rule item anywhere that the answer lacks -> needs review, below the confidence
     line, with the items. The labeled lines (context) are still what carrier match reads."""
@@ -1088,6 +1242,10 @@ def check_operations(merged: dict, texts: dict) -> None:
     if context:
         row["context"] = context  # P-047 (c): carrier match and the D-079 referral read it too
     missing = ops_missing_all(row["value"], text)  # P-059 adds the labeled-line items; P-056 (f): the whole cited document, not only the cited line and labeled lines
+    for other, other_text in texts.items():  # P-075 (C): the application's stated cooking line is read whichever document operations is cited from
+        if other != row.get("source") and other.lower().startswith("application"):
+            for match in COOKING_LINE.finditer(other_text):
+                missing += [m for m in ops_missing_all(row["value"], match.group(1) + match.group(2)) if m not in missing]
     if missing:
         reason = OPS_MISSING.format(", ".join(missing))
         row["reason"] = f"{row['reason']}; {reason}" if row.get("reason") else reason
@@ -1278,6 +1436,7 @@ def process_submission(folder: Path) -> dict:
         conflicts.append(item)
     _apply_reply(conflicts, texts.get("reply.md", ""))
     apply_document_rules(merged, conflicts, texts, scans)
+    apply_cooking_rule(merged, conflicts, texts, scans)  # P-075 (D-133): copy the application's cooking none-line, or hold on a cooking word elsewhere
     check_operations(merged, texts)  # P-047 (b), after every rule that can set operations
     gate_loss_run(merged, texts, scans)  # P-040/P-044/P-045/B-343, after every rule that can set the date
     locations = apply_locations(merged, conflicts, texts, scans)
@@ -1289,6 +1448,11 @@ def process_submission(folder: Path) -> dict:
         ]
     blob = _without_name("\n".join(texts.values()), merged["named_insured"].get("value"), texts).lower()  # P-015 T2: the insured's name never starts an ask
     cooking = cooking_facts(texts)
+    open_cook = next((c for c in conflicts if c.get("field") == "cooking" and c.get("resolution") != "resolved"), None)
+    if open_cook:  # P-075 (code review): while another document states cooking, the application's "None" is never read as no cooking; no points until the call
+        side = open_cook["values"][1]  # the strongest hit (UI check H1)
+        cooking["equipment"] = {"state": "needs_review", "terms": [], "negated": [], "source": side.get("source"), "start": side.get("start"), "end": side.get("end"),
+                                "quote": side.get("quote"), "reason": REASON_COOKING_CONFLICT}
     extra = []
     if any(word in blob for word in ("restaurant", "fryer", "kitchen")):  # P-015 T2: cuisine words ("taco") are not cues
         for label, cues in (
@@ -1491,6 +1655,7 @@ def _saved_payload(report: dict) -> dict:
                 "end": row.get("end"),
                 "quote": row.get("quote"),  # P-016 Q1: the exact cited text. The app shows it
                 **({"also_quoted": row["also_quoted"]} if row.get("also_quoted") else {}),  # P-036: the agreeing values' other quotes
+                **({"rule_copied": True} if row.get("rule_copied") else {}),  # P-075: the row carries a line the rule copied, not model text
                 **({"context": row["context"]} if row.get("context") else {}),  # P-047 H1: operations rule lines outside the cited text
                 "reason": row.get("reason"),  # P-016 R1: why the row is flagged or has no value
             }
@@ -2829,6 +2994,65 @@ if __name__ == "__main__":
         # P-070 backstop reads the units too: "$1.2 million in sales" beside a sales word
         assert [amount for amount, _ in _sales_figures("Our sales were $1.2 million last year.")] == [1200000]
         assert [amount for amount, _ in _sales_figures("Annual sales: 250 thousand")] == [250000]
+        # P-075 (D-133): the cooking none-line is copied as written, or a cooking word anywhere holds the file. Only the model host is stubbed.
+        def ops_of(rep: dict) -> dict:
+            return next(r for r in rep["fields"] if r["field_id"] == "operations")
+
+        def stub75(sid: str) -> dict:  # the application's own sales line, as the model would return it (stubbed() leaves sales out)
+            sales = re.search(r"Annual sales: \$(\d+)", (dev_root / sid / "application.md").read_text())
+            assert sales, sid
+            return stubbed(dev_root / sid, [], field={"field_id": "sales_or_payroll", "value": int(sales.group(1)), "source": "application.md", "quote": sales.group(0), "confidence": 1.0})
+
+        LINE = "Cooking operations: None"
+        rep = stub75("SUB-299")  # SUB-348 shape: another line of the application and the email
+        assert [c["field"] for c in rep["conflicts"]] == ["cooking"] and not ready_to_route(rep) and rep["status"] != "complete" and not rep["complete"], rep["status"]
+        assert [v["source"] for v in rep["conflicts"][0]["values"]] == ["application.md", "application.md"] or rep["conflicts"][0]["values"][1]["source"] in ("application.md", "email.md"), rep["conflicts"]
+        assert LINE not in ops_of(rep)["value"] and not ops_of(rep).get("rule_copied") and ops_of(rep)["needs_review"] and REASON_COOKING_CONFLICT in ops_of(rep)["reason"], ops_of(rep)
+        assert rep["conflicts"][0]["values"][0]["quote"] == LINE, rep["conflicts"]
+        assert rep["cooking"]["equipment"]["state"] == "needs_review" and rep["cooking"]["equipment"]["reason"] == REASON_COOKING_CONFLICT, rep["cooking"]  # code review 3
+        assert [v["source"] for v in rep["conflicts"][0]["values"]] == ["application.md", "email.md", "application.md"], rep["conflicts"]  # UI check H1: the email first, the application's own line last
+        assert "stove top" in rep["conflicts"][0]["values"][1]["quote"], rep["conflicts"]
+        rep = stub75("SUB-300")  # SUB-349 shape: the schedule cooking column says Yes
+        assert [c["field"] for c in rep["conflicts"]] == ["cooking"] and rep["status"] != "complete" and not ready_to_route(rep), rep["conflicts"]
+        assert {"schedule.csv", "email.md"} <= {v["source"] for v in rep["conflicts"][0]["values"]}, rep["conflicts"]  # UI check H1: every document that states cooking
+        rep = stub75("SUB-301")  # T-119 shape: clean; the stub drops the line
+        row = ops_of(rep)
+        assert rep["conflicts"] == [] and row["value"].endswith("; " + LINE) and row["rule_copied"] and row["needs_review"] and REASON_COOKING_COPIED in row["reason"], row
+        assert "no other document" not in row["reason"].lower() and "check the other documents" in row["reason"], row["reason"]  # P-075 check H1: never a claim of absence
+        assert row["also_quoted"][0]["quote"] == LINE and row["also_quoted"][0]["source"] == "application.md" and "no cooking" not in row["value"].lower(), row
+        assert (row["confidence"] or 0) < llm_extract.MIN_CONFIDENCE and rep["status"] == REVIEW_PENDING, (row["confidence"], rep["status"], rep.get("missing"), rep.get("status_reason"))
+        app301 = (dev_root / "SUB-301" / "application.md").read_text()
+        assert app301[row["also_quoted"][0]["start"] : row["also_quoted"][0]["end"]] == LINE
+        rep = stub75("SUB-302")  # negations
+        assert [c["field"] for c in rep["conflicts"]] == ["cooking"] and not ready_to_route(rep), rep["conflicts"]
+        for sentence in ("No fryer on site.", "Fryer removed last year.", "No beer, we fry wings.", "Wings fried daily and beer none.", "No cooking, but we fry wings."):
+            assert cooking_hits({"email.md": sentence}), sentence
+        for sentence in ("No cooking.", "No kitchen.", "We do not cook.", "Cooking operations: None", "The office is in a quiet neighborhood near Coventry Park."):
+            assert not cooking_hits({"email.md": sentence}), sentence
+        rep = stub75("SUB-303")  # SUB-350 shape: the model carried the line itself
+        assert rep["conflicts"] == [] and ops_of(rep)["value"] == "Plumbing supplies, no cooking" and not ops_of(rep).get("rule_copied"), ops_of(rep)
+        for sid in ("SUB-294", "SUB-295"):  # the older none-line files: line copied, status unchanged
+            rep = stub75(sid)
+            assert rep["conflicts"] == [] and ops_of(rep)["value"].endswith("; " + LINE) and rep["status"] == REVIEW_PENDING, (sid, rep["status"])
+        rep = stub75("SUB-293")  # "no kitchen or any cooking on site" is not an exact agreeing phrase: a false hold by design
+        assert [c["field"] for c in rep["conflicts"]] == ["cooking"], rep["conflicts"]
+        # none-shapes: only a whole-body none line is copied; N/A, blank, or extra words keep the P-059 flag
+        for body, shape in (("None", True), ("No.", True), ("nil", True), ("No commercial cooking", True), ("No kitchen", True), ("N/A", False), ("", False), ("None; microwave", False), ("Electric ranges only", False)):
+            assert bool(cooking_none_line({"application.md": f"Cooking operations: {body}\n"})) is shape, body
+        assert cooking_none_line({"application.md": "Cooking operations: None\n"}, {"application.md": [["Cooking", 0.9]]}) is None  # a scan is never copied from
+        # C: operations cited from the email; the application's stated cooking line is read
+        merged_c = {"operations": {"value": "Insurance office", "source": "email.md", "start": 0, "end": 16, "confidence": 0.9, "needs_review": False, "reason": None}}
+        check_operations(merged_c, {"email.md": "Insurance office, 40 seats", "application.md": "Cooking operations: Electric ranges only\n"})
+        assert merged_c["operations"]["needs_review"] and "electric" in merged_c["operations"]["reason"] and "ranges" in merged_c["operations"]["reason"], merged_c["operations"]
+        # the schedule: header only is not read; a Yes is; the insured's name is not read
+        assert not cooking_hits({"schedule.csv": "location\tsq_ft\tcooking\nMain\t3700\tNo\n"}) and cooking_hits({"schedule.csv": "location\tcooking\nMain\tYes\n"})
+        assert not cooking_hits({"schedule.xlsx": "sheet: Schedule\nloc\tsq_ft\tcooking\n1\t900\tnone\n"}) and cooking_hits({"schedule.xlsx": "sheet: Schedule\nloc\tcooking\n1\tYes\n"})
+        assert cooking_hits({"email.md": "Grill Masters LLC is the insured."}) and cooking_hits({"email.md": "Grill Masters LLC is next door."})  # the name is read (code review 2)
+        assert cooking_hits({"schedule.csv": "address\tno\tcooking\n12 Main St, Unit 2\tNo\tYes\n"}) and not cooking_hits({"schedule.csv": "address\tcooking\n12 Main St, Unit 2\tNo\n"})  # code review 1: the cell is not split on its comma
+        pizza = {"application.md": "Named insured: Main Street Pizza & Grill LLC\nOperations: Office\nCooking operations: None\n"}
+        merged_p, conf_p = {"operations": {"value": "Office", "source": "application.md", "needs_review": False, "confidence": 0.9}, "named_insured": {"value": "Main Street Pizza & Grill LLC"}}, []
+        apply_cooking_rule(merged_p, conf_p, pizza)
+        assert [c["field"] for c in conf_p] == ["cooking"] and not merged_p["operations"].get("rule_copied"), conf_p  # code review 2: held, not copied
         request = _request("SUB-290", [], ["square_feet", "suite_count"])
         assert "- square footage" in request and "- suite count" in request, request
     print("prepare ok")

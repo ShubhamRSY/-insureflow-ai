@@ -59,3 +59,17 @@ def test_request_and_cache_key_are_identical_off_and_on(monkeypatch):
     assert different == 0
     assert not failed, failed
     assert total == LAST - FIRST + 1
+
+
+def test_requests_equal_the_recorded_head_baseline(monkeypatch):
+    """P-075 (D-133): 0 of 143 request bodies changed against the SHA-256s recorded from HEAD before the build."""
+    import hashlib
+
+    baseline = json.loads((Path(__file__).parent / "fixtures" / "request_baseline.json").read_text())
+    monkeypatch.setenv("LLM_MODEL", "qwen/qwen3.8-27b")
+    monkeypatch.setenv("LLM_BASE_URL", "https://api.groq.com/openai/v1")
+    monkeypatch.setenv("LLM_API_KEY", "fixture-not-sent")
+    monkeypatch.setenv("LOB_ENGINE", "off")
+    changed = [f.name for f in _submissions() if hashlib.sha256(_request_bytes(sources.read_folder(f))).hexdigest() != baseline.get(f.name)]
+    print(f"request baseline: {len(baseline)} recorded, {len(changed)} changed")
+    assert len(baseline) == LAST - FIRST + 1 and not changed, changed
