@@ -277,9 +277,12 @@ def find_quote(text: str, quote: str) -> tuple[int, int] | None:
 HEDGE = r"(?:about|around|approximately|approx\.?|roughly|nearly|almost|close\s+to|circa|~)"
 CURRENCY = r"(?:US\$|USD|C\$|CAD)"  # P-074 (check M2): a hedge is seen across a currency code or a colon
 UNITS = r"(?:million|thousand|mm|[kmb])"  # P-074 (B): "1.42 million", "250 thousand", "250k", "1.2m", "1.2mm"
+# Security review (ReDoS): each run of spaces belongs to one quantifier, so a long run of spaces cannot backtrack.
+# Same amounts as "HEDGE? \s* :? \s* CURRENCY? \s* $? \s*" before it; leading spaces belong to the caller's pattern.
+AMOUNT_PREFIX = rf"(?:{HEDGE}\s*)?(?::\s*)?(?:{CURRENCY}\s*)?(?:\$\s*)?"
 _AMOUNT = re.compile(
-    rf"(?i)^(?:{HEDGE})?\s*:?\s*(?:{CURRENCY})?\s*"
-    rf"\$?\s*(\d{{1,3}}(?:,\d{{3}})+|\d+(?:\.\d+)?)\s*({UNITS})?"
+    rf"(?i)^\s*{AMOUNT_PREFIX}"
+    rf"(\d{{1,3}}(?:,\d{{3}})+|\d+(?:\.\d+)?)(?:\s*({UNITS}))?"
     r"(?:\s*(?:square\s+feet|sq\.?\s*ft\.?|sqft|sf))?\s*$"
 )
 _FACTOR = {"": 1, "k": 1_000, "thousand": 1_000, "m": 1_000_000, "mm": 1_000_000, "million": 1_000_000, "b": 1_000_000_000}
@@ -301,7 +304,7 @@ DATE_FIELDS = ("effective_date", "loss_run_valued_through")
 TEXT_FIELDS = ("named_insured", "premises_address")
 SOFT_FIELDS = ("operations", "construction")
 _NUM = re.compile(rf"(?<![\d.,])\d[\d,]*(?:\.\d+)?(?:\s?{UNITS}\b)?", re.I)
-_HEDGE_BEFORE = re.compile(rf"(?:\b{HEDGE}|~)\s*:?\s*(?:{CURRENCY})?\s*\$?\s*$", re.I)
+_HEDGE_BEFORE = re.compile(rf"(?:\b{HEDGE}|~)\s*(?::\s*)?(?:{CURRENCY}\s*)?(?:\$\s*)?$", re.I)
 _HEDGE_AFTER = re.compile(r"\s*(?:or so|give or take)\b", re.I)
 _DATE_SHAPE = re.compile(r"\d{4}-\d{2}-\d{2}|\d{1,2}/\d{1,2}/\d{2,4}")
 _DATES = re.compile(r"\d{4}-\d{2}-\d{2}|(?<![\d/.-])\d{1,2}[/.-]\d{1,2}[/.-](?:\d{4}|\d{2})(?![\d/.-]\d)|[A-Za-z]{3,9}\.?\s+\d{1,2}(?:st|nd|rd|th)?,?\s+\d{4}|\d{1,2}(?:st|nd|rd|th)?\s+[A-Za-z]{3,9}\.?,?\s+\d{4}")
