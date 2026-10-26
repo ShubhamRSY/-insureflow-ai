@@ -44,6 +44,8 @@ BANNER = ""  # set by serve(); the sandbox screenshots label the page with it
 MESSAGES: dict[str, tuple[bool, str]] = {}  # submission -> (ok, plain-words result of the last action); shown once
 # D-065 item 5: one line per user-visible feature: date, task or proposal, decision number, what an underwriter sees.
 WHATS_NEW = (
+    ("2026-10-24", "P-074", "D-132", "A conflict the system cannot check against the document now stays open and holds the file. Each side says why: \"Not verified against the document\" "
+     "or \"Approximate figure\" (about, around, roughly, ~). \"$1.42 million\" and \"250k\" are read as numbers. An approximate figure is kept with a review note and never counts as the exact amount."),
     ("2026-10-23", "T-118 (P-072)", "D-124", "Operations never gets \"no cooking\" added automatically. When the application says \"Cooking operations: None\" "
      "and the operations value does not say it, the value stays as stated and keeps its review note, so the underwriter checks cooking against every document."),
     ("2026-10-21", "T-118", "D-122",
@@ -809,16 +811,28 @@ def _msg_for(messages: dict, user: auth.User | None, key: str) -> str:
     return _msg(messages, _msg_key(user, key)) or _msg(messages, key)
 
 
+def side_note(v: dict) -> str:
+    """P-074 (D-132): why a conflict side cannot be trusted as written. Plain words, escaped."""
+    if v.get("unverified"):
+        return html.escape(f"Not verified against the document: {v.get('reason') or 'the cited text was not found'}. Check it on the page before you choose it.")
+    if v.get("approximate"):
+        return html.escape(f"Approximate figure: '{v.get('quote') or v.get('value')}'. It does not confirm an exact amount.")
+    return ""
+
+
 def resolve_form(sub: str, report: dict, conflict: dict, user: auth.User | None = None) -> str:
     """B-324 (D-089): choose one stored side or enter the value; logged with this run's hash. Then approve.
     P-070 (D-122): the topic is named in plain words ("Resolve square footage")."""
     field = conflict.get("field") or ""
     plain = prepare.PLAIN.get(field, field)
-    sides = "".join(f'<option value="{html.escape(str(v.get("value")))}">{html.escape(str(v.get("value")))} ({html.escape(v.get("source") or "file not named")})</option>'
+    sides = "".join(f'<option value="{html.escape(str(v.get("value")))}">{html.escape(str(v.get("value")))} ({html.escape(v.get("source") or "file not named")})'
+                    f'{" - not verified" if v.get("unverified") else " - approximate" if v.get("approximate") else ""}</option>'
                     for v in conflict.get("values") or [] if v.get("value"))
+    notes = "".join(f'<p class="bad">{html.escape(str(v.get("value")))} ({html.escape(v.get("source") or "file not named")}): {side_note(v)}</p>'
+                    for v in conflict.get("values") or [] if v.get("value") and side_note(v))
     actor = ('<label>Underwriter id <input name="underwriter_id" required></label> ' if user is None else
              f'<input type="hidden" name="csrf" value="{html.escape(auth.csrf_for(user))}"><span class="actor">Signed in as {html.escape(user.name)} ({html.escape(user.id)})</span> ')
-    return (f'<form method="post" action="/decision"><input type="hidden" name="action" value="resolve">'
+    return (f'{notes}<form method="post" action="/decision"><input type="hidden" name="action" value="resolve">'
             f'<input type="hidden" name="submission" value="{html.escape(sub)}"><input type="hidden" name="run_hash" value="{html.escape(report.get("saved_hash") or "")}">'
             f'<input type="hidden" name="conflict_field" value="{html.escape(field)}">'
             f'<b>Resolve {html.escape(plain)}</b> <label>Choose <select name="chosen_value"><option value="">—</option>{sides}</select></label> '
@@ -1207,8 +1221,9 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
                 "<li>{}: <ul>{}</ul>{}</li>".format(
                     html.escape(str(prepare.PLAIN.get(item_c["field"], item_c["field"]))),  # P-070: the topic in plain words
                     "".join(  # T-118: each side in words (value, file, cited text), not a JSON blob
-                        "<li><b>{}</b> ({}) — cited: {}</li>".format(
+                        "<li><b>{}</b> ({}) — cited: {}{}</li>".format(
                             html.escape(str(v.get("value"))), html.escape(str(v.get("source") or "file not named")), html.escape(str(v.get("quote") or "—")),
+                            f' <span class="bad">{side_note(v)}</span>' if side_note(v) else "",  # P-074 (D-132)
                         )
                         for v in (item_c["values"] if isinstance(item_c["values"], list) else [])
                     ),

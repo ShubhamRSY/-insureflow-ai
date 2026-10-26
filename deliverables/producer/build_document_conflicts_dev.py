@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Build the document_conflicts DEV set (SUB-290-296) and its dev gold.
+"""Build the document_conflicts DEV set (SUB-290-298) and its dev gold.
+
+P-074 (D-132) adds SUB-297 and SUB-298 (dev note): the SUB-345 shape. The application states one sales figure and the email another
+("about $1.35 million"); the model answered with a conflict, and the pipeline used to keep one flagged figure and no conflict.
+SUB-297: both sides stated, the email side is approximate. SUB-298: every side unverifiable (D2) plus a "~$1.2m" side from a
+third note. The model reply is a stub in prepare.py's self-check (the SUB-345 stored conflict shape); no cache is read or written.
 
 Dev only, synthetic, P-070 (D-122). Six files, one property each, all in scope:
 three files where two documents disagree (a floor area, a count of suites, a sales figure),
@@ -192,6 +197,32 @@ CASES = [
          route="hold until the underwriter clears the cooking flag",
          rec="Not complete: the application says no cooking, the email names a griddle and a wok. The operations value must not say no cooking; the underwriter decides. Not a decline.",
          expect="the @model-risk T-118 H1 case (P-072, D-124): the value does not gain \"no cooking\", the operations flag stays, and process_submission does not return complete"),
+    dict(sid="SUB-297", name="Cedar Ridge Paper Supply LLC", address="5120 Cedar Ridge Ln", city="Temple", zip="76502",
+         ops="Wholesale paper and packaging supplies, warehouse", items="business_type=wholesale; no cooking",
+         notes="one premises; cooking none; sprinklers full; the application and the email state different sales", sales="1180000", tiv="640000", sqft="8800",
+         construction="Metal", year="2001", sprinklers="Yes, full", cooking="None",
+         body="Last year we did about $1.35 million, the application is the budget.",
+         schedule=None, loss="published",
+         read="application.md (typed English application, one premises, annual sales 1180000, building 640000, 8800 sq ft, metal 2001, sprinklers full, cooking none, expiring Carrier A, no claims), email.md (one property; about $1.35 million last year, the application is the budget), loss-runs.md (published Carrier A layout, one period 2025-07-01 to 2026-07-01, valued 2026-07-15, no claims). One premises.",
+         status="incomplete — hold: open conflict (sales)",
+         missing="sales or payroll (the application says 1180000, the email says about 1.35 million; the producer is asked which figure stands)",
+         conflict="sales: 1180000 (application.md) vs 1350000, approximate (email.md)",
+         route="hold until the underwriter chooses the sales figure",
+         rec="Wholesale warehouse, no W1 or W2 word: the route is a recommendation only. The sales value is emptied and the file is held on the open conflict; nothing is declined and nothing is sent.",
+         expect="P-074 (D-132), the SUB-345 shape: an open conflict on sales or payroll with both sides stored (the email side flagged approximate), the sales value emptied, not complete, not routed, not sendable; the card shows the reason"),
+    dict(sid="SUB-298", name="Pinecrest Tile Supply LLC", address="880 Pinecrest Blvd", city="Round Rock", zip="78664",
+         ops="Wholesale ceramic tile, warehouse", items="business_type=wholesale; no cooking",
+         notes="one premises; cooking none; sprinklers full; three documents, three sales statements", sales="1150000", tiv="710000", sqft="9200",
+         construction="Masonry", year="1999", sprinklers="Yes, full", cooking="None",
+         body="We did roughly 1.2 million last year.",
+         schedule=None, loss="published", extra=("broker-note.md", "Broker note\nSales ~$1.2m per the insured.\n"),
+         read="application.md (typed English application, one premises, annual sales 1150000, building 710000, 9200 sq ft, masonry 1999, sprinklers full, cooking none, expiring Carrier A, no claims), email.md (one property; roughly 1.2 million last year), broker-note.md (Sales ~$1.2m per the insured), loss-runs.md (published Carrier A layout, one period 2025-07-01 to 2026-07-01, valued 2026-07-15, no claims). One premises.",
+         status="incomplete — hold: open conflict (sales)",
+         missing="sales or payroll (1150000 against about 1.2 million; the producer is asked which figure stands)",
+         conflict="sales: 1150000 (application.md) vs 1200000, approximate (email.md; broker-note.md)",
+         route="hold until the underwriter chooses the sales figure",
+         rec="Wholesale warehouse, no W1 or W2 word: the route is a recommendation only. The sales value is emptied and the file is held on the open conflict; nothing is declined and nothing is sent.",
+         expect="P-074 (D-132), D2: the model's stated sides cannot be checked against the quotes it gave, so every side is stored as unverified and the conflict is open; the sales value is emptied; the file is held and not sent"),
 ]
 
 
@@ -214,10 +245,13 @@ def main() -> None:
         (d / "application.md").write_text(APP.format(**fmt))
         (d / "email.md").write_text(EMAIL.format(**fmt))
         (d / "loss-runs.md").write_text((LOSS_PUBLISHED if c.get("loss") == "published" else LOSS).format(valued=VALUED, **fmt))
+        if c.get("extra"):
+            (d / c["extra"][0]).write_text(c["extra"][1])
         if c["schedule"]:
             (d / "schedule.csv").write_text(SCHED.format(sqft=c["schedule"][0], year=c["schedule"][1]))
         g = dict(c, eff=EFF, valued=VALUED)
         g.pop("loss", None)
+        g.pop("extra", None)
         (GOLD / f"{c['sid']}.md").write_text(GOLD_T.format(**g))
         for path in sorted(d.iterdir()) + [GOLD / f"{c['sid']}.md"]:
             written.append(f"{sha256(path)}  {path.relative_to(ROOT)}")

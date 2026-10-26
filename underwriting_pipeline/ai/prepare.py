@@ -173,7 +173,7 @@ def _same_row(a: dict, b: dict) -> bool:
 
 def fuller(rows: list[dict]) -> dict:
     """P-036: of agreeing values keep the fuller one; the other quotes stay on it as also_quoted."""
-    base = dict(max(rows, key=lambda row: len(words(row.get("value") or ""))))
+    base = dict(max(rows, key=lambda row: (not row.get("approximate"), len(words(row.get("value") or "")))))  # P-074 (C): an exact figure beats a hedged one
     also = [{"quote": row["quote"], "source": row.get("source")} for row in rows if row.get("quote") and row.get("quote") != base.get("quote")]
     for item in also:  # each other quote with its file, so the card says which document said what
         if item not in (base.get("also_quoted") or []):
@@ -781,7 +781,8 @@ def apply_locations(merged: dict, conflicts: list, texts: dict, scans: dict | No
     if len(locations) < 2:
         return []
     primary = next(row for row in locations if row["primary"])
-    kept = [item for item in conflicts if item.get("field") not in {"premises_address", "premises"}]
+    kept = [item for item in conflicts if item.get("field") not in {"premises_address", "premises"}
+            or any(side.get("unverified") for side in item.get("values") or [])]  # P-074 (check M3): an unverified side is never dropped here
     conflicts[:] = kept
     source_text = texts.get(primary["source"], "")
     at = source_text.find(primary["address"])
@@ -802,7 +803,7 @@ def apply_locations(merged: dict, conflicts: list, texts: dict, scans: dict | No
 # answer could raise a conflict, and a second document that said a different figure was silently ignored.
 SALES_LABELS = ("sales or payroll:", "annual sales:", "gross sales:", "sales:", "gross revenue:", "annual revenue:", "revenue:", "turnover:")
 SALES_WORD = r"(?:gross\s+|annual\s+|net\s+|estimated\s+)?(?:sales|revenue|turnover)s?"
-AMOUNT_TOKEN = r"(?:about|around|approximately|roughly|~)?\s*\$?\s*(?:\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?)\s*(?:mm|[kmb])?\b"
+AMOUNT_TOKEN = rf"(?:{llm_extract.HEDGE})?\s*:?\s*(?:{llm_extract.CURRENCY})?\s*\$?\s*(?:\d{{1,3}}(?:,\d{{3}})+|\d+(?:\.\d+)?)\s*{llm_extract.UNITS}?\b"  # P-074 (B, C): "1.42 million", "close to"
 SALES_BEFORE = re.compile(rf"(?P<amount>{AMOUNT_TOKEN})\s*(?:in|of)?\s*\b{SALES_WORD}\b", re.I)
 SALES_AFTER = re.compile(rf"\b{SALES_WORD}\b(?:\s+(?:of|was|were|is|at|totaled|totalled|stood at))?\s*[:\-]?\s*(?P<amount>{AMOUNT_TOKEN})", re.I)
 SALES_MIN = 1000  # a sales figure is a real figure: a year or a percentage is not
@@ -1133,6 +1134,12 @@ def unread_rows(docs: list[dict], not_sent: list[str]) -> list[dict]:
 
 def _carry_flag(cur: dict, other: dict) -> None:
     """P-024: two agreeing values merge into one; the saved row is needs_review if either side was, and keeps the reason and quote."""
+    if other.get("approximate") and not cur.get("approximate"):  # P-074 (C): the exact side wins; the hedged quote stays as also_quoted
+        note = f"approximate figure: {' '.join((other.get('quote') or '').split())[:160]}"  # rebuilt as accept_field wrote it; only this exact string is removed (recheck H1)
+        rest = re.sub(r"(?:; )+", "; ", (other.get("reason") or "").replace(note, "")).strip("; ")
+        if not rest:
+            return
+        other = {**other, "reason": rest}  # check M1: any other review reason (per-location, scan, date order) is carried as before P-074
     if other.get("needs_review") and not cur.get("needs_review"):
         cur["needs_review"] = True
         for k in ("reason", "quote", "source", "start", "end"):
@@ -1246,12 +1253,13 @@ def process_submission(folder: Path) -> dict:
     for item in extracted["conflicts"]:
         field_id = item.get("field")
         kept = [{**side, "field_id": field_id} for side in item.get("values") or [] if side.get("value")]
-        first = _typed_first(field_id, kept, scans) if field_id in merged and merged[field_id]["value"] is None else None
+        unverified = any(side.get("unverified") for side in kept)  # P-074 (A): an unverified side keeps the conflict open; nothing merges or outranks it
+        first = _typed_first(field_id, kept, scans) if field_id in merged and merged[field_id]["value"] is None and not unverified else None
         if first:  # P-037: the typed sides agree; a scan side never makes this an open conflict
             merged[field_id] = {**merged[field_id], **first, "confidence": first.get("confidence") or 0.0}
             continue
         sides = [side.get("value") or "" for side in item.get("values") or [] if side.get("value")]
-        if len(sides) >= 2 and all(agrees(item.get("field"), a, b) for i, a in enumerate(sides) for b in sides[i + 1 :]):  # H3: every pair
+        if not unverified and len(sides) >= 2 and all(agrees(item.get("field"), a, b) for i, a in enumerate(sides) for b in sides[i + 1 :]):  # H3: every pair
             field_id = item.get("field")
             if field_id in merged and merged[field_id]["value"] is None:
                 kept = [side for side in item["values"] if side.get("value")]
@@ -2677,6 +2685,8 @@ if __name__ == "__main__":
             ("SUB-294", {}),
             ("SUB-295", {}),
             ("SUB-296", {}),
+            ("SUB-297", {}),  # P-074: the email has no sales word, so only the model's conflict (stubbed below) raises it
+            ("SUB-298", {"sales_or_payroll": {"1150000", "1200000"}}),  # P-074: "Sales ~$1.2m" is read by the P-070 rule
         )
         for sid, expect in dev_cases:
             texts, merged = dev_file(sid)
@@ -2726,6 +2736,99 @@ if __name__ == "__main__":
                 assert rep296["status"] != "complete" and "no cooking" not in (ops296["value"] or "") and ops296["needs_review"], (email, rep296["status"], ops296)
         finally:
             llm_extract.llm_extract = real_llm
+        # P-074 (D-132): SUB-297/298 and the merge-vs-conflict cases, end to end through the real conflict loop. Only the model host is stubbed
+        # (the SUB-345 stored reply shape: conflict values as numbers, the sales field empty); a temp cache; no model call.
+        def stubbed(folder: Path, sides: list, *, field: dict | None = None) -> dict:
+            docs74 = sources.read_folder(folder)
+            rows74 = []
+            for doc in docs74:
+                labels = {"loss_run_valued_through": ("valued as of:",)} if doc["name"] == "loss-runs.md" else LABELS if doc["name"] == "application.md" else {}
+                for fid, label in labels.items():
+                    row = extract_labeled(doc["text"], label)[0]
+                    if row["value"] is not None and fid != "sales_or_payroll":
+                        rows74.append({"field_id": fid, "value": row["value"], "source": doc["name"], "quote": doc["text"][row["start"] : row["end"]], "confidence": 0.95})
+            reply74 = {"fields": rows74 + ([field] if field else []), "conflicts": [{"field": "sales_or_payroll", "values": sides}] if sides else []}
+            real_post, real_cache, real_env = llm_extract._post, llm_extract.CACHE, (os.environ.get("LLM_BASE_URL"), os.environ.get("LLM_MODEL"))
+            os.environ["LLM_BASE_URL"], os.environ["LLM_MODEL"] = "http://localhost:11434/v1", "p074-stub"
+            llm_extract.CACHE = tmp_path / f"p074-cache-{len(list(tmp_path.glob('p074-cache-*')))}"
+            llm_extract._post = lambda settings, payload: {"choices": [{"message": {"content": json.dumps(reply74)}}], "usage": {"total_tokens": 1}}
+            try:
+                return process_submission(folder)
+            finally:
+                llm_extract._post, llm_extract.CACHE = real_post, real_cache
+                for name, old in zip(("LLM_BASE_URL", "LLM_MODEL"), real_env):
+                    os.environ.pop(name, None) if old is None else os.environ.__setitem__(name, old)
+
+        def sales_of(rep: dict) -> dict:
+            return next(r for r in rep["fields"] if r["field_id"] == "sales_or_payroll")
+
+        def copy74(sid: str, tag: str, email: str | None = None, app_sales: str | None = None) -> Path:
+            case = tmp_path / "p074" / tag / sid
+            shutil.copytree(dev_root / sid, case)
+            if email is not None:
+                (case / "email.md").write_text(f"Subject: x\n\nHi,\n{email}\nThanks\n")
+            if app_sales:
+                (case / "application.md").write_text(re.sub(r"Annual sales: \$[\d,]+", f"Annual sales: ${app_sales}", (case / "application.md").read_text()))
+            return case
+
+        app297 = {"value": 1180000, "source": "application.md", "quote": "Annual sales: $1180000", "confidence": 1.0}
+        mail297 = {"value": 1350000, "source": "email.md", "quote": "Last year we did about $1.35 million", "confidence": 1.0}
+        rep = stubbed(dev_root / "SUB-297", [app297, mail297])  # SUB-345 shape: both sides verify, the email side is approximate
+        assert [c["field"] for c in rep["conflicts"]] == ["sales_or_payroll"] and not sales_of(rep)["value"], rep["conflicts"]
+        assert rep["status"] != "complete" and not rep["complete"] and not ready_to_route(rep), rep["status"]
+        assert [(v["value"], bool(v.get("approximate"))) for v in rep["conflicts"][0]["values"]] == [("1180000", False), ("1350000", True)]
+        rep = stubbed(dev_root / "SUB-297", [app297, {**mail297, "quote": "we made 1.35 million"}])  # D1: the email side is not in the document
+        assert rep["conflicts"] and rep["status"] != "complete" and not sales_of(rep)["value"] and not ready_to_route(rep), rep["status"]
+        assert [bool(v.get("unverified")) for v in rep["conflicts"][0]["values"]] == [False, True] and "quote not found" in rep["conflicts"][0]["values"][1]["reason"], rep["conflicts"]
+        rep = stubbed(dev_root / "SUB-298", [{**app297, "value": 1150000, "quote": "Sales 1.15 million"}, {**mail297, "value": 1200000, "quote": "we did 1.2 million"}])  # SUB-298, D2
+        assert [bool(v.get("unverified")) for v in rep["conflicts"][0]["values"]] == [True, True] and rep["status"] != "complete" and not ready_to_route(rep), rep["conflicts"]
+        assert rep["status"] != "all_values_rejected", "a reply whose only content is that conflict is an answer with an open conflict"
+        # merge: the same amount in other words is one number; the exact side wins and the hedged quote stays as also_quoted
+        same = copy74("SUB-297", "merge", "We did about $1.18 million.")
+        rep = stubbed(same, [app297, {"value": "$1.18 million", "source": "email.md", "quote": "about $1.18 million", "confidence": 1.0}])
+        assert rep["conflicts"] == [] and sales_of(rep)["value"] == "1180000" and sales_of(rep)["quote"] == "Annual sales: $1180000", sales_of(rep)
+        assert not sales_of(rep)["needs_review"] and any("about $1.18 million" in a["quote"] for a in sales_of(rep).get("also_quoted") or []), sales_of(rep)
+        # conflict: a different number is a conflict, held
+        diff = copy74("SUB-297", "differ", "We did about $1.2 million.")
+        rep = stubbed(diff, [app297, {"value": "$1.2 million", "source": "email.md", "quote": "about $1.2 million", "confidence": 1.0}])
+        assert [c["field"] for c in rep["conflicts"]] == ["sales_or_payroll"] and not ready_to_route(rep), rep["conflicts"]
+        # an approximate quote on a number field with no conflict: kept, flagged, never dropped, never exact
+        solo = copy74("SUB-297", "solo", "We did about $1.35 million.")
+        rep = stubbed(solo, [], field={"field_id": "sales_or_payroll", "value": 1350000, "source": "email.md", "quote": "We did about $1.35 million.", "confidence": 1.0})
+        row = sales_of(rep)
+        assert row["value"] == "1350000" and row["needs_review"] and row["approximate"] and row["reason"].startswith("approximate figure:"), row
+        assert rep["status"] == REVIEW_PENDING, rep["status"]
+        for word in ("nearly", "almost", "close to", "circa", "roughly", "approximately", "around", "~"):  # each hedge word, end to end
+            rep = stubbed(copy74("SUB-297", f"w-{word.strip('~') or 'tilde'}", f"We did {word} $1.35 million."), [],
+                          field={"field_id": "sales_or_payroll", "value": 1350000, "source": "email.md", "quote": f"We did {word} $1.35 million.", "confidence": 1.0})
+            assert sales_of(rep)["needs_review"] and sales_of(rep).get("approximate"), (word, sales_of(rep))
+        exact = copy74("SUB-297", "exact", "We did $1.35 million.")  # no hedge: exact, no review note
+        rep = stubbed(exact, [], field={"field_id": "sales_or_payroll", "value": 1350000, "source": "email.md", "quote": "We did $1.35 million.", "confidence": 1.0})
+        assert sales_of(rep)["value"] == "1350000" and not sales_of(rep)["needs_review"] and not sales_of(rep).get("approximate"), sales_of(rep)
+        # check M2: a hedge across a currency code, a colon or both never verifies an exact figure
+        for quote in ("about US$1.2 million", "about USD 1.2 million", "about: $1.2m", "Approximately: $1,200,000", "roughly C$1.2 million", "around: US$ 1.2 million"):
+            assert llm_extract.is_approximate("1200000", quote), quote
+        assert not llm_extract.is_approximate("1200000", "Annual sales: US$1.2 million")
+        assert _sales_figures("Sales about USD 1.2 million") == [(1200000, "Sales about USD 1.2 million")]
+        # check M1: the exact side wins, but a review reason that is not the approximate note is still carried
+        clean = {"value": "1", "needs_review": False, "reason": None, "quote": "q"}
+        _carry_flag(clean, {"value": "1", "approximate": True, "needs_review": True, "quote": "about 1",
+                            "reason": "values differ by location: loc 1 x; approximate figure: about 1"})
+        assert clean["needs_review"] and clean["reason"] == "values differ by location: loc 1 x", clean
+        clean = {"value": "1", "needs_review": False, "reason": None}
+        _carry_flag(clean, {"value": "1", "approximate": True, "needs_review": True, "quote": "about 1", "reason": "approximate figure: about 1"})
+        assert not clean["needs_review"], "an approximate note alone is not carried onto the exact side"
+        clean = {"value": "1", "needs_review": False, "reason": None}  # recheck H1: the order llm_extract writes on the per-location path
+        _carry_flag(clean, {"value": "1", "approximate": True, "needs_review": True, "quote": "about $1.2 million",
+                            "reason": "approximate figure: about $1.2 million; values differ by location: loc 1 x; loc 2 y"})
+        assert clean["needs_review"] and clean["reason"] == "values differ by location: loc 1 x; loc 2 y", clean
+        # check M3: a premises conflict with an unverified side survives labelled locations
+        keep74 = [{"field": "premises_address", "values": [{"value": "a", "unverified": True}, {"value": "b"}]}, {"field": "premises_address", "values": [{"value": "a"}, {"value": "b"}]}]
+        apply_locations({"premises_address": {"value": None}}, keep74, {"application.md": "Main premises 1 A St, Houston TX 77001. Second premises 2 B St, Houston TX 77002."})
+        assert len(keep74) == 1 and any(s.get("unverified") for s in keep74[0]["values"]), keep74  # recheck L8: fails on []
+        # P-070 backstop reads the units too: "$1.2 million in sales" beside a sales word
+        assert [amount for amount, _ in _sales_figures("Our sales were $1.2 million last year.")] == [1200000]
+        assert [amount for amount, _ in _sales_figures("Annual sales: 250 thousand")] == [250000]
         request = _request("SUB-290", [], ["square_feet", "suite_count"])
         assert "- square footage" in request and "- suite count" in request, request
     print("prepare ok")
