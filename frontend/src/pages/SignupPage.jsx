@@ -302,12 +302,37 @@ export default function SignupPage() {
                     />
                     <button
                       type="button"
-                      onClick={() => navigator.clipboard.writeText(result.api_key)}
+                      onClick={async () => {
+                        try {
+                          if (navigator.clipboard && window.isSecureContext) {
+                            await navigator.clipboard.writeText(result.api_key);
+                          } else {
+                            const ta = document.createElement('textarea');
+                            ta.value = result.api_key;
+                            ta.style.position = 'fixed';
+                            ta.style.left = '-9999px';
+                            document.body.appendChild(ta);
+                            ta.select();
+                            document.execCommand('copy');
+                            document.body.removeChild(ta);
+                          }
+                          // simple feedback
+                          const btn = event?.currentTarget;
+                          if (btn) {
+                            const old = btn.textContent;
+                            btn.textContent = 'Copied';
+                            setTimeout(() => (btn.textContent = old), 1200);
+                          }
+                        } catch (e) {
+                          console.error('Failed to copy API key', e);
+                        }
+                      }}
                       className="rounded-xl border border-white/15 px-3 py-2 text-sm text-slate-200 hover:border-brand-light hover:text-brand-light transition-colors"
                     >
                       Copy
                     </button>
                   </div>
+                  <p className="mt-2 text-xs text-slate-400">Use this key for API/programmatic access. Your session is already active — you don’t need to paste this to sign in.</p>
                 </div>
               )}
 
