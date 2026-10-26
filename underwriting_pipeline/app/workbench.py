@@ -44,6 +44,8 @@ BANNER = ""  # set by serve(); the sandbox screenshots label the page with it
 MESSAGES: dict[str, tuple[bool, str]] = {}  # submission -> (ok, plain-words result of the last action); shown once
 # D-065 item 5: one line per user-visible feature: date, task or proposal, decision number, what an underwriter sees.
 WHATS_NEW = (
+    ("2026-10-26", "P-075", "D-133", "When the application says \"Cooking operations: None\" and the operations answer leaves it out, the line is copied as written, with its quote, and marked \"copied by a rule, not read by the model\"; "
+     "the system still never writes \"no cooking\" itself. If any other document (or the application's other lines, or a schedule cooking column) mentions cooking, the file is held on an open \"cooking operations\" conflict that shows both sentences."),
     ("2026-10-24", "P-074", "D-132", "A conflict the system cannot check against the document now stays open and holds the file. Each side says why: \"Not verified against the document\" "
      "or \"Approximate figure\" (about, around, roughly, ~). \"$1.42 million\" and \"250k\" are read as numbers. An approximate figure is kept with a review note and never counts as the exact amount."),
     ("2026-10-23", "T-118 (P-072)", "D-124", "Operations never gets \"no cooking\" added automatically. When the application says \"Cooking operations: None\" "
@@ -133,11 +135,22 @@ def class_text(report: dict) -> str:
     return f"{_ops(report)} {_line(report, 'line_of_business')}"
 
 
+def _route_value(row: dict) -> str:
+    """P-075 (code review 4): the route reads the operations value as it was before a rule copied the cooking none-line into it,
+    so a copied "No kitchen" or "Nil" can never add an unlisted word or a restaurant word to the route."""
+    value = row.get("value") or ""
+    if row.get("rule_copied"):
+        for part in row.get("also_quoted") or []:
+            if value.endswith("; " + str(part.get("quote"))):
+                value = value[: -len("; " + part["quote"])]
+    return value
+
+
 def _ops(report: dict) -> str:
     """P-047 (c): the full operations, value and cited text, so a detail the value dropped still routes. Negated words are removed."""
     for row in report["fields"]:
         if row["field_id"] == "operations" and row["value"]:
-            return NEGATED.sub(" ", f"{row['value']} {row.get('quote') or ''} {row.get('context') or ''}".lower())  # H1: and the rule lines
+            return NEGATED.sub(" ", f"{_route_value(row)} {row.get('quote') or ''} {row.get('context') or ''}".lower())  # H1: and the rule lines
     return ""
 
 
@@ -283,7 +296,7 @@ def _match(report: dict, gated: bool) -> dict:
     cls = class_text(report)  # P-061: class, bar and prohibited words come from the operations and the Line of business line; R17 reads ops only
     snack = _has(cls, SNACKS)  # P-062 (b): a snack warmer or "snacks only" kitchen is not restaurant evidence
     word_food = _has(cls, CLASSES["b"]) and not snack
-    raw = " ".join(f"{r.get('value') or ''} {r.get('quote') or ''} {r.get('context') or ''}" for r in report["fields"] if r["field_id"] == "operations").lower()
+    raw = " ".join(f"{_route_value(r)} {r.get('quote') or ''} {r.get('context') or ''}" for r in report["fields"] if r["field_id"] == "operations").lower()
     raw_cook = ((report.get("class_lines") or {}).get("cooking_operations") or "").lower()
     equip = _has(NEGATED_EQUIP.sub(" ", f"{raw} {raw_cook}"), EQUIP) or ((report.get("cooking") or {}).get("equipment") or {}).get("state") == "yes"  # P-061: equipment in operations or the Cooking operations line
     food = bool(ops) and (word_food or equip)
@@ -1093,6 +1106,13 @@ def score_html(item: dict, report: dict, user: auth.User | None = None) -> list[
             '<button type="submit">Mark wrong</button> <small>logged; the number does not change</small></form>'
         )
     out += [f"<p>{html.escape(line)}</p>" for line in sc["lines"]]
+    for conflict in report.get("conflicts") or []:  # P-075 (D-133): the cooking line above reads the application only; say where else cooking is stated
+        if conflict.get("field") == "cooking" and conflict.get("resolution") != "resolved":
+            sides = conflict.get("values") or [{}, {}]  # code review 5, UI check H1: the conflict's own sides, every document that states cooking
+            first = sides[0]
+            others = "; ".join(f'{html.escape(str(v.get("source") or "a document"))}: "{html.escape(str(v.get("quote") or "—"))}"' for v in sides[1:])
+            out.append(f'<p class="bad">Cooking: {html.escape(str(first.get("source") or "a document"))} says "{html.escape(str(first.get("quote") or "—"))}", but cooking is stated in {others}. '
+                       'The file is held until you choose.</p>')
     if pilot.active():
         out.append(f'<p class="banner">AI proposal — verify against the source. {html.escape(pilot.warning_text())}</p>')
     if sc.get("provisional"):  # B-278 (D-073): the underwriter records the call; points apply only after it
@@ -1201,8 +1221,11 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
                 note = "NEEDS REVIEW: " + (row.get("reason") or "flagged")
             elif row.get("reason") and not row.get("value"):
                 note = row["reason"]
-            if row.get("also_quoted") and not failed:  # P-036 (@senior-underwriter H2): a merged value never looks like a single read
-                note = (note + "; " if note else "") + f"merged: {len(row['also_quoted']) + 1} documents agree"
+            merged_n = len([q for q in row.get("also_quoted") or [] if not (row.get("rule_copied") and (row.get("value") or "").endswith("; " + str(q.get("quote"))))])
+            if row.get("rule_copied") and not failed:  # P-075 (D-133, code review 6): the copied line is named, and a real merge is still shown
+                note = (note + "; " if note else "") + "the cooking line was copied by a rule from the application, not read by the model"
+            if merged_n and not failed:  # P-036 (@senior-underwriter H2): a merged value never looks like a single read
+                note = (note + "; " if note else "") + f"merged: {merged_n + 1} documents agree"
             field_rows.append(
                 "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
                     html.escape(row["field_id"]),
@@ -1221,8 +1244,9 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
                 "<li>{}: <ul>{}</ul>{}</li>".format(
                     html.escape(str(prepare.PLAIN.get(item_c["field"], item_c["field"]))),  # P-070: the topic in plain words
                     "".join(  # T-118: each side in words (value, file, cited text), not a JSON blob
-                        "<li><b>{}</b> ({}) — cited: {}{}</li>".format(
-                            html.escape(str(v.get("value"))), html.escape(str(v.get("source") or "file not named")), html.escape(str(v.get("quote") or "—")),
+                        "<li><b>{}</b> ({}){}{}</li>".format(
+                            html.escape(str(v.get("value"))), html.escape(str(v.get("source") or "file not named")),
+                            "" if v.get("quote") == v.get("value") else " — cited: " + html.escape(str(v.get("quote") or "—")),  # UI check M: the quote is not repeated when it is the value
                             f' <span class="bad">{side_note(v)}</span>' if side_note(v) else "",  # P-074 (D-132)
                         )
                         for v in (item_c["values"] if isinstance(item_c["values"], list) else [])
@@ -2386,4 +2410,10 @@ if __name__ == "__main__":
                 (package.DECISIONS_LOG, package.SENDS_LOG, package.INBOX, quotes.CLOSURES, quotes.TO_CARRIER, quotes.FROM_CARRIER, prepare.EXTRACT_DIR, prepare.INBOX_DIR, llm_extract.CACHE, pilot.CORRECTIONS, pilot.EVENTS) = saved_other
                 auth.AUDIT_LOG = saved_audit
 
+        # P-075 (code review 4): a rule-copied cooking none-line, whatever its body, routes exactly as the value did before the copy.
+        for body in sorted(prepare.COOKING_NONE_BODIES):
+            line_ = f"Cooking operations: {body}"
+            plain_row = {"field_id": "operations", "value": "Insurance agency office, 48 seats", "quote": "Operations: Insurance agency office, 48 seats"}
+            copied_row = {**plain_row, "value": f"{plain_row['value']}; {line_}", "rule_copied": True, "also_quoted": [{"quote": line_, "source": "application.md"}]}
+            assert _ops({"fields": [copied_row]}) == _ops({"fields": [plain_row]}) and _unlisted(_ops({"fields": [copied_row]})) == _unlisted(_ops({"fields": [plain_row]})), body
         print("workbench ok")
