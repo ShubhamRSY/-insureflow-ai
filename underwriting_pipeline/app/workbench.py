@@ -2372,13 +2372,21 @@ if __name__ == "__main__":
         saved_mod = {n: globals()[n] for n in names}
         saved_other = (package.DECISIONS_LOG, package.SENDS_LOG, package.INBOX, quotes.CLOSURES, quotes.TO_CARRIER, quotes.FROM_CARRIER, prepare.EXTRACT_DIR, prepare.INBOX_DIR, llm_extract.CACHE, pilot.CORRECTIONS, pilot.EVENTS)
         saved_audit = auth.AUDIT_LOG
+        def _gate_ok(sid: str) -> bool:
+            try:
+                prepare.read_saved_run(sid)
+                return True
+            except ValueError:
+                return False
+
         with tempfile.TemporaryDirectory() as box_dir:
             box_dir = Path(box_dir)
             try:
                 sandbox(box_dir)
                 assert PAGE.parent == box_dir and "SANDBOX COPY" in BANNER
                 PAGE.write_text(render(load_queue(), correction_counts(LOG)))  # what serve() writes first
-                sid = next(p.name for p in INBOX.iterdir() if p.name.startswith("SUB-") and (prepare.EXTRACT_DIR / f"{p.name}.json").is_file())
+                # Sorted, and only a saved run the gate accepts: iterdir order differs by OS and old runs carry no hash.
+                sid = next(p.name for p in sorted(INBOX.iterdir()) if p.name.startswith("SUB-") and _gate_ok(p.name))
                 act("/decision", {"submission": sid, "underwriter_id": "user", "action": "approve", "reason": "sandbox check"})
                 act("/send", {"submission": sid, "user_line": f"send to carrier {sid}"})
                 act("/close-subjectivity", {"submission": "SUB-002", "carrier": "carrier_b", "subjectivity": "x", "underwriter_id": "user", "reason": "sandbox check"})
