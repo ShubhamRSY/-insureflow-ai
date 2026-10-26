@@ -1459,3 +1459,10 @@ Then continue: P-066 concurrent-write tests, @pm pilot-readiness update, @model-
 - Follow-up tasks: build on a new branch from pilot-integration in the fix worktree; dev checks as in the proposal; @senior-underwriter UI check; @model-risk check (High only, one look-again max, D-129); if it passes, merge into pilot-integration, tests/pipeline + 143-folder request-equality (expect 0 request changes), push pilot-integration only. Then P-075 drafted, not built. Backlog B-478.
 - Status: ACCEPTED by @user, 2026-10-24
 - Amends: none. v11 and all published scores stay frozen (D-020). Not a production approval; the T-027 veto stands.
+
+## D-133 — P-075 approved (H1: copy the application's own cooking none-line, cited; any cooking mention elsewhere holds the file)
+- Rationale: the user typed in the Claude Code session on 2026-10-26: "approve change P-075 — 1: keep the review note; 2: rule only, 0 requests change; 3: ask @model-risk for the 45 probe sentences (store them as lint/test cases). Build per CLAUDE.md fast lane: pyright-lsp + code-review before review; playwright screenshot; @senior-underwriter UI check; @model-risk check, one look-again max. Merge into pilot-integration if no High; tests/pipeline + request-equality (expect 0 changes). Question for @model-risk (answer only, no change): would it accept, for T-027, "operations is never auto-accepted; the operations gate is 0 silent errors instead of the 18/20 hit floor"? Conditions and reasons. Then plan T-120 (plan only). Commit with commit-commands; push pilot-integration only." Proposal: `deliverables/ai-engineer/proposal-P-075.md`.
+- Dissent: none
+- Follow-up tasks: @model-risk supplies the 45 P-073 probe sentences (stored as test cases); build P-075 on a new branch in the fix worktree (rule only, review note kept, 0 changed requests); checks; @senior-underwriter UI check; @model-risk check (one look-again); merge if no High; @model-risk answers the T-027 operations-gate question (no change); plan T-120.
+- Status: ACCEPTED by @user, 2026-10-26
+- Amends: none. v11 and all published scores stay frozen (D-020). Not a production approval; the T-027 veto stands.
