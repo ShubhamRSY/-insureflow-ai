@@ -19,11 +19,7 @@ BASELINE = Path(__file__).with_name("pyright_baseline.json")
 
 
 def counts(report: dict) -> Counter:
-    return Counter(
-        f"{Path(d['file']).resolve().relative_to(ROOT)} {d.get('rule', '?')}"
-        for d in report["generalDiagnostics"]
-        if d["severity"] == "error"
-    )
+    return Counter(f"{Path(d['file']).resolve().relative_to(ROOT)} {d.get('rule', '?')}" for d in report["generalDiagnostics"] if d["severity"] == "error")
 
 
 def main() -> int:
