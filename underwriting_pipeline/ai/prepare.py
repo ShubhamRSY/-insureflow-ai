@@ -275,6 +275,18 @@ def drop_premises_without_zip(merged: dict, needs_human: list[str]) -> None:
         needs_human.append(source)
 
 
+POLICY_NOTE = "Operations is always checked by the underwriter (T-027 C1, D-135)"
+
+
+def flag_operations(merged: dict) -> None:
+    """P-076 (D-135, T-027 C1): the LAST step. An operations row with a value is never auto-accepted. Every specific reason is kept;
+    the policy flag is stored apart (policy_review) so a silent-error count (C2) can tell it from a reason that names an item."""
+    row = merged.get("operations")
+    if row and row.get("value"):
+        row["needs_review"] = True
+        row["policy_review"] = True
+
+
 def completeness(rows: list[dict]) -> dict:
     missing = [r["field_id"] for r in rows if not r["value"]]
     if not missing:
@@ -1470,6 +1482,7 @@ def process_submission(folder: Path) -> dict:
     drop_premises_without_zip(merged, needs_human)
     if merged["premises_address"].get("value"):
         flag_invalid_address(merged["premises_address"])
+    flag_operations(merged)  # P-076 (D-135): last step, after every rule, merge and conflict
     open_conflicts = [c for c in conflicts if c.get("resolution") != "resolved"]
     rows = [merged[field] for field in FIELDS]
     report = completeness(rows)
@@ -1655,6 +1668,7 @@ def _saved_payload(report: dict) -> dict:
                 "end": row.get("end"),
                 "quote": row.get("quote"),  # P-016 Q1: the exact cited text. The app shows it
                 **({"also_quoted": row["also_quoted"]} if row.get("also_quoted") else {}),  # P-036: the agreeing values' other quotes
+                **({"policy_review": True} if row.get("policy_review") else {}),  # P-076 (D-135): operations is always checked; not a specific reason
                 **({"rule_copied": True} if row.get("rule_copied") else {}),  # P-075: the row carries a line the rule copied, not model text
                 **({"context": row["context"]} if row.get("context") else {}),  # P-047 H1: operations rule lines outside the cited text
                 "reason": row.get("reason"),  # P-016 R1: why the row is flagged or has no value
@@ -2649,7 +2663,22 @@ if __name__ == "__main__":
 
     on_run = {"loss_run_valued_through": {"source": "loss-runs.md"}}
     clean = run_case(on_run, {"loss-runs.md": run_107})
-    assert clean["status"] == "complete" and clean["complete"] and ready_to_route(clean) and clean["request"] is None, clean["status"]
+    assert clean["status"] == REVIEW_PENDING and not clean["complete"] and ready_to_route(clean) and clean["request"] is None, clean["status"]  # P-076: operations is always flagged, so never plain complete
+    # P-076 (D-135, T-027 C1): no path leaves an operations value unflagged; specific reasons are kept; an empty row is left alone.
+    ops76 = next(r for r in clean["fields"] if r["field_id"] == "operations")
+    assert ops76["needs_review"] and ops76["policy_review"] and ops76["reason"] is None, ("model-carried path", ops76)
+    assert "operations" in [r["field_id"] for r in clean["fields"] if r["needs_review"] and r["value"]] and POLICY_NOTE.startswith("Operations is always checked")
+    held76 = run_case({"operations": {"needs_review": True, "reason": "operations may be missing: fryer"}}, {})
+    assert next(r for r in held76["fields"] if r["field_id"] == "operations")["reason"] == "operations may be missing: fryer", "a specific reason is never replaced"
+    merged76 = run_case({"operations": {"also_quoted": [{"quote": "accounting office", "source": "email.md"}]}}, {"email.md": "accounting office\n"})  # agreeing merge (P-024)
+    assert next(r for r in merged76["fields"] if r["field_id"] == "operations")["needs_review"], "merge path"
+    for row76 in ({"value": "Office", "needs_review": False, "rule_copied": True}, {"value": "Office", "needs_review": False, "source": "scan.pdf", "confidence": 0.99}):  # rule-copied P-075 and scan P-037 shapes
+        box76 = {"operations": dict(row76)}
+        flag_operations(box76)
+        assert box76["operations"]["needs_review"] and box76["operations"]["policy_review"], row76
+    empty76 = {"operations": {"value": None, "needs_review": False}}
+    flag_operations(empty76)
+    assert not empty76["operations"]["needs_review"] and not empty76["operations"].get("policy_review"), "an empty operations row is left as it is"
     # P-067 (D-117): a value the model read but the gate rejected carries its reason to the card; a plain null stays silent.
     rejected = run_case({"tiv_building": {"value": None, "needs_review": True, "reason": "value not inside the cited text"}}, {})
     row = {r["field_id"]: r for r in rejected["fields"]}["tiv_building"]
@@ -2664,7 +2693,7 @@ if __name__ == "__main__":
     # P-046 (D-093): each loss-run document is judged; plain complete only when every one is accepted.
     a_run = {"loss_run_valued_through": {"source": "loss-runs-a.md", "value": "2026-09-30", "quote": "2026-09-30"}}
     alone = run_case(a_run, {"loss-runs-a.md": run_107})
-    assert alone["status"] == "complete", "one accepted typed carrier run: plain complete"
+    assert alone["status"] == REVIEW_PENDING, "one accepted typed carrier run: loss run accepted; P-076 keeps operations under review"
     b_run = run_110.replace("kitchen fire", "roof leak")  # no restaurant cue: the only gap is the loss run under test
     b_undated = b_run.replace("Valuation date: 2026-09-30\n", "")
     for extra, why in (({"loss-runs-b.md": b_undated}, RUN_NO_DATE.format("loss-runs-b.md")),
@@ -2713,7 +2742,7 @@ if __name__ == "__main__":
     app_with_history = "Effective date: 2027-03-01\nYear built: 1998\nPrior carrier: Carrier B, policy term 2024-03-01 to 2025-03-01, no claims.\n"
     assert _run_doc_reason("application.md", app_with_history, (None, None, None), "unclear", False) is None, "an application's loss-history answers are not a loss-run document"
     with_letter = run_case(a_run, {"loss-runs-a.md": run_107, "loss-runs-letter.md": letters[2]})
-    assert with_letter["status"] == "complete", "P-040: a no-known-loss letter beside an accepted run is not a loss-run document"
+    assert with_letter["status"] == REVIEW_PENDING, "P-040 (P-076: operations review): a no-known-loss letter beside an accepted run is not a loss-run document"
     undated = run_case({"loss_run_valued_through": {"source": "loss-runs.md", "value": "2026-01-01", "quote": "2026-01-01"}},
                        {"loss-runs.md": run_110.replace("Valuation date: 2026-09-30\n", "")})
     assert undated["status"] == "incomplete" and "loss_run_valued_through" in undated["missing"], "@model-risk H1: undated carrier layout stays incomplete end to end"

@@ -398,9 +398,14 @@ def senior_confirm_problem(submission: str, report: dict) -> str:
     return "" if market_confirmation(submission, report.get("saved_hash") or "") else "a senior referral needs a senior underwriter to confirm the market first"
 
 
+def is_review_row(row: dict) -> bool:
+    """P-076 (D-135, model-risk H1): a value that needs review, and operations whenever it has a value, even in a run saved before P-076."""
+    return bool(row.get("value") and (row.get("needs_review") or row.get("field_id") == "operations"))
+
+
 def needs_review_ids(report: dict) -> list[str]:
     """Field ids of the rows the underwriter must acknowledge at approve (D-039, D-068): needs_review with a value. The one list."""
-    ids = [r["field_id"] for r in report.get("fields") or [] if r.get("needs_review") and r.get("value")]
+    ids = [r["field_id"] for r in report.get("fields") or [] if is_review_row(r)]
     if ((report.get("cooking") or {}).get("equipment") or {}).get("state") == "needs_review":  # P-029 (D-072)
         ids.append("cooking_equipment")
     return ids
@@ -559,8 +564,10 @@ if __name__ == "__main__":
 
         seq = iter(range(1, 1000))
 
-        def decide(sub: str, action: str, reason: str = "", who: str = "UW-001", n: int | None = None):
+        def decide(sub: str, action: str, reason: str = "", who: str = "UW-001", n: int | None = None, ack: bool = True):
             row = {"seq": next(seq) if n is None else n, "submission": sub, "action": action, "underwriter_id": who, "reason": reason, "run_hash": _current_hash(sub)}
+            if action == "approve" and ack:  # P-076: operations is always listed, so the approve acknowledges what the saved run lists (as the workbench does); ack=False tests the refusal
+                row["acknowledged"] = needs_review_ids(prepare.read_saved_run(sub))
             with log.open("a") as handle:
                 handle.write(json.dumps(row) + "\n")
 
@@ -696,7 +703,7 @@ if __name__ == "__main__":
                 pass
             with log.open("a") as handle:
                 handle.write(json.dumps({"seq": 800, "submission": "SUB-195", "action": "edit", "underwriter_id": "UW-001", "reason": "from the loss run", "field_id": "year_built", "new_value": "1987"}) + "\n")
-                handle.write(json.dumps({"seq": 801, "submission": "SUB-195", "action": "approve", "underwriter_id": "UW-001", "reason": "", "run_hash": _current_hash("SUB-195")}) + "\n")
+                handle.write(json.dumps({"seq": 801, "submission": "SUB-195", "action": "approve", "underwriter_id": "UW-001", "reason": "", "acknowledged": ["operations"], "run_hash": _current_hash("SUB-195")}) + "\n")
             edited = build_package("SUB-195")
             assert "year_built: 1987" in edited and "EDITED by UW-001" in edited and "from the loss run" in edited
             # T-085: no carrier named (nightclub) -> refused.
@@ -928,7 +935,7 @@ if __name__ == "__main__":
             low = full(named_insured="Acme")
             low = [{**r, "needs_review": True} if r["field_id"] in ("named_insured", "operations") else r for r in low]
             save(ext, "SUB-321", "complete", complete=True, fields=low, sprinklers="no")
-            decide("SUB-321", "approve")
+            decide("SUB-321", "approve", ack=False)
             try:
                 send_to_carrier("SUB-321", "user", dest_dir, user_line=LINE("SUB-321"))
                 raise SystemExit("unacknowledged needs-review values must refuse the send, for the user too")
@@ -937,6 +944,31 @@ if __name__ == "__main__":
             with log.open("a") as handle:
                 handle.write(json.dumps({"seq": 9001, "submission": "SUB-321", "action": "approve", "underwriter_id": "UW-001", "reason": "", "acknowledged": ["named_insured", "operations"], "run_hash": _current_hash("SUB-321")}) + "\n")
             assert send_to_carrier("SUB-321", "user", dest_dir, user_line=LINE("SUB-321")).exists()
+            # P-076 (D-135, T-027 C1): operations alone flagged (policy): send refused until acknowledged on this run hash, then allowed.
+            only_ops = [{**r, "needs_review": True, "policy_review": True} if r["field_id"] == "operations" else r for r in full()]
+            save(ext, "SUB-376", prepare.REVIEW_PENDING, fields=only_ops, sprinklers="no")
+            decide("SUB-376", "approve", ack=False)
+            try:
+                send_to_carrier("SUB-376", "user", dest_dir, user_line=LINE("SUB-376"))
+                raise SystemExit("P-076: operations not acknowledged must refuse the send")
+            except ValueError as exc:
+                assert "1 value needs review and is not acknowledged (operations)" in str(exc), exc
+            with log.open("a") as handle:
+                handle.write(json.dumps({"seq": 9376, "submission": "SUB-376", "action": "approve", "underwriter_id": "UW-001", "reason": "", "acknowledged": ["operations"], "run_hash": _current_hash("SUB-376")}) + "\n")
+            assert send_to_carrier("SUB-376", "user", dest_dir, user_line=LINE("SUB-376")).exists(), "P-076: acknowledged on the current run hash, other gates pass: sent"
+            # P-076 (model-risk H1): a run saved before P-076 (operations has a value, not flagged, status complete) still needs the operations acknowledgment.
+            old76 = full()
+            assert not any(r.get("needs_review") or r.get("policy_review") for r in old76 if r["field_id"] == "operations")
+            save(ext, "SUB-377", "complete", complete=True, fields=old76, sprinklers="no")
+            decide("SUB-377", "approve", ack=False)
+            try:
+                send_to_carrier("SUB-377", "user", dest_dir, user_line=LINE("SUB-377"))
+                raise SystemExit("P-076 H1: a pre-P-076 run must refuse the send until operations is acknowledged")
+            except ValueError as exc:
+                assert "(operations)" in str(exc) and "not acknowledged" in str(exc), exc
+            with log.open("a") as handle:
+                handle.write(json.dumps({"seq": 9377, "submission": "SUB-377", "action": "approve", "underwriter_id": "UW-001", "reason": "", "acknowledged": ["operations"], "run_hash": _current_hash("SUB-377")}) + "\n")
+            assert send_to_carrier("SUB-377", "user", dest_dir, user_line=LINE("SUB-377")).exists()
             # P-026 (D-069, B-220): approve + acknowledge, then a re-save with a changed value -> refused; approve + acknowledge again -> allowed.
             save(ext, "SUB-322", "complete", complete=True, fields=low, sprinklers="no")
             def approve_ack(n):
