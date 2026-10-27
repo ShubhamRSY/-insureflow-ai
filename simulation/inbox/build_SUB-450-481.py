@@ -99,13 +99,13 @@ def build():
     # 450 office tenant, bookkeeping office. Carrier A clean. Allow-list class. No cooking.
     d = folder(450)
     email(d, "Cedar Bend Bookkeeping - renewal",
-          "Bookkeeping office in Killeen, we rent suite 300 in a small professional center. "
+          "Office in Killeen, we rent suite 300 in a small office building. "
           "Desks and computers only, nothing stored on site. Carrier A has us, loss run attached, "
           "no claims. App below.")
     app_md(d, 450, app(named="Cedar Bend Bookkeeping LLC", mail="same as premises",
                        prem="2750 Bee Creek Rd Ste 300, Killeen TX 76542", eff="2026-12-01",
                        yrs="8", entity="LLC", lob="Business owners policy",
-                       ops="Office, bookkeeping and tax preparation", emp="6", sales="$540,000",
+                       ops="Office", emp="6", sales="$540,000",
                        tiv="$88,000", bpp="$61,000", sqft="2,400", constr="Masonry", yb="2001",
                        stories="1", spk="Yes", cook="None", carrier="Carrier A", claims="None",
                        bk="No"))
@@ -131,11 +131,11 @@ def build():
     # 452 hardware retail store, typed md app. Carrier A clean. Allow-list class. No cooking.
     d = folder(452)
     email(d, "Walnut Creek Hardware - Crane",
-          "Hardware store in Crane, paint, tools and yard supplies. Retail counter and aisles, "
-          "been on South 2nd since 2011. Carrier A loss run attached, clean. Please send a quote.")
+          "Retail store in Crane, been on South 2nd since 2011. Dry goods, front counter and "
+          "aisles. Carrier A loss run attached, clean. Please send a quote.")
     app_md(d, 452, app(named="Walnut Creek Hardware Co LLC", mail="same as premises",
                        prem="418 S 2nd St, Crane TX 79731", eff="2026-12-01", yrs="14",
-                       entity="LLC", lob="Business owners policy", ops="Hardware and paint retail store",
+                       entity="LLC", lob="Business owners policy", ops="Retail store, dry goods, front room",
                        emp="4", sales="$395,000", tiv="$185,000", bpp="$120,000", sqft="4,200",
                        constr="Masonry", yb="1958", stories="1", spk="No", cook="None",
                        carrier="Carrier A", claims="None", bk="No"))
@@ -145,12 +145,12 @@ def build():
     # 453 insurance agency office, typed PDF app. Carrier A clean. Allow-list class. No cooking.
     d = folder(453)
     email(d, "Mesquite Ridge Agency",
-          "Small insurance agency in a two story office on Gus Thomasson Rd, five agents and a "
-          "receptionist. Carrier A has us, nothing reported, loss run attached.")
+          "Two story office building on Gus Thomasson Rd, five people and a front desk. "
+          "Carrier A has us, nothing reported, loss run attached.")
     app_typed_pdf(d, 453, app(named="Mesquite Ridge Insurance Agency LLC", mail="same as premises",
                               prem="3100 Gus Thomasson Rd Ste 120, Mesquite TX 75150",
                               eff="2026-11-29", yrs="7", entity="LLC", lob="Business owners policy",
-                              ops="Insurance agency office, personal and commercial lines", emp="5",
+                              ops="Office building, suite", emp="5",
                               sales="$690,000", tiv="$140,000", bpp="$92,000", sqft="2,600",
                               constr="Masonry", yb="2006", stories="2", spk="Yes",
                               cook="None", carrier="Carrier A", claims="None", bk="No"))

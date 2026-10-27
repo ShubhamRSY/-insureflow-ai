@@ -10,7 +10,7 @@ Effective date: 2026-12-01
 Years in business: 8
 Entity type: LLC
 Line of business: Business owners policy
-Operations: Office, bookkeeping and tax preparation
+Operations: Office
 Number of employees: 6
 Annual sales: $540,000
 Building TIV: $88,000

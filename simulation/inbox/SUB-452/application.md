@@ -10,7 +10,7 @@ Effective date: 2026-12-01
 Years in business: 14
 Entity type: LLC
 Line of business: Business owners policy
-Operations: Hardware and paint retail store
+Operations: Retail store, dry goods, front room
 Number of employees: 4
 Annual sales: $395,000
 Building TIV: $185,000

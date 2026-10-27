@@ -7,10 +7,10 @@ Folders: `simulation/inbox/SUB-450/` .. `simulation/inbox/SUB-481/`. Nothing com
 
 | SUB | Insured | Ops line | Docs | Loss run | Flags |
 |---|---|---|---|---|---|
-| 450 | Cedar Bend Bookkeeping LLC | Office tenant, bookkeeping | app.md, email, loss-runs.md | A, no claims, valued 2026-08-12 | in scope, clean A route |
+| 450 | Cedar Bend Bookkeeping LLC | Office (ops line: "Office") | app.md, email, loss-runs.md | A, no claims, valued 2026-08-12 | in scope, clean A route |
 | 451 | Juniper Lane Apparel LLC | Clothing retail storefront | app.pdf (typed), email, loss-runs.md | A, no claims, valued 2026-07-21 | clean A route |
-| 452 | Walnut Creek Hardware Co LLC | Hardware retail store | app.md, email, loss-runs.md | A, no claims, valued 2026-09-02 | clean A route |
-| 453 | Mesquite Ridge Insurance Agency LLC | Insurance agency office | app.pdf (typed), email, loss-runs.md | A, no claims, valued 2026-07-30 | clean A route |
+| 452 | Walnut Creek Hardware Co LLC | Retail store, dry goods, front room (ops line) | app.md, email, loss-runs.md | A, no claims, valued 2026-09-02 | clean A route |
+| 453 | Mesquite Ridge Insurance Agency LLC | Office building, suite (ops line) | app.pdf (typed), email, loss-runs.md | A, no claims, valued 2026-07-30 | clean A route |
 | 454 | Neches River Electric LLC | Electrical contractor | app.pdf (typed), email, loss-runs.md | B, 1 van claim, valued 2026-05-26 | CONFLICT sq ft (email 2,450 / app 3,200); contractor; cooking None |
 | 455 | Chisholm Trail Janitorial Supply LLC | Janitorial wholesale | app.md, email, loss-runs.md | C, no claims, valued 2026-08-05 | CONFLICT sales (email $1.42 million / app $1,240,000); wholesale |
 | 456 | Azalea Floor Works LLC | Flooring contractor | app.md, email | MISSING (email says coming) | missing loss run; contractor |
@@ -52,7 +52,7 @@ Folders: `simulation/inbox/SUB-450/` .. `simulation/inbox/SUB-481/`. Nothing com
 | Cooking stated, equipment named (>= 3) | 4 | 462, 464, 467, 468 |
 | Cooking conflict (>= 2) | 2 | 461 (soup on stove top), 463 (fryer, schedule cooking Yes) |
 | Contractor, wholesale or mixed (>= 2) | 5 | 454, 455, 456, 460, 469 |
-| Straight to Carrier A (>= 3) | 4 | 450, 451, 452, 453 (allow-list words only, TIV <= $5M, clean typed A run, no conflicts) |
+| Straight to Carrier A (>= 3) | 4 | 450, 451, 452, 453 (every ops word is an R14/R17 allow-list phrase or non-occupancy word; TIV <= $5M; clean typed A run; no conflicts) |
 | Held W1 prohibited (>= 2) | 2 | 465 nightclub, 466 hookah lounge |
 | Office-building lessor (>= 2) | 2 | 458, 459 |
 | Deli-style (>= 2) | 2 | 462, 463 |
