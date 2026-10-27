@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Building2, Globe, MapPin, Users, Briefcase, ExternalLink } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardContent } from '../components/ui';
 
 export default function CompanyPage() {
   const { slug } = useParams();
@@ -104,11 +103,11 @@ export default function CompanyPage() {
       {/* Body */}
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>About</CardTitle>
-            </CardHeader>
-            <CardContent>
+          <div className="rounded-xl border border-white/5 bg-slate-900/60">
+            <div className="border-b border-white/5 px-6 py-4">
+              <h2 className="text-base font-medium text-slate-100">About</h2>
+            </div>
+            <div className="px-6 py-5">
               {company.about ? (
                 <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-300">{company.about}</p>
               ) : (
@@ -124,16 +123,16 @@ export default function CompanyPage() {
                   </div>
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
 
         <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Company details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm">
+          <div className="rounded-xl border border-white/5 bg-slate-900/60">
+            <div className="border-b border-white/5 px-6 py-4">
+              <h2 className="text-base font-medium text-slate-100">Company details</h2>
+            </div>
+            <div className="space-y-3 px-6 py-5 text-sm">
               {company.website && (
                 <div>
                   <p className="text-xs text-slate-500">Website</p>
@@ -163,8 +162,8 @@ export default function CompanyPage() {
               {!company.website && !company.industry && !company.company_size && !company.headquarters && (
                 <p className="text-slate-500">No details added yet.</p>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
     </div>

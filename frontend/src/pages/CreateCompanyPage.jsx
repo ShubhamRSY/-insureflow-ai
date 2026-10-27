@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Building2, Globe, Users, Briefcase, MapPin, Hash, FileText } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardContent } from '../components/ui';
 
 const ORG_SIZES = [
   '1-10 employees',
@@ -135,14 +134,11 @@ export default function CreateCompanyPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Building2 className="h-4 w-4" />
-              Page details
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-5">
+        <div className="rounded-xl border border-white/5 bg-slate-900/60">
+          <div className="border-b border-white/5 px-6 py-4">
+            <h2 className="flex items-center gap-2 text-base font-medium text-slate-100"><Building2 className="h-4 w-4" />Page details</h2>
+          </div>
+          <div className="space-y-5 px-6 py-5">
             {/* Name */}
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-200">
@@ -222,17 +218,14 @@ export default function CreateCompanyPage() {
                 />
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Briefcase className="h-4 w-4" />
-              Company info
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-5">
+        <div className="rounded-xl border border-white/5 bg-slate-900/60">
+          <div className="border-b border-white/5 px-6 py-4">
+            <h2 className="flex items-center gap-2 text-base font-medium text-slate-100"><Briefcase className="h-4 w-4" />Company info</h2>
+          </div>
+          <div className="space-y-5 px-6 py-5">
             {/* Industry */}
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-200">
@@ -335,8 +328,8 @@ export default function CreateCompanyPage() {
                 className="w-full rounded-lg border border-white/10 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600 focus:border-cyan-400/50 focus:outline-none focus:ring-1 focus:ring-cyan-400/30"
               />
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {error && (
           <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm text-red-400">
