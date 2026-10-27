@@ -1486,3 +1486,15 @@ Then continue: P-066 concurrent-write tests, @pm pilot-readiness update, @model-
 - Follow-up tasks: build on a new branch from pilot-integration in the fix worktree; pyright + self code review; tests/pipeline green; request-equality on all 143; Playwright screenshot on a temp copy; @senior-underwriter UI check; @model-risk check (High only, one look-again max, D-129); merge if no High; then freeze and build T-120 (not run).
 - Status: ACCEPTED by @user, 2026-10-27
 - Amends: none. v11 and all published scores stay frozen (D-020). Not a production approval; the T-027 veto stands.
+
+## D-136 — T-120 pre-run rulings: SUB-461/463 conflict marks excluded; C2 counter rules confirmed (2026-10-27)
+- Rationale: the user's words in the Claude Code session on 2026-10-27 (pasted, D-032): "Decisions (typed by @user): exclude the SUB-461/463 cooking-conflict marks from the conflict rate (as D-128); planted-conflict recall is measured on the 7 figure conflicts. C2 counter rules confirmed as written. Record before the run."
+- Decision: (1) SUB-461 and SUB-463 cooking-conflict marks are v11-unmeasurable; reported separately, excluded from the conflict rate (as D-128). Planted-conflict recall is measured on the 7 figure conflicts (SUB-454, 455, 458, 459, 460, 462, 469). (2) `count_ops_gate.py` (sha256 f942010d…9aa1) rules confirmed as written: silent error = v11 operations miss with no non-empty `reason` and no open operations/cooking conflict; `policy_review` never counts; failed calls counted apart, not present and not hit.
+- Dissent: none
+- Status: ACCEPTED by @user, 2026-10-27, before the T-120 run
+- Amends: none. v11 and all published scores stay frozen (D-020). Not a production approval; the T-027 veto stands.
+
+## D-137 — T-120 official run: GO
+- Rationale: the user's words in the Claude Code session on 2026-10-27 (pasted, D-032): "T-120 official run: GO (D-020). Verify every hash in NEXT-SESSION.md first (code fa604b9, PROMPT_VERSION 759b3e6bc9b2, scorer v11, lint, C2/C4 counter, gold manifest 534e65a5…); stop if any differs. smoke_readers first; no cached replies for SUB-450–481; qwen paced 55 s; retries per RUN-RULES; run once, score once with v11 and count_ops_gate.py. Report all gates … Mismatches file and run record. Fix nothing." Then @model-risk writes the T-027 memo.
+- Status: ACCEPTED by @user, 2026-10-27
+- Amends: none.
