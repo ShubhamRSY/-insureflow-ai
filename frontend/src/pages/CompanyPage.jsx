@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Building2, Globe, MapPin, Users, Briefcase, ExternalLink } from 'lucide-react';
+import { safeHttpUrl } from '../lib/safeUrl';
 
 export default function CompanyPage() {
   const { slug } = useParams();
@@ -63,6 +64,7 @@ export default function CompanyPage() {
     : typeof company.specialties === 'string' && company.specialties.trim()
       ? company.specialties.split(',').map(s => s.trim()).filter(Boolean)
       : [];
+  const website = safeHttpUrl(company.website); // only http(s) links are rendered
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-6">
@@ -91,8 +93,8 @@ export default function CompanyPage() {
                 {company.company_size && <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5" />{company.company_size} employees</span>}
               </div>
             </div>
-            {company.website && (
-              <a href={company.website} target="_blank" rel="noreferrer" className="btn-secondary inline-flex items-center gap-2">
+            {website && (
+              <a href={website} target="_blank" rel="noreferrer" className="btn-secondary inline-flex items-center gap-2">
                 Visit website <ExternalLink className="h-4 w-4" />
               </a>
             )}
@@ -133,11 +135,11 @@ export default function CompanyPage() {
               <h2 className="text-base font-medium text-slate-100">Company details</h2>
             </div>
             <div className="space-y-3 px-6 py-5 text-sm">
-              {company.website && (
+              {website && (
                 <div>
                   <p className="text-xs text-slate-500">Website</p>
-                  <a href={company.website} target="_blank" rel="noreferrer" className="mt-1 inline-flex items-center gap-1 text-cyan-300 hover:underline">
-                    <Globe className="h-3.5 w-3.5" /> {company.website.replace(/^https?:\/\//, '')}
+                  <a href={website} target="_blank" rel="noreferrer" className="mt-1 inline-flex items-center gap-1 text-cyan-300 hover:underline">
+                    <Globe className="h-3.5 w-3.5" /> {website.replace(/^https?:\/\//, '')}
                   </a>
                 </div>
               )}
@@ -159,7 +161,7 @@ export default function CompanyPage() {
                   <p className="mt-1 text-slate-300">{company.headquarters}</p>
                 </div>
               )}
-              {!company.website && !company.industry && !company.company_size && !company.headquarters && (
+              {!website && !company.industry && !company.company_size && !company.headquarters && (
                 <p className="text-slate-500">No details added yet.</p>
               )}
             </div>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Building2, Globe, Briefcase, MapPin, Hash, FileText } from 'lucide-react';
+import { auth } from '../lib/api';
 
 const ORG_SIZES = [
   '1-10 employees',
@@ -98,7 +99,7 @@ export default function CreateCompanyPage() {
       
       const res = await fetch('/api/companies', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(auth.token ? { Authorization: `Bearer ${auth.token}` } : {}) },
         body: JSON.stringify(payload),
       });
       
