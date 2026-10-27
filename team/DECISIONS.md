@@ -1478,3 +1478,11 @@ Then continue: P-066 concurrent-write tests, @pm pilot-readiness update, @model-
   - **C6:** T-120 will include ≥12 files with "Cooking operations: None"-type lines, ≥3 with cooking stated, ≥2 with planted cooking conflicts (added to plan).
   - **C7:** Recorded before any T-120 gold exists (satisfied).
 - Effect: Operations and status automation go to 0 by design. T-027 veto remains until T-120 meets all conditions; this is not a production approval.
+
+## D-135 — P-076 approved (C1: operations is never auto-accepted; flagged and acknowledged before send)
+- Rationale: the user's words in the Claude Code session on 2026-10-27 (pasted, D-032): "C1 proposal: show me its full text. I approve it (record as "approve change P-### — conditional approval typed by @user, conditions met") ONLY if all three hold: (a) it only adds an operations flag and acknowledgment before send, loosening nothing; (b) it reuses the pilot per-value confirm; (c) it touches no frozen file." Recorded as: **approve change P-076 — conditional approval typed by @user, conditions met.** Proposal: `deliverables/ai-engineer/proposal-P-076.md`.
+- Conditions checked by the orchestrator against the proposal text and the code on pilot-integration 6b827a1: (a) the change sets `needs_review` on operations and keeps every existing reason; routing, appetite and every gate unchanged; the only new effect is the acknowledgment before send (stricter only). (b) no new confirm path: the pilot form already shows a per-value confirm for every value (`workbench.py` 1339), and outside the pilot the one acknowledgment list `package.needs_review_ids` / `ack_problem` is reused. (c) touches `ai/prepare.py`, `app/package.py`, `app/workbench.py` and tests only; no frozen scorer, lint, gold or hold-out file.
+- Dissent: none
+- Follow-up tasks: build on a new branch from pilot-integration in the fix worktree; pyright + self code review; tests/pipeline green; request-equality on all 143; Playwright screenshot on a temp copy; @senior-underwriter UI check; @model-risk check (High only, one look-again max, D-129); merge if no High; then freeze and build T-120 (not run).
+- Status: ACCEPTED by @user, 2026-10-27
+- Amends: none. v11 and all published scores stay frozen (D-020). Not a production approval; the T-027 veto stands.
