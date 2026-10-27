@@ -60,6 +60,7 @@ def create_company(payload: CompanyCreate, current: TokenData | None = Depends(g
         "industry": payload.industry,
         "company_size": payload.company_size,
         "headquarters": payload.headquarters,
+        "organization_type": payload.organization_type,
         "about": payload.about,
         "specialties": specialties or [],
         "owner_id": payload.owner_id or (current.username if current else None),

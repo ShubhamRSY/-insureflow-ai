@@ -16,6 +16,7 @@ class CompanyBase(BaseModel):
     industry: Optional[str] = None
     company_size: Optional[str] = None
     headquarters: Optional[str] = None
+    organization_type: Optional[str] = None
     about: Optional[str] = None
     specialties: Optional[List[str] | str] = None
     is_verified: bool = False
@@ -33,6 +34,7 @@ class CompanyUpdate(BaseModel):
     industry: Optional[str] = None
     company_size: Optional[str] = None
     headquarters: Optional[str] = None
+    organization_type: Optional[str] = None
     about: Optional[str] = None
     specialties: Optional[List[str] | str] = None
     is_verified: Optional[bool] = None
