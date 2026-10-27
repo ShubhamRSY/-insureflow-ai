@@ -9,6 +9,14 @@ Written 2026-10-21 (third session) by the orchestrator at wrap-up. Wrap-up commi
 - pyright: `npx --yes pyright@1.1.390 --pythonpath .venv/bin/python <files>`. Playwright only via `/opt/homebrew/opt/python@3.14/bin/python3.14`.
 - @producer cannot write `deliverables/`; it writes to the scratchpad and the orchestrator copies it.
 
+## 2026-10-27: T-120 run and scored (D-136, D-137) — T-027 veto KEPT — read this first
+
+- Run `20261027T124020-83695`, once, v11 `--write` + `count_ops_gate.py`; commits 1f42ebe, 8d8eade. Results `deliverables/ai-engineer/evals/SUB-450-481-results.md`.
+- Met: every field ≥ 18/20; operations gate C1–C7 (present 19/20, hits 19/20, 0 silent, 0 understated hazards); planted-conflict recall 7/7 (SUB-461/463 excluded, D-136); 0 false completes, 0 unsafe, route 18/20; wrong manual intake 0.
+- Failed: 1 leak and detection recall 11/12, both SUB-475 (second location stated only in words; `ai/scope.py` reads addresses, numbered labels and schedules).
+- @model-risk memo KEEP: `deliverables/model-risk/T-027-memo-T-120.md`. Resolves when: stricter-only scope rule under a new P-###, dev self-checks incl. near-pass negatives, @model-risk check no High, fresh 20+12 hold-out with ≥ 6 criterion-2 files (≥ 4 words-only) meeting every gate.
+- Security PR #13 (`fix/companies-authz`, worktree `insureflow-sec-companies`, base `feat/senior-test-and-frontend-roles`): not merged.
+
 ## Freeze 2026-10-27 (D-134, D-135), for the T-120 hold-out — read this first
 
 Recorded by the orchestrator in the Claude Code session, 2026-10-27, before any T-120 file or gold existed. Supersedes the 2026-10-23 freeze for T-120.
