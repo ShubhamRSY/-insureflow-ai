@@ -238,8 +238,10 @@ if integration_gateway_router is not None:
 
 try:
     from insureflow.api.platform_router import router as platform_router
+    from insureflow.api.companies import router as companies_router
 
     app.include_router(platform_router)
+    app.include_router(companies_router, prefix="/api")
 except ImportError:
     pass
 
