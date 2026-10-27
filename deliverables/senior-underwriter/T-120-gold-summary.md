@@ -10,14 +10,14 @@
 
 ## Open conflicts, per file (both sides in the card, 9)
 - 454 square footage 3200 (application) vs 2450 (email)
-- 455 sales 1240000 (application) vs 1420000 (email, "$1.42 million")
+- 455 sales 1360000 (application) vs 1570000 (email, "$1.57 million")
 - 458 suites 8 (application) vs 9 (email)
 - 459 square footage 2950 (application) vs 2400 (email, "roughly"; approximate)
 - 460 building value (TIV) 980000 (application) vs 1180000 (email)
 - 461 cooking none (application) vs soup heated on the stove top (email)
 - 462 sales 505000 (application) vs 560000 (email, "about"; approximate)
 - 463 cooking none (application) vs yes (schedule) vs fryer (email)
-- 469 square footage 4100 (application) vs 3600 (email, warehouse part only; ambiguous)
+- 469 square footage 4100 (application) vs 3600 (email, "total")
 - Non-cooking conflicts 7; cooking conflicts 2 (461, 463). Approximate or "million" wording: 455, 459, 462.
 - No conflict written: all other in-scope files ("none").
 
@@ -37,5 +37,10 @@
 - 462: "flat grill" and the open_flame slot; hood implied but not stated.
 - 463: schedule labelled "application" yet disagrees with it.
 - 468: expiring Carrier B program closed; suggested market needs checking.
-- 469: tire mounting not on the OTHER list; 3600 is a part, not a total.
+- 469 (documents rebuilt): wholesale auto parts only; insured name and tire-theft claim hint at tire work not stated in operations.
 - 476: email mentions an earlier scan not in the folder; gold claims criterion 3 only.
+
+## Rebuilds and edits after first writing (all before any freeze or run)
+- SUB-450, 452, 453 rebuilt (commit 9f059e1) and SUB-454, 455, 464, 465, 468, 469 rebuilt (commit e478db5): the six cards were rewritten from the new documents. Routes and counts unchanged by the second rebuild (carrier_a 4, senior_referral 13, no_match 3).
+- Gold 462 and 468 were edited after the first lint run (lint wording errors: "stove top" and "convection ovens" fit no slot). Operations and items lines of 462 now carry "flat grill" only (stove top is in the notes), and 468 now carries "oven" (the rebuilt application says "Oven"). The documents' meaning is unchanged.
+- 461 and 463 cooking conflict marks are unchanged and will be reported as v11-unmeasurable (D-128 kind).
