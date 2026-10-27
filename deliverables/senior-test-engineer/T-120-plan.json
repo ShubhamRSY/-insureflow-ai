@@ -1,0 +1,5 @@
+{"ids": "450-481", "in": 20, "out": 12,
+ "per_criterion": {"1": 3, "2": 3, "3": 3, "4": 3},
+ "two_criteria": 0, "criterion_4": 3,
+ "routes": {"carrier_a": 4, "carrier_b": 0, "carrier_c": 0, "senior_referral": 13, "no_match": 3},
+ "undated_loss_runs": ["SUB-468"]}
