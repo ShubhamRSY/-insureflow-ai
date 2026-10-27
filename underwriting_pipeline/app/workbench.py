@@ -1218,8 +1218,11 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
             note = ""
             if failed:
                 note = NOT_READ
-            elif row.get("needs_review") and row.get("value"):
-                note = "NEEDS REVIEW: " + "; ".join(x for x in (row.get("reason"), prepare.POLICY_NOTE if row.get("policy_review") else None) if x) if (row.get("reason") or row.get("policy_review")) else "NEEDS REVIEW: flagged"  # P-076 (D-135): the policy note sits beside any specific reason, never in place of it
+            elif package.is_review_row(row):  # P-076 (H1): operations with a value always, also in a run saved before P-076
+                parts = [row.get("reason")]
+                if row.get("policy_review") or row.get("field_id") == "operations":
+                    parts.append(prepare.POLICY_NOTE)  # P-076 (D-135): beside any specific reason, never in place of it
+                note = "NEEDS REVIEW: " + ("; ".join(x for x in parts if x) or "flagged")
             elif row.get("reason") and not row.get("value"):
                 note = row["reason"]
             merged_n = len([q for q in row.get("also_quoted") or [] if not (row.get("rule_copied") and (row.get("value") or "").endswith("; " + str(q.get("quote"))))])
@@ -1337,7 +1340,7 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
                 html.escape(row["field_id"]), html.escape(row["value"]), html.escape(row.get("quote") or "—")
             )
             for row in report["fields"]
-            if row.get("value") and (pilot.active() or row.get("needs_review"))
+            if row.get("value") and (pilot.active() or package.is_review_row(row))
         )
         cook = (report.get("cooking") or {}).get("equipment") or {}
         if cook.get("state") == "needs_review":  # P-029 (D-072): the same acknowledgment; no cooking points either way
@@ -1705,7 +1708,7 @@ if __name__ == "__main__":
                     except ValueError:
                         pass
                 n = len(check.read_text().splitlines())
-                assert record_decision({**ap, "ack": ["year_built"]}, check)["acknowledged"] == ["year_built"]
+                assert record_decision({**ap, "ack": ["year_built", "operations"]}, check)["acknowledged"] == ["year_built", "operations"]  # P-076: operations is always listed
                 assert len(check.read_text().splitlines()) == n + 1
                 assert "acknowledged" not in logged  # a report with no needs-review value approves as before
 
@@ -1879,6 +1882,8 @@ if __name__ == "__main__":
         assert "NEEDS REVIEW: Operations is always checked by the underwriter" in pol and 'name="ack" value="operations"' in pol, "P-076 policy note and ack box"
         pol2 = render([card("complete", fields=[{"field_id": "operations", "value": "Office", "needs_review": True, "policy_review": True, "reason": "operations may be missing: fryer"}])], None)
         assert "NEEDS REVIEW: operations may be missing: fryer; Operations is always checked" in pol2, "P-076: specific reason kept"
+        old = render([card("complete", fields=[{"field_id": "operations", "value": "Office", "needs_review": False}])], None)  # P-076 H1: a run saved before P-076
+        assert 'name="ack" value="operations"' in old and "NEEDS REVIEW: Operations is always checked" in old, "P-076 H1: ack box and note on a pre-P-076 run"
         flagged = card("complete", fields=[{"field_id": "year_built", "value": "1942", "needs_review": True, "quote": "Built 1942", "reason": "number or date read from a scan"}])
         flagged["report"]["unread"] = [{"file": "a.pdf", "page": 2, "reason": "blank"}, {"file": "b.docx", "page": None, "reason": "file type .docx is not read"}]
         pf = render([flagged], None)
@@ -1892,7 +1897,7 @@ if __name__ == "__main__":
         flagged["ignored"] = not_read_by_extraction(flagged["report"], [])
         pf_unread = render([flagged], None).split("<article", 1)[1]
         assert "<p>Not read by extraction: b.docx</p>" in pf_unread and "<p>Not read by extraction: a.pdf</p>" not in pf_unread, pf_unread[:900]
-        assert 'name="ack"' not in page_ok
+        assert page_ok.count('name="ack"') == 1 and 'name="ack" value="operations"' in page_ok  # P-076: operations is the only value listed on an otherwise clean card
         # T-087: the card shows the quote status per carrier and SUB-002's open subjectivity.
         sub2 = card("complete", fields=[{"field_id": "operations", "value": "restaurant"}])
         sub2["id"] = "SUB-002"
@@ -2151,7 +2156,7 @@ if __name__ == "__main__":
                 assert 'class="msg bad"' in pg and "Send refused: x" in pg and "Approve first" in pg and 'action="/send"' not in pg  # B-249
 
                 # item 1: a recorded approve, then the typed line. A wrong line is refused; the right one writes the package.
-                assert act("/decision", {"submission": "SUB-901", "underwriter_id": "user", "action": "approve", "reason": "ok"})[1]
+                assert act("/decision", {"submission": "SUB-901", "underwriter_id": "user", "action": "approve", "ack": ["operations"], "reason": "ok"})[1]
                 assert "exact line" in refused("/send", user_line="yes")
                 assert not TO_CARRIER.exists()
                 sub, ok, text = act("/send", {"submission": "SUB-901", "user_line": "send to carrier SUB-901"})
@@ -2173,15 +2178,15 @@ if __name__ == "__main__":
                 sub, ok, text = act("/send", {"submission": "SUB-901", "user_line": line, "resend_reason": "carrier lost it"})
                 assert ok and json.loads((tmp / "sends.jsonl").read_text().splitlines()[-1])["resend_reason"] == "carrier lost it", text
                 stored("SUB-904", "complete", good)
-                assert act("/decision", {"submission": "SUB-904", "underwriter_id": "user", "action": "approve", "reason": "ok"})[1]
+                assert act("/decision", {"submission": "SUB-904", "underwriter_id": "user", "action": "approve", "ack": ["operations"], "reason": "ok"})[1]
                 assert "The package goes to <b>carrier_a</b>" in render(load_queue(), None)
                 assert "SUB-901.md, SUB-901-resend-2.md" in render(load_queue(), None)  # B-247 card lists each file
                 # B-244: an approve logged before the run held low-confidence values does not cover them.
                 stored("SUB-905", "complete", [{**r, "needs_review": True} if r["field_id"] == "named_insured" else r for r in good])
                 with dlog.open("a") as h:
                     h.write(json.dumps({"seq": 9000, "submission": "SUB-905", "action": "approve", "underwriter_id": "user", "reason": "ok", "run_hash": package._current_hash("SUB-905")}) + "\n")
-                assert "Send refused: 1 value needs review and is not acknowledged (named_insured)" in render(load_queue(), None)
-                assert "not acknowledged (named_insured)" in act("/send", {"submission": "SUB-905", "user_line": "send to carrier SUB-905"})[2]
+                assert "Send refused: 2 values need review and are not acknowledged (named_insured, operations)" in render(load_queue(), None)
+                assert "not acknowledged (named_insured, operations)" in act("/send", {"submission": "SUB-905", "user_line": "send to carrier SUB-905"})[2]
 
                 # item 13: the draft shows on the card; the user approves it (D-050); refused files cannot be approved.
                 PENDING.mkdir()
@@ -2202,7 +2207,7 @@ if __name__ == "__main__":
 
                 stored("SUB-906", "complete", good)
                 assert act("/decision", {"submission": "SUB-906", "underwriter_id": "user", "action": "approve", "reason": "ok", "run_hash": "0ld"})[2].startswith("Decision refused: the saved run changed since this card was opened")
-                assert act("/decision", {"submission": "SUB-906", "underwriter_id": "user", "action": "approve", "reason": "ok"})[1]
+                assert act("/decision", {"submission": "SUB-906", "underwriter_id": "user", "action": "approve", "ack": ["operations"], "reason": "ok"})[1]
                 first = json.loads(dlog.read_text().splitlines()[-1])
                 assert first["run_hash"] == package._current_hash("SUB-906") and first["at"] and "Re-review needed" not in art(render(load_queue(), None), "SUB-906")
                 stored("SUB-906", "complete", [{**r, "value": "Different Co"} if r["field_id"] == "named_insured" else r for r in good])
@@ -2210,7 +2215,7 @@ if __name__ == "__main__":
                 assert "Re-review needed: file changed since your approval" in art(pg, "SUB-906") and 'action="/send"' not in art(pg, "SUB-906")
                 assert act("/send", {"submission": "SUB-906", "user_line": "send to carrier SUB-906"})[2] == "Send refused: Re-review needed: file changed since your approval"
                 assert "not the current run" in art(pg, "SUB-906")
-                assert act("/decision", {"submission": "SUB-906", "underwriter_id": "user", "action": "approve", "reason": "ok again"})[1]
+                assert act("/decision", {"submission": "SUB-906", "underwriter_id": "user", "action": "approve", "reason": "ok again", "ack": ["operations"]})[1]
                 pg = render(load_queue(), None)
                 assert "Re-review needed" not in art(pg, "SUB-906") and 'action="/send"' in art(pg, "SUB-906")
                 assert act("/send", {"submission": "SUB-906", "user_line": "send to carrier SUB-906"})[1]
@@ -2225,8 +2230,8 @@ if __name__ == "__main__":
                 assert "No decision or send logged" in art(render(load_queue(), None), "SUB-929")
 
                 stored("SUB-908", "complete", [{**r, "needs_review": True, "quote": "Acme", "reason": "r"} if r["field_id"] == "named_insured" else r for r in good])
-                assert act("/decision", {"submission": "SUB-908", "underwriter_id": "user", "action": "approve", "reason": "checked", "ack": ["named_insured"]})[1]
-                assert "acknowledged 1: named_insured" in art(render(load_queue(), None), "SUB-908")
+                assert act("/decision", {"submission": "SUB-908", "underwriter_id": "user", "action": "approve", "reason": "checked", "ack": ["named_insured", "operations"]})[1]
+                assert "acknowledged 2: named_insured, operations" in art(render(load_queue(), None), "SUB-908")
                 # B-324 (D-089): a resolve names an open conflict of this run, is logged with the run hash, and the card then shows it resolved.
                 sq = {"field": "square_feet", "values": [{"value": "16800", "source": "email.md"}, {"value": "14200", "source": "application.md"}], "resolution": "unresolved"}
                 stored("SUB-909", prepare.REVIEW_PENDING, good, complete=False, conflicts=[sq])
@@ -2348,7 +2353,7 @@ if __name__ == "__main__":
                     assert "underwriter recorded present (user: fryer on the photos)" in _a
                     assert json.loads(calls_path().read_text().splitlines()[-1])["run_hash"] == j["saved_hash"]
                     # B-266: a stale card lists changed fields, old to new.
-                    assert act("/decision", {"submission": "SUB-908", "underwriter_id": "user", "action": "approve", "reason": "again", "ack": ["named_insured"]})[1]
+                    assert act("/decision", {"submission": "SUB-908", "underwriter_id": "user", "action": "approve", "reason": "again", "ack": ["named_insured", "operations"]})[1]
                     stored("SUB-908", "complete", [{**r, "value": "Other Co", "needs_review": True, "quote": "Acme", "reason": "r"} if r["field_id"] == "named_insured" else r for r in good])
                     a = art(render(load_queue(), None), "SUB-908")
                     assert "Re-review needed" in a and "named_insured: x → Other Co" in a, a
@@ -2393,7 +2398,7 @@ if __name__ == "__main__":
                 PAGE.write_text(render(load_queue(), correction_counts(LOG)))  # what serve() writes first
                 # Sorted, and only a saved run the gate accepts: iterdir order differs by OS and old runs carry no hash.
                 sid = next(p.name for p in sorted(INBOX.iterdir()) if p.name.startswith("SUB-") and _gate_ok(p.name))
-                act("/decision", {"submission": sid, "underwriter_id": "user", "action": "approve", "reason": "sandbox check"})
+                act("/decision", {"submission": sid, "underwriter_id": "user", "action": "approve", "reason": "sandbox check", "ack": ["operations"]})
                 act("/send", {"submission": sid, "user_line": f"send to carrier {sid}"})
                 act("/close-subjectivity", {"submission": "SUB-002", "carrier": "carrier_b", "subjectivity": "x", "underwriter_id": "user", "reason": "sandbox check"})
                 assert LOG.is_file() and (box_dir / "workbench.html").is_file() and "SANDBOX COPY" in PAGE.read_text()
