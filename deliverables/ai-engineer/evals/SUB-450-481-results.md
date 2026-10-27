@@ -40,7 +40,7 @@
 ## Automation and cost
 
 - Field automation 155/180 = 0.861 (T-119 0.90). Operations automation 0/20 by design (P-076, D-134). Status automation 0/9 gold-complete files by design (all 9 read "complete — review pending"; the scorer marks these 9 as status misses).
-- Cost: 21 model calls (20 in-scope + retried call), 0 from cache, 37,085 tokens (1,766 per call); `qwen/qwen3.8-27b` on Groq on-demand, no paid API (D-011). 2 rate-limit retries on SUB-450, logged; 0 failed calls. Wall time 28 min (55 s pacing).
+- Cost: 21 model calls (20 in-scope files + SUB-475, the leaked out-of-scope file; the 11 detected out-of-scope files make no call), 0 from cache, 37,085 tokens (1,766 per call); `qwen/qwen3.8-27b` on Groq on-demand, no paid API (D-011). 2 rate-limit retries on SUB-450, logged; 0 failed calls. Wall time 28 min (55 s pacing).
 
 ## Verdict summary
 
