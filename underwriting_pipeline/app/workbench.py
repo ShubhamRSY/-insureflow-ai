@@ -44,6 +44,7 @@ BANNER = ""  # set by serve(); the sandbox screenshots label the page with it
 MESSAGES: dict[str, tuple[bool, str]] = {}  # submission -> (ok, plain-words result of the last action); shown once
 # D-065 item 5: one line per user-visible feature: date, task or proposal, decision number, what an underwriter sees.
 WHATS_NEW = (
+    ("2026-10-27", "P-076", "D-135", "Operations is always checked by the underwriter before send."),
     ("2026-10-26", "P-075", "D-133", "When the application says \"Cooking operations: None\" and the operations answer leaves it out, the line is copied as written, with its quote, and marked \"copied by a rule, not read by the model\"; "
      "the system still never writes \"no cooking\" itself. If any other document (or the application's other lines, or a schedule cooking column) mentions cooking, the file is held on an open \"cooking operations\" conflict that shows both sentences."),
     ("2026-10-24", "P-074", "D-132", "A conflict the system cannot check against the document now stays open and holds the file. Each side says why: \"Not verified against the document\" "
@@ -1218,7 +1219,7 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
             if failed:
                 note = NOT_READ
             elif row.get("needs_review") and row.get("value"):
-                note = "NEEDS REVIEW: " + (row.get("reason") or "flagged")
+                note = "NEEDS REVIEW: " + "; ".join(x for x in (row.get("reason"), prepare.POLICY_NOTE if row.get("policy_review") else None) if x) if (row.get("reason") or row.get("policy_review")) else "NEEDS REVIEW: flagged"  # P-076 (D-135): the policy note sits beside any specific reason, never in place of it
             elif row.get("reason") and not row.get("value"):
                 note = row["reason"]
             merged_n = len([q for q in row.get("also_quoted") or [] if not (row.get("rule_copied") and (row.get("value") or "").endswith("; " + str(q.get("quote"))))])
@@ -1873,6 +1874,11 @@ if __name__ == "__main__":
         # P-016 R1/D-039: the card shows reason, quote, unread rows, and a checkbox per needs-review value.
         lowc = render([card("complete", fields=[{"field_id": "tiv_building", "value": "220000", "needs_review": True, "quote": "TIV 220,000", "reason": "Low-confidence scan read — check against the page"}])], None)
         assert "NEEDS REVIEW: Low-confidence scan read — check against the page" in lowc and needs_review_ids({"fields": [{"field_id": "tiv_building", "value": "220000", "needs_review": True}]}) == ["tiv_building"], "P-025 label and approve list"
+        # P-076 (D-135): the policy note shows beside the value, and beside a specific reason without replacing it.
+        pol = render([card("complete", fields=[{"field_id": "operations", "value": "Office", "needs_review": True, "policy_review": True}])], None)
+        assert "NEEDS REVIEW: Operations is always checked by the underwriter" in pol and 'name="ack" value="operations"' in pol, "P-076 policy note and ack box"
+        pol2 = render([card("complete", fields=[{"field_id": "operations", "value": "Office", "needs_review": True, "policy_review": True, "reason": "operations may be missing: fryer"}])], None)
+        assert "NEEDS REVIEW: operations may be missing: fryer; Operations is always checked" in pol2, "P-076: specific reason kept"
         flagged = card("complete", fields=[{"field_id": "year_built", "value": "1942", "needs_review": True, "quote": "Built 1942", "reason": "number or date read from a scan"}])
         flagged["report"]["unread"] = [{"file": "a.pdf", "page": 2, "reason": "blank"}, {"file": "b.docx", "page": None, "reason": "file type .docx is not read"}]
         pf = render([flagged], None)

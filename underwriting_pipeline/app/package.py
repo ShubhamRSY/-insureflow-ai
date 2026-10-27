@@ -937,6 +937,18 @@ if __name__ == "__main__":
             with log.open("a") as handle:
                 handle.write(json.dumps({"seq": 9001, "submission": "SUB-321", "action": "approve", "underwriter_id": "UW-001", "reason": "", "acknowledged": ["named_insured", "operations"], "run_hash": _current_hash("SUB-321")}) + "\n")
             assert send_to_carrier("SUB-321", "user", dest_dir, user_line=LINE("SUB-321")).exists()
+            # P-076 (D-135, T-027 C1): operations alone flagged (policy): send refused until acknowledged on this run hash, then allowed.
+            only_ops = [{**r, "needs_review": True, "policy_review": True} if r["field_id"] == "operations" else r for r in full()]
+            save(ext, "SUB-376", prepare.REVIEW_PENDING, fields=only_ops, sprinklers="no")
+            decide("SUB-376", "approve")
+            try:
+                send_to_carrier("SUB-376", "user", dest_dir, user_line=LINE("SUB-376"))
+                raise SystemExit("P-076: operations not acknowledged must refuse the send")
+            except ValueError as exc:
+                assert "1 value needs review and is not acknowledged (operations)" in str(exc), exc
+            with log.open("a") as handle:
+                handle.write(json.dumps({"seq": 9376, "submission": "SUB-376", "action": "approve", "underwriter_id": "UW-001", "reason": "", "acknowledged": ["operations"], "run_hash": _current_hash("SUB-376")}) + "\n")
+            assert send_to_carrier("SUB-376", "user", dest_dir, user_line=LINE("SUB-376")).exists(), "P-076: acknowledged on the current run hash, other gates pass: sent"
             # P-026 (D-069, B-220): approve + acknowledge, then a re-save with a changed value -> refused; approve + acknowledge again -> allowed.
             save(ext, "SUB-322", "complete", complete=True, fields=low, sprinklers="no")
             def approve_ack(n):
