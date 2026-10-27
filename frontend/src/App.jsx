@@ -53,6 +53,7 @@ const RatemakingPage = lazy(() => import('./pages/Ratemaking'));
 const BusinessKPIsPage = lazy(() => import('./pages/BusinessKPIs'));
 const PriorDecisionsPage = lazy(() => import('./pages/PriorDecisions'));
 const CompanyPage = lazy(() => import('./pages/CompanyPage'));
+const CreateCompanyPage = lazy(() => import('./pages/CreateCompanyPage'));
 
 function Protected({ children, onLogin }) {
   if (!auth.isLoggedIn) {
@@ -379,6 +380,7 @@ function AppRoutes() {
           <Route path="market" element={<Protected onLogin={() => setLoginOpen(true)}><MarketAdmin /></Protected>} />
           <Route path="regulatory-review" element={<Protected onLogin={() => setLoginOpen(true)}><RegulatoryReviewPage /></Protected>} />
           <Route path="settings" element={<SettingsPage onLogin={() => setLoginOpen(true)} />} />
+          <Route path="/company/create" element={<CreateCompanyPage />} />
           <Route path="/company/:slug" element={<CompanyPage />} />
           <Route path="*" element={<PlaceholderPage title="Page not found" message="That dashboard page doesn't exist. Head back to the Overview to keep working." />} />
         </Route>
