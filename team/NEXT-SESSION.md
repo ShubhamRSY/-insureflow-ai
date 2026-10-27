@@ -9,6 +9,18 @@ Written 2026-10-21 (third session) by the orchestrator at wrap-up. Wrap-up commi
 - pyright: `npx --yes pyright@1.1.390 --pythonpath .venv/bin/python <files>`. Playwright only via `/opt/homebrew/opt/python@3.14/bin/python3.14`.
 - @producer cannot write `deliverables/`; it writes to the scratchpad and the orchestrator copies it.
 
+## Freeze 2026-10-27 (D-134, D-135), for the T-120 hold-out — read this first
+
+Recorded by the orchestrator in the Claude Code session, 2026-10-27, before any T-120 file or gold existed. Supersedes the 2026-10-23 freeze for T-120.
+- Worktree and branch: `/Users/disastershubz/INSURANCE FLOW AI/insureflow-integration`, `pilot-integration` (never `main`).
+- Code under test: `pilot-integration` commit `fa604b9e210d80fb4ee6030734ad2bc493d9c955` (merge of P-076 on top of P-074/P-075). Later commits touch docs, gold and the T-120 build only.
+- `PROMPT_VERSION` `759b3e6bc9b2` (unchanged; request baseline 0 of 143 changed at fa604b9; tests/pipeline 93 passed).
+- Scorer: **v11** (`underwriting_pipeline/ai/eval_holdout_v11.py`) sha256 `7ddcfb50521b7af17f00c0e148891ca40008d019ce257b9b5d121c7fa6d3fcbb`, self-check ok.
+- Lint: `deliverables/senior-test-engineer/lint_holdout.py` sha256 `01147a7532bdd7f1ec00861200d1d5e6bbf87f12612389416ff58b78844ea653`, SELF-CHECK PASS.
+- Operations gate C2/C4 counter: `deliverables/senior-test-engineer/count_ops_gate.py` sha256 `f942010dffab720b4c60942614973a7d9c5404d28f4cb53a10bc8709b62a9aa1`, SELF-CHECK PASS. Rule: silent error = v11 operations miss with no non-empty `reason` and no open operations/cooking conflict; `policy_review` (P-076) never counts; failed calls are counted apart and not as present or hit.
+- Python: the fix worktree's `.venv` link is broken; use `/Users/disastershubz/INSURANCE FLOW AI/insureflow-ai-team/.venv/bin/python`.
+- Any byte change to v11, the lint, the counter or the T-120 gold reopens the check.
+
 ## 2026-10-26: P-074 and P-075 merged; T-120 planned (not built) — read this first
 
 - pilot-integration: P-074 (D-132, unverifiable conflict sides stay open; million read; approximate amounts) and P-075 (D-133, cited cooking none-line copied; cooking elsewhere holds) merged. tests/pipeline 93 passed; 0 of 143 requests changed; PROMPT_VERSION 759b3e6bc9b2. @model-risk APPROVE on both after fixes.
