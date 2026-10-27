@@ -100,3 +100,9 @@ Cooking-conflict detail: 461 application "Cooking operations: None" vs email.md 
 - Nothing unmet.
 - The 4 Carrier A straight-route files are the minimum; no conflicts, no claims.
 - Out-of-scope criteria are one each (3 per criterion), not combined.
+
+## Freeze note (T-120), 2026-10-27 (written by the orchestrator)
+
+- Code under test: pilot-integration `fa604b9e210d80fb4ee6030734ad2bc493d9c955`, PROMPT_VERSION 759b3e6bc9b2, scorer v11 `7ddcfb50…fcbb`, lint `01147a75…a653`, counter `count_ops_gate.py` `f942010d…9aa1` (team/NEXT-SESSION.md, Freeze 2026-10-27).
+- Submissions SUB-450…481 (32), builder simulation/inbox/build_SUB-450-481.py (fixes 9f059e1, e478db5 before the freeze). Never extracted, run or model-called.
+- Gold manifest `deliverables/senior-underwriter/T-120-gold-manifest.sha256`, **sha256 `534e65a55456f2a173e5ef3f85ecfa700c5693afa82e1007eac58e41bbcb3a73`**.

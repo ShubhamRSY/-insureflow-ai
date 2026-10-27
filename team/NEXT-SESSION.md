@@ -19,6 +19,7 @@ Recorded by the orchestrator in the Claude Code session, 2026-10-27, before any 
 - Lint: `deliverables/senior-test-engineer/lint_holdout.py` sha256 `01147a7532bdd7f1ec00861200d1d5e6bbf87f12612389416ff58b78844ea653`, SELF-CHECK PASS.
 - Operations gate C2/C4 counter: `deliverables/senior-test-engineer/count_ops_gate.py` sha256 `f942010dffab720b4c60942614973a7d9c5404d28f4cb53a10bc8709b62a9aa1`, SELF-CHECK PASS. Rule: silent error = v11 operations miss with no non-empty `reason` and no open operations/cooking conflict; `policy_review` (P-076) never counts; failed calls are counted apart and not as present or hit.
 - Python: the fix worktree's `.venv` link is broken; use `/Users/disastershubz/INSURANCE FLOW AI/insureflow-ai-team/.venv/bin/python`.
+- **T-120 gold manifest sha256 `534e65a55456f2a173e5ef3f85ecfa700c5693afa82e1007eac58e41bbcb3a73`** (`deliverables/senior-underwriter/T-120-gold-manifest.sha256`, frozen 2026-10-27 after @model-risk look-again APPROVE). Hold-out files SUB-450–481 built by `simulation/inbox/build_SUB-450-481.py`. Lint v11: only the SUB-461/463 cooking-conflict marks fail (v11-unmeasurable, noted in TASKS before freeze; needs @user confirm as D-128 did). NOT RUN.
 - Any byte change to v11, the lint, the counter or the T-120 gold reopens the check.
 
 ## 2026-10-26: P-074 and P-075 merged; T-120 planned (not built) — read this first
