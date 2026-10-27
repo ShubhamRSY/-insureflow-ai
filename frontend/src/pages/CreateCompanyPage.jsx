@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Building2, Globe, Users, Briefcase, MapPin, Hash, FileText } from 'lucide-react';
+import { Building2, Globe, Briefcase, MapPin, Hash, FileText } from 'lucide-react';
 
 const ORG_SIZES = [
   '1-10 employees',
@@ -34,19 +34,18 @@ function slugify(name) {
 export default function CreateCompanyPage() {
   const navigate = useNavigate();
   const [form, setForm] = useState({
-    name: '',
-    slug: '',
-    slugEdited: false,
+    name: 'Rytera AI',
+    slug: 'rytera-ai',
+    slugEdited: true,
     website: '',
-    industry: '',
+    industry: 'Insurance',
     company_size: '',
-    organization_type: '',
+    organization_type: 'Privately Held',
     headquarters: '',
     about: '',
-    specialties: '',
+    specialties: 'AI, Insurance, InsurTech',
   });
-  const [logoFile, setLogoFile] = useState(null);
-  const [logoPreview, setLogoPreview] = useState('');
+  const [logoPreview, setLogoPreview] = useState('/brand/rytera-logo.png');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -72,15 +71,6 @@ export default function CreateCompanyPage() {
     setForm((prev) => ({ ...prev, [name]: value }));
   }
 
-  function handleLogoChange(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setLogoFile(file);
-    const reader = new FileReader();
-    reader.onload = () => setLogoPreview(reader.result);
-    reader.readAsDataURL(file);
-  }
-
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
@@ -101,7 +91,7 @@ export default function CreateCompanyPage() {
         company_size: form.company_size,
         organization_type: form.organization_type,
         headquarters: form.headquarters.trim() || null,
-        about: form.about.trim() || null,
+        about: form.about.trim() || 'Rytera AI is building intelligent insurance infrastructure with AI-powered underwriting, risk analysis, and automation.',
         specialties: form.specialties.trim() || null,
         logo_url: logoPreview || null,
       };
@@ -139,7 +129,6 @@ export default function CreateCompanyPage() {
             <h2 className="flex items-center gap-2 text-base font-medium text-slate-100"><Building2 className="h-4 w-4" />Page details</h2>
           </div>
           <div className="space-y-5 px-6 py-5">
-            {/* Name */}
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-200">
                 Name <span className="text-red-400">*</span>
@@ -150,13 +139,11 @@ export default function CreateCompanyPage() {
                 name="name"
                 value={form.name}
                 onChange={handleNameChange}
-                placeholder="e.g. Acme Insurance"
-                className="w-full rounded-lg border border-white/10 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600 focus:border-cyan-400/50 focus:outline-none focus:ring-1 focus:ring-cyan-400/30"
+                className="w-full rounded-lg border border-white/10 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 focus:border-cyan-400/50 focus:outline-none focus:ring-1 focus:ring-cyan-400/30"
                 required
               />
             </div>
 
-            {/* LinkedIn URL */}
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-200">
                 LinkedIn Page Public URL <span className="text-red-400">*</span>
@@ -171,38 +158,26 @@ export default function CreateCompanyPage() {
                   type="text"
                   value={form.slug}
                   onChange={handleSlugChange}
-                  placeholder="your-unique-name"
-                  className="flex-1 bg-transparent px-1 py-2 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none"
+                  className="flex-1 bg-transparent px-1 py-2 text-sm text-slate-100 focus:outline-none"
                   required
                 />
               </div>
-              {form.slug && (
-                <p className="mt-1.5 text-xs text-slate-500">Preview: linkedin.com/company/{form.slug}</p>
-              )}
+              <p className="mt-1.5 text-xs text-slate-500">Preview: linkedin.com/company/{form.slug}</p>
             </div>
 
-            {/* Logo */}
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-200">Logo</label>
               <div className="flex items-center gap-4">
-                <div className="flex h-20 w-20 items-center justify-center rounded-xl border border-dashed border-white/20 bg-slate-900/60 overflow-hidden">
-                  {logoPreview ? (
-                    <img src={logoPreview} alt="Logo preview" className="h-full w-full object-contain" />
-                  ) : (
-                    <Building2 className="h-8 w-8 text-slate-600" />
-                  )}
+                <div className="flex h-20 w-20 items-center justify-center rounded-xl border border-white/10 bg-slate-900/60 overflow-hidden">
+                  <img src={logoPreview} alt="Logo preview" className="h-full w-full object-contain" />
                 </div>
                 <div>
-                  <label className="btn-secondary cursor-pointer inline-flex">
-                    Upload logo
-                    <input type="file" accept="image/*" className="hidden" onChange={handleLogoChange} />
-                  </label>
-                  <p className="mt-1 text-xs text-slate-500">Recommended: 300x300px, PNG or JPG</p>
+                  <p className="text-sm text-slate-300">Rytera AI logo</p>
+                  <p className="text-xs text-slate-500">Using brand/rytera-logo.png</p>
                 </div>
               </div>
             </div>
 
-            {/* Website */}
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-200">Website</label>
               <p className="mb-2 text-xs text-slate-500">Begin with http://, https:// or www.</p>
@@ -213,7 +188,7 @@ export default function CreateCompanyPage() {
                   name="website"
                   value={form.website}
                   onChange={handleChange}
-                  placeholder="https://www.yourcompany.com"
+                  placeholder="https://"
                   className="w-full rounded-lg border border-white/10 bg-slate-900/60 py-2 pl-9 pr-3 text-sm text-slate-100 placeholder:text-slate-600 focus:border-cyan-400/50 focus:outline-none focus:ring-1 focus:ring-cyan-400/30"
                 />
               </div>
@@ -226,7 +201,6 @@ export default function CreateCompanyPage() {
             <h2 className="flex items-center gap-2 text-base font-medium text-slate-100"><Briefcase className="h-4 w-4" />Company info</h2>
           </div>
           <div className="space-y-5 px-6 py-5">
-            {/* Industry */}
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-200">
                 Industry <span className="text-red-400">*</span>
@@ -237,13 +211,11 @@ export default function CreateCompanyPage() {
                 name="industry"
                 value={form.industry}
                 onChange={handleChange}
-                placeholder="e.g. Insurance"
-                className="w-full rounded-lg border border-white/10 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600 focus:border-cyan-400/50 focus:outline-none focus:ring-1 focus:ring-cyan-400/30"
+                className="w-full rounded-lg border border-white/10 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 focus:border-cyan-400/50 focus:outline-none focus:ring-1 focus:ring-cyan-400/30"
                 required
               />
             </div>
 
-            {/* Organization size */}
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-200">
                 Organization size <span className="text-red-400">*</span>
@@ -263,7 +235,6 @@ export default function CreateCompanyPage() {
               </select>
             </div>
 
-            {/* Organization type */}
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-200">
                 Organization type <span className="text-red-400">*</span>
@@ -276,14 +247,12 @@ export default function CreateCompanyPage() {
                 className="w-full rounded-lg border border-white/10 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 focus:border-cyan-400/50 focus:outline-none focus:ring-1 focus:ring-cyan-400/30"
                 required
               >
-                <option value="" disabled>Select type</option>
                 {ORG_TYPES.map((type) => (
                   <option key={type} value={type}>{type}</option>
                 ))}
               </select>
             </div>
 
-            {/* Headquarters */}
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-200">Headquarters</label>
               <div className="relative">
@@ -293,13 +262,12 @@ export default function CreateCompanyPage() {
                   name="headquarters"
                   value={form.headquarters}
                   onChange={handleChange}
-                  placeholder="e.g. New York, NY"
+                  placeholder="e.g. San Francisco, CA"
                   className="w-full rounded-lg border border-white/10 bg-slate-900/60 py-2 pl-9 pr-3 text-sm text-slate-100 placeholder:text-slate-600 focus:border-cyan-400/50 focus:outline-none focus:ring-1 focus:ring-cyan-400/30"
                 />
               </div>
             </div>
 
-            {/* About */}
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-200">About</label>
               <div className="relative">
@@ -309,23 +277,20 @@ export default function CreateCompanyPage() {
                   value={form.about}
                   onChange={handleChange}
                   rows={4}
-                  placeholder="Tell people about your organization..."
                   className="w-full rounded-lg border border-white/10 bg-slate-900/60 py-2 pl-9 pr-3 text-sm text-slate-100 placeholder:text-slate-600 focus:border-cyan-400/50 focus:outline-none focus:ring-1 focus:ring-cyan-400/30"
                 />
               </div>
             </div>
 
-            {/* Specialties */}
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-200">Specialties</label>
-              <p className="mb-2 text-xs text-slate-500">Separate with commas (e.g. Commercial Insurance, Risk Management)</p>
+              <p className="mb-2 text-xs text-slate-500">Separate with commas</p>
               <input
                 type="text"
                 name="specialties"
                 value={form.specialties}
                 onChange={handleChange}
-                placeholder="e.g. Commercial Insurance, Risk Management, Brokerage"
-                className="w-full rounded-lg border border-white/10 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600 focus:border-cyan-400/50 focus:outline-none focus:ring-1 focus:ring-cyan-400/30"
+                className="w-full rounded-lg border border-white/10 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 focus:border-cyan-400/50 focus:outline-none focus:ring-1 focus:ring-cyan-400/30"
               />
             </div>
           </div>
