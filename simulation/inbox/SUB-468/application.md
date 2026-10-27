@@ -20,7 +20,7 @@ Construction: Masonry
 Year built: 1972
 Stories: 1
 Sprinklers: No
-Cooking operations: Convection ovens, panini press, espresso machine
+Cooking operations: Oven, panini press, espresso machine
 Expiring carrier: Carrier B (program closed 2026)
 Pending or open claims: None
 Bankruptcy or cancellation in last 5 years: No

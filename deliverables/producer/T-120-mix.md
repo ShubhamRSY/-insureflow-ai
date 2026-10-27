@@ -11,8 +11,8 @@ Folders: `simulation/inbox/SUB-450/` .. `simulation/inbox/SUB-481/`. Nothing com
 | 451 | Juniper Lane Apparel LLC | Clothing retail storefront | app.pdf (typed), email, loss-runs.md | A, no claims, valued 2026-07-21 | clean A route |
 | 452 | Walnut Creek Hardware Co LLC | Retail store, dry goods, front room (ops line) | app.md, email, loss-runs.md | A, no claims, valued 2026-09-02 | clean A route |
 | 453 | Mesquite Ridge Insurance Agency LLC | Office building, suite (ops line) | app.pdf (typed), email, loss-runs.md | A, no claims, valued 2026-07-30 | clean A route |
-| 454 | Neches River Electric LLC | Electrical contractor | app.pdf (typed), email, loss-runs.md | B, 1 van claim, valued 2026-05-26 | CONFLICT sq ft (email 2,450 / app 3,200); contractor; cooking None |
-| 455 | Chisholm Trail Janitorial Supply LLC | Janitorial wholesale | app.md, email, loss-runs.md | C, no claims, valued 2026-08-05 | CONFLICT sales (email $1.42 million / app $1,240,000); wholesale |
+| 454 | Neches River Electric LLC | Electrical contractor, shop and yard (ops line) | app.pdf (typed), email, loss-runs.md | B, 1 van claim, valued 2026-05-26 | CONFLICT sq ft (email 2,450 / app 3,200); contractor; cooking None |
+| 455 | Chisholm Trail Janitorial Supply LLC | Janitorial wholesale (app $1,360,000 vs email $1.57 million) | app.md, email, loss-runs.md | C, no claims, valued 2026-08-05 | CONFLICT sales (email $1.42 million / app $1,240,000); wholesale |
 | 456 | Azalea Floor Works LLC | Flooring contractor | app.md, email | MISSING (email says coming) | missing loss run; contractor |
 | 457 | Bayou Ridge Metal Works LLC | Light metal fabrication shop | app.md, email, loss-runs.md | A, welding fire claim, valued 2026-08-18 | cooking None |
 | 458 | Pecan Row Professional Center LLC | Office building lessor | app.md, email, loss-runs.md | C, no claims, valued 2026-09-09 | lessor; CONFLICT suite count (email 9 / app 8) |
@@ -21,12 +21,12 @@ Folders: `simulation/inbox/SUB-450/` .. `simulation/inbox/SUB-481/`. Nothing com
 | 461 | Magnolia Gifts & Home Goods LLC | Gift shop with lunch counter | app.pdf (typed), email, loss-runs.md | B, no claims, valued 2026-07-08 | COOKING CONFLICT (app None; email soup on stove top) |
 | 462 | Corner Table Deli LLC | Deli, cooking stated | app.md, email, loss-runs.md | B, slip at door, valued 2026-07-30 | deli; cooking stated; CONFLICT sales, approx (email about $560,000 / app $505,000) |
 | 463 | Harbor Deli Co LLC | Deli | app.md, email, loss-runs.md, schedule.csv | C, no claims, valued 2026-08-03 | deli; COOKING CONFLICT (app None; schedule cooking Yes; email fryer) |
-| 464 | Lantern Hill Pub & Grill LLC | Pub with full bar and kitchen, one building, 2 operations | app.pdf (typed), email, loss-runs.md | C, liquor claim, valued 2026-08-21 | pub-and-kitchen (SUB-352 shape); cooking stated; held |
-| 465 | Sunset Pier Nightclub LLC | Nightclub, full bar (W1) | app.md, email, loss-runs.md | C, assault claim, valued 2026-07-15 | HELD prohibited class W1; cooking None |
+| 464 | Lantern Hill Pub & Grill LLC | Pub with full bar, ground floor; two office suites, second floor (ops line; kitchen only on cooking line) | app.pdf (typed), email, loss-runs.md | C, liquor claim 2026-01-19, valued 2026-08-21 | pub-and-kitchen (SUB-352 shape); cooking stated; held |
+| 465 | Sunset Pier Nightclub LLC | Nightclub, full bar (W1) | app.md, email, loss-runs.md | C, assault claim 2026-03-09, valued 2026-07-15 | HELD prohibited class W1; cooking None |
 | 466 | Smoke Ring Hookah Lounge LLC | Hookah lounge, beer and wine (W1) | app.md, email, loss-runs.md | A, no claims, valued 2026-08-26 | HELD prohibited class W1 (not A route); cooking None |
 | 467 | Harvest Moon Breakfast House LLC | Breakfast restaurant | app.pdf (typed), email, loss-runs.md | C, grease fire, valued 2026-09-02 | cooking stated (griddle, fryers) |
-| 468 | Cypress Bend Bakery Cafe LLC | Bakery cafe, cooking stated | app.md, email, owner NKL letter | NKL letter dated 2026-09-21 (no carrier run) | cooking stated; the only NKL letter in scope |
-| 469 | Ridgeline Auto Parts & Tire Service LLC | Mixed: wholesale parts and tire installation | app.md, email, loss-runs.md | A, theft claim, valued 2026-07-28 | mixed class; CONFLICT floor area (email 3,600 / app 4,100) |
+| 468 | Cypress Bend Bakery Cafe LLC | Bakery cafe, cooking stated ("Oven, panini press, espresso machine") | app.md, email, owner NKL letter | NKL letter dated 2026-09-21 (no carrier run) | cooking stated; the only NKL letter in scope |
+| 469 | Ridgeline Auto Parts & Tire Service LLC | Wholesale auto parts, warehouse (single class) | app.md, email, loss-runs.md | A, theft claim, valued 2026-07-28 | wholesale; CONFLICT floor area (email 3,600 / app 4,100, email states building total) |
 | 470 | Tumbleweed Upholstery LLC | Upholstery shop | application_scan.jpg, email, loss-runs.md | B, no claims | OOS criterion 1 (scan) |
 | 471 | Brightwater Laundry Co LLC | Coin laundry, dry cleaning drop-off | application.pdf (image-only), email, loss-runs.md | A, no claims | OOS criterion 1 (image-only PDF) |
 | 472 | Rosewood Tile & Stone Supply LLC | Tile and stone wholesale | application_scan.jpg, email, loss-runs.md | C, no claims | OOS criterion 1 (scan) |
@@ -68,12 +68,12 @@ Folders: `simulation/inbox/SUB-450/` .. `simulation/inbox/SUB-481/`. Nothing com
 | SUB | Figure | Document 1 | Document 2 | Type |
 |---|---|---|---|---|
 | 454 | Square footage | email.md: "2,450 square feet" | application.md (typed PDF): "Square footage: 3,200" | exact |
-| 455 | Annual sales | email.md: "$1.42 million" | application.md: "Annual sales: $1,240,000" | exact vs words |
+| 455 | Annual sales | email.md: "$1.57 million" | application.md: "Annual sales: $1,360,000" | exact vs words |
 | 458 | Suite count | email.md: "9 suites" | application.md: "8 suites" (Operations line) | exact |
 | 459 | Square footage | email.md: "roughly 2,400 sq ft" | application.md: "Square footage: 2,950" | approximate vs exact |
 | 460 | Building TIV | email.md: "1,180,000" | application.md: "Building TIV: $980,000" | exact |
 | 462 | Annual sales | email.md: "about $560,000 in sales" | application.md: "Annual sales: $505,000" | approximate vs exact |
-| 469 | Square footage | email.md: "3,600 square feet" | application.md: "Square footage: 4,100" | exact |
+| 469 | Square footage | email.md: "3,600 square feet total" | application.md: "Square footage: 4,100" | exact |
 
 Cooking-conflict detail: 461 application "Cooking operations: None" vs email.md "heat the soup on the stove top"; 463 application "None" vs schedule.csv cooking "Yes" and email.md "fry chicken tenders in the fryer".
 

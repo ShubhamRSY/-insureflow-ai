@@ -22,5 +22,5 @@ Stories: 1
 Sprinklers: Partial
 Cooking operations: None
 Expiring carrier: Carrier C
-Pending or open claims: Assault claim 2025, closed
+Pending or open claims: Assault claim 2026, closed
 Bankruptcy or cancellation in last 5 years: No

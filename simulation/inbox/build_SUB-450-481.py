@@ -160,13 +160,13 @@ def build():
     # 454 electrical contractor, typed PDF app. Planted conflict: square footage (email 2,450, app 3,200).
     d = folder(454)
     email(d, "Neches River Electric - sq ft",
-          "Electrical contractor in Beaumont, six vans, office and a shop on Pine Island Rd. "
+          "Electrical contractor in Beaumont, six vans and a shop on Pine Island Rd. "
           "The building is 2,450 square feet, I measured it last winter. The application says "
           "3,200, that is off the old lease. Carrier B loss run attached, one van claim.")
     app_typed_pdf(d, 454, app(named="Neches River Electric LLC", mail="same as premises",
                               prem="1472 Pine Island Rd, Beaumont TX 77713", eff="2026-11-01",
                               yrs="9", entity="LLC", lob="Contractors general liability",
-                              ops="Electrical contracting, commercial service calls, office and shop",
+                              ops="Electrical contractor, shop and yard",
                               emp="14", sales="$1,450,000", tiv="$240,000", bpp="$175,000",
                               sqft="3,200", constr="Masonry", yb="1989", stories="1",
                               spk="No", cook="None", carrier="Carrier B",
@@ -179,13 +179,13 @@ def build():
     d = folder(455)
     email(d, "Chisholm Trail Janitorial - renewal",
           "Janitorial supply wholesale out of a warehouse on Bosque Blvd in Waco. We sell to "
-          "cleaning crews and offices. Last year we did $1.42 million, the application has the "
+          "cleaning crews and offices. Last year we did $1.57 million, the application has the "
           "lower budget number. Carrier C run attached, no claims.")
     app_md(d, 455, app(named="Chisholm Trail Janitorial Supply LLC", mail="same as premises",
                        prem="2215 Bosque Blvd, Waco TX 76706", eff="2026-12-01", yrs="9",
                        entity="LLC", lob="Commercial property and general liability",
                        ops="Wholesale janitorial supplies, warehouse", emp="12",
-                       sales="$1,240,000", tiv="$505,000", bpp="$300,000", sqft="9,400",
+                       sales="$1,360,000", tiv="$505,000", bpp="$300,000", sqft="9,400",
                        constr="Metal", yb="2004", stories="1", spk="Yes", cook="None",
                        carrier="Carrier C", claims="None", bk="No"))
     loss_md(d, lr_c("Chisholm Trail Janitorial Supply LLC", ["2025-12-01 to 2026-12-01"],
@@ -327,23 +327,23 @@ def build():
     email(d, "Lantern Hill Pub & Grill - Denton",
           "Pub on West Oak in Denton. Bar downstairs, kitchen with a fryer and flat top for pub "
           "food. Upstairs is two office suites. One building, one policy. Carrier C loss run "
-          "attached, one liquor claim last fall, closed.")
+          "attached, one liquor claim this winter, closed.")
     app_typed_pdf(d, 464, app(named="Lantern Hill Pub & Grill LLC", mail="same as premises",
                               prem="512 W Oak St, Denton TX 76201", eff="2026-12-03", yrs="5",
                               entity="LLC", lob="Business owners policy with liquor liability",
-                              ops="Pub with full bar and kitchen, ground floor; two office suites, second floor",
+                              ops="Pub with full bar, ground floor; two office suites, second floor",
                               emp="11", sales="$870,000", tiv="$405,000", bpp="$130,000",
                               sqft="4,900", constr="Masonry", yb="1938", stories="2",
-                              spk="Yes, bar area and kitchen", cook="Fryer, flat top, hood",
-                              carrier="Carrier C", claims="Liquor liability 2025, closed", bk="No"))
+                              spk="Yes, bar area and kitchen", cook="Fryer, flat-top, hood",
+                              carrier="Carrier C", claims="Liquor liability 2026, closed", bk="No"))
     loss_md(d, lr_c("Lantern Hill Pub & Grill LLC", ["2025-12-03 to 2026-12-03"], "2026-08-21",
-                    [["C-50612", "2025-10-19", "liquor liability, patron", "$12,900", "$0"]]))
+                    [["C-50612", "2026-01-19", "liquor liability, patron", "$12,900", "$0"]]))
 
     # 465 nightclub, prohibited class (W1, held). Carrier C assault claim.
     d = folder(465)
     email(d, "Sunset Pier Nightclub - Corpus",
           "Nightclub on Yorktown in Corpus. Dance floor, DJs and a full bar, open Thu to Sun "
-          "until 2. One assault claim from last year on the Carrier C loss run, closed. Need "
+          "until 2. One assault claim from this year on the Carrier C loss run, closed. Need "
           "a quote before our policy ends.")
     app_md(d, 465, app(named="Sunset Pier Nightclub LLC", mail="same as premises",
                        prem="2410 Yorktown Blvd, Corpus Christi TX 78416", eff="2026-12-12",
@@ -351,9 +351,9 @@ def build():
                        ops="Nightclub, dance floor, DJ, full bar", emp="14", sales="$930,000",
                        tiv="$380,000", bpp="$140,000", sqft="5,800", constr="Masonry",
                        yb="1982", stories="1", spk="Partial", cook="None",
-                       carrier="Carrier C", claims="Assault claim 2025, closed", bk="No"))
+                       carrier="Carrier C", claims="Assault claim 2026, closed", bk="No"))
     loss_md(d, lr_c("Sunset Pier Nightclub LLC", ["2025-12-12 to 2026-12-12"], "2026-07-15",
-                    [["C-50734", "2025-09-22", "assault, patron", "$11,400", "$0"]]))
+                    [["C-50734", "2026-03-09", "assault, patron", "$11,400", "$0"]]))
 
     # 466 hookah lounge, prohibited class (W1, held). Carrier A, no claims.
     d = folder(466)
@@ -397,7 +397,7 @@ def build():
                        entity="LLC", lob="Restaurant package, no liquor",
                        ops="Bakery cafe, counter service, dine in", emp="9", sales="$440,000",
                        tiv="$135,000", bpp="$88,000", sqft="2,300", constr="Masonry", yb="1972",
-                       stories="1", spk="No", cook="Convection ovens, panini press, espresso machine",
+                       stories="1", spk="No", cook="Oven, panini press, espresso machine",
                        carrier="Carrier B (program closed 2026)", claims="None", bk="No"))
     loss_md(d, [
         "NO KNOWN LOSS LETTER (FICTIONAL)",
@@ -409,13 +409,13 @@ def build():
     # 469 wholesale auto parts and tire mounting (mixed class). Planted conflict: floor area (email 3,600, app 4,100).
     d = folder(469)
     email(d, "Ridgeline Auto Parts & Tire - Lubbock",
-          "Auto parts wholesale and tire mounting in Lubbock on Frankford. The warehouse is 3,600 "
-          "square feet, the rest is the bay. The app has 4,100 from the county record, that is not "
+          "Auto parts wholesale in Lubbock on Frankford. The building is 3,600 "
+          "square feet total. The app has 4,100 from the county record, that is not "
           "right, I measured it. Carrier A loss run attached, one theft claim.")
     app_md(d, 469, app(named="Ridgeline Auto Parts & Tire Service LLC", mail="same as premises",
                        prem="3015 Frankford Ave, Lubbock TX 79407", eff="2026-12-09", yrs="8",
                        entity="LLC", lob="Commercial property and general liability",
-                       ops="Wholesale auto parts, tire mounting and installation, warehouse",
+                       ops="Wholesale auto parts, warehouse",
                        emp="10", sales="$1,310,000", tiv="$420,000", bpp="$275,000", sqft="4,100",
                        constr="Metal", yb="1994", stories="1", spk="No", cook="None",
                        carrier="Carrier A", claims="Theft of tires 2026, closed", bk="No"))

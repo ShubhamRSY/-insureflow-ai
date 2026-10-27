@@ -12,7 +12,7 @@ Entity type: LLC
 Line of business: Commercial property and general liability
 Operations: Wholesale janitorial supplies, warehouse
 Number of employees: 12
-Annual sales: $1,240,000
+Annual sales: $1,360,000
 Building TIV: $505,000
 Business personal property: $300,000
 Square footage: 9,400

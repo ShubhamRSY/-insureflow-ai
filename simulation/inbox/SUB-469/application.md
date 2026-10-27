@@ -10,7 +10,7 @@ Effective date: 2026-12-09
 Years in business: 8
 Entity type: LLC
 Line of business: Commercial property and general liability
-Operations: Wholesale auto parts, tire mounting and installation, warehouse
+Operations: Wholesale auto parts, warehouse
 Number of employees: 10
 Annual sales: $1,310,000
 Building TIV: $420,000
