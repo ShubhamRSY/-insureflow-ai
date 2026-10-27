@@ -1,0 +1,86 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "prompt_version": "759b3e6bc9b2",
+  "files": [
+    "application.pdf",
+    "carrier-loss-runs.md",
+    "loss-runs.md"
+  ],
+  "usage": {
+    "queue_time": 0.077180521,
+    "prompt_tokens": 832,
+    "prompt_time": 0.074935086,
+    "completion_tokens": 607,
+    "completion_time": 1.286783724,
+    "total_tokens": 1439,
+    "total_time": 1.36171881
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Elmira Electric LLC",
+        "source": "application.pdf",
+        "quote": "Named insured: Elmira Electric LLC",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": "500 Elmira St, San Antonio, TX 78212",
+        "source": "application.pdf",
+        "quote": "Premises: 500 Elmira St, San Antonio, TX 78212",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-01-01",
+        "source": "application.pdf",
+        "quote": "Effective date: 2027-01-01",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "light electrical contractor",
+        "source": "application.pdf",
+        "quote": "Operations: light electrical contractor",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "305000",
+        "source": "application.pdf",
+        "quote": "Sales: 305000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "0",
+        "source": "application.pdf",
+        "quote": "Building TIV: 0",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "masonry",
+        "source": "application.pdf",
+        "quote": "Construction: masonry",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": "2015",
+        "source": "application.pdf",
+        "quote": "Year built: 2015",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-02-02",
+        "source": "carrier-loss-runs.md",
+        "quote": "Valued through: 2026-02-02",
+        "confidence": 1.0
+      }
+    ],
+    "conflicts": []
+  }
+}

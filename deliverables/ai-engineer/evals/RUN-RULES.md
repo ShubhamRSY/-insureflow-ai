@@ -30,3 +30,23 @@ The retry count per file and in total, and every `call_failed` file. A retry is 
 - D-096 item 4: `regression_dev.py` (every hold-out, quick and full run) and the dev scripts write score files only with `--write`. Without it the run is read-only: the files go to a temp folder and nothing in the repo changes. Frozen scorers are not edited; the driver redirects their output. A frozen scorer must not be run directly (D-025).
 - D-096 item 2: hold-outs from T-103 on are scored with `eval_holdout_v3` (route gate: 0 unsafe routes, route accuracy at least 18/20). v2 stays frozen.
 - D-097: hold-outs are scored with `eval_holdout_v4` (unsafe = a carrier route, held or not, where gold says senior_referral or no_match; "hold" is a status, not a gold route). v2 and v3 stay frozen. Their route column calls the live `workbench.match`, so their route marks follow the routing code of the commit being scored. Since P-049, their `--self-check` fails on its sprinklered → carrier_c route assert. This is expected, and the frozen files are not edited.
+
+## Test-file lint before a gold freeze (T-106d, D-111)
+
+Before any hold-out gold is frozen, run `.venv/bin/python deliverables/senior-test-engineer/lint_holdout.py <plan.json> [--run-date YYYY-MM-DD]` (read-only, no model call). It must exit 0: every loss-run date is before the run date, every gold Scope line parses with the scorer v6 parser, and the in/out, per-criterion and route counts match the written plan. Any FAIL line means fix the files (or the plan) first; do not freeze. Plan format and details: `deliverables/senior-test-engineer/T-106d-lint.md`.
+
+## Scorer v8 and the loss-run gold line (P-064, D-116)
+
+- New hold-outs are scored with `eval_holdout_v8`. v7 stays frozen; published v7 scores stay as published.
+- Every in-scope gold card whose loss run has a date carries its own line: `- Loss runs valued as of: <YYYY-MM-DD>`. v8 compares the pipeline's date to that date only, never to the policy-period start or any other date in the `- Loss runs:` line. When gold expects no date (loss runs missing / not in documents, or `Expected loss run` starting "needs review" or "loss run found but no valued-as-of date") the line is left out or written `none`.
+- A card that breaks this stops v8 before any call (`--check-gold` shows it), as the Scope line does.
+
+## Scorer v9 and the T-109c gold formats (P-065, 2026-10-19)
+
+- New hold-outs are scored with `eval_holdout_v9`. v7 and v8 stay frozen; published scores stay as published (D-020). v9 is v8 plus three changes (B-437), nothing else: (F1) `Conflict: none` with a note after it is read as no conflict and the note never flags another field; (F2) hours in an answer and in an `Operations items` item are read in any written form (`2:00 a.m.` = `2 am`, `11pm` = `11 pm`) while a different hour or meridiem still misses; (F3) `needs review` anywhere on `Expected loss run` (outside a parenthetical note) means the card expects review, so a review card needs no valued-as-of line and a flagged run is a hit.
+- The valued-as-of line rule of v8 (above) is unchanged; under (F3) the "gold expects no date" set is wider. Both scorers stop before any call on a card that breaks the line.
+- `.venv/bin/python underwriting_pipeline/ai/eval_holdout_v9.py --self-check` prints `eval_holdout_v9 self-check ok`; it chains the v8 and v7 self-checks.
+
+## Test the test before a gold freeze (D-116 item 5)
+
+`lint_holdout.py` also runs the scorer test (`--scorer eval_holdout_v9` is the default): a perfect answer built from each gold card must get no "miss" from the scorer and pass the route and P-055 gates with 0 false completes; deliberately wrong answers (one per field on every in-scope file, a leak on every out-of-scope file, and an unsafe route) must each be caught. Any FAIL blocks the freeze. The perfect answer follows the scorer's own readers, so the conventions below are what a card must hold for v8 to fail it and v9 to score it clean (a card of each is in `lint_holdout.py --self-check`, see `deliverables/senior-test-engineer/T-109c-lint-check.md`): `Conflict: none` alone or with an agreeing note; `Expected loss run` saying `needs review` (anywhere, outside a bracket) when review is expected; an hour inside an `Operations items` item written as the documents write it.

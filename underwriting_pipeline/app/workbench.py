@@ -12,6 +12,7 @@ import html
 import json
 import os
 import re
+import fcntl
 import shutil
 import sys
 import tempfile
@@ -25,8 +26,10 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "underwriting_pipeline" / "ai"))
 sys.path.insert(0, str(ROOT / "underwriting_pipeline" / "models"))
 sys.path.insert(0, str(ROOT / "underwriting_pipeline" / "app"))
+import auth
 import llm_extract
 import package
+import pilot
 import points
 import prepare
 import quotes
@@ -41,7 +44,41 @@ BANNER = ""  # set by serve(); the sandbox screenshots label the page with it
 MESSAGES: dict[str, tuple[bool, str]] = {}  # submission -> (ok, plain-words result of the last action); shown once
 # D-065 item 5: one line per user-visible feature: date, task or proposal, decision number, what an underwriter sees.
 WHATS_NEW = (
-    ("2026-10-16", "P-052", "D-098", "A senior underwriter (marked senior on the underwriter list) can confirm the market on a senior-referral card: pick the carrier and write a reason. The card shows who confirmed and why. The send still needs an approve on this run and the typed line. Never offered on a held file or a file with a prohibited word (bar, pub, lounge)."),
+    ("2026-10-26", "P-075", "D-133", "When the application says \"Cooking operations: None\" and the operations answer leaves it out, the line is copied as written, with its quote, and marked \"copied by a rule, not read by the model\"; "
+     "the system still never writes \"no cooking\" itself. If any other document (or the application's other lines, or a schedule cooking column) mentions cooking, the file is held on an open \"cooking operations\" conflict that shows both sentences."),
+    ("2026-10-24", "P-074", "D-132", "A conflict the system cannot check against the document now stays open and holds the file. Each side says why: \"Not verified against the document\" "
+     "or \"Approximate figure\" (about, around, roughly, ~). \"$1.42 million\" and \"250k\" are read as numbers. An approximate figure is kept with a review note and never counts as the exact amount."),
+    ("2026-10-23", "T-118 (P-072)", "D-124", "Operations never gets \"no cooking\" added automatically. When the application says \"Cooking operations: None\" "
+     "and the operations value does not say it, the value stays as stated and keeps its review note, so the underwriter checks cooking against every document."),
+    ("2026-10-21", "T-118", "D-122",
+     "Two documents that disagree are now seen (P-070). A floor area, a sales figure or a count of units that two documents state "
+     "differently is an open conflict on the card, named in plain words (\"square footage\", \"sales or payroll\", \"suite count\"), "
+     "the file is held until the underwriter chooses or enters the value, and the producer is asked which figure stands."),
+    ("2026-10-21", "PILOT C5", "D-117/D-118 (T-027 C1–C8)", "Every per-value confirmation is now written to the pilot correction log, edited or not. The pilot monitor shows confirmations per field and the correction rate per field (the confirmed values the underwriter corrected, over the confirmed values), and each confirmation is a read-only row on the card with what the AI said and what was confirmed."),
+    ("2026-10-21", "B-190", "D-057", "The workbench now needs a signed-in underwriter: OIDC sign-in, a signed session, a per-form token, an Origin check, and an audit row for every view, decision and send. The typed underwriter id is gone; a posted id cannot be used."),
+    ("2026-10-21", "PILOT C1–C6", "D-117/D-118 (T-027 C1–C8)", "Assist-only pilot mode: send, package, draft and producer request are disabled with a plain reason; every value needs a per-value confirmation instead of an approve; scope is always shown; AI proposals and weak-field warnings are labelled; corrections, refusals and time per file are logged for the pilot review."),
+    ("2026-10-20", "P-067", "D-118", "A rejected value now keeps its reason on the card: a field the extraction could not trust shows why (\"value not inside the cited text\", \"the date does not parse\") instead of an empty reason."),
+    ("2026-10-20", "P-066", "D-118", "Every refusal now names its reason in plain words, and no action can crash the page: a blocked send, approve or carrier package shows why it was refused."),
+    ("2026-10-19", "P-067", "D-117", "Loss-run dates read from a scan are kept for review when the date digits appear in the cited text: the card shows \"read from a scan — check it against the page\" and is never silently dropped."),
+    ("2026-10-19", "T-109a", "D-116",
+     "Scope check scope-v4 (P-063): a location label anywhere in the application (\"Loc 1 …; Loc #2 …\", \"Location 2\", \"Bldg 2\") "
+     "now means multiple locations, so the file is manual intake. Every send re-checks scope at send time, whatever the status says, "
+     "and an out-of-scope file shows \"No send: out of pilot scope at send time (…)\"."),
+    ("2026-10-19", "B-428, B-411", "D-113",
+     "\"Not read by extraction\" now lists only files the saved run did not read, taken from its own unread rows, "
+     "not from the file name. A PDF, workbook, text file or scan that was read (by a reader or OCR) is no longer "
+     "shown as not read beside values taken from it. A partly read file stays on the \"Not read\" line with its page."),
+    ("2026-10-18", "T-107a", "D-112", "Carrier match reads the application's Line of business and Cooking operations lines (P-061). A nightclub or lounge beside restaurant evidence, and any bar word beside a non-food operation, is now a prohibited class; a bar, tavern or pub beside real restaurant evidence stays a senior referral (P-062). \"Snacks only\" is not restaurant evidence."),
+    ("2026-10-18", "T-107d", "D-112", "What's new shows the latest 5 entries; \"Show all\" opens the rest."),
+    ("2026-10-18", "T-107c", "D-112", "The account-manager check passes a carrier a senior confirmed on a senior referral (all other gates unchanged), and every card shows that check in words. A send before the senior confirm now says \"a senior referral needs a senior underwriter to confirm the market first\", the same as the card, instead of \"no logged decision\". \"The file is not in appetite\" is no longer shown for a senior referral."),
+    ("2026-10-18", "T-106a", "D-111", "The \"operations may be missing\" flag now also reads the Cooking operations, Hood & extinguishing system and Line of business lines: equipment (e.g. snack warmer), \"no gas\", \"None\" under cooking (no cooking) and hood inspection dates are named in the flag when the operations answer leaves them out, so a file no longer shows a clean operations value that drops them."),
+    ("2026-10-17", "T-104b", "D-108", "Manual intake now also catches numbered locations: an application or schedule that names \"Location No. 2\", \"Loc #2\", \"Building 2\", \"Bldg 2\" or \"Premises 2\" goes to manual intake with the reason \"multiple locations\"."),
+    ("2026-10-17", "T-104a", "D-105", "Manual intake: a file with a scanned application, several locations, non-English documents (Spanish) or no identifiable application (email-only files) is a whole-file manual intake. The card lists every reason (\"Manual intake: scanned application\"); no field is filled in, no carrier route is shown, no missing-info draft is made, and the send, approve and edit are refused with the same reason. Files with several locations now go here whole instead of being read with other-location rows (earlier location notes apply to in-scope files only)."),
+    ("2026-10-16", "P-056", "D-103", "Dates with a 2-digit year are read (\"3/1/27\" is 2027-03-01); a date that could be day or month first is read month first and marked NEEDS REVIEW: \"date read month first (US order)\". One low-confidence word on a scan marks the field for review instead of emptying it. A quote that joins two lines with \" ... \" is found. A trailing period is not a reword. Values labelled (loc 1), (loc 2) in one application are locations, not a conflict: the card shows location 1 and says \"values differ by location: ...\". The operations check reads the whole cited document."),
+    ("2026-10-16", "P-052", "D-098", "A senior underwriter (marked senior on the underwriter list) can confirm the market on a senior-referral card: pick the carrier and write a reason. The card shows who confirmed and why. The send still needs an approve on this run and the typed line. Never offered on a held file, a file with a prohibited word (bar, pub, lounge), or a vacant, unoccupied or no-utilities file (AG:51)."),
+    ("2026-10-16", "P-054", "D-100", "Carrier A direct now needs every other word to be a non-occupancy word (and, LLC, suite, floor...); shop, store, gift, home and trade words go to senior referral. More vacancy words (desocupado, vacante, power disconnected...) block the market confirm. A carrier excluded by any note on the file, including a producer remark such as \"declined by Carrier A\", is not offered, and the card says where the note is."),
+    ("2026-10-16", "M1", "D-099", "A senior cannot confirm a carrier the carrier match note excludes (\"not Carrier A\"). The card says which carrier is not offered and why; pick another market, or fix the note at source and re-run the file."),
+    ("2026-10-16", "P-053", "D-099", "Carrier A direct only when every operations word is on the allow-list or the short neutral-word list. Any other word goes to senior referral with Carrier A suggested, and the card names the unlisted words. Wholesale never routes directly."),
     ("2026-10-16", "P-051", "D-098", "Carrier A only for a file whose one operation is on the written allow-list (office, retail incl. clothing and thrift shops, light wholesale; AG:29-31). A second operation (office + pub, retail + lounge, office + retail) goes to senior referral (R16). Vacant, unoccupied and \"no utilities\" go to senior referral. Pubs and lounges are prohibited words (AG:46) and are never overridable."),
     ("2026-10-16", "P-049", "D-097", "Carrier match follows the written rules (carrier-match.md); each note shows its rule ID (R1-R14). Carrier A is the only direct route. Restaurants and apartments (sprinklered or not) go to senior referral, with Carrier B or C shown as the suggested market for the underwriter to confirm. Hazardous goods, lab or medical, cold storage, liquor and vacant files go to senior referral even when an office or retail word is present. The unsourced Carrier B $2,000,000 cap is gone."),
     ("2026-10-16", "P-050", "D-096", "When TIV is missing, a held file shows the route its class gives: \"Provisional route: senior_referral (provisional — TIV needed to confirm)\". No TIV cap is applied until the TIV is known, and sending stays blocked. The habitational-without-sprinklers referral now cites AG:37, AG:62."),
@@ -85,13 +122,35 @@ _LOG_LOCK = threading.Lock()  # ponytail: one process writes the log; a file loc
 
 
 NEGATED = re.compile(r"(?<!\w)(?:no|not an?|without(?: an?)?|sin|non)[- ]\w+")  # P-047 (c): "no bar" is not a bar
+NEGATED_EQUIP = re.compile(r"(?<!\w)(?:no|not an?|without(?: an?)?|sin|non)[- ](?:[\w-]{1,30} ){0,2}[\w-]{1,30}|(?<!\w)(?:[\w-]{1,30} ){0,2}[\w-]{1,30} ?[:=-] ?(?:none|0|n/a|nil|no)(?!\w)|(?<!\w)(?:[\w-]{1,30} ){0,2}[\w-]{1,30} (?:is |are )?(?:not|never) (?:used|in use|present|installed|operated)")  # T-107a review: "no deep fryer", "Fryers: 0", "Oven not used" are not equipment; equipment only, never for bar/class words (M1, D-112: stricter wins)
+
+
+def _line(report: dict, key: str) -> str:
+    """P-061 (D-112): the application's Line of business / Cooking operations line (not the insured's name), negated words dropped. "" in a run saved before P-061."""
+    return NEGATED.sub(" ", ((report.get("class_lines") or {}).get(key) or "").lower())
+
+
+def class_text(report: dict) -> str:
+    """P-061: the one class text, operations plus the Line of business line. _match and package.confirm_problem both read it."""
+    return f"{_ops(report)} {_line(report, 'line_of_business')}"
+
+
+def _route_value(row: dict) -> str:
+    """P-075 (code review 4): the route reads the operations value as it was before a rule copied the cooking none-line into it,
+    so a copied "No kitchen" or "Nil" can never add an unlisted word or a restaurant word to the route."""
+    value = row.get("value") or ""
+    if row.get("rule_copied"):
+        for part in row.get("also_quoted") or []:
+            if value.endswith("; " + str(part.get("quote"))):
+                value = value[: -len("; " + part["quote"])]
+    return value
 
 
 def _ops(report: dict) -> str:
     """P-047 (c): the full operations, value and cited text, so a detail the value dropped still routes. Negated words are removed."""
     for row in report["fields"]:
         if row["field_id"] == "operations" and row["value"]:
-            return NEGATED.sub(" ", f"{row['value']} {row.get('quote') or ''} {row.get('context') or ''}".lower())  # H1: and the rule lines
+            return NEGATED.sub(" ", f"{_route_value(row)} {row.get('quote') or ''} {row.get('context') or ''}".lower())  # H1: and the rule lines
     return ""
 
 
@@ -106,7 +165,10 @@ PROHIBITED = ("bar", "bars", "nightclub", "nightclubs", "tavern", "taverns", "ca
               "hookah", "adult entertainment", "ammunition", "bail bonds", "sawmill", "sawmills", "pallet manufacturing",
               "plastics manufacturing", "recycling", "pub", "pubs", "lounge", "lounges")  # W1 (R1; AG:45-50); P-051: pubs, lounges per AG:46. Never overridable (D-057/D-060)
 # W2 (R14, D-097 1d): referral words, checked before any class word; each sends the file to senior_referral, never to a carrier.
-NO_UTILITIES = ("no utilities", "without utilities", "utilities off", "utilities disconnected")  # P-051 (c): read on the raw text, before the negation drop
+NO_UTILITIES = ("no utilities", "without utilities", "utilities off", "utilities disconnected", "utilities shut off", "power off", "power disconnected",
+                "sin servicios", "sin luz", "no tenants", "building empty", "empty building", "utilities are off", "utilities turned off", "power is off",
+                "no power", "no electricity", "electricity off", "electricity disconnected", "not occupied", "sin ocupar")  # P-051 (c), P-054 (b): read on the raw text, before the negation drop
+VACANT = ("vacant", "vacancy", "vacante", "vacío", "vacio", "vacía", "vacia", "desocupado", "desocupada", "unoccupied", "abandoned", "abandonado", "abandonada", "deshabitado", "deshabitada") + NO_UTILITIES  # W2e; AG:51 lists true vacancy and no utilities as prohibited, so no market confirm (P-052)
 REFERRAL = (
     (("fertilizer", "fertilizers", "pesticide", "pesticides", "herbicide", "chemical", "chemicals", "hazardous", "flammable", "solvent",
       "solvents", "propane", "fuel", "fertilizante", "pesticida", "químico", "químicos"), "wholesale/retail with hazardous goods - not Carrier A (R14; AG:31)"),
@@ -114,9 +176,27 @@ REFERRAL = (
       "pediatric", "chiropractic", "hospital", "médico", "clínica", "terapia", "pediátrico"), "lab or medical occupancy - not Carrier A (R14; AG:29)"),
     (("cold storage", "refrigerated", "freezer", "freezers", "almacenamiento en frío", "refrigerado"), "cold storage - not Carrier A (R14; AG:31)"),
     (("liquor", "liquor store", "package store", "licor"), "liquor sales, share of receipts not checked - not Carrier A (R14; AG:30)"),
-    (("vacant", "vacío", "unoccupied") + NO_UTILITIES, "vacant, unoccupied or no utilities: renovation with signed GC contract is a referral, true vacancy is prohibited; a person decides (R14; AG:40, AG:51)"),
+    (VACANT, "vacant, unoccupied or no utilities: renovation with signed GC contract is a referral, true vacancy is prohibited; a person decides (R14; AG:40, AG:51)"),
 )
 NOT_READ = "Not read — extraction failed"  # D-079 (B-295)
+MI_NOT_READ = "whole file: not read (manual intake)"  # P-055 (T-104a UI H1)
+
+
+def not_read_by_extraction(report: dict | None, files: list[str]) -> list[str]:
+    """B-428 (D-113): files extraction did not read, for the "Not read by extraction" line.
+    The saved run's unread rows are the log of record: a .pdf, .xlsx, .txt or scan is read by a reader or OCR, so its
+    name alone never means it was skipped (the old `.md`/`.csv` name test named a pdf that gave values, B-411/B-428).
+    A partly read file (some pages unread) is not listed here; the "Not read" line carries that page.
+    Only a run saved before unread rows existed (no key at all) falls back to the old name test."""
+    if report is not None and "unread" in report:
+        return sorted({row.get("file") for row in report["unread"] or [] if row.get("page") is None and row.get("file")})
+    return sorted(name for name in files if not name.endswith((".md", ".csv")))
+
+
+NEVER_SOFT = ("nightclub", "nightclubs", "lounge", "lounges")  # P-062 (D-112): R1 even beside restaurant evidence; bar, tavern, pub stay R2 there
+SNACKS = ("pre-packaged snacks only", "prepackaged snacks only", "pre packaged snacks only", "snacks only", "snack warmer")  # P-062 (b): not restaurant evidence
+EQUIP = ("fryer", "fryers", "deep fryer", "deep fryers", "burner", "burners", "flat-top", "flat top", "griddle", "charbroiler", "char-broiler",
+         "broiler", "oven", "ovens", "smoker", "smokers", "comal", "wok", "freidora", "freidoras", "horno")  # P-061: stated cooking equipment (R9); "snack warmer" and "range" are not here
 BAR_WORDS = ("bar", "bars", "tavern", "taverns", "nightclub", "nightclubs", "pub", "pubs", "lounge", "lounges")  # D-079
 
 # P-051 (a): the Carrier A allow-list, one group per written guide line. Only a file whose one operation is on it routes to Carrier A.
@@ -127,9 +207,31 @@ ALLOW_A = {
     "wholesale": ("wholesale", "light wholesale", "mayoreo", "mayorista"),  # AG:31 "Wholesale: light"
 }
 # P-051 (b): an occupancy word for a class that is not a target (AG:33 "No other class is a target"). Beside an allow-list word it is a
-# second operation (senior_referral); alone it is R8. ponytail: a closed list, like W2 (B-379); a word not here still reaches Carrier A.
+# second operation (senior_referral); alone it is R8. A word on no list goes to senior_referral under P-053 (NEUTRAL below).
 OTHER_OPS = ("gym", "gyms", "fitness", "salon", "salons", "spa", "spas", "daycare", "day care", "school", "schools", "church", "churches",
              "hotel", "hotels", "motel", "motels", "theater", "theatre", "auto repair", "car wash", "gas station", "manufacturing", "factory")
+# P-053 (D-099): the direct Carrier A route needs every operations word to be an allow-list phrase, a listed negation or a neutral word
+# below; any other word goes to senior_referral with Carrier A suggested. Read on the raw text, so "no tenants" is not dropped.
+NEUTRAL_NO = ("no food", "no alcohol", "no liquor", "no cooking", "no inventory", "no goods", "no repackaging", "no manufacturing", "held for sale",
+              "cooking operations none", "cooking none")  # check-P-054 H2: "cooking" only as the empty label, matched after punctuation is dropped
+# P-054 (a): non-occupancy words only. A word that names a business, a trade or goods (shop, store, gift, home, tax...) is never neutral.
+NEUTRAL = frozenset((
+    "and", "or", "of", "on", "by", "for", "with", "the", "a", "an", "at", "in", "to", "de", "del", "la", "el", "en", "y",  # joining words
+    "llc", "inc", "co", "corp", "ltd", "lp", "pllc", "dba",  # company suffixes
+    "operations", "none",  # field labels in the cited text ("cooking" is an occupancy word: check-P-054 H2)
+    "floor", "floors", "story", "stories", "suite", "ground", "level", "room", "back", "front",  # where in the building
+    "clients", "appointment", "appointments"))  # how visitors come, not what the business is
+ORDINAL = re.compile(r"\d+(st|nd|rd|th)?")
+
+
+def _unlisted(raw: str) -> list[str]:
+    """P-053: the operations words that are not an allow-list phrase, a listed negation or a neutral word. Empty = Carrier A direct."""
+    raw = " ".join(re.findall(r"[^\W_]+", raw.lower()))  # "Cooking: None" and "cooking - none" read alike
+    for phrase in sorted(NEUTRAL_NO + tuple(w for words in ALLOW_A.values() for w in words), key=len, reverse=True):
+        raw = re.sub(rf"(?<!\w){re.escape(phrase)}(?!\w)", " ", raw)
+    return [w for w in re.findall(r"[^\W_]+", raw) if w not in NEUTRAL and not ORDINAL.fullmatch(w)]
+
+
 CLASSES = {
     **ALLOW_A,
     # D-078 (B-286): generic restaurant evidence only, never a cuisine or ethnic word; Spanish only as translations (D-060).
@@ -169,7 +271,7 @@ PROVISIONAL_TIV = "provisional — TIV needed to confirm"  # P-050 (D-096): a cl
 
 
 def match(report: dict) -> dict:
-    """route: carrier_a/b/c, no_match, hold or senior_referral. overridable only for no_match (D-057). Never declines.
+    """route: carrier_a/b/c, no_match, hold, senior_referral or manual_intake (P-055: out of pilot scope; no carrier, provisional or suggested route). overridable only for no_match (D-057). Never declines.
     P-048 (c): routing always runs. A held file also carries "provisional" (the route it would take once the hold clears, or None when
     the class, TIV or sprinkler answer it needs is missing) and its label. route stays "hold", so every send gate stays shut."""
     m = _match(report, gated=True)
@@ -188,12 +290,21 @@ def _match(report: dict, gated: bool) -> dict:
     def out(route, note="", suggested="", overridable=False):
         return {"route": route, "note": note, "suggested": suggested, "overridable": overridable}
 
-    food = bool(ops) and (_has(ops, CLASSES["b"]) or ((report.get("cooking") or {}).get("equipment") or {}).get("state") == "yes")
-    barred = bool(ops) and _has(ops, BAR_WORDS)
-    other_prohibited = bool(ops) and _has(ops, tuple(w for w in PROHIBITED if w not in BAR_WORDS))
-    beside = bool(ops) and _has(ops, tuple(w for k, words in CLASSES.items() if k != "b" for w in words) + OTHER_OPS)  # P-051 (b): another operation
-    if other_prohibited or (barred and not food and not beside):  # W1 before the hold gate, as since D-059 (carrier-match.md lists R5/R6 first: B-378)
-        return out("no_match", "prohibited class (R1; AG:45-50)")
+    if report.get("status") == prepare.MANUAL_INTAKE:  # P-055 (D-105): no carrier, provisional or suggested route; not a hold either
+        return out("manual_intake", prepare.status_refusal(report))
+
+    cls = class_text(report)  # P-061: class, bar and prohibited words come from the operations and the Line of business line; R17 reads ops only
+    snack = _has(cls, SNACKS)  # P-062 (b): a snack warmer or "snacks only" kitchen is not restaurant evidence
+    word_food = _has(cls, CLASSES["b"]) and not snack
+    raw = " ".join(f"{_route_value(r)} {r.get('quote') or ''} {r.get('context') or ''}" for r in report["fields"] if r["field_id"] == "operations").lower()
+    raw_cook = ((report.get("class_lines") or {}).get("cooking_operations") or "").lower()
+    equip = _has(NEGATED_EQUIP.sub(" ", f"{raw} {raw_cook}"), EQUIP) or ((report.get("cooking") or {}).get("equipment") or {}).get("state") == "yes"  # P-061: equipment in operations or the Cooking operations line
+    food = bool(ops) and (word_food or equip)
+    barred = bool(ops) and _has(cls, BAR_WORDS)
+    other_prohibited = bool(ops) and _has(cls, tuple(w for w in PROHIBITED if w not in BAR_WORDS))
+    if other_prohibited or (barred and not food) or (barred and food and _has(cls, NEVER_SOFT)):  # W1 before the hold gate, as since D-059 (carrier-match.md lists R5/R6 first: B-378); D-112: a bar word beside a non-food operation is R1 too (stricter of W1 and W1b); P-062 (a): nightclub, lounge never softened
+        hit = next(w for w in PROHIBITED if _has(cls, (w,)))  # UI check H1: name the word and the line it was read from
+        return out("no_match", f"prohibited class (R1; AG:45-50): \"{hit}\" in {'operations' if _has(ops, (hit,)) else 'the Line of business line (P-061)'}")
     if (gated and not prepare.ready_to_route(report)) or not ops:  # P-041: review pending routes as complete did before
         return out("hold", "open conflict" if ops and report.get("status") == prepare.REVIEW_PENDING else "missing information")
     tiv = _tiv(report)
@@ -204,16 +315,13 @@ def _match(report: dict, gated: bool) -> dict:
     over = lambda cap: tiv is not None and tiv > cap
     if barred and food:  # D-079 (B-290): a bar word with restaurant evidence is a person's call, not a rule's
         return out("senior_referral", "possible bar/liquor exposure — confirm liquor sales (R2; AG:46, AG:39)")
-    if barred:  # P-051 (b): a bar, pub or lounge beside another operation is a person's call; never Carrier A, never a market confirm
-        return out("senior_referral", "bar, pub or lounge beside another operation — a second operation, a person decides (R16; AG:46, AG:33)")
     w2 = re.sub(r"(?<!\w)wet[\s-]+chemical(?!\w)", " ", ops) if food else ops  # a kitchen's wet chemical hood is fire suppression, not hazardous goods (as P-047); only with restaurant evidence
-    raw = " ".join(f"{r.get('value') or ''} {r.get('quote') or ''} {r.get('context') or ''}" for r in report["fields"] if r["field_id"] == "operations").lower()
     for words, note in REFERRAL:  # W2 (D-097 1d): a referral word always wins over appetite (class) words
         if _has(w2, words) or _has(raw, tuple(w for w in words if w in NO_UTILITIES)):  # raw: _ops drops "no <word>"
             return out("senior_referral", note + (f"; {OUT_TIV}" if over(PILOT_TIV) else ""))
-    hit = [k for k, words in CLASSES.items() if _has(ops, words)]
-    if "b" not in hit and ((report.get("cooking") or {}).get("equipment") or {}).get("state") == "yes":
-        hit.append("b")  # D-078: stated cooking equipment is generic restaurant evidence
+    hit = [k for k, words in CLASSES.items() if _has(cls, words) and not (k == "b" and snack)]
+    if "b" not in hit and equip:
+        hit.append("b")  # D-078, P-061: stated cooking equipment is generic restaurant evidence
     if not hit:
         return out("no_match", "readable class on no carrier list (R8; KO 8); a restaurant needs generic evidence (restaurant, food service, kitchen, eatery, café, catering or stated cooking equipment), never a cuisine word (D-078)", overridable=True)
     spr = report.get("sprinklers")
@@ -239,6 +347,14 @@ def _match(report: dict, gated: bool) -> dict:
     if over(PILOT_TIV):
         return out("senior_referral", OUT_TIV)
     assert kind in ALLOW_A  # P-051 (a): Carrier A only from the allow-list
+    if not _has(ops, ALLOW_A[kind]):  # P-061: a class read only from the Line of business line never routes directly (R17 reads operations)
+        return out("senior_referral", "class read from the line of business only (P-061; AG:29-31); a person decides; suggested market: Carrier A" + CONFIRM, suggested="carrier_a")
+    suggest_a = "; suggested market: Carrier A" + CONFIRM
+    if kind == "wholesale":  # P-053: wholesale never routes directly; light or not is a person's call (AG:31 "Wholesale: light")
+        return out("senior_referral", "wholesale: whether it is light is a person's call (P-053; AG:31)" + suggest_a, suggested="carrier_a")
+    extra = _unlisted(raw)
+    if extra:  # P-053: a word outside the allow-list and the neutral list (e.g. "office and casino")
+        return out("senior_referral", "words not on the Carrier A allow-list: " + ", ".join(list(dict.fromkeys(extra))[:5]) + " (P-053; AG:29-30)" + suggest_a, suggested="carrier_a")
     return out("carrier_a", "Carrier A (R14; AG:29-31); verify: no restaurant, liquor <= 10%, no cold storage, no hazardous goods, no lab or medical")
 
 
@@ -287,11 +403,12 @@ def load_queue(only: str | None = None) -> list[dict]:
         report, problem = saved_report(folder.name)
         report = package.with_resolutions(report, folder.name) if report is not None else None  # B-324: logged resolutions on this run
         files = sorted(p.name for p in folder.iterdir() if p.is_file())
-        ignored = [name for name in files if not name.endswith((".md", ".csv"))]
+        ignored = not_read_by_extraction(report, files)  # B-428 (D-113)
         row = {"id": folder.name, "report": report, "saved_problem": problem, "files": files, "ignored": ignored}
         if report is not None:
             row.update(
                 manifest=prepare.manifest_problem(folder.name, inbox=INBOX),
+                scope_now=prepare.scope_problem(folder.name, inbox=INBOX),  # P-063: the send gate's own scope re-check
                 route=route(report),
                 note=match(report)["note"],
                 suggested=match(report)["suggested"],
@@ -434,8 +551,12 @@ def record_decision(payload: dict, log_path: Path) -> dict:
         raise ValueError("underwriter id required")
     if actor not in package.underwriters():
         raise ValueError("only an id on underwriters.json may log a decision (D-055); AI roles never count")
-    if action not in {"approve", "edit", "decline", "resolve"}:
-        raise ValueError("action must be approve, edit, decline or resolve")
+    if action not in {"approve", "edit", "decline", "resolve", "confirm"}:
+        raise ValueError("action must be approve, edit, decline, resolve or confirm")
+    if action == "approve" and pilot.active():
+        pilot.guard("approve", (payload.get("submission") or "").strip())
+    if action == "confirm" and not pilot.active():
+        raise ValueError("confirm is an assist-only pilot action")
     if action == "resolve":  # B-324 (D-089): the underwriter chooses or enters the value of one open conflict on this run
         submission = (payload.get("submission") or "").strip()
         saved = prepare.read_saved_run(submission)
@@ -460,6 +581,28 @@ def record_decision(payload: dict, log_path: Path) -> dict:
     if field_id or new_value:  # D-056 (B-139): an edit that changes a field stores the field and its new value
         if field_id not in prepare.FIELDS or not new_value:
             raise ValueError(f"an edit of a field needs field_id (one of {', '.join(prepare.FIELDS)}) and a new value")
+    if action == "edit":  # P-055: a manual-intake file is read by a person; nothing is filled in by an edit
+        try:
+            mi_run = prepare.read_saved_run((payload.get("submission") or "").strip())
+        except ValueError:
+            mi_run = {}
+        if mi_run.get("status") == prepare.MANUAL_INTAKE:
+            raise ValueError(f"this file's status is {prepare.status_refusal(mi_run)}; an edit is refused for it")
+    if action == "confirm":  # T-027 C1: a per-value confirmation, never an approve and never sendable
+        submission = (payload.get("submission") or "").strip()
+        saved = prepare.read_saved_run(submission)
+        if saved["status"] in prepare.REFUSED_STATUSES:
+            raise ValueError(f"this file's status is {prepare.status_refusal(saved)}; no confirmation is recorded for it")
+        shown = (payload.get("run_hash") or "").strip()
+        if shown and shown != saved["saved_hash"]:
+            raise ValueError("the saved run changed since this card was opened; reload the page and review again")
+        listed = [r["field_id"] for r in saved["fields"] if (r.get("value") or "").strip()]
+        unacked = [f for f in listed if f not in (payload.get("ack") or [])]
+        if unacked:
+            raise ValueError(f"confirm every value before recording: {', '.join(unacked)}")
+        if not listed:
+            raise ValueError("there is no value to confirm on this run")
+        payload = {**payload, "acknowledged": listed, "confirmed_values": field_values(saved), "run_hash": saved["saved_hash"]}
     if action == "approve":
         submission = (payload.get("submission") or "").strip()
         # T-071: read the file's status from the last saved run itself. An approve is refused on either
@@ -467,7 +610,7 @@ def record_decision(payload: dict, log_path: Path) -> dict:
         saved = prepare.read_saved_run(submission)
         status = saved["status"]
         if status in prepare.REFUSED_STATUSES:
-            raise ValueError(f"this file's status is {status}; an approve is refused for it")
+            raise ValueError(f"this file's status is {prepare.status_refusal(saved)}; an approve is refused for it")
         # D-039: every value flagged needs-review is listed at approve; each must be acknowledged, and is logged.
         shown = (payload.get("run_hash") or "").strip()  # the run the card showed; the log stores the run read now (P-026)
         if shown and shown != saved["saved_hash"]:
@@ -490,70 +633,158 @@ needs_review_ids = package.needs_review_ids  # D-068: one list, shared with the 
 
 def _append(payload: dict, action: str, actor: str, reason: str, log_path: Path) -> dict:
     """D-055: every entry gets the next sequence number in the log; the highest seq is the latest decision."""
-    last = 0
-    if log_path.exists():
-        for line in log_path.read_text().splitlines():
-            try:
-                seq = json.loads(line).get("seq")
-            except (ValueError, AttributeError):
-                continue
-            if isinstance(seq, int) and not isinstance(seq, bool):
-                last = max(last, seq)
-    row = {
-        "seq": last + 1,
-        "submission": payload.get("submission"),
-        "action": action,
-        "underwriter_id": actor,
-        "reason": reason,
-        **({"run_hash": payload["run_hash"]} if action in ("approve", "resolve") else {}),
-        **({"conflict_field": payload["conflict_field"], "new_value": payload["new_value"]} if action == "resolve" else {}),
-        **payload["run_record"],
-        **({"approved_values": payload["approved_values"]} if action == "approve" else {}),
-        **({"acknowledged": payload["acknowledged"]} if payload.get("acknowledged") else {}),
-        **({"field_id": payload["field_id"].strip(), "new_value": payload["new_value"].strip()} if (payload.get("field_id") or "").strip() else {}),
-        "date": date.today().isoformat(),
-        "at": datetime.now().astimezone().isoformat(timespec="seconds"),
-        "ai_version": ai_version(),
-        "bound": False,
-        "sent_to_carrier": False,
-    }
     log_path.parent.mkdir(parents=True, exist_ok=True)
-    with log_path.open("a") as handle:
-        handle.write(json.dumps(row) + "\n")
+    lock_path = log_path.with_suffix(log_path.suffix + ".lock")
+    with lock_path.open("a+") as lfh:
+        fcntl.flock(lfh, fcntl.LOCK_EX)  # B-191 item 2: a lock failure is an error, never a silent append
+        last = 0
+        if log_path.exists():
+            for line in log_path.read_text().splitlines():
+                try:
+                    seq = json.loads(line).get("seq")
+                except (ValueError, AttributeError):
+                    continue
+                if isinstance(seq, int) and not isinstance(seq, bool):
+                    last = max(last, seq)
+        row = {
+            "seq": last + 1,
+            "submission": payload.get("submission"),
+            "action": action,
+            "underwriter_id": actor,
+            "reason": reason,
+            **({"run_hash": payload["run_hash"]} if action in ("approve", "resolve", "confirm") else {}),
+            **({"conflict_field": payload["conflict_field"], "new_value": payload["new_value"]} if action == "resolve" else {}),
+            **payload["run_record"],
+            **({"approved_values": payload["approved_values"]} if action == "approve" else {}),
+            **({"confirmed_values": payload["confirmed_values"]} if action == "confirm" else {}),
+            **({"acknowledged": payload["acknowledged"]} if payload.get("acknowledged") else {}),
+            **({"field_id": payload["field_id"].strip(), "new_value": payload["new_value"].strip()} if (payload.get("field_id") or "").strip() else {}),
+            "date": date.today().isoformat(),
+            "at": datetime.now().astimezone().isoformat(timespec="seconds"),
+            "ai_version": ai_version(),
+            "bound": False,
+            "sent_to_carrier": False,
+        }
+        try:
+            with log_path.open("a") as handle:
+                handle.write(json.dumps(row) + "\n")
+                handle.flush()
+                os.fsync(handle.fileno())  # B-191 item 2: a failed flush is an error, never a silent success
+        finally:
+            fcntl.flock(lfh, fcntl.LOCK_UN)
     return row
 
 
 REFUSED_AS = {"/confirm-market": "Market confirm refused", "/decision": "Decision refused", "/mark-code": "Mark refused", "/cooking-call": "Cooking call refused", "/close-subjectivity": "Not closed", "/send": "Send refused", "/approve-draft": "Request not approved"}
 
 
+def reviewed_values(submission: str) -> dict:
+    """The values the underwriter stands behind: the saved run with the logged edits and resolutions."""
+    try:
+        run = package.reviewed(submission)
+    except (ValueError, OSError):
+        return {}
+    return {r["field_id"]: r.get("value") for r in run.get("fields") or []}
+
+
+def _pilot_correction(path: str, payload: dict, row: dict) -> None:
+    """T-027 C5: capture field, suggested value, final value and reason for every correction."""
+    if not pilot.active():
+        return
+    sub = (payload.get("submission") or "").strip()
+    actor = str(row.get("underwriter_id") or payload.get("underwriter_id") or "")
+    run_hash = str(row.get("run_hash") or "")
+    if path == "/decision":
+        action = row.get("action")
+        if action == "confirm":
+            # Every per-value confirmation, edited or not, is one row: the pilot measures a
+            # correction rate per field, and the rate needs every confirmation as its denominator.
+            suggested_values = row.get("confirmed_values") or {}
+            effective = reviewed_values(sub)
+            for field in row.get("acknowledged") or []:
+                suggested = suggested_values.get(field, "")
+                final = effective.get(field, suggested)
+                pilot.record_correction(submission=sub, field=field, kind="confirm",
+                                        suggested=str(suggested or ""), final=str(final or ""),
+                                        reason=str(payload.get("reason") or "checked against the cited text"),
+                                        actor=actor, run_hash=run_hash)
+        if action in {"edit", "resolve", "decline"}:
+            field = (payload.get("conflict_field") if action == "resolve" else payload.get("field_id")) or "file"
+            suggested = ""
+            try:
+                saved = prepare.read_saved_run(sub)
+                if action == "decline":
+                    suggested = f"status {saved.get('status')}"
+                elif action == "resolve":
+                    for c in saved.get("conflicts") or []:
+                        if c.get("field") == field:
+                            suggested = json.dumps(c.get("values") or [])
+                else:
+                    suggested = field_values(saved).get(field, "")
+            except (ValueError, OSError):
+                suggested = ""
+            pilot.record_correction(submission=sub, field=field, kind=action,
+                                    suggested=str(suggested), final=str(payload.get("new_value") or action),
+                                    reason=str(payload.get("reason") or ""), actor=actor, run_hash=run_hash)
+    elif path == "/mark-code":
+        pilot.record_correction(submission=sub, field=str(payload.get("code") or ""), kind="code",
+                                suggested="shown in the score", final="marked wrong",
+                                reason=str(payload.get("reason") or ""), actor=actor, run_hash="")
+
+
+def _pilot_event(path: str, payload: dict, sub: str, outcome: str, message: str) -> str:
+    """Log one action or refusal. Returns a note to show when the log itself failed."""
+    if not pilot.active():
+        return ""
+    try:
+        pilot.record_event(action=path.removeprefix("/"), submission=sub,
+                           actor=str(payload.get("underwriter_id") or ""), outcome=outcome, message=message)
+    except OSError as exc:
+        return f" Pilot log failed: {exc}."
+    return ""
+
+
 def act(path: str, payload: dict) -> tuple[str, bool, str]:
     """D-066 items 2/4/8: run one POST action. Returns (submission, ok, plain-words message); a refusal never raises."""
     sub = (payload.get("submission") or "").strip()
+
+    def done(message: str, row: dict | None = None) -> tuple[str, bool, str]:
+        note = ""
+        try:
+            if row is not None:
+                _pilot_correction(path, payload, row)
+        except OSError as exc:
+            note += f" Pilot correction log failed: {exc}."
+        note += _pilot_event(path, payload, sub, "ok", message)
+        return sub, True, message + note
+
     try:
         if path in ("/send", "/approve-draft") and not re.fullmatch(r"SUB-\d+", sub):
             raise ValueError("no such submission id on the form")
         if path == "/decision":
             row = record_decision(payload, LOG)
-            return sub, True, f"Decision recorded: {row['action']} by {row['underwriter_id']}."
+            return done(f"Decision recorded: {row['action']} by {row['underwriter_id']}.", row)
         if path == "/confirm-market":  # P-052 (D-098)
             row = package.confirm_market(sub, payload.get("underwriter_id", ""), payload.get("carrier", ""), payload.get("reason", ""), payload.get("run_hash", ""))
-            return sub, True, f"Market confirmed: {row['carrier']} by {row['underwriter_id']} {row['underwriter_name']}. Not sent: approve on this run and type the send line."
+            return done(f"Market confirmed: {row['carrier']} by {row['underwriter_id']} {row['underwriter_name']}. Not sent: approve on this run and type the send line.", row)
         if path == "/mark-code":
             row = mark_code(payload)
-            return sub, True, f"Marked {row['code']} wrong by {row['underwriter_id']}. The number does not change."
+            return done(f"Marked {row['code']} wrong by {row['underwriter_id']}. The number does not change.", row)
         if path == "/cooking-call":
             row = cooking_call(payload)
-            return sub, True, f"Cooking recorded {row['call']} by {row['underwriter_id']} for this run. Points now apply."
+            return done(f"Cooking recorded {row['call']} by {row['underwriter_id']} for this run. Points now apply.", row)
         if path == "/close-subjectivity":
             quotes.close_subjectivity(*(payload.get(k, "") for k in ("submission", "carrier", "subjectivity", "underwriter_id", "reason")))
-            return sub, True, "Subjectivity closed and logged."
+            return done("Subjectivity closed and logged.")
         if path == "/send":  # item 1: the same gate as every send; the actor is the user, the line is typed on the card
-            dest = package.send_to_carrier(sub, "user", TO_CARRIER, user_line=payload.get("user_line", ""), resend_reason=payload.get("resend_reason", ""))
-            return sub, True, f"Sent: package {dest.name} written to to-carrier. Not bound."
-        dest = prepare.approve(PENDING / f"{sub}.md", "user", TO_PRODUCER, payload.get("reason", ""))  # item 13: D-050, user override
-        return sub, True, f"Approved: request {dest.name} written to to-producer. It lists only missing items and declines nothing."
+            dest = package.send_to_carrier(sub, payload.get("underwriter_id") or "user", TO_CARRIER, user_line=payload.get("user_line", ""), resend_reason=payload.get("resend_reason", ""))
+            return done(f"Sent: package {dest.name} written to to-carrier. Not bound.")
+        dest = prepare.approve(PENDING / f"{sub}.md", payload.get("underwriter_id") or "user", TO_PRODUCER, payload.get("reason", ""))  # item 13: D-050, user override
+        return done(f"Approved: request {dest.name} written to to-producer. It lists only missing items and declines nothing.")
     except (ValueError, OSError) as exc:
-        return sub, False, f"{REFUSED_AS.get(path, 'Refused')}: {exc}"
+        message = f"{REFUSED_AS.get(path, 'Refused')}: {exc}"
+        message += _pilot_event(path, payload, sub, "refused", message)
+        return sub, False, message
 
 
 def _confidence(row: dict) -> str:
@@ -585,16 +816,40 @@ def _msg(messages: dict, key: str) -> str:
     return f'<p class="msg {"ok" if ok else "bad"}" role="alert">{html.escape(text)}</p>'
 
 
-def resolve_form(sub: str, report: dict, conflict: dict) -> str:
-    """B-324 (D-089): choose one stored side or enter the value; logged with this run's hash. Then approve."""
+def _msg_key(user: auth.User | None, key: str) -> str:
+    return f"{user.id}|{key}" if user is not None else key
+
+
+def _msg_for(messages: dict, user: auth.User | None, key: str) -> str:
+    return _msg(messages, _msg_key(user, key)) or _msg(messages, key)
+
+
+def side_note(v: dict) -> str:
+    """P-074 (D-132): why a conflict side cannot be trusted as written. Plain words, escaped."""
+    if v.get("unverified"):
+        return html.escape(f"Not verified against the document: {v.get('reason') or 'the cited text was not found'}. Check it on the page before you choose it.")
+    if v.get("approximate"):
+        return html.escape(f"Approximate figure: '{v.get('quote') or v.get('value')}'. It does not confirm an exact amount.")
+    return ""
+
+
+def resolve_form(sub: str, report: dict, conflict: dict, user: auth.User | None = None) -> str:
+    """B-324 (D-089): choose one stored side or enter the value; logged with this run's hash. Then approve.
+    P-070 (D-122): the topic is named in plain words ("Resolve square footage")."""
     field = conflict.get("field") or ""
-    sides = "".join(f'<option value="{html.escape(str(v.get("value")))}">{html.escape(str(v.get("value")))} ({html.escape(v.get("source") or "file not named")})</option>'
+    plain = prepare.PLAIN.get(field, field)
+    sides = "".join(f'<option value="{html.escape(str(v.get("value")))}">{html.escape(str(v.get("value")))} ({html.escape(v.get("source") or "file not named")})'
+                    f'{" - not verified" if v.get("unverified") else " - approximate" if v.get("approximate") else ""}</option>'
                     for v in conflict.get("values") or [] if v.get("value"))
-    return (f'<form method="post" action="/decision"><input type="hidden" name="action" value="resolve">'
+    notes = "".join(f'<p class="bad">{html.escape(str(v.get("value")))} ({html.escape(v.get("source") or "file not named")}): {side_note(v)}</p>'
+                    for v in conflict.get("values") or [] if v.get("value") and side_note(v))
+    actor = ('<label>Underwriter id <input name="underwriter_id" required></label> ' if user is None else
+             f'<input type="hidden" name="csrf" value="{html.escape(auth.csrf_for(user))}"><span class="actor">Signed in as {html.escape(user.name)} ({html.escape(user.id)})</span> ')
+    return (f'{notes}<form method="post" action="/decision"><input type="hidden" name="action" value="resolve">'
             f'<input type="hidden" name="submission" value="{html.escape(sub)}"><input type="hidden" name="run_hash" value="{html.escape(report.get("saved_hash") or "")}">'
             f'<input type="hidden" name="conflict_field" value="{html.escape(field)}">'
-            f'<b>Resolve {html.escape(field)}</b> <label>Choose <select name="chosen_value"><option value="">—</option>{sides}</select></label> '
-            f'<label>or enter <input name="entered_value"></label> <label>Underwriter id <input name="underwriter_id" required></label> '
+            f'<b>Resolve {html.escape(plain)}</b> <label>Choose <select name="chosen_value"><option value="">—</option>{sides}</select></label> '
+            f'<label>or enter <input name="entered_value"></label> {actor}'
             f'<label>Reason <input name="reason"></label> <button type="submit">Record resolution</button> '
             "<small>Logged with this run. Resolve each open conflict, then approve.</small></form>")
 
@@ -604,7 +859,7 @@ def review_pending_html(report: dict) -> str:
     if report.get("status") != prepare.REVIEW_PENDING:
         return ""
     review = [r["field_id"] for r in report.get("fields") or [] if r.get("value") and r.get("needs_review")]
-    open_ = [c.get("field") or "?" for c in report.get("conflicts") or [] if c.get("resolution") != "resolved"]
+    open_ = [prepare.PLAIN.get(c.get("field") or "?", c.get("field") or "?") for c in report.get("conflicts") or [] if c.get("resolution") != "resolved"]  # P-070: plain words
     what = "; ".join(x for x in (review and "values to review: " + ", ".join(review), open_ and "open conflict: " + ", ".join(open_)) if x)
     return f'<p class="bad">Complete — review pending: {html.escape(what or "see the review notes")}. Not complete until checked.</p>'
 
@@ -622,7 +877,7 @@ def _carrier(item: dict, report: dict) -> str:
     return c["carrier"] if c else item["route"]
 
 
-def confirm_html(item: dict, report: dict) -> str:
+def confirm_html(item: dict, report: dict, user: auth.User | None = None) -> str:
     """P-052 (D-098): who confirmed the market and why, or the senior confirm form, or why there is none."""
     sid = html.escape(item["id"])
     try:
@@ -638,12 +893,18 @@ def confirm_html(item: dict, report: dict) -> str:
                 "The send below still needs an approve on this run and the typed line.</p>")
     seniors = package.seniors()
     opts = "".join(f'<option value="{html.escape(i)}">{html.escape(i)} {html.escape(n)}</option>' for i, n in sorted(seniors.items()))
-    carriers = "".join(f'<option{" selected" if c == item.get("suggested") else ""}>{c}</option>' for c in sorted(package.CARRIERS))
+    if user is not None and not user.senior:
+        return f'<p class="bad">No market confirm: {html.escape(user.name)} ({html.escape(user.id)}) is not a senior underwriter.</p>'
+    excluded = package.excluded_carriers(package.reviewed(item["id"]))
+    carriers = "".join(f'<option{" selected" if c == item.get("suggested") else ""}>{c}</option>' for c in sorted(package.CARRIERS - set(excluded)))
+    why = ("".join(f'<p class="bad">Not offered: {html.escape(c)}. A note on the file excludes it ({html.escape(w)}). '
+                   "Pick another market, or fix the note at source and re-run the file.</p>" for c, w in sorted(excluded.items())))  # @compliance M1 (D-099), P-054 (c)
     return (
-        '<form method="post" action="/confirm-market"><fieldset><legend>Confirm the market (senior underwriter only)</legend>'
+        '<form method="post" action="/confirm-market"><fieldset><legend>Confirm the market (senior underwriter only)</legend>' + why +
         f'<input type="hidden" name="submission" value="{sid}"><input type="hidden" name="run_hash" value="{html.escape(report.get("saved_hash") or "")}">'
-        f'<label>Senior underwriter <select name="underwriter_id" required><option value="">choose</option>{opts}</select></label> '
-        f'<label>Carrier <select name="carrier">{carriers}</select></label> '
+        + (f'<input type="hidden" name="csrf" value="{html.escape(auth.csrf_for(user))}"><span class="actor">Signed in as {html.escape(user.name)} ({html.escape(user.id)}, senior)</span> ' if user is not None else
+           f'<label>Senior underwriter <select name="underwriter_id" required><option value="">choose</option>{opts}</select></label> ')
+        + f'<label>Carrier <select name="carrier">{carriers}</select></label> '
         '<label>Reason (required) <input name="reason" size="40" required></label> '
         '<button type="submit">Confirm market</button>'
         "<p>Logged with this run. It sends nothing: the send still needs an approve on this run and the typed line. A new run needs a new confirm.</p>"
@@ -654,26 +915,47 @@ def confirm_html(item: dict, report: dict) -> str:
 def _no_send_reason(item: dict, report: dict, refused: bool) -> str:
     """B-232: plain words for why this card has no send form; empty when a send can be offered."""
     if refused:
-        return f"this file's status is {report.get('status')}; it cannot be sent"
+        return f"this file's status is {prepare.status_refusal(report)}; it cannot be sent"
     if item.get("manifest"):
         return f"documents changed since extraction ({item['manifest']})"
+    if item.get("scope_now"):  # P-063 (B-432): independent of status
+        return item["scope_now"]
     if report.get("status") == prepare.REVIEW_PENDING and package.conflict_problem(report):  # B-324 (D-089)
         return package.conflict_problem(report)
-    if item["route"] == "senior_referral" and _carrier(item, report) not in package.CARRIERS:  # P-052
-        try:
-            blocked = package.confirm_problem(package.reviewed(item["id"]))
-        except ValueError as exc:
-            blocked = str(exc)
-        return f"no market can be confirmed on this file ({blocked})" if blocked else "a senior referral needs a senior underwriter to confirm the market first"
+    if item["route"] == "senior_referral" and _carrier(item, report) not in package.CARRIERS:  # P-052; T-107c: one text with the send gate
+        return package.senior_confirm_problem(item["id"], report) or "a senior referral needs a senior underwriter to confirm the market first"
     if _carrier(item, report) not in package.CARRIERS:
         return f"the carrier match is {item['route']}" + (f" ({item['note']})" if item.get("note") else "") + ", so no carrier is named"
     if not prepare.ready_to_route(report):
-        return "an open conflict is still on the file" if report.get("status") == prepare.REVIEW_PENDING else "the file is incomplete (a required field is empty)"
+        if report.get("status") == prepare.REVIEW_PENDING:
+            return "an open conflict is still on the file"
+        why = "the file is incomplete (a required field is empty)"
+        open_ = [prepare.PLAIN.get(c.get("field") or "?", c.get("field") or "?") for c in report.get("conflicts") or [] if c.get("resolution") != "resolved"]  # P-070: the topic in plain words
+        if open_:  # D-065 item 2: the block says what is open, not only that something is
+            why += " and there is an open conflict on " + ", ".join(open_)
+        return why
     return ""
 
 
-def _send_html(item: dict, report: dict, refused: bool, manifest: str) -> str:
+def _send_html(item: dict, report: dict, refused: bool, manifest: str, user: auth.User | None = None) -> str:
+    """The send panel plus, T-107c (D-112), the account-manager check result in plain words (the same check send_to_carrier runs)."""
+    if pilot.active():
+        return _send_panel(item, report, refused, manifest)
+    try:
+        am = package.agency_problem(item["id"])
+    except Exception as exc:  # the card must still render
+        am = str(exc)
+    line = ('<p class="msg ok">Account-manager check: passes (complete file, no open conflict, no unread page' + (", senior-confirmed carrier" if item["route"] == "senior_referral" else "") + "). The account manager still writes a reason to send.</p>"
+            if not am else f'<p class="bad">Account-manager check: refused, {html.escape(am)}.</p>')
+    if not am and _no_send_reason(item, report, refused):
+        line = ""  # the send panel already gives the reason; do not say "passes" beside it
+    return _send_panel(item, report, refused, manifest, user) + line
+
+
+def _send_panel(item: dict, report: dict, refused: bool, manifest: str, user: auth.User | None = None) -> str:
     sid = html.escape(item["id"])
+    if pilot.active():
+        return f'<h3>Send to carrier</h3><p class="bad">No send: assist-only pilot — send disabled for {sid}.</p>'
     why = _no_send_reason(item, report, refused)
     if why:
         return f'<h3>Send to carrier</h3><p class="bad">No send: {html.escape(why)}.</p>'
@@ -692,8 +974,9 @@ def _send_html(item: dict, report: dict, refused: bool, manifest: str) -> str:
     resend = (
         '<label>Resend reason (required for a second send) <input name="resend_reason" size="30"></label> ' if when else ""
     )
+    csrf = f'<input type="hidden" name="csrf" value="{html.escape(auth.csrf_for(user))}">' if user is not None else ""
     return (
-        f'<h3>Send to carrier</h3>{already}<form method="post" action="/send"><input type="hidden" name="submission" value="{sid}">'
+        f'<h3>Send to carrier</h3>{already}<form method="post" action="/send"><input type="hidden" name="submission" value="{sid}">{csrf}'
         f"<p>The package goes to <b>{html.escape(carrier)}</b>{' (market confirmed by a senior underwriter)' if carrier != item['route'] else ''}. Check the carrier name, then confirm.</p>"
         f'{resend}<label>Type <code>send to carrier {sid}</code> to confirm <input name="user_line" size="28" autocomplete="off"></label> '
         f'<button type="submit">{"Resend" if when else "Send"} to {html.escape(carrier)}</button></form>'
@@ -701,8 +984,25 @@ def _send_html(item: dict, report: dict, refused: bool, manifest: str) -> str:
     )
 
 
+def whats_new_items(rows) -> str:
+    return "".join(f"<li>{html.escape(d)} · {html.escape(t)} · {html.escape(n)}: {html.escape(w)}</li>" for d, t, n, w in rows)
+
+
 def _short(h: str) -> str:
     return (h or "")[:8]
+
+
+def manual_intake_html(report: dict) -> str:
+    """P-055 (D-105, D-065): the Manual intake card. Every matched reason, in plain words, and what the file does not get."""
+    if report.get("status") != prepare.MANUAL_INTAKE:
+        return ""
+    reasons = prepare.scope.reasons_text(report.get("scope")) or ["Manual intake: outside the pilot scope"]
+    return (
+        '<div class="msg bad" role="alert"><b>Manual intake</b> — a person reads this whole file. Why:<ul>'
+        + "".join(f"<li>{html.escape(r)}</li>" for r in reasons)
+        + "</ul>No field is filled in, no carrier route is shown, no missing-info draft is made, and the send is refused: "
+        f"{html.escape(prepare.status_refusal(report))}. (scope check {html.escape(str((report.get('scope') or {}).get('version') or 'not recorded'))})</div>"
+    )
 
 
 def history_html(sub: str, current: str, marks: list[dict] | None = None) -> str:
@@ -775,7 +1075,16 @@ def stale_changes(sub: str, report: dict) -> str:
     return "<p>Changed since your approval (old → new):</p><ul>" + "".join(f"<li>{html.escape(d)}</li>" for d in diff) + "</ul>"
 
 
-def score_html(item: dict, report: dict) -> list[str]:
+def _plain_reason(text: str) -> str:
+    """P-070 (D-122): the topic of a conflict is named in plain words on the card. The score model keeps its
+    own wording (points.py is a model file and is not touched); the card names the topic for the underwriter."""
+    out = text or ""
+    for field, plain in prepare.PLAIN.items():
+        out = out.replace(f"open conflict on {field}", f"open conflict on {plain}")
+    return out
+
+
+def score_html(item: dict, report: dict, user: auth.User | None = None) -> list[str]:
     """P-015: the score, or why there is none; the three lines; a mark-wrong control beside each code (W1). No add-a-code control (A1)."""
     sc, sid = item["score"], html.escape(item["id"])
     marks = item.get("marks") or []
@@ -785,28 +1094,109 @@ def score_html(item: dict, report: dict) -> list[str]:
         if not sc["reason_codes"]:
             out.append("<p>Codes: none</p>")
     else:
-        out.append(f"<p class=\"bad\">{html.escape(sc['not_scored_reason'])}</p>")
+        out.append(f"<p class=\"bad\">{html.escape(_plain_reason(sc['not_scored_reason']))}</p>")
     for code in sc["reason_codes"]:
         shown = "".join(f" <i>(marked wrong by {html.escape(m['underwriter_id'])}: {html.escape(m['reason'])})</i>" for m in marks if m.get("code") == code)
         out.append(
             f'<form method="post" action="/mark-code" class="mark"><b>{html.escape(code)}</b>{shown} '
             f'<input type="hidden" name="submission" value="{sid}"><input type="hidden" name="code" value="{html.escape(code)}">'
-            '<label>Mark wrong: id <input name="underwriter_id" size="8" required></label> <label>reason <input name="reason" required></label> '
+            + (f'<input type="hidden" name="csrf" value="{html.escape(auth.csrf_for(user))}"><span class="actor">{html.escape(user.name)}</span> ' if user is not None else
+               '<label>Mark wrong: id <input name="underwriter_id" size="8" required></label> ')
+            + '<label>reason <input name="reason" required></label> '
             '<button type="submit">Mark wrong</button> <small>logged; the number does not change</small></form>'
         )
     out += [f"<p>{html.escape(line)}</p>" for line in sc["lines"]]
+    for conflict in report.get("conflicts") or []:  # P-075 (D-133): the cooking line above reads the application only; say where else cooking is stated
+        if conflict.get("field") == "cooking" and conflict.get("resolution") != "resolved":
+            sides = conflict.get("values") or [{}, {}]  # code review 5, UI check H1: the conflict's own sides, every document that states cooking
+            first = sides[0]
+            others = "; ".join(f'{html.escape(str(v.get("source") or "a document"))}: "{html.escape(str(v.get("quote") or "—"))}"' for v in sides[1:])
+            out.append(f'<p class="bad">Cooking: {html.escape(str(first.get("source") or "a document"))} says "{html.escape(str(first.get("quote") or "—"))}", but cooking is stated in {others}. '
+                       'The file is held until you choose.</p>')
+    if pilot.active():
+        out.append(f'<p class="banner">AI proposal — verify against the source. {html.escape(pilot.warning_text())}</p>')
     if sc.get("provisional"):  # B-278 (D-073): the underwriter records the call; points apply only after it
         out.append(
             f'<form method="post" action="/cooking-call" class="mark"><b>Record cooking for this run</b> '
             f'<input type="hidden" name="submission" value="{sid}"><input type="hidden" name="run_hash" value="{html.escape(report.get("saved_hash") or "")}">'
             '<label><input type="radio" name="call" value="present" required> present</label> <label><input type="radio" name="call" value="none"> none</label> '
-            '<label>id <input name="underwriter_id" size="8" required></label> <label>reason <input name="reason" required></label> '
+            + (f'<input type="hidden" name="csrf" value="{html.escape(auth.csrf_for(user))}"><span class="actor">{html.escape(user.name)}</span> ' if user is not None else
+               '<label>id <input name="underwriter_id" size="8" required></label> ')
+            + '<label>reason <input name="reason" required></label> '
             '<button type="submit">Record cooking</button> <small>logged with the run hash; points apply only after this</small></form>'
         )
     return out
 
 
-def render(queue: list[dict], counts: dict | None = None, messages: dict | None = None) -> str:
+def scope_html(item: dict, report: dict) -> str:
+    """T-027 C3: the scope verdict on every card, not only when it refuses something."""
+    if not pilot.active():
+        return ""
+    if item.get("scope_now"):
+        return (f'<p class="bad"><b>Scope check:</b> manual intake — {html.escape(item["scope_now"])}. '
+                "No send, no draft, no route. Your decision is logged.</p>")
+    version = (report.get("scope") or {}).get("version") or "not recorded"
+    return f'<p><b>Scope check:</b> in pilot scope (scope {html.escape(str(version))}).</p>'
+
+
+def pilot_summary_html(queue: list[dict] | None = None) -> str:
+    """T-027 C5: the pilot monitor. Read-only counts, refusals, time per file and failed extractions."""
+    if not pilot.active():
+        return ""
+    s = pilot.summary(queue)
+    fields = "; ".join(f"{k}: {v}" for k, v in s["per_field"].items()) or "none yet"
+    # every pilot field is listed, confirmed or not, so a field nobody checked is never hidden
+    confirms = "; ".join(f"{f}: {s['per_field_confirmations'].get(f, 0)}" for f in prepare.FIELDS)
+    rates = "; ".join(
+        f"{f}: no confirmations yet" if not s["per_field_confirmations"].get(f, 0)
+        else f"{f}: {s['correction_rate'][f]}% ({s['per_field_corrected'].get(f, 0)} of {s['per_field_confirmations'][f]} confirmed values corrected)"
+        for f in prepare.FIELDS
+    )
+    minutes = "; ".join(f"{k}: {v // 60}m {v % 60}s" for k, v in s["duration_seconds"].items()) or "none yet"
+    failed = ", ".join(s["extraction_failed"]) or "none"
+    return (
+        '<details open><summary><b>Pilot monitor</b> (read-only; nothing here changes a file)</summary>'
+        f'<p>Corrections logged: {s["corrections"]} · confirmations logged: {s["confirmations"]} · overrides: {s["overrides"]} · refusals: {s["refusals"]}</p>'
+        f'<p>Edits per field: {html.escape(fields)}</p>'
+        f'<p>Confirmations per field: {html.escape(confirms)}</p>'
+        f'<p>Correction rate per field (corrected ÷ confirmed): {html.escape(rates)}</p>'
+        f'<p>Time per file: {html.escape(minutes)}</p>'
+        f'<p>Extraction failed (never a value): {html.escape(failed)}</p>'
+        '<p>Pilot logs: deliverables/software-engineer/pilot-corrections.jsonl and pilot-events.jsonl.</p></details>'
+    )
+
+
+PILOT_KIND_LABEL = {
+    "confirm": "confirmed",
+    "edit": "edited",
+    "resolve": "conflict resolved",
+    "decline": "declined",
+    "code": "code marked",
+    "override": "override",
+}
+
+
+def pilot_corrections_html(submission: str) -> str:
+    """T-027 C5: one read-only row per correction or per-value confirmation on this file."""
+    if not pilot.active():
+        return ""
+    rows = pilot.corrections_for(submission)
+    if not rows:
+        return "<h3>Corrections</h3><p>None logged on this file yet.</p>"
+    body = "".join(
+        f'<tr><td>{html.escape(r.get("at", ""))}</td><td>{html.escape(r.get("actor", ""))}</td>'
+        f'<td>{html.escape(PILOT_KIND_LABEL.get(r.get("kind", ""), r.get("kind", "")))}</td>'
+        f'<td>{html.escape(r.get("field", ""))}</td><td>{html.escape(r.get("suggested", ""))}</td>'
+        f'<td>{html.escape(r.get("final", ""))}</td><td>{html.escape(r.get("reason", ""))}</td></tr>'
+        for r in rows
+    )
+    note = ('<p>"AI said" is the AI\'s proposal; "Final" is the value the underwriter stands behind, '
+            "with the logged edits applied. One row per checked value.</p>")
+    return ("<h3>Corrections</h3>" + note + "<table><tr><th>When</th><th>Who</th><th>Kind</th><th>Field</th>"
+            f"<th>AI said</th><th>Final</th><th>Reason</th></tr>{body}</table>")
+
+
+def render(queue: list[dict], counts: dict | None = None, messages: dict | None = None, user: auth.User | None = None) -> str:
     counts = counts or {"approve": 0, "edit": 0, "decline": 0}
     messages = messages or {}
     corrections = counts["edit"] + counts["decline"]
@@ -815,7 +1205,7 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
         report = item["report"]
         if report is None:  # item 10: no saved run, or it cannot be read; nothing is extracted here
             unsaved.append(
-                f'<article id="{html.escape(item["id"])}"><h2>{html.escape(item["id"])}</h2>{_msg(messages, item["id"])}'
+                f'<article id="{html.escape(item["id"])}"><h2>{html.escape(item["id"])}</h2>{_msg_for(messages, user, item["id"])}'
                 f'<p class="bad">No usable saved run: {html.escape(item.get("saved_problem") or "none found")}. '
                 "This page shows saved runs only and does not run extraction. Run extraction, then reload. No decision or send is offered.</p></article>"
             )
@@ -831,8 +1221,11 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
                 note = "NEEDS REVIEW: " + (row.get("reason") or "flagged")
             elif row.get("reason") and not row.get("value"):
                 note = row["reason"]
-            if row.get("also_quoted") and not failed:  # P-036 (@senior-underwriter H2): a merged value never looks like a single read
-                note = (note + "; " if note else "") + f"merged: {len(row['also_quoted']) + 1} documents agree"
+            merged_n = len([q for q in row.get("also_quoted") or [] if not (row.get("rule_copied") and (row.get("value") or "").endswith("; " + str(q.get("quote"))))])
+            if row.get("rule_copied") and not failed:  # P-075 (D-133, code review 6): the copied line is named, and a real merge is still shown
+                note = (note + "; " if note else "") + "the cooking line was copied by a rule from the application, not read by the model"
+            if merged_n and not failed:  # P-036 (@senior-underwriter H2): a merged value never looks like a single read
+                note = (note + "; " if note else "") + f"merged: {merged_n + 1} documents agree"
             field_rows.append(
                 "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
                     html.escape(row["field_id"]),
@@ -848,28 +1241,38 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
         conflict_html = "<p>No stored conflict.</p>"
         if conflicts:
             conflict_html = "<ul>" + "".join(
-                "<li>{}: {}{}</li>".format(
-                    html.escape(item_c["field"]),
-                    html.escape(json.dumps(item_c["values"])),
+                "<li>{}: <ul>{}</ul>{}</li>".format(
+                    html.escape(str(prepare.PLAIN.get(item_c["field"], item_c["field"]))),  # P-070: the topic in plain words
+                    "".join(  # T-118: each side in words (value, file, cited text), not a JSON blob
+                        "<li><b>{}</b> ({}){}{}</li>".format(
+                            html.escape(str(v.get("value"))), html.escape(str(v.get("source") or "file not named")),
+                            "" if v.get("quote") == v.get("value") else " — cited: " + html.escape(str(v.get("quote") or "—")),  # UI check M: the quote is not repeated when it is the value
+                            f' <span class="bad">{side_note(v)}</span>' if side_note(v) else "",  # P-074 (D-132)
+                        )
+                        for v in (item_c["values"] if isinstance(item_c["values"], list) else [])
+                    ),
                     html.escape(f" · RESOLVED by {item_c['resolved_by']}: {item_c['resolved_value']}") if item_c.get("resolution") == "resolved" and item_c.get("resolved_by")
                     else ("" if item_c.get("resolution") == "resolved" else " · OPEN: no send until the underwriter chooses or enters the value"),
                 )
                 for item_c in conflicts
-            ) + "</ul>" + ("" if refused else "".join(resolve_form(item["id"], report, item_c) for item_c in conflicts if item_c.get("resolution") != "resolved"))
+            ) + "</ul>" + ("" if refused else "".join(resolve_form(item["id"], report, item_c, user) for item_c in conflicts if item_c.get("resolution") != "resolved"))
         address_check = "—"
         for row in report["fields"]:
             if row["field_id"] == "premises_address":
                 address_check = row.get("address_check") or "—"
         extraction = "ok"
-        if report.get("status") == "extraction_failed":
+        manual = report.get("status") == prepare.MANUAL_INTAKE
+        if manual:
+            extraction = "MANUAL INTAKE — the file was not read for values. No field was filled in. This is not a missing-data file. Sends are blocked."
+        elif report.get("status") == "extraction_failed":
             extraction = f"FAILED — {report['error']}. No field was read. This is not a missing-data file. Sends are blocked."
         elif report.get("status") == "all_values_rejected":
             reason = report.get("status_reason") or "every value was rejected by the gate"
             extraction = f"REJECTED — {reason}. No field was accepted. This is not a missing-data file. Sends are blocked."
         unread = report.get("unread") or []
         failed = report.get("status") == "extraction_failed"
-        none_ = NOT_READ if failed else "none"  # D-080 (B-297): a failed card never says "none"
-        unread_html = f"<p>Not read: {none_}</p>" if not unread else "<p>Not read:</p><ul>" + "".join(
+        none_ = NOT_READ if failed else MI_NOT_READ if manual else "none"  # D-080 (B-297): a failed card never says "none"; nor does a manual-intake card (T-104a UI H1)
+        unread_html = f"<p>Not read: {none_}</p>" if not unread or manual else "<p>Not read:</p><ul>" + "".join(
             "<li>{}, {}: {}</li>".format(
                 html.escape(u["file"]),
                 "whole file" if u.get("page") is None else f"page {u['page']}",
@@ -880,53 +1283,67 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
         manifest = item.get("manifest") or ""
         lines = [
             f"<h2>{html.escape(item['id'])}</h2>",
-            _msg(messages, item["id"]),
+            _msg_for(messages, user, item["id"]),
             (f'<p class="msg bad" role="alert">{package.STALE}. Approve and tick each needs-review value again.</p>' + stale_changes(item["id"], report) if package._decision_problem(item["id"], report.get("saved_hash") or "") == package.STALE else ""),
             f"<p>Saved run: status {html.escape(str(report.get('status')))} · hash check: ok · manifest check: "
             + (f'<span class="bad">FAILED — {html.escape(manifest)}. A send will be refused.</span>' if manifest else "ok")
             + "</p>",
             review_pending_html(report),
+            manual_intake_html(report),
+            scope_html(item, report),
+            (f'<p class="msg bad" role="alert"><b>Send blocked</b> — {html.escape(item["scope_now"])}. Nothing on this file can be sent. '
+             "Do not chase the missing items. Next step: re-run extraction on this file; the scope check then makes it manual intake, "
+             "and an underwriter reads the whole file by hand.</p>" if item.get("scope_now") and not refused else ""),  # P-063, T-109a UI check H1
             f"<p>Files: {html.escape(', '.join(item['files']) or 'none')}</p>",
-            f"<p>Not read by extraction: {html.escape(', '.join(item['ignored']) or none_)}</p>",
+            f"<p>Not read by extraction: {html.escape(none_ if manual else ', '.join(item['ignored']) or none_)}</p>",
         ]
-        lines += score_html(item, report)
-        if not refused:
-            lines.append(f"<p>Carrier match: {html.escape(item['route'])}{html.escape(' · ' + item['note']) if item.get('note') else ''} · recommendation only</p>")
+        lines += score_html(item, report, user)
+        if item.get("scope_now") and not refused:  # P-063 (T-109a UI check H1): no route or hold wording on an out-of-scope file
+            lines.append("<p>Carrier match: none — out of pilot scope at send time (see the alert above)</p>")
+        elif not refused:
+            lines.append(f"<p>Carrier match: {html.escape(item['route'])}{html.escape(' · ' + item['note']) if item.get('note') else ''} · "
+                         + ("Suggestion only — not a decision" if pilot.active() else "recommendation only") + "</p>")
             if item.get("provisional"):  # P-048 (c) (D-095): routing always runs; the send stays blocked until the hold clears
                 pv = item["provisional"]
                 lines.append(f"<p>Provisional route: <b>{html.escape(pv['provisional'] or 'none yet')}</b>{html.escape(' · ' + pv['provisional_note']) if pv['provisional_note'] else ''}"
                              f" ({html.escape(pv['provisional_label'])}) · No send until the hold clears</p>")
             if item["route"] == "senior_referral":  # B-264: only a senior referral names a market
                 lines.append(f"<p>Suggested market: <b>{html.escape(item.get('suggested') or 'none')}</b> · recommendation only; the underwriter decides</p>")
-                lines.append(confirm_html(item, report))
+                lines.append(confirm_html(item, report, user))
         lines += [
             f"<p>Extraction: {html.escape(extraction)}</p>",
             unread_html,
-            f"<p>Needs human read: {html.escape(', '.join(report.get('needs_human') or []) or none_)}</p>",
+            f"<p>Needs human read: {html.escape(none_ if manual else ', '.join(report.get('needs_human') or []) or none_)}</p>",
             f"<p>Address check: {html.escape(address_check)}</p>",
             f"<p>Locations: {html.escape('; '.join(('primary ' if row.get('primary') else 'other ') + row['address'] for row in report['locations']) or 'one premises') if report.get('locations') is not None else 'not stored in the saved run'}</p>",
             "<h3>Extracted fields</h3>",
-            f"<table><tr><th>Field</th><th>Value</th><th>Confidence</th><th>Source</th><th>Cited text</th><th>Review note</th></tr>{''.join(field_rows)}</table>",
+            "<p>Nothing filled in: a person reads the file.</p>" if manual else (
+                ("<p class='banner'>AI proposal — verify against the source.</p>" if pilot.active() else "")
+                + f"<table><tr><th>Field</th><th>{'Value (AI proposal — verify)' if pilot.active() else 'Value'}</th><th>Confidence</th><th>Source</th><th>Cited text</th><th>Review note</th></tr>{''.join(field_rows)}</table>"
+            ),
             f"<h3>Conflicts</h3>{conflict_html}",
-            quotes.html_for(item["id"]),
+            quotes.html_for(item["id"], user),
         ]
         if not refused:
             missing = report["missing"] + report.get("extra", [])
             lines += ["<h3>Missing</h3>", f"<p>{html.escape(', '.join(missing) or 'none')}</p>"]
         # T-071: on a refused card there is no approve option. Edit and decline stay so a person decides.
-        options = "<option>edit</option><option>decline</option>" if refused else "<option>approve</option><option>edit</option><option>decline</option>"
+        options = "<option>decline</option>" if manual else "<option>edit</option><option>decline</option>" if refused else (
+            "<option>confirm</option><option>edit</option><option>decline</option>" if pilot.active()
+            else "<option>approve</option><option>edit</option><option>decline</option>")
         acks = "".join(
             '<label><input type="checkbox" name="ack" value="{0}"> I checked {0}: {1} (cited: {2})</label><br>'.format(
                 html.escape(row["field_id"]), html.escape(row["value"]), html.escape(row.get("quote") or "—")
             )
             for row in report["fields"]
-            if row.get("needs_review") and row.get("value")
+            if row.get("value") and (pilot.active() or row.get("needs_review"))
         )
         cook = (report.get("cooking") or {}).get("equipment") or {}
         if cook.get("state") == "needs_review":  # P-029 (D-072): the same acknowledgment; no cooking points either way
             acks += '<label><input type="checkbox" name="ack" value="cooking_equipment"> I checked cooking equipment: needs review; points only after the cooking call (cited: {})</label><br>'.format(html.escape(cook.get("quote") or "—"))
         if acks and not refused:
-            acks = f"<fieldset><legend>Needs-review values: acknowledge each to approve</legend>{acks}</fieldset>"
+            legend = "Confirm every value with its cited text" if pilot.active() else "Needs-review values: acknowledge each to approve"
+            acks = f"<fieldset><legend>{legend}</legend>{acks}</fieldset>"
         else:
             acks = ""
         lines.append(
@@ -934,32 +1351,45 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
 <input type="hidden" name="submission" value="{html.escape(item['id'])}">
 <input type="hidden" name="run_hash" value="{html.escape(report.get('saved_hash') or '')}">
 {acks}
-<label>Underwriter id <input name="underwriter_id" required></label>
+{f'<input type="hidden" name="csrf" value="{html.escape(auth.csrf_for(user))}"><span class="actor">Signed in as {html.escape(user.name)} ({html.escape(user.id)})</span>' if user is not None else '<label>Underwriter id <input name="underwriter_id" required></label>'}
 <label>Action
 <select name="action">{options}</select>
 </label>
 <label>Edited field <input name="field_id" placeholder="e.g. year_built"></label>
 <label>New value <input name="new_value"></label>
 <label>Reason <input name="reason"></label>
-<button type="submit">Record decision</button>
+<button type="submit">{"Record confirmation" if pilot.active() and not refused and not manual else "Record decision"}</button>
 </form>"""
         )
         sid = html.escape(item["id"])
         draft = PENDING / f"{item['id']}.md"
-        if draft.is_file():
+        if draft.is_file() and not manual:  # P-055: a manual-intake file has no automated missing-info draft
             lines.append(
                 f"<h3>Missing-info draft for the producer (not sent)</h3><pre>{html.escape(draft.read_text())}</pre>"
-                f'<form method="post" action="/approve-draft"><input type="hidden" name="submission" value="{sid}">'
-                '<label>Reason (optional) <input name="reason"></label> '
-                '<button type="submit">Approve and send to producer (user override)</button></form>'
+                + (f'<p class="bad">No send to producer: {html.escape(item["scope_now"])}.</p>' if item.get("scope_now") else  # P-063
+                   ('<p class="bad">No producer request: assist-only pilot — producer requests are disabled.</p>' if pilot.active() else
+                    f'<form method="post" action="/approve-draft"><input type="hidden" name="submission" value="{sid}">'
+                    + (f'<input type="hidden" name="csrf" value="{html.escape(auth.csrf_for(user))}">' if user is not None else "")
+                    + '<label>Reason (optional) <input name="reason"></label> '
+                    '<button type="submit">Approve and send to producer (user override)</button></form>'))
             )
         if (TO_PRODUCER / f"{item['id']}.md").is_file():
             lines.append("<p>Producer request on file in to-producer.</p>")
-        lines.append(_send_html(item, report, refused, manifest))
+        lines.append(_send_html(item, report, refused, manifest, user))
         lines.append(history_html(item["id"], report.get("saved_hash") or "", item.get("marks") or []))
+        lines.append(pilot_corrections_html(item["id"]))
         blocks.append(
             f'<article id="{html.escape(item["id"])}">\n' + "\n".join(lines) + "\n</article>"
         )
+    ids = {q["id"] for q in queue}
+    loose = "".join(_msg(messages, k) for k in messages if k not in ids and (user is None or k.startswith(f"{user.id}|") or "|" not in k))
+    identity = (
+        f'<p class="identity">Signed in as <b>{html.escape(user.name)}</b> ({html.escape(user.id)})'
+        f'{" · senior underwriter" if user.senior else ""}'
+        f'<form method="post" action="/logout"><input type="hidden" name="csrf" value="{html.escape(auth.csrf_for(user))}">'
+        '<button type="submit">Sign out</button></form></p>'
+        if user is not None else '<p class="identity">Not signed in. No decision or send is accepted.</p>'
+    )
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><title>Underwriter workbench</title>
 <style>
@@ -976,11 +1406,17 @@ form.mark {{ margin: 0.2rem 0; }}
 pre {{ background: #f6f6f6; padding: 0.5rem; white-space: pre-wrap; }}
 details {{ margin: 0.5rem 0; }}
 footer {{ border-top: 1px solid #ccc; margin-top: 2rem; color: #555; }}
+.identity {{ background: #eef3f8; border-left: 4px solid #1f4e79; padding: 0.5rem 0.75rem; }}
+.identity form {{ display: inline; margin-left: 1rem; }}
+.actor {{ color: #1f4e79; font-weight: 600; margin-right: 0.5rem; }}
 </style></head><body>
 {f'<p class="banner">{html.escape(BANNER)}</p>' if BANNER else ''}
 <h1>Underwriter workbench</h1>
-{''.join(_msg(messages, k) for k in messages if k not in {q["id"] for q in queue})}
-<details open><summary><b>What's new</b></summary><ul>{''.join(f"<li>{html.escape(d)} · {html.escape(t)} · {html.escape(n)}: {html.escape(w)}</li>" for d, t, n, w in WHATS_NEW)}</ul></details>
+{identity}
+{loose}
+{'<p class="banner">ASSIST-ONLY PILOT — AI proposals only. Nothing is routed, sent or drafted. You decide.</p>' if pilot.active() else ''}
+{pilot_summary_html(queue)}
+<details open><summary><b>What's new</b> (latest {min(5, len(WHATS_NEW))} of {len(WHATS_NEW)})</summary><ul>{whats_new_items(WHATS_NEW[:5])}</ul>{f"<details><summary>Show all {len(WHATS_NEW)}</summary><ul>{whats_new_items(WHATS_NEW[5:])}</ul></details>" if len(WHATS_NEW) > 5 else ""}</details>
 <p>Synthetic queue. A decision is logged only with an id on the underwriter list. Decline and edit need a reason, and so does an approve after a decline. Approve, edit, and decline are saved with that reason. This page shows saved runs only. It never binds. A carrier send needs the typed line and passes the send gate.</p>
 <p>Decisions so far: {counts['approve']} approved, {counts['edit']} edited, {counts['decline']} declined. Corrections: {corrections}.</p>
 {''.join(blocks)}
@@ -997,6 +1433,8 @@ def sandbox(tmp: Path) -> None:
     (token log). Nothing real is written afterwards. Call before serve() or any test that posts an action."""
     global PAGE, LOG, INBOX, PENDING, TO_PRODUCER, TO_CARRIER, BANNER
     tmp = Path(tmp)
+    if auth.audit_path().is_file():
+        shutil.copy2(auth.audit_path(), tmp / "auth-audit.jsonl")
     if marks_path().is_file():
         shutil.copy2(marks_path(), tmp / "code_marks.jsonl")
     if calls_path().is_file():
@@ -1015,39 +1453,173 @@ def sandbox(tmp: Path) -> None:
     package.DECISIONS_LOG, package.SENDS_LOG, package.INBOX = LOG, tmp / "sends.jsonl", INBOX
     quotes.CLOSURES, quotes.TO_CARRIER, quotes.FROM_CARRIER = tmp / "closures.jsonl", TO_CARRIER, tmp / "from-carrier"
     prepare.EXTRACT_DIR, prepare.INBOX_DIR, llm_extract.CACHE = tmp / "extractions", INBOX, tmp / "cache"
+    auth.AUDIT_LOG = tmp / "auth-audit.jsonl"
+    pilot.CORRECTIONS, pilot.EVENTS = tmp / "pilot-corrections.jsonl", tmp / "pilot-events.jsonl"
     BANNER = f"SANDBOX COPY in {tmp}: nothing here is real; no real log, outbox or page is written"
+
+
+def make_handler(only: str | None = None):
+    """The HTTP handler, separate from serve() so tests can bind an ephemeral port. Every route needs sign-in."""
+    class Handler(BaseHTTPRequestHandler):
+        def _send(self, status: int, body: str, *, content_type: str = "text/html; charset=utf-8", headers: dict | None = None) -> None:
+            raw = body.encode()
+            self.send_response(status)
+            self.send_header("Content-Type", content_type)
+            self.send_header("Content-Length", str(len(raw)))
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("X-Content-Type-Options", "nosniff")
+            self.send_header("Referrer-Policy", "no-referrer")
+            self.send_header("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'")
+            for key, value in (headers or {}).items():
+                self.send_header(key, value)
+            self.end_headers()
+            self.wfile.write(raw)
+
+        def _redirect(self, location: str, cookies: list[str] | None = None) -> None:
+            self.send_response(303)
+            self.send_header("Location", location)
+            self.send_header("Cache-Control", "no-store")
+            for cookie in cookies or []:
+                self.send_header("Set-Cookie", cookie)
+            self.end_headers()
+
+        def _user(self) -> tuple[auth.User | None, str]:
+            try:
+                return auth.session_from_cookie(self.headers.get("Cookie")), ""
+            except auth.AuthError as exc:
+                return None, str(exc)
+
+        def _config_or_page(self) -> auth.Config | None:
+            try:
+                return auth.config()
+            except auth.AuthError as exc:
+                self._send(503, auth.config_error_page(str(exc)))
+                return None
+
+        def do_GET(self):
+            path = self.path.split("?", 1)[0]
+            if path == "/favicon.ico":
+                self.send_error(404)
+                return
+            cfg = self._config_or_page()
+            if cfg is None:
+                return
+            if path == "/login":
+                query = {k: v[0] for k, v in parse_qs(self.path.split("?", 1)[1] if "?" in self.path else "").items()}
+                try:
+                    target, cookie = auth.sign_in_url(query.get("next") or "/")
+                except auth.AuthError as exc:
+                    self._send(502, auth.sign_in_page(f"Sign-in could not start: {exc}"), headers={"Set-Cookie": auth.clear_cookie(auth.STATE_COOKIE)})
+                    return
+                self._redirect(target, [cookie])
+                return
+            if path == "/auth/callback":
+                query = {k: v[0] for k, v in parse_qs(self.path.split("?", 1)[1] if "?" in self.path else "").items()}
+                try:
+                    user, session, next_path = auth.complete_sign_in(query, self.headers.get("Cookie"))
+                    auth.audit(user, "login", outcome="ok", reason="OIDC sign-in")
+                except (auth.AuthError, OSError) as exc:
+                    self._send(403, auth.sign_in_page(f"Sign-in failed: {exc}"), headers={"Set-Cookie": auth.clear_cookie(auth.STATE_COOKIE)})
+                    return
+                self._redirect(next_path, [auth.clear_cookie(auth.STATE_COOKIE), auth.cookie_header(auth.SESSION_COOKIE, session, auth.SESSION_TTL, auth._secure(cfg))])
+                return
+            user, problem = self._user()
+            if user is None:
+                self._send(200, auth.sign_in_page(problem, self.path))
+                return
+            queue = load_queue(only)
+            try:
+                for item in queue:
+                    report = item.get("report") or {}
+                    auth.audit(user, "view", item["id"], run_hash=report.get("saved_hash") or "")
+            except (OSError, auth.AuthError) as exc:
+                self._send(503, auth.sign_in_page(f"Audit log unavailable: {exc}", self.path))
+                return
+            shown = {k: v for k, v in MESSAGES.items() if k.startswith(f"{user.id}|")}
+            for key in list(shown):
+                MESSAGES.pop(key, None)
+            body = render(queue, correction_counts(LOG), shown, user)
+            try:  # T-027 C5 display log: one row per file shown, with the run hash and model. B-190 supplies the user.
+                for item in queue:
+                    report = item.get("report")
+                    if not report:
+                        continue
+                    pilot.record_event(action="view", submission=item["id"], actor=user.id, outcome="view",
+                                       message=f"prompt={report.get('prompt_version') or 'not recorded'} "
+                                               f"model={report.get('model_version') or 'not recorded'}",
+                                       run_hash=str(report.get("saved_hash") or ""))
+            except OSError as exc:
+                body = body.replace("<body>", f'<body><p class="bad">Pilot view log failed: {html.escape(str(exc))}</p>', 1)
+            self._send(200, body)
+
+        def do_POST(self):
+            path = self.path.split("?", 1)[0]
+            cfg = self._config_or_page()
+            if cfg is None:
+                return
+            user, _ = self._user()
+            if path == "/logout":
+                if user is None:
+                    self._send(401, auth.sign_in_page("Sign-in required: sign out was not recorded."))
+                    return
+                try:
+                    auth.check_origin(self.headers.get("Origin"), self.headers.get("Host"))
+                    size = int(self.headers.get("Content-Length", "0") or 0)
+                    if size > auth.MAX_FORM_BYTES:
+                        raise auth.AuthError("the form is too large")
+                    form = parse_qs(self.rfile.read(size).decode())
+                    auth.check_csrf(user, (form.get("csrf") or [""])[0])
+                    auth.audit(user, "logout", outcome="ok", reason="signed out")
+                except (auth.AuthError, ValueError, OSError) as exc:
+                    self._send(403, auth.sign_in_page(f"Sign out refused: {exc}"))
+                    return
+                self._redirect("/", [auth.clear_cookie(auth.SESSION_COOKIE)])
+                return
+            label = REFUSED_AS.get(path)
+            if label is None:
+                self.send_error(404)
+                return
+            if user is None:
+                self._send(401, auth.sign_in_page(f"Sign-in required: {label.lower()} was not recorded."))
+                return
+            try:
+                auth.check_origin(self.headers.get("Origin"), self.headers.get("Host"))
+                size = int(self.headers.get("Content-Length", "0") or 0)
+                if size > auth.MAX_FORM_BYTES:
+                    raise auth.AuthError("the form is too large")
+                form = parse_qs(self.rfile.read(size).decode())
+                payload = {k: v[0] for k, v in form.items()}
+                payload["ack"] = form.get("ack", [])
+                auth.check_csrf(user, payload.get("csrf", ""))
+                payload.pop("csrf", None)
+                posted_actor = (payload.pop("underwriter_id", "") or "").strip()
+                if posted_actor and posted_actor != user.id:
+                    payload["_posted_actor_ignored"] = posted_actor
+                payload["underwriter_id"] = user.id
+                sub, ok, text = act(path, payload)
+                outcome, reason = ("ok" if ok else "refused"), text
+                try:
+                    auth.audit(user, path.strip("/"), sub, outcome=outcome, reason=reason)
+                except OSError as exc:
+                    text, ok = f"Audit log failed after the action: {exc}. Check the decision log before relying on this screen.", False
+            except (auth.AuthError, ValueError, OSError) as exc:
+                self._send(403, auth.sign_in_page(f"{label}: {exc}"))
+                return
+            MESSAGES[f"{user.id}|{sub}"] = (ok, text)
+            self._redirect("/" + (f"#{sub}" if sub else ""))
+
+    return Handler
 
 
 def serve(port: int = 8765, only: str | None = None, sandbox_dir: Path | None = None) -> None:
     if sandbox_dir is not None:
         sandbox(sandbox_dir)
-    PAGE.write_text(render(load_queue(only), correction_counts(LOG)))
-
-    class Handler(BaseHTTPRequestHandler):
-        def do_GET(self):
-            shown = dict(MESSAGES)
-            MESSAGES.clear()
-            body = render(load_queue(only), correction_counts(LOG), shown).encode()  # saved runs only: no extraction here
-            self.send_response(200)
-            self.send_header("Content-Type", "text/html; charset=utf-8")
-            self.end_headers()
-            self.wfile.write(body)
-
-        def do_POST(self):
-            if self.path not in REFUSED_AS:
-                self.send_error(404)
-                return
-            size = int(self.headers.get("Content-Length", "0"))
-            form = parse_qs(self.rfile.read(size).decode())
-            payload = {k: v[0] for k, v in form.items()}
-            payload["ack"] = form.get("ack", [])
-            sub, ok, text = act(self.path, payload)
-            MESSAGES[sub] = (ok, text)
-            self.send_response(303)  # never a bare 400 page: back to the card with the reason on it
-            self.send_header("Location", "/" + (f"#{sub}" if sub else ""))
-            self.end_headers()
-
-    ThreadingHTTPServer(("127.0.0.1", port), Handler).serve_forever()
+    try:
+        auth.config()
+        PAGE.write_text(auth.sign_in_page("", "/"))
+    except auth.AuthError as exc:
+        PAGE.write_text(auth.config_error_page(str(exc)))
+    ThreadingHTTPServer(("127.0.0.1", port), make_handler(only)).serve_forever()
 
 
 if __name__ == "__main__":
@@ -1160,6 +1732,19 @@ if __name__ == "__main__":
                     check,
                 )
                 assert correction_counts(check) == {"approve": 2, "edit": 3, "decline": 2}, correction_counts(check)
+                save(ext, "SUB-013", prepare.MANUAL_INTAKE)  # P-055: an approve is refused on a manual-intake file, with its reason
+                try:
+                    record_decision({"underwriter_id": "UW-001", "action": "approve", "submission": "SUB-013", "reason": "self-check"}, check)
+                    raise SystemExit("an approve on manual_intake should fail")
+                except ValueError as exc:
+                    assert "manual intake" in str(exc), exc
+                try:
+                    record_decision({"underwriter_id": "UW-001", "action": "edit", "submission": "SUB-013", "reason": "x", "field_id": "year_built", "new_value": "1990"}, check)
+                    raise SystemExit("an edit on manual_intake should fail")
+                except ValueError as exc:
+                    assert "manual intake" in str(exc) and "edit is refused" in str(exc), exc
+                record_decision({"underwriter_id": "UW-001", "action": "decline", "submission": "SUB-013", "reason": "a person decided"}, check)  # decline stays
+                assert correction_counts(check)["decline"] == 3
 
                 # D-055: seq rises by one per entry; an unlisted id or an AI role cannot log.
                 seqs = [json.loads(line)["seq"] for line in check.read_text().splitlines()]
@@ -1237,6 +1822,32 @@ if __name__ == "__main__":
                 assert "Loss history: not scored" in page and "Cooking: not scored" in page
             assert "<option>edit</option>" in page and "<option>decline</option>" in page
         assert "REJECTED" in render([card("all_values_rejected", status_reason=prepare.REJECT_REASON)], None)
+        # P-055 (D-105, D-065): a manual-intake card lists every reason, shows no route, no draft, no approve, and the send refusal says why.
+        mi = card(prepare.MANUAL_INTAKE)
+        mi["report"].update(scope=prepare.scope.detect([{"name": "application.jpg", "text": "", "needs_human": True}, {"name": "schedule.csv", "text": "loc,address\n1,1 A St\n2,2 B St"}]),
+                            fields=[{"field_id": "operations", "value": None}], sprinklers=None)
+        want_reasons = ["Manual intake: scanned application", "Manual intake: multiple locations"]
+        assert all(t in [r["text"] for r in mi["report"]["scope"]["reasons"]] for t in want_reasons)
+        m = match(mi["report"])
+        assert m["route"] == "manual_intake" and "provisional" not in m and m["suggested"] == "" and "hold" not in m["route"], m
+        mi.update(route=m["route"], note=m["note"], suggested=m["suggested"], score=points.score_run(mi["report"]))
+        real_pending, tmp_pending = PENDING, Path(tempfile.mkdtemp(prefix="wb-pending-"))
+        (tmp_pending / f"{mi['id']}.md").write_text("Please send the following. Nothing has been declined.")
+        PENDING = tmp_pending
+        try:
+            mi_page = render([mi], {"approve": 0, "edit": 0, "decline": 0}).split("<article", 1)[1]
+        finally:
+            PENDING = real_pending
+            shutil.rmtree(tmp_pending)
+        for label in ("Not read", "Not read by extraction", "Needs human read"):  # T-104a UI H1: never "none" under the manual-intake banner
+            assert f"<p>{label}: {MI_NOT_READ}</p>" in mi_page and f"<p>{label}: none</p>" not in mi_page, label
+        assert "Manual intake</b>" in mi_page and all(f"<li>{t}</li>" in mi_page for t in want_reasons), mi_page[:900]
+        assert "<option>edit</option>" not in mi_page and "<th>Cited text</th>" not in mi_page and "Nothing filled in: a person reads the file." in mi_page
+        assert "<option>approve</option>" not in mi_page and "Carrier match:" not in mi_page and "Provisional route" not in mi_page and "Suggested market" not in mi_page
+        assert "Missing-info draft" not in mi_page and "approve-draft" not in mi_page and "<h3>Missing</h3>" not in mi_page
+        assert html.escape(f"No send: this file's status is {prepare.status_refusal(mi['report'])}; it cannot be sent.") in mi_page and "scanned application; multiple locations" in mi_page, mi_page[-1500:]
+        assert "Cooking: not read (manual intake)" in mi_page and "no cooking equipment stated" not in mi_page and "Hood and suppression: not stated" not in mi_page
+        assert "MANUAL INTAKE" in mi_page and prepare.status_refusal(mi["report"]) in mi_page
         # P-041 (D-088): review pending says what is pending, keeps approve with the tick, and routes as complete did.
         rp = card(prepare.REVIEW_PENDING, fields=[{"field_id": "operations", "value": "accounting office"},
                                                   {"field_id": "sales_or_payroll", "value": "2100000", "needs_review": True, "reason": "check against the email"}])
@@ -1251,7 +1862,7 @@ if __name__ == "__main__":
         rpc["report"].update(missing=[], conflicts=[{"field": "square_feet", "values": [{"value": "16800", "source": "email.md"}, {"value": "14200", "source": "application.md"}], "resolution": "unresolved"}])
         rpc_page = render([rpc], None).split("<article", 1)[1]
         assert 'name="action" value="resolve"' in rpc_page and 'value="16800"' in rpc_page and 'name="entered_value"' in rpc_page, rpc_page[:400]
-        assert "OPEN: no send until the underwriter chooses or enters the value" in rpc_page and "No send: open conflict on square_feet" in rpc_page
+        assert "OPEN: no send until the underwriter chooses or enters the value" in rpc_page and "No send: open conflict on square footage" in rpc_page
         rpc["report"]["conflicts"][0].update(resolution="resolved", resolved_value="14200", resolved_by="UW-001")
         assert "RESOLVED by UW-001: 14200" in render([rpc], None) and 'value="resolve"' not in render([rpc], None).split("<article", 1)[1]
         normal = card("complete", fields=[{"field_id": "operations", "value": "accounting office"}])
@@ -1267,6 +1878,14 @@ if __name__ == "__main__":
         pf = render([flagged], None)
         assert "NEEDS REVIEW: number or date read from a scan" in pf and "Built 1942" in pf and 'name="ack" value="year_built"' in pf
         assert "a.pdf, page 2: blank" in pf and "b.docx, whole file:" in pf
+        # B-428 (D-113): the "Not read by extraction" list comes from the saved run's unread rows, never from the file name.
+        assert not_read_by_extraction({"unread": []}, ["application.pdf", "loss-runs.jpg", "email.md"]) == [], "a read pdf or jpg is not 'not read' (SUB-184, SUB-127/133)"
+        assert not_read_by_extraction({"unread": [{"file": "a.pdf", "page": 2, "reason": "blank"}]}, ["a.pdf"]) == [], "a partly read file belongs on the Not read line, not here"
+        assert not_read_by_extraction({"unread": [{"file": "b.docx", "page": None, "reason": "file type .docx is not read"}]}, ["b.docx"]) == ["b.docx"]
+        assert not_read_by_extraction(None, ["a.pdf", "a.md"]) == ["a.pdf"], "only a run with no unread rows at all falls back to the name test"
+        flagged["ignored"] = not_read_by_extraction(flagged["report"], [])
+        pf_unread = render([flagged], None).split("<article", 1)[1]
+        assert "<p>Not read by extraction: b.docx</p>" in pf_unread and "<p>Not read by extraction: a.pdf</p>" not in pf_unread, pf_unread[:900]
         assert 'name="ack"' not in page_ok
         # T-087: the card shows the quote status per carrier and SUB-002's open subjectivity.
         sub2 = card("complete", fields=[{"field_id": "operations", "value": "restaurant"}])
@@ -1282,7 +1901,7 @@ if __name__ == "__main__":
         assert logged["ai_version"].endswith("+rules-d015")
         fake = {
             "complete": True,
-            "fields": [{"field_id": "operations", "value": "bookkeeping office, no cooking"}, {"field_id": "tiv_building", "value": "$900,000"}],
+            "fields": [{"field_id": "operations", "value": "office building, no cooking"}, {"field_id": "tiv_building", "value": "$900,000"}],
         }
         assert route(fake) == "carrier_a"
         held = {
@@ -1311,7 +1930,7 @@ if __name__ == "__main__":
         for ops, why in (("Wholesale and retail of animal feed, seed and fertilizer bags. Warehouse with loading dock", "AG:31"), ("pediatric therapy offices", "AG:29"),
                          ("cold storage warehouse, wholesale", "AG:31"), ("retail liquor store", "AG:30"), ("vacant office building", "AG:40")):
             assert route(r(ops)) == "senior_referral" and why in match(r(ops))["note"], (ops, match(r(ops)))
-        assert route(r("lab-grown diamonds retail")) == "senior_referral" and route(r("labrador breeder office")) == "carrier_a", "whole words only"
+        assert route(r("lab-grown diamonds retail")) == "senior_referral" and "P-053" in match(r("labrador breeder office"))["note"], "whole words only (P-053: breeder is not an office word)"
         assert route(r("office, no liquor")) == "carrier_a", "a negated referral word does not refer"
         assert "R10" in match(r("cafe, Type I hood with wet chemical suppression"))["note"] and "AG:31" in match(r("chemical supply wholesale"))["note"], "SUB-130: wet chemical hood"
         assert {route(r(x)) for x in ("wet chemicals wholesale", "wet chemical wholesale", "wet-chemical retail supply")} == {"senior_referral"}, "security review: the exemption never opens Carrier A"
@@ -1362,30 +1981,88 @@ if __name__ == "__main__":
         assert match(r("pho house", cooking={"equipment": {"state": "yes"}, "hood_suppression": {"state": "not_stated"}}))["note"] == R10, "stated cooking equipment is generic evidence"
         # D-079 (B-290): bar words with restaurant evidence go to a person; without it, as before. (B-293): bakery, coffee shop, deli are food service.
         bar_ref = {"route": "senior_referral", "note": "possible bar/liquor exposure — confirm liquor sales (R2; AG:46, AG:39)", "suggested": "", "overridable": False}
-        for ops in ("sushi bar restaurant", "bar-b-q restaurant", "pub and kitchen", "hotel lounge with catering"):
+        for ops in ("sushi bar restaurant", "bar-b-q restaurant", "pub and kitchen"):
             assert match(r(ops)) == bar_ref, (ops, match(r(ops)))
+        # T-107a (D-112) P-061 / P-062: dev-shaped cases; no hold-out file or gold was opened. cl = the application's two class lines.
+        cl = lambda lob=None, cook=None: {"line_of_business": lob, "cooking_operations": cook}
+        R1 = lambda m: m["route"] == "no_match" and m["note"].startswith("prohibited class (R1; AG:45-50): ") and not m["overridable"] and not m["suggested"]  # UI check H1: the note names the word
+        lob_office = "commercial property and general liability, office"
+        m = match(r("Consulting firm", class_lines=cl(lob_office)))  # SUB-174 shape: office only on the line of business
+        assert m["route"] == "senior_referral" and m["suggested"] == "carrier_a" and "P-061" in m["note"], m  # never carrier_a: the class came from the line of business only
+        m = match(r("and", class_lines=cl(lob_office)))
+        assert m["route"] == "senior_referral" and "P-061" in m["note"], "a class read only from the line of business never routes to Carrier A"
+        assert route(r("Consulting firm")) == "no_match", "no line of business: as before"
+        assert route(r("office", class_lines=cl(lob_office))) == "carrier_a", "office on both: unchanged"
+        assert route(r("sub and deli shop", class_lines=cl("commercial property, retail food", "Two fryers, flat-top, 8-burner range"))) == "senior_referral"  # SUB-182 shape
+        assert match(r("sandwich shop", class_lines=cl(None, "Flat-top griddle, 2 fryers, 6-burner range")))["note"] == R10, "cooking equipment on the Cooking operations line is R9 evidence"
+        assert match(r("sandwich shop, convection oven"))["note"] == R10, "cooking equipment in operations is R9 evidence"
+        assert route(r("sandwich shop", class_lines=cl(None, "None (tenant electric ranges only)"))) == "no_match" and route(r("sandwich shop", class_lines=cl(None, "not listed"))) == "no_match", "none is not evidence"
+        assert match(r("Dining venue", class_lines=cl("commercial property and general liability, restaurant and bar", "Two fryers, flat-top")))["note"] == bar_ref["note"], "SUB-186 shape: bar on the line of business, fryers"
+        for cook in ("Fryer: none", "Fryers: 0", "Oven not used", "no fryer", "Fryers: n/a"):  # M1 (D-112): a negated appliance is not cooking evidence, so a bar file is never made softer by it
+            assert R1(match(r("pub", class_lines=cl(None, cook)))), cook
+        assert match(r("pub", class_lines=cl(None, "Two fryers, oven not used")))["note"] == bar_ref["note"], "a real fryer still counts"
+        assert R1(match(r("Nightclub and lounge. Small kitchen, pre-packaged snacks only.", class_lines=cl(None, "Snack warmer")))), "SUB-201 shape: snacks only is not restaurant evidence"
+        assert R1(match(r("pub, small kitchen, snack warmer"))) and R1(match(r("tavern, kitchen, snacks only")))
+        assert R1(match(r("restaurant and lounge, full kitchen", class_lines=cl(None, "Two fryers, flat-top, 8-burner range")))), "P-062 (a): a lounge is never softened by real cooking"
+        assert R1(match(r("nightclub with restaurant"))) and R1(match(r("hotel lounge with catering"))) and R1(match(r("hookah restaurant")))
+        assert R1(match(r("bar and grill"))), "bar and grill: no restaurant word, as before"
+        assert match(r("restaurant with a bar", class_lines=cl(None, "Two fryers"))) == bar_ref == match(r("pub, restaurant, full kitchen")), "R2 stays for bar, tavern, pub beside real evidence"
+        assert route(r("restaurant", class_lines=cl("restaurant and bar"))) == "senior_referral" and "R2" in match(r("restaurant", class_lines=cl("restaurant and bar")))["note"]
+        assert match(r("Pre-packaged snacks only, no cooking", class_lines=cl("restaurant")))["route"] == "no_match", "snacks only blocks the word evidence"
+        assert route(r("Pizzeria, two fryers, snacks only")) == "senior_referral", "stated equipment still counts"
         assert match(r("bbq restaurant"))["note"] == R10
         for ops in ("sports bar", "tavern", "nightclub"):
-            assert match(r(ops)) == {"route": "no_match", "note": "prohibited class (R1; AG:45-50)", "suggested": "", "overridable": False}, ops
+            assert R1(match(r(ops))) and f'"{ops.split()[-1]}" in operations' in match(r(ops))["note"], ops
         assert {route(r(w)) for w in ("hookah lounge", "recycling yard", "sawmill", "bail bonds office")} == {"no_match"}, "W1 additions; prohibited wins over office"
-        assert match(r("pub")) == match(r("nail lounge")) == {"route": "no_match", "note": "prohibited class (R1; AG:45-50)", "suggested": "", "overridable": False}, "P-051 (d): pubs, lounges are W1 (AG:46), never overridable"
-        # P-051: the four @model-risk P-049 H1 phrases never reach Carrier A; each goes to senior_referral.
-        for ops in ("office building with ground-floor pub", "retail store and cocktail lounge", "office building, no utilities", "office, unoccupied",
-                    "office building with ground-floor bar", "office and retail storefront", "retail store with a nail salon", "vacant office building"):
+        assert R1(match(r("pub"))) and R1(match(r("nail lounge"))), "P-051 (d): pubs, lounges are W1 (AG:46), never overridable"
+        for ops in ("bar, no deep fryer", "tavern, no flat-top griddle"):  # T-107a code review: a negated equipment phrase is not restaurant evidence
+            assert R1(match(r(ops))), ops
+        assert R1(match(r("bar", class_lines=cl(None, "No gas burners"))))
+        assert match(r("leased offices", class_lines=cl("office - nightclub")))["note"].endswith('"nightclub" in the Line of business line (P-061)')
+        # P-051: the four @model-risk P-049 H1 phrases never reach Carrier A. T-107a (D-112): a bar word beside a non-food operation is R1 (stricter of W1 and W1b);
+        # changed from senior_referral R16: "office building with ground-floor pub", "retail store and cocktail lounge", "office building with ground-floor bar".
+        for ops in ("office building with ground-floor pub", "retail store and cocktail lounge", "office building with ground-floor bar", "wholesale tavern", "gym and nightclub"):
+            assert R1(match(r(ops))), (ops, match(r(ops)))
+        for ops in ("office building, no utilities", "office, unoccupied", "office and retail storefront", "retail store with a nail salon", "vacant office building"):
             assert route(r(ops)) == "senior_referral", (ops, match(r(ops)))
-        assert "R16" in match(r("retail store and cocktail lounge"))["note"] and "AG:51" in match(r("office building, no utilities"))["note"]
+        assert "AG:51" in match(r("office building, no utilities"))["note"]
         assert route({"complete": True, "fields": [{"field_id": "operations", "value": "Office building", "quote": "Operations: office building. No utilities connected."}, {"field_id": "tiv_building", "value": "$1,000,000"}]}) == "senior_referral", "P-051 (c): read before the negation drop"
-        for ops in ("Used book and thrift shop, donated goods sorted on site", "Clothing boutique retail store", "clothing store tienda de ropa",
-                    "Dry retail gift shop", "Financial advisory and tax office, 2nd floor", "Light wholesale of electrical supplies"):
-            assert route(r(ops)) == "carrier_a", (ops, match(r(ops)))  # P-051 (a): AG:29-31 allow-list (SUB-135, SUB-143)
-        assert route(r("office, utilities on")) == "carrier_a" and route(r("gym")) == "no_match", "only the listed phrases; a non-target class alone is R8"
+        for ops in ("Clothing boutique retail store", "clothing store tienda de ropa", "Office, 2nd floor, clients by appointment", "office suite, LLC",
+                    "thrift shop", "office building, no food, no alcohol"):
+            assert route(r(ops)) == "carrier_a", (ops, match(r(ops)))  # P-051 (a): AG:29-31 allow-list (SUB-143); P-054 (a): only non-occupancy words beside it
+        # P-054 (a) (D-100): shop, store, gift, home, goods and trade words are occupancy words, never neutral (B-389).
+        for ops in ("Used book and thrift shop, donated goods sorted on site", "Dry retail gift shop", "Financial advisory and tax office, 2nd floor",
+                    "office and shop", "office with back shop", "office and store", "office and gift shop", "home office", "bookkeeping office"):
+            m = match(r(ops))
+            assert (m["route"], m["suggested"]) == ("senior_referral", "carrier_a"), (ops, m)
+        assert route(r("office, utilities on")) == "senior_referral" and route(r("gym")) == "no_match", "P-053: utilities is not a listed word; a non-target class alone is R8"
+        # P-053 (D-099): the @model-risk check-P-051-P-052 probe phrases (H1 and M1) all go to senior_referral with Carrier A suggested.
+        for ops in ("office and warehouse", "office and auto body shop", "retail and tattoo parlor", "retail and pawn shop", "office with veterinary practice",
+                    "office with indoor shooting range", "office and data center", "office and kennel", "office and casino", "retail with bowling alley",
+                    "retail and brewery taproom", "retail and winery tasting room", "retail and cbd", "retail smoke shop", "retail - vape shop",
+                    "office tenants; second floor event hall", "office and storage of tires", "lumber wholesale", "steel wholesale", "scrap metal wholesale",
+                    "tire wholesale", "wholesale firearms", "office, under renovation", "Light wholesale of electrical supplies"):
+            m = match(r(ops))
+            assert (m["route"], m["suggested"]) == ("senior_referral", "carrier_a") and "P-053" in m["note"], (ops, m)
+        # check-P-054 H2: cooking beside an allow-list word is not neutral; the empty "Cooking: none" label is.
+        for ops in ("office with cooking", "office, cooking", "office, back room cooking", "retail store, cooking on the ground floor"):
+            m = match(r(ops))
+            assert (m["route"], m["suggested"]) == ("senior_referral", "carrier_a"), (ops, m)
+        assert route(r("office building. Cooking: none")) == route(r("office building, cooking operations - none")) == "carrier_a"
+        # P-054 (b): vacancy variants are W2e (AG:51), so no market confirm.
+        for ops in ("office, no tenants", "retail, building empty", "office, utilities shut off", "office, power disconnected", "oficina desocupada",
+                    "local vacante", "edificio vacío", "retail, power off", "office, vacancy", "oficina, sin servicios", "office, utilities are off",
+                    "office, no power", "office, no electricity", "abandoned retail", "oficina abandonada", "office, not occupied", "local sin ocupar"):
+            assert "AG:51" in match(r(ops))["note"] and route(r(ops)) == "senior_referral", (ops, match(r(ops)))
         assert route(r("cannabis dispensary restaurant")) == "no_match", "other prohibited words are unchanged"
         assert route(r("restaurant bar", None)) == "hold", "holds come before the referral"
         # P-047 (c): the cited text is read too, so a dropped "and bar" still refers; a negated word does not.
         quoted = lambda ops, quote: {"complete": True, "fields": [{"field_id": "operations", "value": ops, "quote": quote}, {"field_id": "tiv_building", "value": "$1,000,000"}]}
         assert match(quoted("Full-service restaurant", "Operations: Full-service restaurant and bar, 180 seats, full liquor license")) == bar_ref
         assert match(quoted("Mexican restaurant", "Operations: Mexican restaurant, 70 seats, beer and wine only, no bar."))["note"] == R10
-        assert route(quoted("Dry retail gift shop", "Operations: Dry retail gift shop. No food, no alcohol.")) == "carrier_a"
+        assert route(quoted("Dry retail", "Operations: Dry retail. No food, no alcohol.")) == "carrier_a"
+        assert route(quoted("Financial advisory and tax office, 2nd floor", "Operations: Financial advisory and tax office, 2nd floor. Clients by appointment. No inventory, no goods held for sale.")) == "senior_referral", "SUB-127: P-054"
+        assert route(quoted("Dry retail gift shop: candles, home goods, greeting cards, gift wrap.", "No food, no alcohol, no repackaging.")) == "senior_referral", "SUB-128: P-054"
         lined = quoted("Mexican restaurant", "Operations: Mexican restaurant, 70 seats.")
         lined["fields"][0]["context"] = "Liquor: full bar, 35% of sales"
         assert match(lined) == bar_ref, "P-047 H1: a separate liquor line still refers"
@@ -1404,10 +2081,13 @@ if __name__ == "__main__":
             ext, inbox, dlog = tmp / "extractions", tmp / "inbox", tmp / "decisions.jsonl"
             old = (prepare.EXTRACT_DIR, prepare.INBOX_DIR, INBOX, LOG, PENDING, TO_PRODUCER, TO_CARRIER, package.DECISIONS_LOG, package.SENDS_LOG, package.INBOX, llm_extract._post, prepare.process_submission)
 
-            def stored(sub: str, status: str, fields=None, complete=True, conflicts=None) -> None:
+            APP_OK = ("Named insured: Example Roofing LLC\nPremises address: 100 Main St, Austin, TX 78701\nEffective date: 2027-01-01\nYears in business: 9\n"
+                       "Operations: General office work for the business, no public visits, and the staff are all on site.\nConstruction: masonry\n")  # in scope for the P-063 send-time re-check
+
+            def stored(sub: str, status: str, fields=None, complete=True, conflicts=None, app=APP_OK) -> None:
                 folder = inbox / sub
                 folder.mkdir(parents=True, exist_ok=True)
-                (folder / "application.md").write_text(f"SYNTHETIC application {sub}\n")
+                (folder / "application.md").write_text(f"SYNTHETIC application {sub}\n{app}")
                 payload = {"submission": sub, "status": status, "error": None, "complete": complete, "conflicts": conflicts or [], "needs_human": [], "unread": [], "sprinklers": "no", "fields": fields or [],
                            "input_manifest": prepare.folder_manifest(folder), "hash_algorithm": prepare.HASH_ALGORITHM}
                 payload["saved_hash"] = prepare.hash_payload(payload)
@@ -1422,7 +2102,7 @@ if __name__ == "__main__":
                 PENDING, TO_PRODUCER, TO_CARRIER = tmp / "pending", tmp / "to-producer", tmp / "to-carrier"
                 package.DECISIONS_LOG, package.SENDS_LOG, package.INBOX = dlog, tmp / "sends.jsonl", inbox
                 good = [{"field_id": f, "value": "x", "source": "application.md", "start": 0, "end": 3} for f in prepare.FIELDS]
-                good = [{**r, "value": {"operations": "accounting office", "tiv_building": "$1,000,000"}.get(r["field_id"], "x")} for r in good]
+                good = [{**r, "value": {"operations": "office building", "tiv_building": "$1,000,000"}.get(r["field_id"], "x")} for r in good]
                 stored("SUB-901", "complete", good)
                 stored("SUB-903", "complete", good)
                 stored("SUB-910", "extraction_failed", complete=False)
@@ -1448,6 +2128,19 @@ if __name__ == "__main__":
                 assert "changed since extraction" in act("/send", {"submission": "SUB-903", "user_line": "send to carrier SUB-903"})[2]
                 assert "Send refused: this file's status is extraction_failed" in act("/send", {"submission": "SUB-910", "user_line": "send to carrier SUB-910"})[2]
                 assert act("/send", {"submission": "../x"})[2].startswith("Send refused: no such submission")
+                # P-063 (B-432): a SUB-233-shaped file saved complete is refused at send time and its card says why, whatever the status
+                stored("SUB-933", "complete", good, app=APP_OK.replace("100 Main St, Austin, TX 78701", "Loc 1: 3412 S Georgia St, Amarillo, TX 79109; Loc #2: 6901 Bell St, Amarillo, TX 79106"))
+                msg933 = act("/send", {"submission": "SUB-933", "user_line": "send to carrier SUB-933"})[2]
+                assert msg933.startswith("Send refused: out of pilot scope at send time (multiple locations, " + prepare.scope.VERSION), msg933
+                card933 = render(load_queue("SUB-933"), None)
+                assert html.escape("No send: out of pilot scope at send time (multiple locations, " + prepare.scope.VERSION) in card933 and 'action="/send"' not in card933, card933[-2000:]
+                (PENDING / "SUB-933.md").parent.mkdir(parents=True, exist_ok=True)
+                (PENDING / "SUB-933.md").write_text("Nothing has been declined")
+                card933 = render(load_queue("SUB-933"), None)
+                assert "<b>Send blocked</b> — out of pilot scope" in card933 and "Next step: re-run extraction" in card933 and "Provisional route: <b>" not in card933 and "· No send until the hold clears" not in card933
+                assert "No send to producer: out of pilot scope at send time" in card933 and 'action="/approve-draft"' not in card933
+                assert act("/approve-draft", {"submission": "SUB-933"})[2].startswith("Request not approved: out of pilot scope at send time"), "the gate refuses too"
+                shutil.rmtree(PENDING)  # later checks make their own
                 pg = render(load_queue(), None, {"SUB-901": (False, "Send refused: x")})
                 assert 'class="msg bad"' in pg and "Send refused: x" in pg and "Approve first" in pg and 'action="/send"' not in pg  # B-249
 
@@ -1531,7 +2224,7 @@ if __name__ == "__main__":
                 # B-324 (D-089): a resolve names an open conflict of this run, is logged with the run hash, and the card then shows it resolved.
                 sq = {"field": "square_feet", "values": [{"value": "16800", "source": "email.md"}, {"value": "14200", "source": "application.md"}], "resolution": "unresolved"}
                 stored("SUB-909", prepare.REVIEW_PENDING, good, complete=False, conflicts=[sq])
-                assert "No send: open conflict on square_feet" in art(render(load_queue(), None), "SUB-909")
+                assert "No send: open conflict on square footage" in art(render(load_queue(), None), "SUB-909")
                 base = {"submission": "SUB-909", "underwriter_id": "user", "action": "resolve", "conflict_field": "square_feet"}
                 assert act("/decision", {**base, "conflict_field": "sales_or_payroll", "chosen_value": "1"})[2] == "Decision refused: no open conflict on sales_or_payroll in this run"
                 assert act("/decision", base)[2] == "Decision refused: choose one of the values or enter the value"
@@ -1546,6 +2239,8 @@ if __name__ == "__main__":
                 card = art(render(load_queue(), None), "SUB-907")
                 assert "Suggested market: <b>carrier_b</b>" in card and 'action="/confirm-market"' in card and "UW-001 Dana Reyes" in card and "UW-002" not in card.split("/confirm-market")[1].split("</form>")[0]
                 assert "No send: a senior referral needs a senior underwriter to confirm the market first" in card  # P-052: the plain reason
+                assert 'class="bad">Account-manager check: refused, a senior referral needs a senior underwriter' in card and "in appetite" not in card.split("Account-manager check")[1]  # T-107c
+                assert "Send refused: a senior referral needs a senior underwriter to confirm the market first" in act("/send", {"submission": "SUB-907", "user_line": "send to carrier SUB-907"})[2]  # T-107c (B-412): the card's order
                 assert not str(package.confirms_path()).startswith(str(ROOT)), "D-069: the confirm log is the sandbox copy"
                 h907 = prepare.read_saved_run("SUB-907")["saved_hash"]
                 assert "Market confirm refused: only a senior" in act("/confirm-market", {"submission": "SUB-907", "underwriter_id": "UW-002", "carrier": "carrier_b", "reason": "x", "run_hash": h907})[2]
@@ -1553,9 +2248,22 @@ if __name__ == "__main__":
                 card = art(render(load_queue(), None), "SUB-907")
                 assert "Market confirmed: <b>carrier_b</b> by UW-001 Dana Reyes" in card and "roofing only, no hot work" in card and 'action="/confirm-market"' not in card
                 assert "Approve first" in card, "P-052: a confirm opens no send gate"
+                assert "Account-manager check: passes" in card and "appetite" not in card.split("Account-manager check")[1], "T-107c: confirmed carrier passes the AM check"
+                pg = render(load_queue(), None)
+                assert pg.count("<details><summary>Show all") == 1 and pg.split("<details><summary>Show all")[0].split("<summary><b>What's new</b>")[1].count("<li>") == 5, "T-107d: latest 5, then show all"
                 stored("SUB-907", "complete", [{**r, "value": "office building with ground-floor pub"} if r["field_id"] == "operations" else r for r in good])
                 card = art(render(load_queue(), None), "SUB-907")
-                assert "No market confirm and no send from this screen: a prohibited word" in card and "No send: no market can be confirmed on this file (a prohibited word" in card
+                assert 'action="/confirm-market"' not in card and "prohibited class (R1; AG:45-50)" in card, "T-107a (D-112): office + pub is now no_match R1, no market confirm offered (was senior_referral R16; the old text asserted here was the prohibited-word refusal)"
+                # @compliance M1 (D-099): the excluded carrier is not offered, the card says why, and a posted confirm for it is refused.
+                stored("SUB-961", "complete", [{**r, "value": "office with a medical clinic"} if r["field_id"] == "operations" else r for r in good])
+                card = art(render(load_queue(), None), "SUB-961")
+                form = card.split('action="/confirm-market"')[1].split("</form>")[0]
+                assert "Not offered: carrier_a. A note on the file excludes it (carrier match note:" in form and "<option>carrier_a</option>" not in form and "<option>carrier_b</option>" in form, form
+                m1_reply = act("/confirm-market", {"submission": "SUB-961", "underwriter_id": "UW-001", "carrier": "carrier_a", "reason": "x", "run_hash": prepare.read_saved_run("SUB-961")["saved_hash"]})[2]
+                assert "Market confirm refused: the file's notes exclude carrier_a" in m1_reply, m1_reply
+                stored("SUB-962", "complete", [{**r, "value": "office and casino"} if r["field_id"] == "operations" else r for r in good])
+                card = art(render(load_queue(), None), "SUB-962")
+                assert "Suggested market: <b>carrier_a</b>" in card and "words not on the Carrier A allow-list: casino" in card and "Not offered" not in card  # P-053
                 assert "Suggested market" not in art(render(load_queue(), None), "SUB-901")  # B-264: senior referrals only
                 env_old = {k: os.environ.get(k) for k in ("LLM_API_KEY", "LLM_BASE_URL", "LLM_MODEL")}
                 try:
@@ -1662,14 +2370,23 @@ if __name__ == "__main__":
         before_real = fingerprint()
         names = ("PAGE", "LOG", "INBOX", "PENDING", "TO_PRODUCER", "TO_CARRIER", "BANNER")
         saved_mod = {n: globals()[n] for n in names}
-        saved_other = (package.DECISIONS_LOG, package.SENDS_LOG, package.INBOX, quotes.CLOSURES, quotes.TO_CARRIER, quotes.FROM_CARRIER, prepare.EXTRACT_DIR, prepare.INBOX_DIR, llm_extract.CACHE)
+        saved_other = (package.DECISIONS_LOG, package.SENDS_LOG, package.INBOX, quotes.CLOSURES, quotes.TO_CARRIER, quotes.FROM_CARRIER, prepare.EXTRACT_DIR, prepare.INBOX_DIR, llm_extract.CACHE, pilot.CORRECTIONS, pilot.EVENTS)
+        saved_audit = auth.AUDIT_LOG
+        def _gate_ok(sid: str) -> bool:
+            try:
+                prepare.read_saved_run(sid)
+                return True
+            except ValueError:
+                return False
+
         with tempfile.TemporaryDirectory() as box_dir:
             box_dir = Path(box_dir)
             try:
                 sandbox(box_dir)
                 assert PAGE.parent == box_dir and "SANDBOX COPY" in BANNER
                 PAGE.write_text(render(load_queue(), correction_counts(LOG)))  # what serve() writes first
-                sid = next(p.name for p in INBOX.iterdir() if p.name.startswith("SUB-") and (prepare.EXTRACT_DIR / f"{p.name}.json").is_file())
+                # Sorted, and only a saved run the gate accepts: iterdir order differs by OS and old runs carry no hash.
+                sid = next(p.name for p in sorted(INBOX.iterdir()) if p.name.startswith("SUB-") and _gate_ok(p.name))
                 act("/decision", {"submission": sid, "underwriter_id": "user", "action": "approve", "reason": "sandbox check"})
                 act("/send", {"submission": sid, "user_line": f"send to carrier {sid}"})
                 act("/close-subjectivity", {"submission": "SUB-002", "carrier": "carrier_b", "subjectivity": "x", "underwriter_id": "user", "reason": "sandbox check"})
@@ -1677,6 +2394,34 @@ if __name__ == "__main__":
             finally:
                 for n, v in saved_mod.items():
                     globals()[n] = v
-                (package.DECISIONS_LOG, package.SENDS_LOG, package.INBOX, quotes.CLOSURES, quotes.TO_CARRIER, quotes.FROM_CARRIER, prepare.EXTRACT_DIR, prepare.INBOX_DIR, llm_extract.CACHE) = saved_other
+                (package.DECISIONS_LOG, package.SENDS_LOG, package.INBOX, quotes.CLOSURES, quotes.TO_CARRIER, quotes.FROM_CARRIER, prepare.EXTRACT_DIR, prepare.INBOX_DIR, llm_extract.CACHE, pilot.CORRECTIONS, pilot.EVENTS) = saved_other
+                auth.AUDIT_LOG = saved_audit
         assert fingerprint() == before_real, "a sandbox run changed a real file"
+
+        # P-066 regression (2026-10-20): REFUSED_AS was deleted while two uses stayed, so every refusal
+        # raised NameError instead of a plain-words reason. This check fails if a refusal route has no
+        # reason here, or if the set of POST routes and REFUSED_AS ever drift apart. Runs in a sandbox,
+        # so nothing real is written.
+        with tempfile.TemporaryDirectory() as ref_box:
+            ref_box = Path(ref_box)
+            try:
+                sandbox(ref_box)
+                posted = {"/confirm-market", "/decision", "/mark-code", "/cooking-call", "/close-subjectivity", "/send", "/approve-draft"}
+                assert set(REFUSED_AS) == posted, ("refusal reasons and POST routes must match", set(REFUSED_AS) ^ posted)
+                for ref_path, ref_reason in REFUSED_AS.items():
+                    sub, ok, text = act(ref_path, {})  # an empty form is refused by every action
+                    assert ok is False, (ref_path, "an empty form must be refused")
+                    assert text.startswith(f"{ref_reason}: "), (ref_path, "plain-words reason missing", text)
+            finally:
+                for n, v in saved_mod.items():
+                    globals()[n] = v
+                (package.DECISIONS_LOG, package.SENDS_LOG, package.INBOX, quotes.CLOSURES, quotes.TO_CARRIER, quotes.FROM_CARRIER, prepare.EXTRACT_DIR, prepare.INBOX_DIR, llm_extract.CACHE, pilot.CORRECTIONS, pilot.EVENTS) = saved_other
+                auth.AUDIT_LOG = saved_audit
+
+        # P-075 (code review 4): a rule-copied cooking none-line, whatever its body, routes exactly as the value did before the copy.
+        for body in sorted(prepare.COOKING_NONE_BODIES):
+            line_ = f"Cooking operations: {body}"
+            plain_row = {"field_id": "operations", "value": "Insurance agency office, 48 seats", "quote": "Operations: Insurance agency office, 48 seats"}
+            copied_row = {**plain_row, "value": f"{plain_row['value']}; {line_}", "rule_copied": True, "also_quoted": [{"quote": line_, "source": "application.md"}]}
+            assert _ops({"fields": [copied_row]}) == _ops({"fields": [plain_row]}) and _unlisted(_ops({"fields": [copied_row]})) == _unlisted(_ops({"fields": [plain_row]})), body
         print("workbench ok")

@@ -1,0 +1,113 @@
+# Development overlay.
+# Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+# Isolated ports, DB name and volumes so dev never touches base/bank data.
+# API runs with --reload against the bind-mounted ./src.
+
+version: "3.9"
+
+x-api-env: &api-env
+  LLM_API_KEY: ${LLM_API_KEY:-}
+  LLM_CHEAP_API_KEY: ${LLM_CHEAP_API_KEY:-}
+  LLM_EXPENSIVE_API_KEY: ${LLM_EXPENSIVE_API_KEY:-}
+  CLAUDE_API_KEY: ${CLAUDE_API_KEY:-}
+  LLM_MODEL: ${LLM_MODEL:-gpt-4o-mini}
+  LLM_CHEAP_MODEL: ${LLM_CHEAP_MODEL:-gpt-4o-mini}
+  LLM_EXPENSIVE_MODEL: ${LLM_EXPENSIVE_MODEL:-gpt-4o}
+  DATABASE_URL: postgresql://insureflow:${POSTGRES_PASSWORD:-insureflow}@db:5432/insureflow_dev
+  REDIS_URL: redis://redis:6379/0
+  CELERY_BROKER_URL: redis://redis:6379/0
+  CELERY_RESULT_BACKEND: redis://redis:6379/0
+  JOB_STORE_BACKEND: auto
+  ENCRYPTION_KEY: ${ENCRYPTION_KEY:-}
+  SECRET_KEY: ${SECRET_KEY:-CHANGE_ME_IN_DEV_LOCAL_ONLY_32_CHARS_MINIMUM}
+  ENVIRONMENT: development
+  BANK_MODE: "false"
+  ALLOW_OPEN_REGISTRATION: "true"
+  ALLOW_AUTH_RESET: "true"
+  ALLOW_SIMULATED_BIND: "true"
+  LOAD_DEMO_PORTFOLIO: "true"
+  ORACLE_MODE: auto
+  REQUIRE_LIVE_ORACLES: "false"
+  LANGSMITH_API_KEY: ${LANGSMITH_API_KEY:-}
+  LANGSMITH_PROJECT: ${LANGSMITH_PROJECT:-insureflow-evals}
+  LANGSMITH_TRACING: ${LANGSMITH_TRACING:-false}
+  CLOUDWATCH_LOGS: ${CLOUDWATCH_LOGS:-false}
+  AWS_REGION: ${AWS_REGION:-us-east-1}
+  AWS_SECRETS_ARN: ${AWS_SECRETS_ARN:-}
+  PYTHONPATH: /app
+  WEB_CONCURRENCY: ${WEB_CONCURRENCY:-1}
+  METRICS_BACKEND: ${METRICS_BACKEND:-redis}
+  INSURANCE_USE_CELERY: ${INSURANCE_USE_CELERY:-0}
+  PROMETHEUS_MULTIPROC_DIR: /tmp/rytera-prom
+  METRICS_BEARER: ${METRICS_BEARER:-}
+  OPENOBSERVE_ENABLED: ${OPENOBSERVE_ENABLED:-false}
+  OPENOBSERVE_URL: ${OPENOBSERVE_URL:-http://openobserve:5080}
+  OPENOBSERVE_ORG: ${OPENOBSERVE_ORG:-default}
+  OPENOBSERVE_USER: ${ZO_ROOT_USER_EMAIL:-dev@rytera.local}
+  OPENOBSERVE_PASSWORD: ${ZO_ROOT_USER_PASSWORD:-devpass}
+  GRAFANA_URL: ${GRAFANA_URL:-http://localhost:3010}
+  CLAMAV_HOST: ${CLAMAV_HOST:-clamav}
+
+services:
+  api:
+    command: python3 -m uvicorn insureflow.api:app --host 0.0.0.0 --port 8000 --reload
+    ports: !override ["8002:8000"]
+    environment:
+      <<: *api-env
+    volumes:
+      - ./src:/app/src
+      - ./underwriting_pipeline:/app/underwriting_pipeline
+
+  worker:
+    environment:
+      <<: *api-env
+
+  worker-large:
+    environment:
+      <<: *api-env
+
+  clamav:
+    ports: !override []
+    volumes:
+      - clamav-db-dev:/var/lib/clamav
+
+  redis:
+    ports: !override ["6380:6379"]
+
+  prometheus:
+    ports: !override []
+    volumes:
+      - ./deploy/observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data-dev:/prometheus
+
+  grafana:
+    ports: !override ["3010:3000"]
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-dev}
+    volumes:
+      - ./deploy/observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./deploy/observability/grafana/dashboards:/etc/grafana/dashboards:ro
+      - grafana-data-dev:/var/lib/grafana
+
+  openobserve:
+    ports: !override []
+    volumes:
+      - oo-data-dev:/data
+
+  db:
+    ports: !override ["5433:5432"]
+    environment:
+      - POSTGRES_USER=insureflow
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-insureflow}
+      - POSTGRES_DB=insureflow_dev
+    volumes:
+      - pgdata-dev:/var/lib/postgresql/data
+      - ./scripts/db/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
+
+volumes:
+  pgdata-dev:
+  clamav-db-dev:
+  prometheus-data-dev:
+  grafana-data-dev:
+  oo-data-dev:

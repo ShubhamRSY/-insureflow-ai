@@ -1,0 +1,23 @@
+INFO  SUB-212/loss-runs.md: declared undated in the plan; no valued date found, as declared
+INFO  SUB-216/loss-runs.md: declared undated in the plan; no valued date found, as declared
+INFO  SUB-219/loss-runs.md: declared undated in the plan; no valued date found, as declared
+INFO  SUB-220/loss-runs.md: declared undated in the plan; no valued date found, as declared
+INFO  SUB-229/loss-runs.md: declared undated in the plan; no valued date found, as declared
+INFO  SUB-233/loss-runs.md: declared undated in the plan; no valued date found, as declared
+INFO  SUB-235/loss-runs.md: declared undated in the plan; no valued date found, as declared
+FAIL  SUB-206/gold: eval_holdout_v8 cannot read it: no "- Loss runs valued as of: <YYYY-MM-DD>" line; gold expects a loss-run date (v8 reads only that line)
+FAIL  SUB-207/gold: eval_holdout_v8 cannot read it: no "- Loss runs valued as of: <YYYY-MM-DD>" line; gold expects a loss-run date (v8 reads only that line)
+FAIL  SUB-209/gold: eval_holdout_v8 cannot read it: no "- Loss runs valued as of: <YYYY-MM-DD>" line; gold expects a loss-run date (v8 reads only that line)
+FAIL  SUB-210/gold: eval_holdout_v8 cannot read it: no "- Loss runs valued as of: <YYYY-MM-DD>" line; gold expects a loss-run date (v8 reads only that line)
+FAIL  SUB-211/gold: eval_holdout_v8 cannot read it: no "- Loss runs valued as of: <YYYY-MM-DD>" line; gold expects a loss-run date (v8 reads only that line)
+FAIL  SUB-213/gold: eval_holdout_v8 cannot read it: no "- Loss runs valued as of: <YYYY-MM-DD>" line; gold expects a loss-run date (v8 reads only that line)
+FAIL  SUB-215/gold: eval_holdout_v8 cannot read it: no "- Loss runs valued as of: <YYYY-MM-DD>" line; gold expects a loss-run date (v8 reads only that line)
+FAIL  SUB-216/gold: eval_holdout_v8 cannot read it: no "- Loss runs valued as of: <YYYY-MM-DD>" line; gold expects a loss-run date (v8 reads only that line)
+FAIL  SUB-217/gold: eval_holdout_v8 cannot read it: no "- Loss runs valued as of: <YYYY-MM-DD>" line; gold expects a loss-run date (v8 reads only that line)
+FAIL  SUB-218/gold: eval_holdout_v8 cannot read it: no "- Loss runs valued as of: <YYYY-MM-DD>" line; gold expects a loss-run date (v8 reads only that line)
+FAIL  SUB-219/gold: eval_holdout_v8 cannot read it: no "- Loss runs valued as of: <YYYY-MM-DD>" line; gold expects a loss-run date (v8 reads only that line)
+FAIL  SUB-221/gold: eval_holdout_v8 cannot read it: no "- Loss runs valued as of: <YYYY-MM-DD>" line; gold expects a loss-run date (v8 reads only that line)
+FAIL  SUB-222/gold: eval_holdout_v8 cannot read it: no "- Loss runs valued as of: <YYYY-MM-DD>" line; gold expects a loss-run date (v8 reads only that line)
+FAIL  SUB-224/gold: eval_holdout_v8 cannot read it: no "- Loss runs valued as of: <YYYY-MM-DD>" line; gold expects a loss-run date (v8 reads only that line)
+FAIL  SUB-225/gold: eval_holdout_v8 cannot read it: no "- Loss runs valued as of: <YYYY-MM-DD>" line; gold expects a loss-run date (v8 reads only that line)
+FAIL: 15 failure(s), 7 info, 32 files, run date 2026-10-19

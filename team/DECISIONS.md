@@ -1101,3 +1101,380 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: P-051 and P-052 built in the main session (budget rule 3, as P-047–P-050); backlog row; dev re-check; @model-risk and @compliance checks; @senior-underwriter UI check; screenshot.
 - Status: ACCEPTED
 - Amends: D-057/D-060 (a senior_referral market may now be confirmed by a senior underwriter; no_match override unchanged); D-097 (closes @model-risk P-049 H1 once built and checked). Not a production approval; T-027 veto stands.
+
+## D-099 — outside commits ruled; approve change P-053 (P-051 H1: strict Carrier A words, wholesale never direct); @compliance M1 ruled (no confirm of an excluded carrier)
+- Date / Owner: 2026-10-16 / @user
+- Context: team/NEXT-SESSION.md after D-098 (pending decisions 1–3); @model-risk check-P-051-P-052 H1; @compliance M1 (B-386).
+- Options considered: P-051 H1 (i) or (ii) as written in NEXT-SESSION.md; the user chose a strict word list with senior referral for anything else.
+- Decision: In the user's words. "1. Outside commits: accept efdd48d (my frontend fix). Leave 774d8b1 on its branch; check its .env example files hold placeholders only, no real keys. Do not accept 5ceeef8: keep feat/senior-test-and-frontend-roles as is; log a backlog item to raise the two new roles as a P-### later. 2. Option (a): switch to ai-team, cherry-pick d53e250, 83e7c31, c232a2c (not 5ceeef8). Run self-checks. Confirm git log shows no 5ceeef8 on ai-team. 3. approve change P-053 (P-051 H1): Carrier A direct route only when every operations word is on the allow-list or a small listed neutral-word list; any other word → senior_referral with Carrier A suggested. Wholesale never routes directly. Self-checks include the 36 @model-risk phrases (e.g. "office and casino", "steel wholesale"). 4. @compliance M1: a senior cannot confirm a carrier the file's notes exclude ("not Carrier A"); they pick another market or the note is fixed at source and the file re-run. Show the reason on the card. 5. @compliance re-checks its H1 fix. Orchestrator writes D-098 standups for @model-risk, @compliance and @senior-underwriter per D-095. 6. Dev re-check SUB-127–146 from cache with v4: route gate, unsafe routes, false completes, and how many files now go to senior_referral. @model-risk check P-053, High only. /wrap-up and push ai-team only."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-16 (D-032).
+- Dissent: none
+- Follow-up tasks: item 2 was already done before the pause (31e2a16, e5326dc, 50435a2 carry the same patch-ids as d53e250, 83e7c31, c232a2c; 5ceeef8 is not an ancestor of ai-team). 774d8b1 .env examples: empty keys and dev placeholders only. P-053 and M1 built in the main session (budget rule 3); rules file R17; backlog row for the 5ceeef8 roles; @compliance look-again on P-052 H1; @model-risk check P-053; @senior-underwriter UI check (D-065); dev re-check.
+- Status: ACCEPTED
+- Amends: D-098 (P-051 R14: a direct Carrier A route now also needs R17; P-052: a confirm may not name a carrier the route note excludes). The roles in 5ceeef8 stay unconfirmed (D-045/D-053). Not a production approval; T-027 veto stands.
+
+## D-100 — approve change P-054 (B-389 non-occupancy neutral words; B-390 vacancy variants; M1 reads every note); freeze; T-103 build
+- Date / Owner: 2026-10-16 / @user
+- Context: team/NEXT-SESSION.md after D-099 (pending decisions 1–4); @model-risk check-P-053 M1 (B-389); @compliance look-again M1, M2 (B-390).
+- Options considered: none. The user's words.
+- Decision: In the user's words. "1. approve change P-054: (a) B-389: the neutral list holds only non-occupancy words (articles, "LLC", "suite", "floor" etc.). Remove shop, store, gift, home and any other occupancy word. "home office" → senior_referral. (b) B-390: extend vacancy words for the no-confirm rule (incl. "desocupado", "vacante", "power disconnected", "utilities off"). (c) M1 covers every note in the file, including producer remarks like "declined by Carrier A". Self-checks; dev re-check SUB-127–146 from cache with v4. @model-risk check, High only. 2. If P-054 passes with no High: freeze the code, record the commit hash in NEXT-SESSION.md. Then build T-103 (SUB-154–173) per the approved mix: @producer builds files, @senior-underwriter writes gold from documents and the written rules only (gold route = route after any hold clears). Freeze gold, commit, record the hash. Do not run the pipeline on them. /wrap-up and push ai-team only."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-16 (D-032).
+- Dissent: none
+- Follow-up tasks: P-054 built in the main session (budget rule 3). (a) read strictly: trade and goods words (financial, tax, bookkeeping, used, book...) are occupancy words too, so SUB-127/128/135 leave carrier_a. Rules file R17, W2e; dev re-check; @model-risk check; screenshot; then item 2 only if no High.
+- Status: ACCEPTED
+- Amends: D-099 (R17 neutral list narrowed; M1 scope widened to every note). B-389 M1, B-390 M1/M2 answered. Not a production approval; T-027 veto stands.
+
+## D-101 — official T-103 hold-out run (SUB-154–173) for the T-027 gate
+- Date / Owner: 2026-10-16 / @user
+- Context: team/NEXT-SESSION.md after D-100 (pending decision 1).
+- Options considered: none. The user's words.
+- Decision: In the user's words (summary of the pasted instruction): set up a permanent worktree `../insureflow-ai-team` on ai-team; code = 3557e4a, gold = 33e399a, confirmed by git, no code or gold change during or after the run; .venv python; smoke_readers.py first; qwen paced (LLM_PACE_SECONDS=55); no cached replies for SUB-154–173; retries per RUN-RULES.md, logged; run once, score once with scorer v4 (--write). @model-risk writes the T-027 memo (lift, keep, or lift with conditions). "Fix nothing this session; log findings as backlog." /wrap-up and push ai-team only.
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-16 (D-032).
+- Dissent: none
+- Follow-up tasks: done this session. Score SUB-154-173-holdout-v4.md/.json; run record; as-is mismatches; @model-risk memo T-027-gate-memo-T-103.md: **KEEP**. Findings B-394, B-395, B-396.
+- Status: ACCEPTED
+- Amends: none. Not a production approval; T-027 veto stands.
+
+## D-102 — T-103 root cause (analysis only), gold rules for all future gold, P-055 pilot scope draft, stronger-model test plan
+- Date / Owner: 2026-10-16 / @user
+- Context: team/NEXT-SESSION.md after D-101 (pending decisions 1–2); @model-risk T-027 memo on T-103 (KEEP; B-394, B-395, B-396).
+- Options considered: none. The user's words.
+- Decision: In the user's words (summary of the pasted instruction): no code changes this session; 0 model calls (saved replies only). (1) Root cause of T-103 in `deliverables/ai-engineer/analysis/T-103-root-cause.md`: operations 19/20 dev vs 7/20 T-103 (each of the 13 misses and 6 silent errors with source text, extracted value, gold, and why the P-047 check did not flag it); SUB-170 (where the values are lost); scanned carrier runs SUB-159–161 (why no date was kept); SUB-172 multi-location and the email-only/Spanish files; each miss classed as extraction, prompt, check, OCR, scorer or gold convention. (2) **Gold rules for all future gold: an empty field is written "not in documents"; "hold" is a status, never a route.** Written into the gold-writing guide. (3) @pm drafts P-055 (pilot scope), not built: files detected as scanned application, email-only, non-English or multi-location go to "manual intake" as a whole file (no auto-fill shown as complete, no carrier route); the T-027 gate applies to in-scope files; out-of-scope detection itself is measured (must never let an out-of-scope file through as complete). Ask @model-risk whether it accepts this scope. (4) @ai-engineer (retired handle → @ai-engineer-assistant) drafts a plan to test one stronger model on SUB-127–146 (dev only), with cost per file. (5) Standups: the orchestrator may write an entry for any role that took a turn and did not write one, labelled "written by orchestrator". /wrap-up and push ai-team only.
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-16 (D-032).
+- Dissent: none
+- Follow-up tasks: root-cause file; gold guide section; P-055 draft + @model-risk scope answer; model-test plan.
+- Status: ACCEPTED
+- Amends: B-396 M1 and M4 settled forward only (never applied to published scores). Not a production approval; T-027 veto stands.
+
+## D-103 — P-055 scope answers (D-020 exception); approve change P-056 (check fixes); scorer v5 and operations checklist gold; stronger-model test deferred; wrap-up standups
+- Date / Owner: 2026-10-16 / @user
+- Context: team/NEXT-SESSION.md after D-102 (pending decisions 1–6); `deliverables/ai-engineer/analysis/T-103-root-cause.md`; @model-risk `scope-P-055.md` (ACCEPT WITH CONDITIONS, H1, H2).
+- Options considered: none. The user's words.
+- Decision: In the user's words (summary of the pasted instruction). "1. P-055 decisions: scanned loss runs stay in scope (review as now); scanned applications, multi-location schedules and substantial non-English content are out of scope → whole file to "manual intake". In-scope files wrongly sent to manual intake: max 2 of 20. D-020 exception granted: next hold-out = 20 in-scope + 12 out-of-scope. Apply @model-risk H2 conditions (100% detection per criterion, fail-closed, wider leakage count). Then present for "approve change P-055". 2. approve change P-056 (check fixes from the root cause): (a) 2-digit years parse (3/1/27 → 2027) in the date parser; (b) OCR floor: don't drop a whole field because one word in its quote is low-confidence; flag it for review instead; (c) quote matcher accepts " ... " joins of lines from the same document; (d) trailing-period reword flag fix; (e) location values from an application (not a schedule) are not false conflicts; (f) the P-047 operations check compares the answer against the whole document, not only the cited line. Self-checks on dev files only (SUB-127–153). Report counts before/after. 3. Scorer v5 + gold rule: operations gold is a checklist of the items in operations-gold-rule.md; scorer v5 credits operations when every required item is present, not every gold word. Follows D-102 conventions. Commit before any new gold; v4 stays frozen. 4. Stronger model test: not now (no misses came from the model). Log as backlog. 5. Update the wrap-up checklist to match D-102 item 5: the orchestrator may write a labelled standup for a role that took a turn. @model-risk check P-055, P-056 and v5, High only. /wrap-up and push ai-team only."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-16 (D-032).
+- Dissent: none
+- Follow-up tasks: P-055 revision 2 (not built; email-only stays in scope because it is not in the user's list); P-056 built in the main session (budget rule 3), as-built `deliverables/ai-engineer/p-056-as-built.md`; (a) also reads an ambiguous day/month month first with a review flag (P-016 D2 had refused such dates); scorer v5 `eval_holdout_v5.py` and the checklist section of `operations-gold-rule.md`; B-397; `.claude/commands/wrap-up.md` item 2; @model-risk check.
+- Status: ACCEPTED
+- Amends: D-020 (one exception: next hold-out 20 + 12); P-016 D2 (ambiguous dates read month first, flagged); D-094/D-097 scoring (v5 for new gold, v4 frozen). Not a production approval; T-027 veto stands.
+
+## D-104 — P-055 wording (M1–M3, email-only out of scope); P-056 (b) clarification; P-056 range regression fix; @model-risk look-again on v5 H3
+- Date / Owner: 2026-10-17 / @user
+- Context: team/NEXT-SESSION.md after D-103 (pending decisions 1–4); `deliverables/model-risk/check-P-055-P-056-v5.md`.
+- Options considered: none. The user's words.
+: In the user's words (pasted). "1. P-055 wording: Non-English: a document is non-English when its common non-English words outnumber its common English words; names and addresses don't count; when unsure → manual intake. Application not identifiable (incl. email-only files) → whole file to manual intake. A file matching several criteria counts under each for detection testing, once in totals; the card lists every reason. Update the proposal, then show me the final text for "approve change P-055". 2. P-056 (b): record as a clarification within P-056 (stricter only), no new P-###. 3. Fix the policy-period range regression ("3/15/2026-3/15/2027" and "3/15/26 – 3/15/27") inside P-056; self-checks. 4. @model-risk look-again on scorer v5's "Live music - no" fix. @model-risk check items 3 and 4, High only. /wrap-up and push ai-team only."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-17 (D-032).
+- Dissent: none
+- Follow-up tasks: P-055 revision 3 (email-only files now out of scope, criterion 4; @model-risk L1 added, stricter only); not approved, not built. P-056 (b) narrowing recorded in `p-056-as-built.md`. Range fix `_RANGE` in `llm_extract.py` with self-checks. @model-risk look-again on items 3 and 4.
+- Status: ACCEPTED
+- Amends: D-103 (email-only files were in scope; now out). Not a production approval; T-027 veto stands.
+
+## D-105 — approve change P-055 (revision 3); build the detector; T-104 hold-out (20 + 12) gold
+- Date / Owner: 2026-10-17 / @user
+- Context: team/NEXT-SESSION.md after D-104 (pending decision 1); `deliverables/pm/proposal-P-055.md` revision 3.
+- Options considered: none. The user's words.
+- Decision: In the user's words (pasted). "approve change P-055 (revision 3), with: automated missing-info drafts count as leakage (accepted); the 12 out-of-scope files include at least 2 email-only / application-not-identified files, so criterion 4 is tested. 1. Build the P-055 detector: fail-closed, card shows every reason, out-of-scope files go to manual intake as a whole file (no auto-fill shown as complete, no carrier route, no automated missing-info draft). Self-checks on dev files, including SUB-142/143 (email-only, Spanish), SUB-170-style scanned application, SUB-172-style multi-location. Run pyright on changed files before review. 2. @model-risk check, High only. @senior-underwriter UI check of the manual-intake card. 3. Only if no High remains: freeze code, record the hash in NEXT-SESSION.md. Then build T-104: 20 in-scope + 12 out-of-scope per P-055. @producer builds files; @senior-underwriter writes gold from documents and written rules only, using D-102 conventions ("not in documents"; hold is a status) and the operations checklist for scorer v5. Freeze gold, commit, record the hash. Do not run the pipeline on T-104. /wrap-up and push ai-team only."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-17 (D-032). Contains `approve change P-055`.
+- Dissent: none
+- Follow-up tasks: T-104a detector build (@ai-engineer-assistant); @model-risk check; @senior-underwriter UI check; T-104 hold-out files (@producer) and gold (@senior-underwriter), not run.
+- Status: ACCEPTED
+- Amends: P-055 revision 3 (L1 accepted; criterion 4 now has at least 2 hold-out files). Not a production approval; T-027 veto stands.
+
+## D-106 — Merges from the user's other terminal adopted (PR #9, PR #10)
+- Date / Owner: 2026-10-17 / @user
+- Context: ai-team gained 048b29d, 9693913 (PR #10 feat/senior-test-and-frontend-roles), d3e7fc9 and 3e39917 (PR #9 feat/dev-testing-environments), made by the user in another terminal and pushed to origin/ai-team.
+- Options considered: none. The user's words.
+- Decision: In the user's words, typed in this session: "there has been changes in between i did on other terminal adapt that and continue". Adopted: roles @frontend-engineer and @senior-test-engineer (agents, .cursor rules, protocol rights table and roster, CLAUDE.md budget rule 4: sonnet); docker-compose.dev/testing.yml and .env.dev/.testing.example (placeholders only, checked).
+- Rationale: The user typed this in this Claude Code session on 2026-10-17 (D-045/D-054: decisions from another tool count once the user confirms them here).
+- Dissent: none
+- Follow-up tasks: none now. B-388 (the two roles) closed by this adoption. underwriting_pipeline/ is unchanged since the T-104a freeze 1cf001f (checked by git diff), so the freeze holds.
+- Status: ACCEPTED
+- Amends: D-099 item on 5ceeef8 (the roles were not accepted then; accepted now via PR #10). Not a production approval; T-027 veto stands.
+
+## D-107 — T-104: rebuild in-scope loss runs in carrier formats; replace SUB-199
+- Date / Owner: 2026-10-17 / @user
+- Context: @senior-underwriter T-104 gold summary: no typed loss run in a Carrier A/B/C layout, so all 20 in-scope files are gold-incomplete (no carrier_a, no false-complete test); SUB-199 scope unclear (locations only in the email).
+- Options considered: rebuild then freeze; freeze as is; stop. SUB-199: replace with a clear C2 file; out of scope; in scope.
+- Decision: The user chose "Rebuild then freeze" and "Replace with a clear C2 file" in this session. The email-only-locations case goes to the backlog as a P-055 wording question.
+- Rationale: The user's answers in this Claude Code session on 2026-10-17. Nothing has been run on T-104, so the set is still clean.
+- Dissent: none
+- Follow-up tasks: @producer rebuilds in-scope loss runs and SUB-199; @senior-underwriter rewrites the affected gold; freeze, commit, record the hash.
+- Status: ACCEPTED
+- Amends: none. Not a production approval; T-027 veto stands.
+
+## D-108 — P-055 fixes confirmed; approve change P-057 (scorer v6); approve change P-058 (numbered locations)
+- Date / Owner: 2026-10-17 / @user
+- Context: team/NEXT-SESSION.md after D-105–D-107 (pending decision 1, B-400, B-398).
+- Options considered: none. The user's words.
+- Decision: In the user's words (pasted). "1. Confirmed: @model-risk's two P-055 fixes are covered by my P-055 approval. 2. approve change P-057 (scorer v6, B-400): adds P-055 measures to v5 — leakage (any out-of-scope file shown complete, routed, or given an automated missing-info draft) must be 0; detection recall per criterion and overall must be 100%; in-scope files wrongly sent to manual intake ≤2 of 20; plus everything in v5 and the route gate (0 unsafe, ≥18/20). Built from the gold format only — do not open T-104 files or gold contents to tune it. Self-checks on dev data. v4/v5 stay frozen. 3. approve change P-058 (B-398): the multi-location detector also catches numbered locations/buildings/premises ("Location No. 2", "Loc #2", "Building 2", "Bldg 2", "Premises 2" etc.). Found on dev; not derived from T-104. Self-checks on dev; pyright on changed files. 4. @model-risk check P-057 and P-058, High only. If no High: re-freeze the code, record the new code hash and the scorer v6 hash in NEXT-SESSION.md, note that T-104 gold 3678c0f is unchanged. 5. Orchestrator writes labelled standups for @model-risk and @producer. /wrap-up and push ai-team only."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-17 (D-032). Contains `approve change P-057` and `approve change P-058`.
+- Dissent: none
+- Follow-up tasks: T-104b (P-057 scorer v6, P-058 detector scope-v3) by @ai-engineer-assistant; @model-risk check; re-freeze; labelled standups.
+- Status: ACCEPTED
+- Amends: D-105 (the @model-risk H1/H2 fixes are within P-055). The T-104 code freeze 1cf001f is replaced by the re-freeze after P-058. T-104 gold 3678c0f unchanged. Not a production approval; T-027 veto stands.
+
+## D-109 — Official T-104 hold-out run → T-027 gate
+- Date / Owner: 2026-10-17 / @user
+- Context: team/NEXT-SESSION.md after D-108 (code 6e7cfa2, scorer v6 sha256 4bf1cd63…, gold 3678c0f).
+- Options considered: none. The user's words.
+- Decision: In the user's words (pasted). "Official hold-out run, T-104 → T-027 gate. Rules, fixed before running: Code, scorer v6 and gold (3678c0f) must match the hashes in NEXT-SESSION.md exactly; if not, stop and report. No changes during or after the run. .venv python; smoke_readers.py first, stop if any reader fails. qwen, paced (55 s). Confirm no cached replies exist for T-104 files. Retries per RUN-RULES.md, all logged; other failures are "call failed" and counted. Run all 32 files once. Score once with scorer v6 (--write). Report: leakage (must be 0), detection recall per criterion and overall, in-scope files wrongly sent to manual intake, false completes, route gate (unsafe, accuracy), per-field hits vs 9/10 floor for in-scope files, operations checklist results, silent error rate, automation rate, loss-run accept vs review, mismatches as-is, retries, cost per file. @model-risk writes the T-027 memo: lift, keep, or lift with conditions. Fix nothing; log findings as backlog. Orchestrator writes labelled standups. /wrap-up and push ai-team only."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-17 (D-032).
+- Dissent: none
+- Follow-up tasks: run record, score files, as-is mismatches, @model-risk T-027 memo, backlog, labelled standups.
+- Status: ACCEPTED
+- Amends: none. Not a production approval until @model-risk's memo; T-027 veto stands until then.
+
+## D-110 — Manager demo prep (T-105)
+- Date / Owner: 2026-10-18 / @user
+- Context: team/NEXT-SESSION.md after D-109 (T-104 run, T-027 KEEP).
+- Options considered: none. The user's words.
+- Decision: In the user's words (pasted). "Demo prep for my manager (non-technical, ~10 minutes). No pipeline code changes. 1. @pm writes deliverables/pm/demo-guide.md: a 10-minute script. One messy in-scope submission from inbox to carrier quote; one out-of-scope file safely sent to manual intake; one senior-referral file confirmed by a senior; honest scores from the T-104 run; cost per file and estimated time saved per submission (state assumptions). 2. @senior-underwriter picks 3 demo files from dev data (not hold-out) and checks each runs cleanly on the frozen code. List them in the guide. 3. @software-engineer: make sure the workbench shows these 3 cleanly; Playwright screenshots of each step in deliverables/software-engineer/screenshots/demo/. 4. @pm writes a one-page "Where we are" summary: what works, the 2 open gaps (operations details, routing rules), what production still needs (T-027 veto, SSO B-190, concurrent writes B-191, real carrier formats R-030), and the next steps. 5. Rehearsal: dry-run the guide step by step and list anything that breaks. /wrap-up and push ai-team only."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-18 (D-032).
+- Dissent: none
+- Follow-up tasks: T-105.
+- Status: ACCEPTED
+- Amends: none. No pipeline code changes; frozen code 6e7cfa2 stays frozen. Not a production approval; T-027 veto stands.
+
+## D-111 — approve change P-059 (operations); routes check; approve change P-060 (scorer v7); test-file lint
+- Date / Owner: 2026-10-18 / @user
+- Context: team/NEXT-SESSION.md after D-110 (pending decisions 1–3); deliverables/model-risk/T-027-gate-memo-T-104.md H1–H3; B-406–B-408.
+- Options considered: none. The user's words.
+- Decision: In the user's words (pasted). "1. approve change P-059 (operations): extraction keeps items from cooking, hood and line-of-business lines; the whole-document check flags any operations-rule item present in the documents but missing from the answer. Self-checks on dev; explain why the check missed the 3 T-104 silent errors. 2. Routes: @head-of-underwriting checks the 4 T-104 route misses against the written rules. Code wrong → P-### fix; gold wrong → record the gold lesson for future sets. Report before building. 3. approve change P-060 (scorer v7): loss runs score "correct" when the pipeline matches the gold expectation, including "needs review" when gold expects review; a null + needs review where gold expects a date is "not credited", not a miss. v6 stays frozen. 4. Test-file lint: before any hold-out gold is frozen, a script checks the files: loss-run valued dates before the run date, every Scope line valid, the mix matches the plan. It must pass before the freeze. @model-risk check, High only. /wrap-up and push ai-team only."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-18 (D-032). Contains `approve change P-059` and `approve change P-060`.
+- Dissent: none
+- Follow-up tasks: T-106a (P-059), T-106b (routes check, report only), T-106c (P-060 scorer v7), T-106d (test-file lint); @model-risk check.
+- Status: ACCEPTED
+- Amends: none. Code freeze 6e7cfa2 is lifted for P-059 only; re-freeze after the @model-risk check. T-104 scores stay as published. Route fixes need their own P-### after the report. Not a production approval; T-027 veto stands.
+
+## D-112 — approve change P-061 and P-062; W1/W1b merge; B-415 live check; demo fixes
+- Date / Owner: 2026-10-18 / @user
+- Context: team/NEXT-SESSION.md after D-111 (pending decisions 1–3); deliverables/head-of-underwriting/T-104-route-check.md; B-410, B-412, B-414, B-415.
+- Options considered: none. The user's words.
+- Decision: In the user's words (pasted). "1. approve change P-061 and approve change P-062. Also merge prohibited-class tables W1 and W1b into one table; where they conflict, the stricter rule wins; cite each row. Self-checks on dev. 2. B-415 approved: run the 41 live calls (quick set + dev SUB-127–173) to test P-059 together with P-061/P-062. Report operations hits, silent errors, routes, false completes, unsafe routes vs the old saved replies. 3. Demo fixes (they change code, so they go before the next freeze): (a) account-manager check: a senior-confirmed carrier passes; the card shows the real reason for any refusal, never a misleading "not in appetite". No typed override needed in the normal demo flow. (b) collapse the "What's new" panel to the latest 5 entries plus "show all". (c) add one T-104 file that routes straight to Carrier A as the "best case" demo file (T-104 is now dev data). (d) @senior-underwriter checks the 25–35 min time-saved assumptions, or the guide labels it clearly as an unmeasured estimate. (e) second rehearsal with run-demo.sh; update demo-guide.md and screenshots. 4. Plugins: run code-review and pyright only on files inside this ai-team worktree. 5. Orchestrator writes labelled standups for every role that worked side by side. @model-risk check P-061, P-062 and the account-manager change, High only; @senior-underwriter UI check. /wrap-up and push ai-team only."
+- Rationale: The user typed (pasted) this in this Claude Code session on 2026-10-18 (D-032). Contains `approve change P-061` and `approve change P-062`. Approving P-061 settles @head-of-underwriting's open point 1 in T-104-route-check.md (class words are read from the line of business and cooking lines as well as operations).
+- Dissent: none
+- Follow-up tasks: T-107a (P-061, P-062, W1/W1b merge), T-107b (B-415 live run), T-107c (account-manager check), T-107d (What's new collapse), T-107e (T-104 best-case demo file), T-107f (time-saved check), T-107g (second rehearsal); @model-risk check; @senior-underwriter UI check.
+- Status: ACCEPTED
+- Amends: D-111 (P-061/P-062 approved; B-415 calls allowed: 5 + 36). T-104 is now dev data: its published scores stay as published, and it is no longer hold-out evidence. Not a production approval; T-027 veto stands.
+
+## D-113 — T-108 next hold-out built gold-first and frozen; B-428/B-411 fix; B-427 silent-error analysis; M2 scanned-gold resolution
+- Date / Owner: 2026-10-19 / @user
+- Context: `team/NEXT-SESSION.md` after D-112 (pending decisions 1–3); the user's session answers (full build, task id T-108, commit the code freeze first); `deliverables/ai-engineer/b-427-silent-errors-and-ops-flags.md`; `deliverables/producer/T-108-mix.md`; `deliverables/senior-test-engineer/T-108-lint.md`; `deliverables/senior-underwriter/T-108-gold-summary.md`, `T-108-routes.md`, `T-108-gold-vs-source.md`; `deliverables/model-risk/T-108-check.md`, `T-108-M2-close.md`.
+- Options considered: none. The user's words, carried out by the orchestrator and the roles.
+- Decision: (1) The B-428/B-411 workbench fix is committed as the T-108 code freeze `457f1bf`; the T-108 code under test is that SHA with prompt `759b3e6bc9b2` (P-059) and scorer v7. (2) T-108 is built as 32 submissions SUB-206 to SUB-237 (20 in-scope, 12 out-of-scope covering proposal-P-055 criteria 1-4 at 4/5/4/2, three two-criteria files, two criterion-4-alone), gold first by @senior-underwriter, with the lint passing (exit 0) before the gold freeze. (3) T-108 is **not** run and no score exists (D-020). (4) B-427 is closed as analysis only: the 9 dev silent errors are stale dev gold with no operations-items line, 0 real check gaps, no P-### needed; operations flags 5/16 old -> 0/16 new, 1 of 41 new replies (SUB-134). (5) M2/B-430 (gold for scanned files was read via OCR) is resolved in a separate decision; T-108 gold is not final until that decision is recorded.
+- Rationale: The user typed these instructions in this session on 2026-10-19 (D-032), including the added point (5) and the confirmation "D-113: confirmed as one decision … Status: ACCEPTED by @user, 2026-10-19."
+- Dissent: none
+- Follow-up tasks: T-108 (build done and frozen; run and score later, on the user's word, under D-020). Backlog B-429, B-430, B-431.
+- Status: ACCEPTED
+- Amends: D-112 pending decision 2 (next hold-out: built and frozen). T-104 scores stay as published; T-104 is dev data.
+
+## D-114 — M2/B-430 resolved: T-108 gold checked against builder source data; gold re-frozen
+- Date / Owner: 2026-10-19 / @user
+- Context: D-113 point (5) (M2/B-430 to be recorded in a separate decision; T-108 gold not final until then); `deliverables/senior-underwriter/T-108-gold-vs-source.md`; `deliverables/model-risk/T-108-M2-close.md`; the user's instruction to compare every gold card against the **builder scripts' source data** (not OCR), correct differences, re-lint, re-freeze.
+- Options considered: none. The user instructed the comparison against builder source data.
+- Decision: (1) M2/B-430 is resolved. Every T-108 gold card was checked field by field against the builder scripts' source data (`simulation/inbox/build_SUB-206-225.py`, `build_SUB-226-237.py`), not against an OCR read. (2) The scanned/image-only cards (209, 211, 217, 218, 225, 228, 229, 230, 231) and the typed 236 were faithful to source data; no OCR-induced drift in any field. (3) Four wording-only corrections were made: SUB-206 and SUB-208 scope lines ("no schedule" -> one-row schedule); SUB-214 source/scope lines (unsupported scan reference removed); SUB-230 loss-summary wording (Low L1). (4) @model-risk's re-check found H1 — SUB-211's gold omitted an open premises conflict (application 1120 Commerce St vs the email's "their new spot on Guadalupe"); SUB-211 is corrected to **`incomplete — hold: open conflict`** (pending `premises address reconciled`), route unchanged (`senior_referral`, suggested `carrier_b`). (5) Lint re-run exit 0 (0 failures, 7 info, 32 files); @model-risk re-check: M2 CLOSED, H1 FIXED, freeze APPROVED, no High. (6) Gold re-frozen at manifest **sha256 `11933e96b8370f57321ce5c1e1c6c3c3105a4f0517d841fbbbb8821bca18633d`** (32 gold cards + route table, file order 206..237 then routes), replacing `657c63a9…` / `7a26b81e…` / `196152332a…`. Code `457f1bf`, prompt `759b3e6bc9b2`, scorer v7 unchanged; T-108 still not run.
+- Rationale: the user required the gold's facts to come from the source data, not the same OCR the pipeline uses; the comparison and the reviewer's re-check confirm the gold is now source-grounded. The user typed this instruction in this session on 2026-10-19.
+- Dissent: none
+- Follow-up tasks: T-108 (gold final; run and score later on the user's word under D-020). B-430 closed as resolved. B-431 (out-of-scope full fields; mix mtime) stays Low.
+- Status: ACCEPTED by @user, 2026-10-19
+- Amends: D-113 point (5). The T-108 gold is now final.
+
+## D-115 — T-108 (SUB-206–237) is now development data; D-011 stays parked with a two-step model test
+- Date / Owner: 2026-10-19 / @user
+- Context: the official T-108 hold-out run is done and scored once (`deliverables/ai-engineer/evals/SUB-206-237-holdout-v7.{md,json}`, run id `20261019T140831-50315`); @model-risk T-027 memo `deliverables/model-risk/T-027-memo.md` (KEEP); `deliverables/ai-engineer/analysis/T-108-root-cause.md`; @ai-engineer-assistant's blocking finding `deliverables/ai-engineer/analysis/T-108-stronger-model-plan.md` (the set was still hold-out, so no stronger-model plan could be written).
+- Options considered: none. The user's words.
+- Decision: In the user's words. (1) "SUB-206-237 is now development data; its published scores stay as published, and it is no longer hold-out evidence." (2) "Keep D-011 parked." A stronger-model plan covers two steps: first the free `openai/gpt-oss-120b` on Groq (no D-011 change), then a paid model only if the free result is unclear; the user will decide on lifting D-011 after seeing the root cause and the plan.
+- Rationale: The user typed both lines in this Claude Code session on 2026-10-19 (D-017: decisions come only from the user's own words in this session). The promotion matches the D-083/D-088/D-111 precedent.
+- Dissent: none
+- Follow-up tasks: @ai-engineer-assistant writes the two-step stronger-model plan on T-108 (plan only, 0 calls, nothing run). B-432/B-433 fixes still need `approve change P-###`. D-011 unchanged.
+- Status: ACCEPTED by @user, 2026-10-19
+- Amends: D-114 (T-108 gold is still final; the set is promoted from hold-out to dev). T-104 and T-108 published scores stay as published. Not a production approval; T-027 veto stands.
+
+## D-116 — approve change P-063 (scope leak) and P-064 (scorer v8); B-433/free-model kept in backlog; lint tests the scorer; pilot-readiness checklist
+- Date / Owner: 2026-10-19 / @user
+- Context: T-108 root cause `deliverables/ai-engineer/analysis/T-108-root-cause.md` (SUB-233 scope leak; 7 of 8 loss-run silent misses are v7's first-date rule; 1 real read error SUB-224); @model-risk T-027 memo (KEEP) and assist-mode ruling C1–C8.
+- Options considered: none. The user's words.
+- Decision: In the user's words (pasted): "1. approve change P-063 (B-432 scope leak): (a) the detector finds location labels anywhere in a field or body text ("Loc 1 … ; Loc #2 …", "Location 2", "Bldg 2"), not only at line start, list items or schedule cells; (b) the send gate re-checks scope at send time and refuses any out-of-scope file, with the reason shown — independent of status. Self-checks on dev incl. SUB-233; pyright on changed files. 2. B-435 decision: loss-run gold names the valued-as-of date explicitly ("Loss runs valued as of: <date>"); scorer v8 compares that date only, never the policy-period start. v7 stays frozen. 3. B-433: no extractor change now (root cause shows 1 real error). Keep in backlog. 4. Free-model test: not now; keep in backlog. 5. Test the test: extend lint_holdout.py so that before any gold freeze, (a) a perfect answer file built from the gold scores 100% on the scorer, and (b) a set of deliberately wrong answers (one per field, plus a leak and an unsafe route) is each caught. Freeze is blocked if either fails. Run it on T-108's gold now as a check (dev data). 6. @pm writes deliverables/pm/pilot-readiness.md: @model-risk's C1–C8 as a checklist with status, plus B-190 (SSO) and B-191 (concurrent writes) with a short build plan each. No build. @model-risk check P-063, scorer v8 and the lint extension, High only." Asked whether item 2 (a scorer change) was an approval under D-017, the user answered "approve change P-064" (scorer v8 = item 2 as written).
+- Rationale: The user typed both approvals in this Claude Code session on 2026-10-19 (D-017; pasted text counts, D-032).
+- Dissent: none
+- Follow-up tasks: T-109a (P-063), T-109b (P-064 scorer v8 + gold line), T-109c (lint scorer test, run on T-108 gold), T-109d (@pm pilot-readiness.md); @model-risk check of T-109a–c, High only.
+- Status: ACCEPTED by @user, 2026-10-19
+- Amends: D-108 (scope-v3 → scope-v4; three mid-line "Building 2" P-058 negatives are now manual intake), D-111 (v7 frozen; new hold-outs use v8; the lint also tests the scorer). Not a production approval; T-027 veto stands.
+
+## D-117 — approve change P-067 (loss-run scan dates); B-433 operations half → P-068 (scorer v10, facts not wording); then P-066, reviews, wrap-up
+- Date / Owner: 2026-10-19 / @user
+- Context: T-110 re-measure of T-108 with scorer v9 on the corrected gold copy (`deliverables/ai-engineer/evals/SUB-206-237-holdout-v9-cache-rescore.{json,md}`, 0 model calls) and the cause write-up `deliverables/ai-engineer/analysis/T-110-v9-remeasure.md`: route 18/20, 0 unsafe, 0 false completes; operations 10/20, loss_runs 16/20 — both below the 18/20 floor, so B-433 could not be closed as a measurement issue. 4 real misses (loss_runs 217/209/225, conflict 211); the other 26 marks are an approved rule or a scorer artefact.
+- Options considered: B-433's rule offered two branches — close as measurement, or draft a P-### for the real misses only and stop. For operations: (a) prompt the extractor to copy the documents' wording, (b) a scorer rule on facts not wording, (c) leave it open. The user chose the P-### branch and option (b).
+- Decision: In the user's words (pasted): "approve change P-067.
+
+Operations: option (b), as P-068 (scorer v10): operations items are scored on facts, not wording — normalised numbers/units and a short synonym list per checklist item, defined from operations-gold-rule.md, not from T-108 phrasing. Extend the lint's wrong-answer set with near-miss negatives (no alcohol vs beer and wine, hood vs no hood, wrong seat or unit count, cooking vs no cooking); every one must still be caught. v9 stays frozen. Dev re-score of T-108 with v10 is dev evidence only. @model-risk must approve P-068 before it is used for any hold-out.
+
+Then continue: P-066 concurrent-write tests, @pm pilot-readiness update, @model-risk High-only check of P-067, P-068 and P-066, standups, /wrap-up, push ai-team only."
+- Rationale: The user typed both parts in this Claude Code session on 2026-10-19 (D-017; the approval is exact). P-067 covers the real loss-run misses only (`deliverables/ai-engineer/proposal-P-067.md`); P-068 closes the operations measurement gap without touching published v7/v9 scores.
+- Dissent: none
+- Follow-up tasks: T-111 build P-067 (llm_extract + prepare + workbench reason + D-065 What's new/screenshot + @senior-underwriter UI review); T-112 P-066 concurrent-write fix and two-user tests; T-113 P-068 scorer v10 + operations-gold-rule.md synonym list + lint near-miss negatives + dev re-score; @pm updates pilot-readiness (B-191); @model-risk High-only check of P-067, P-068 and P-066 (P-068 needs its approval before any hold-out use); standups, /wrap-up, push `ai-team` only.
+- Status: ACCEPTED by @user, 2026-10-19
+- Amends: D-116 item 3 (B-433's real misses now have an approved proposal instead of staying untouched) and the B-433 measurement branch. v7/v9 stay frozen; new hold-outs keep the scorer they were scored with until @model-risk approves P-068. Not a production approval; T-027 veto stands.
+
+## D-118 — correction: P-067 was reported built on 2026-10-20, but its card-reason path was dead; P-066 was reported built but crashed the workbench
+- Date / Owner: 2026-10-20 / orchestrator (correction note; @user's approval of P-067/P-068 stands, D-117)
+- Context: (1) P-067 was reported implemented on 2026-10-20; on inspection the "rejected value carries its reason to the card" path was not working — `prepare.py:1057` skipped a rejected row, so the field card showed `value=None, reason=None` while `needs_review=True` (SUB-209/211/225). (2) P-066 was reported built (commit 39b2a46); it deleted `REFUSED_AS` while two uses stayed, so every refusal raised `NameError` and `python underwriting_pipeline/app/workbench.py` (its own self-check) crashed. The @model-risk check of 39b2a46 said no High on P-066; the broken file was never run.
+- Correction: P-067 status is now "built, defect closed" — the reason path is fixed under P-067 (no new P-###, within D-117's scope) with a prepare.py self-check; P-066 is fixed by restoring `REFUSED_AS` verbatim from `39b2a46^` and adding a workbench self-check that exercises every refusal route. Both fixes committed separately: `fix(P-066): restore REFUSED_AS …`, `fix(P-067): card reasons for rejected values …`.
+- Disclosure: llm_extract.py's self-check also fails at HEAD (pre-existing; `SCAN_FLOOR` 0.50 vs a self-check expecting a 0.29 cited word kept). Recorded as B-446; not fixed (needs an approved proposal).
+- Dissent: none
+- Status: ACCEPTED as a correction record by the orchestrator, 2026-10-20. Not a production approval; the T-027 veto stands.
+- Amends: none (records that two commits claimed more than they delivered).
+
+## D-119 — approve change P-069 (business_type operations slot, scorer v11); freeze if no High; build the next hold-out (SUB-238–269), gold first, no run
+- Date / Owner: 2026-10-21 / @user
+- Context: T-115 (`deliverables/ai-engineer/analysis/T-115-v10-slot-rework.md`) found 8 of 20 T-108 operations items fit no v10 slot, so v10 scores operations 12/20 on T-108 with no extractor change possible to close it. NEXT-SESSION.md (2026-10-20) offered: add a `business_type` slot, or relax the free-text rule.
+- Decision: In the user's words (pasted): "1. approve change P-069: add a business_type slot whose values are the class list in carrier-match.md (allow-list + referral + prohibited classes). Any operations item that matters must be a slot; items that fit no slot are removed from the scored checklist (listed as unscored notes). Update operations-gold-rule.md. Scorer v11; v10 stays frozen. Lint: perfect answers 100%, all wrong answers incl. near-miss negatives caught. Validate on SUB-127–173 and dev re-score T-108 (0 model calls). @model-risk check, High only. 2. If no High: freeze code and scorer v11; record the code-under-test commit, prompt hash and scorer sha256 in NEXT-SESSION.md. 3. Build the next hold-out (20 in-scope + 12 out-of-scope, next SUB numbers after 237): @producer builds files, @senior-underwriter writes gold first with operations slots and the valued-as-of line; lint must PASS before the gold freeze; record the gold manifest hash. Do not run it."
+- Rationale: The user typed the exact approval in this Claude Code session on 2026-10-21 (D-017; pasted text counts, D-032).
+- Dissent: none
+- Follow-up tasks: T-116 (P-069 scorer v11 + operations-gold-rule.md + lint + dev validation; @model-risk High-only), T-117 (next hold-out SUB-238–269, gold first, no run; blocked on T-116 freeze).
+- Status: ACCEPTED by @user, 2026-10-21
+- Amends: D-117 (P-068 / scorer v10 frozen; new hold-outs score with v11 once frozen). Not a production approval; T-027 veto stands.
+
+## D-120 — LOB expansion decisions: Wave 1 = 4 lines, umbrella to Wave 2, config-first engine in principle, package composed from property + GL
+- Date / Owner: 2026-10-21 / @user
+- Context: `deliverables/pm/lob-roadmap.md`, `deliverables/architecture/lob-engine-design.md`, `deliverables/lobs/*/spec.md`, `deliverables/lobs/test-plan.md` (commit `c13cd9c`); the 12 open questions listed at the end of that session. Typed by @user in OpenCode on 2026-10-21.
+- Decision (in the user's words, item by item):
+  1. Wave 1 = BOP, commercial_property, general_liability, commercial_package. Umbrella moves to the start of Wave 2.
+  2. Config-first engine with `LOB_ENGINE=off` rollback; condition: with the engine on, small-commercial outputs on SUB-127–269 must be identical.
+  3. Moving the baseline prompt into a pack is authorised as a future P-###; the prompt hash must stay `759b3e6bc9b2`.
+  4. `commercial_package` = a pack composed from the property and GL packs, not BOP plus flags.
+  5. `general` is triage-only: no extraction, no route, straight to manual intake.
+  6. `bpp_limit` and `sprinklered` are scored fields. Rule: anything affecting status, route or a value sent to a carrier is scored; display-only fields are context only. Umbrella fields move with umbrella to Wave 2.
+  7. Umbrella scope criterion 5 is deferred with umbrella.
+  8. Out-of-scope hold-out size stays 20/12 for all waves.
+  9. Gold layout: `gold-set-<lob>/`, frozen and hashed per LOB.
+  10. BOP carrier suggestions: keep only those in `carrier-match.md`; remove the rest from the specs.
+  11. Accepted: a GL sales-based referral needs a written source before it can exist.
+  12. Real carrier terms replace synthetic A/B/C only after @head-of-underwriting and @compliance sign-off; treated as confidential business data.
+- Conditions: items 2 and 3 are approved in principle; the engine build starts only after @model-risk reviews the engine design in Claude Code. No pipeline code, scorer, lint, gold, inbox or frozen file is changed by this decision record. No P-### has been opened yet.
+- Rationale: the user typed all twelve items in this session on 2026-10-21. The wave change keeps Wave 1 to reuse-only lines; package-as-composition follows the design's config-first principle; decision 6 makes the scored/context boundary explicit.
+- Dissent: none
+- Follow-up tasks: update the roadmap and Wave 1 specs; write Wave 2 specs; @producer builds 10 synthetic commercial_package dev files with a dev gold set and lint (this session, dev only); @model-risk reviews the engine design before any build; a future P-### for the prompt move.
+- Status: ACCEPTED by @user, 2026-10-21 (items 2 and 3 in principle, build gated on @model-risk's Claude Code review)
+- Amends: D-119 is unchanged. The LOB roadmap's earlier Wave 1 (5 lines) is replaced by this decision. Not a production approval; the T-027 veto stands.
+
+## D-121 — Wave 2 order and scope details; engine step 1 to be prepared on a separate branch
+- Date / Owner: 2026-10-21 / @user
+- Context: D-120; the new-decisions list from the LOB specs session; `deliverables/architecture/lob-engine-design.md`. Typed by @user in OpenCode on 2026-10-21.
+- Decision (in the user's words, item by item):
+  1. Wave 2 order confirmed for now: umbrella → inland marine → builders risk → commercial auto → WC; to be revisited for business volume.
+  2. New Wave 2 field names/shapes: **not approved yet**; review tomorrow by @senior-underwriter and @model-risk.
+  3. `bpp_limit` and `sprinklered` become scored in the property-pack P-### with a new scorer version after the engine exists; notes until then; v11 untouched.
+  4. Umbrella criterion 5 is decided when umbrella starts, with @compliance.
+  5. Package dev set 6 in + 4 out accepted for dev; hold-outs stay 20/12.
+  6. Wave 2 synthetic limits/bands accepted as placeholders, labelled synthetic.
+  7. WC outside Texas: out of scope (manual intake).
+  8. Occupied renovation (builders risk vs property): `senior_referral` with both suggested until a written rule exists.
+  9. Personal-auto submissions are a commercial-auto scope criterion (manual intake).
+- Conditions: the engine work is prepared for review on branch `lob-engine-step1` in a separate worktree; it is **not merged** into `ai-team`. No scorer, lint or existing gold is changed. No P-### has been opened for the prompt move or for BPP/sprinklers.
+- Rationale: the user typed all nine items in this session on 2026-10-21.
+- Dissent: none
+- Follow-up tasks: apply items 7–9 to the Wave 2 specs; prepare engine migration step 1 and the baseline-equality test on `lob-engine-step1`; @senior-underwriter + @model-risk review Wave 2 fields tomorrow; @compliance on umbrella criterion 5 when umbrella starts.
+- Status: ACCEPTED by @user, 2026-10-21
+- Amends: D-120 item 7 (umbrella criterion 5 timing) and D-120 items 1/10/12 by the Wave 2 decisions above. Not a production approval; the T-027 veto stands.
+
+## D-122 — approve change P-070 (carry the stated cooking line into operations; a disagreement between documents on a rating or scored figure becomes an open conflict and a hold)
+- Date / Owner: 2026-10-21 / @user
+- Context: the T-117 memo of @model-risk (`deliverables/model-risk/T-027-memo-T-117.md`) carries two High findings: H1 (on SUB-248/250/254/257 the stated application line `Cooking operations: None` is dropped from the operations answer) and H2 (0 of 3 planted document conflicts surfaced). The cause write-up is `deliverables/ai-engineer/analysis/T-117-H1-H2-cause.md`; the change is `deliverables/ai-engineer/proposal-P-070.md`.
+- Decision: In the user's words (typed in this session): "approve change P-070".
+- Conditions: the change is in `underwriting_pipeline/ai/prepare.py` only — no prompt, no model, no scorer, no gold, no hold-out file, no published score. The model request stays byte-identical (zero changed requests). Self-checks on development files only, shaped like SUB-249/252/257 but new files. D-065: the workbench card, one "What's new" line, a Playwright screenshot and @senior-underwriter's UI review (High only). The work lands on branch `fix-t117` and is pushed there only. @model-risk checks the result before any use beyond development; the T-027 veto stands.
+- Rationale: the user typed the exact approval in this session on 2026-10-21 (D-017).
+- Dissent: none
+- Follow-up tasks: @ai-engineer-assistant builds P-070 on `fix-t117` with the dev set `simulation/inbox-dev/document_conflicts/`; @senior-test-engineer and @model-risk own the v-next scorer (the M-class operations readings and the suite-count conflict topic), frozen before the next gold; @model-risk reviews the fix with no High before it counts towards the H1/H2 closure.
+- Status: ACCEPTED by @user, 2026-10-21
+- Amends: none. Not a production approval; the T-027 veto stands.
+- Confirmed: 2026-10-22, the user typed "approve change P-070" in the Claude Code session (D-045, D-053: the OpenCode record of 2026-10-21 is confirmed here).
+
+## D-123 — approve change P-071 (the stated cooking line is added only when no document in the folder states cooking)
+- Rationale: the user typed "approve change P-071" in the Claude Code session on 2026-10-23 (D-017), after reading `deliverables/ai-engineer/proposal-P-071.md`. Fixes @model-risk T-118 High H1 only.
+- Dissent: none
+- Follow-up tasks: build on `fix-t117` (dev files only, tests/pipeline green, request-equality changes listed); fresh @model-risk check, High only; then merge `fix-t117` into `pilot-integration`.
+- Status: ACCEPTED by @user, 2026-10-23
+- Amends: D-122 (P-070 change 1). Not a production approval; the T-027 veto stands.
+
+## D-124 — approve change P-072 (remove the "; no cooking" add from operations entirely)
+- Rationale: the user typed "approve change P-072" in the Claude Code session on 2026-10-23, with the text: remove the "; no cooking" add from operations entirely; files where cooking is not clearly stated keep their existing review flag; no automatic "no cooking" in any case; revert the P-070/P-071 add logic, keeping harmless refactoring only if it changes no behaviour; the H1 scoring gap moves to the next scorer version. Answers @model-risk T-118 re-check High H1 (`deliverables/model-risk/T-118-recheck.md`).
+- Dissent: none
+- Follow-up tasks: build on `fix-t117` (dev SUB-293 and SUB-296: no false complete, flag kept); fresh @model-risk check, High only; if no High, commit, merge into `pilot-integration`, full suite + request equality. The H1 scoring gap goes to the v-next scorer (@senior-test-engineer, @model-risk).
+- Status: ACCEPTED by @user, 2026-10-23
+- Amends: D-122 (P-070 change 1 withdrawn), D-123 (P-071 withdrawn). P-070 changes 2–5 stand. Not a production approval; the T-027 veto stands.
+
+## D-125 — B-448/B-458 (SUB-252): option A, restaurant evidence → R2 senior referral wins
+- Rationale: the user chose option A in the Claude Code session on 2026-10-23, from @head-of-underwriting's proposal (`deliverables/head-of-underwriting/B-448-SUB-252-rule-proposal.md`): when a bar word stands beside restaurant evidence, R2 senior referral wins, also when a non-food second operation (offices, retail) is present. Decided by @user.
+- Dissent: none
+- Follow-up tasks: @senior-underwriter updates the written rules (carrier-match.md W1 note) and any affected dev gold, each with a note citing D-125. No code change. Published hold-out gold and scores (T-117) are not rewritten (D-020); the next hold-out (T-119) includes a SUB-252-style case under this rule.
+- Status: ACCEPTED by @user, 2026-10-23
+- Amends: closes B-448 and B-458. Not a production approval; the T-027 veto stands.
+
+## D-126 — approve change P-073 (scorer v12, H1 only)
+- Rationale: the user typed "approve change P-073" in the Claude Code session on 2026-10-23, with the text: scorer v12 reads the cooking slot correctly when the answer leaves cooking out or says "no cooking" in plain words, per operations-gold-rule.md; v11 stays frozen; lint: perfect answers 100%, every wrong answer caught, including near-miss negatives (cooking vs no cooking; "cook/stove/fry/hot food" sentences); dev re-score on SUB-127–296 with 0 model calls; @model-risk check, High only.
+- Dissent: none
+- Follow-up tasks: @senior-test-engineer builds `eval_holdout_v12.py` and its lint cases and runs the dev re-score; fresh @model-risk check; if no High, freeze code (pilot-integration commit) and v12, recorded in team/NEXT-SESSION.md.
+- Status: ACCEPTED by @user, 2026-10-23
+- Amends: D-124 (the H1 scoring gap moves to v12). v11 and all published scores stay frozen (D-020). Not a production approval; the T-027 veto stands.
+- Superseded: by D-127 (2026-10-23), P-073/v12 dropped by @user after the @model-risk BLOCK.
+
+## D-127 — P-073/v12 dropped; v11 remains the scorer
+- Rationale: the user's words in the Claude Code session on 2026-10-23: "P-073/v12 dropped by @user; v11 remains the scorer. Omitted 'no cooking' slots score as misses under v11 (conservative). The H1 scorer fix is deferred to the backlog with P-073-v12-check.md and @model-risk's 45 answers as future lint cases." Follows the @model-risk BLOCK (`deliverables/model-risk/P-073-v12-check.md`, High H1).
+- Dissent: none
+- Follow-up tasks: operations-gold-rule.md states the v11 behaviour explicitly (no scoring change); the v12 files are parked in `deliverables/backlog/P-073-v12/`, off the pipeline path; backlog B-464; T-119 notes the v11 behaviour before any file is built.
+- Status: ACCEPTED by @user, 2026-10-23
+- Amends: supersedes D-126. v11 and every published score stay frozen (D-020). Not a production approval; the T-027 veto stands.
+
+## D-128 — T-119 cooking conflicts on SUB-348/349: true lines restored, not measured under v11
+- Rationale: the user's words in the Claude Code session on 2026-10-23: "A. Restore the true cooking-conflict lines on SUB-348 and SUB-349. Record: "Under v11 these two conflict marks can't be measured; they are reported separately and excluded from the conflict rate. Noted before the run." Fix SUB-344 (remove 'appraisal 2025' as a required match) and add it to the no-cooking backlog item." Follows the @model-risk T-119 build check BLOCK (`deliverables/model-risk/T-119-build-check.md`, High H1).
+- Dissent: none
+- Follow-up tasks: @senior-underwriter restores the SUB-348/349 conflict lines, moves "appraisal 2025" out of the SUB-344 Conflict line, adds SUB-344 to the no-cooking list (14 files); re-lint; lint record updated; @model-risk look-again (B-457); if it passes, freeze the gold and record the manifest sha256. T-119 is not run (D-020). Backlog B-465.
+- Status: ACCEPTED by @user, 2026-10-23
+- Amends: none. v11 and every published score stay frozen (D-020). Not a production approval; the T-027 veto stands.
+
+## D-129 — Fast lane (standing approval)
+- Rationale: the user's words in the Claude Code session on 2026-10-23 (pasted, D-032): "FAST LANE (standing approval by @user, 2026-10-23): Proceed without asking: gold fixes that make gold match the documents; new tests; docs; dev-only data; reviewer-requested UI text fixes; any change that is stricter only (sends more to a person, never less, never loosens a gate). Always stop and ask @user: anything that loosens a rule or gate; scorer changes; frozen files; hold-out runs; rule/routing/appetite decisions; merges into ai-team or main; real data; anything outside the worktrees. Decisions: collect all decisions for @user in one list per session, each with options and a recommendation. Reviews: High-only; at most one look-again per finding. If a fix fails a second time, stop and present 2–3 options instead of looping. Tracks: at most two AI tracks at once, each in its own worktree, one tool per worktree. Everything else in CLAUDE.md (frozen files, gold-first, run once, secret scan, never push main, decisions only typed by @user) still applies."
+- Dissent: none
+- Follow-up tasks: "Fast lane" section in CLAUDE.md and AGENTS.md on pilot-integration and ai-team.
+- Status: ACCEPTED by @user, 2026-10-23
+- Amends: none; D-017 approvals for extraction, prompts, OCR, models and scorers still need `approve change P-###`.
+
+## D-130 — T-119 official run: GO
+- Rationale: the user's words in the Claude Code session on 2026-10-23: "T-119 official run: GO (D-020, typed by @user)." Rules fixed before running: code b6a35b7, PROMPT_VERSION 759b3e6bc9b2, scorer v11 and lint sha256 and T-119 gold manifest 2feba3b2… must match NEXT-SESSION.md exactly, else stop; no changes during or after the run; .venv python; smoke_readers.py first, stop if any reader fails; qwen, paced 55 s; no cached replies for SUB-340–371; retries per RUN-RULES.md, all logged; other failures are "call failed" and counted; all 32 files once; scored once with v11 (--write); D-127/D-128/B-467 reporting; results, mismatches and run record; fix nothing. Then @model-risk writes the T-027 memo.
+- Dissent: none
+- Follow-up tasks: run and score T-119 once; results, mismatches, run record in deliverables/ai-engineer/evals/; @model-risk T-027 memo; findings to the backlog.
+- Status: ACCEPTED by @user, 2026-10-23
+- Amends: none. Published scores are never rewritten (D-020).
+
+## D-131 — After the T-119 memo: H2 first (P-074), then H1 (P-075), then plan T-120
+- Rationale: the user's words in the Claude Code session on 2026-10-24 (pasted, D-032): "Decisions: 1 = A. 2 = B (with guardrails below), not A. 3 = A (H2 first, then H1, same track, sequential). H2 → @ai-engineer-assistant drafts P-074 for me to read: when the model raises a conflict and the pipeline can't verify one side, the conflict stays open and the file is held — never dropped. The quote check reads "million"/"thousand"/"k"; approximate amounts ("about", "roughly", "~") are kept as approximate and never verify an exact figure. Stricter only otherwise. H1 → after P-074 is built and checked, draft P-075 for me to read: copy an explicit, cited cooking statement from the application (e.g. "Cooking operations: None") into operations. Never infer cooking status from missing words. Any cooking mention in any other document → open conflict, file held (per P-074). The whole-document check flags any stated cooking line missing from the answer (review). No scorer change; v11 stays frozen. List every request that changes (PROMPT_VERSION will change). For both: dev checks only (incl. SUB-345, SUB-293–296, SUB-348/349, SUB-350), tests/pipeline green, @model-risk check High only, one look-again max per the fast lane. Then plan T-120: 20 in-scope + 12 out-of-scope, at least 5 measurable planted conflicts (incl. a "million"/approximate one), cooking-stated and cooking-conflict cases, direct Carrier A files. Plan only. Show me each proposal text before building; I'll approve with "approve change P-###"."
+- Dissent: none
+- Follow-up tasks: @ai-engineer-assistant drafts P-074 (not built until `approve change P-074`); after P-074 is built and checked, P-075 drafted; then T-120 planned (plan only). Scorer option for H1 (B-464) not taken.
+- Status: ACCEPTED by @user, 2026-10-24
+- Amends: none. v11 and all published scores stay frozen (D-020). Not a production approval; the T-027 veto stands.
+
+## D-132 — P-074 approved (H2: unverifiable conflict sides stay open; "million" read; approximate amounts never verify)
+- Rationale: the user typed in the Claude Code session on 2026-10-24: "approve change P-074 as drafted, with: (1) keep the extra hedge words (nearly, almost, close to, circa); (2) equal-amount merging as drafted; (3) backup sales rule left out — add a backlog item: "second safety net for sales figures in sentences without a sales word, so a conflict is caught even when the model doesn't raise it."" Proposal: `deliverables/ai-engineer/proposal-P-074.md`.
+- Dissent: none
+- Follow-up tasks: build on a new branch from pilot-integration in the fix worktree; dev checks as in the proposal; @senior-underwriter UI check; @model-risk check (High only, one look-again max, D-129); if it passes, merge into pilot-integration, tests/pipeline + 143-folder request-equality (expect 0 request changes), push pilot-integration only. Then P-075 drafted, not built. Backlog B-478.
+- Status: ACCEPTED by @user, 2026-10-24
+- Amends: none. v11 and all published scores stay frozen (D-020). Not a production approval; the T-027 veto stands.
+
+## D-133 — P-075 approved (H1: copy the application's own cooking none-line, cited; any cooking mention elsewhere holds the file)
+- Rationale: the user typed in the Claude Code session on 2026-10-26: "approve change P-075 — 1: keep the review note; 2: rule only, 0 requests change; 3: ask @model-risk for the 45 probe sentences (store them as lint/test cases). Build per CLAUDE.md fast lane: pyright-lsp + code-review before review; playwright screenshot; @senior-underwriter UI check; @model-risk check, one look-again max. Merge into pilot-integration if no High; tests/pipeline + request-equality (expect 0 changes). Question for @model-risk (answer only, no change): would it accept, for T-027, "operations is never auto-accepted; the operations gate is 0 silent errors instead of the 18/20 hit floor"? Conditions and reasons. Then plan T-120 (plan only). Commit with commit-commands; push pilot-integration only." Proposal: `deliverables/ai-engineer/proposal-P-075.md`.
+- Dissent: none
+- Follow-up tasks: @model-risk supplies the 45 P-073 probe sentences (stored as test cases); build P-075 on a new branch in the fix worktree (rule only, review note kept, 0 changed requests); checks; @senior-underwriter UI check; @model-risk check (one look-again); merge if no High; @model-risk answers the T-027 operations-gate question (no change); plan T-120.
+- Status: ACCEPTED by @user, 2026-10-26
+- Amends: none. v11 and all published scores stay frozen (D-020). Not a production approval; the T-027 veto stands.
+
+## D-134 — Operations gate adopted for T-027 (C1–C7), recorded before T-120 gold (2026-10-26)
+- Rationale: The user typed in the Claude Code session on 2026-10-26: "Decisions (typed by @user): 1 = A — adopt the operations gate with @model-risk's C1–C7; record it now, before any T-120 gold. 2 = A — freeze and build T-120 after C1 is built. B-481 waits until after T-120. 1. @ai-engineer-assistant drafts the C1 proposal for me to read: operations is always flagged and must be acknowledged before any send, in all modes; reuse the pilot per-value confirm where possible. Do not build until I approve. 2. Freeze C2 (stricter silent-error count) and C4 (operations ≥15/20) in writing now, in the T-120 plan and the scorer notes. No scorer code change. 3. Add C6 (extra cooking files) to the T-120 plan. Commit, push pilot-integration only."
+- Decision:
+  - **C1:** Operations is never auto-accepted. After all rules/merges (including P-074/P-075), any operations row with a value is flagged `needs_review=True` with a policy note when no specific item-naming reason exists; shown on the card; send refused until acknowledged on the current run hash. Enforced by code change needing its own proposal (**P-076**, draft for user review, not built). Reuse existing per-value acknowledgment.
+  - **C2:** Silent error for operations = scored miss with **no specific** item-naming reason (P-059/P-075 missing-item reasons, cooking/conflict reasons, scan/low-confidence reasons count as specific; the C1 policy reason does **not** count). Counted by a script frozen before T-120 gold; v11 unchanged. Target 0.
+  - **C3:** Zero understated hazards (cooking, fryer, hood, pub, contractor class), whether flagged or not.
+  - **C4:** Operations present ≥ 18/20 and hits ≥ 15/20 under frozen v11 (floor set now, before T-120 gold).
+  - **C5:** All other fields and gates unchanged.
+  - **C6:** T-120 will include ≥12 files with "Cooking operations: None"-type lines, ≥3 with cooking stated, ≥2 with planted cooking conflicts (added to plan).
+  - **C7:** Recorded before any T-120 gold exists (satisfied).
+- Effect: Operations and status automation go to 0 by design. T-027 veto remains until T-120 meets all conditions; this is not a production approval.

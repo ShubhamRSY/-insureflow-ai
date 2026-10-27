@@ -1,0 +1,87 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "prompt_version": "b025802c0dfa",
+  "files": [
+    "application.md",
+    "email.md",
+    "loss-runs.md",
+    "schedule.csv"
+  ],
+  "usage": {
+    "queue_time": 0.247787223,
+    "prompt_tokens": 1150,
+    "prompt_time": 0.104121091,
+    "completion_tokens": 666,
+    "completion_time": 1.419148653,
+    "total_tokens": 1816,
+    "total_time": 1.523269744
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Plains Home & Candle Co LLC",
+        "source": "application.md",
+        "quote": "Named insured: Plains Home & Candle Co LLC",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": "1615 Ave Q, Lubbock, TX 79401",
+        "source": "application.md",
+        "quote": "Premises address: 1615 Ave Q, Lubbock, TX 79401",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-02-01",
+        "source": "application.md",
+        "quote": "Effective date: 2027-02-01",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "Dry retail storefront, ground floor, clothing and dry goods. No food, no alcohol, no repackaging.",
+        "source": "application.md",
+        "quote": "Operations: Dry retail storefront, ground floor, clothing and dry goods. No food, no alcohol, no repackaging.",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "610000",
+        "source": "application.md",
+        "quote": "Annual sales: $610,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "520000",
+        "source": "application.md",
+        "quote": "Building TIV: $520,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "Masonry",
+        "source": "application.md",
+        "quote": "Construction: Masonry",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": "1981",
+        "source": "application.md",
+        "quote": "Year built: 1981",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-09-30",
+        "source": "loss-runs.md",
+        "quote": "Valued as of: 2026-09-30",
+        "confidence": 1.0
+      }
+    ],
+    "conflicts": []
+  }
+}

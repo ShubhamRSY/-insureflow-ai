@@ -1,0 +1,406 @@
+{
+  "label": "9 of 9 extracted fields scored; claims not read; loss runs = date only",
+  "commit": "ba3022155bbde4b5572d7d6fa7af0b3bf2e61f0a (last pipeline commit 3557e4a6e91831dbde0b3177ad1e5e2a3be22739)",
+  "uncommitted": [
+    "underwriting_pipeline/ai/llm_extract.py",
+    "underwriting_pipeline/ai/prepare.py"
+  ],
+  "model": "qwen/qwen3.8-27b",
+  "host": "api.groq.com",
+  "submissions": [
+    {
+      "submission": "SUB-147",
+      "format": "typed md app, email, csv, typed PDF carrier loss run",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "hit",
+        "route": "miss"
+      },
+      "system_status": "complete",
+      "status_safety": "safe",
+      "status_automation": "automated",
+      "extracted_named_insured": "Marlow Creek Accounting PLLC",
+      "retries": [],
+      "gold_route": "carrier_a",
+      "route_used": "senior_referral"
+    },
+    {
+      "submission": "SUB-148",
+      "format": "typed md app, email, csv, greyscale scan of a carrier no-claims loss run (slightly crooked per the producer)",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "miss",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "miss",
+        "conflict": "hit",
+        "status": "miss",
+        "route": "miss"
+      },
+      "system_status": "incomplete",
+      "status_safety": "safe",
+      "status_automation": "not_automated",
+      "extracted_named_insured": "Hollis and Vane Kitchen LLC",
+      "retries": [],
+      "gold_route": "carrier_b",
+      "route_used": "senior_referral"
+    },
+    {
+      "submission": "SUB-149",
+      "format": "typed md app, email, csv, typed Carrier C loss run",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "miss",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "miss",
+        "status": "hit",
+        "route": "miss"
+      },
+      "system_status": "complete",
+      "status_safety": "safe",
+      "status_automation": "automated",
+      "extracted_named_insured": "Ridgeview Court Apartments LLC",
+      "retries": [
+        {
+          "kind": "rate_limit_429",
+          "attempt": 1,
+          "retry_in": 42.0,
+          "detail": "per minute: {\"error\":{\"message\":\"Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01kcpawq5vecv8na8y22z8xpx0` service tier `on_demand` on output tokens per minute (OTPM): Limit 1000, Used 997, Requested 677. Please try again in 40.44s. Need more tokens? Upgrade to Dev Tier today at https://c",
+          "files": [
+            "application.md",
+            "email.md",
+            "loss-runs.md",
+            "schedule.csv"
+          ]
+        },
+        {
+          "kind": "rate_limit_429",
+          "attempt": 2,
+          "retry_in": 4.0,
+          "detail": "per minute: {\"error\":{\"message\":\"Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01kcpawq5vecv8na8y22z8xpx0` service tier `on_demand` on output tokens per minute (OTPM): Limit 1000, Used 294, Requested 740. Please try again in 2.04s. Need more tokens? Upgrade to Dev Tier today at https://co",
+          "files": [
+            "application.md",
+            "email.md",
+            "loss-runs.md",
+            "schedule.csv"
+          ]
+        }
+      ],
+      "gold_route": "carrier_c",
+      "route_used": "senior_referral"
+    },
+    {
+      "submission": "SUB-150",
+      "format": "typed md app, email, csv, applicant's narrative letter with a copied carrier header",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "miss",
+        "conflict": "hit",
+        "status": "hit",
+        "route": "miss"
+      },
+      "system_status": "incomplete",
+      "status_safety": "safe",
+      "status_automation": null,
+      "extracted_named_insured": "Tucker Ridge Hardware Supply LLC",
+      "retries": [
+        {
+          "kind": "rate_limit_429",
+          "attempt": 1,
+          "retry_in": 3.0,
+          "detail": "per minute: {\"error\":{\"message\":\"Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01kcpawq5vecv8na8y22z8xpx0` service tier `on_demand` on output tokens per minute (OTPM): Limit 1000, Used 863, Requested 156. Please try again in 1.14s. Need more tokens? Upgrade to Dev Tier today at https://co",
+          "files": [
+            "application.md",
+            "email.md",
+            "loss-runs.md",
+            "schedule.csv"
+          ]
+        }
+      ],
+      "gold_route": "carrier_a",
+      "route_used": "senior_referral"
+    },
+    {
+      "submission": "SUB-151",
+      "format": "typed md app, email, csv, carrier B layout missing its valuation line",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "miss",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "miss",
+        "conflict": "hit",
+        "status": "hit",
+        "route": "miss"
+      },
+      "system_status": "incomplete",
+      "status_safety": "safe",
+      "status_automation": null,
+      "extracted_named_insured": "Lone Star Drywall and Trim LLC",
+      "retries": [
+        {
+          "kind": "rate_limit_429",
+          "attempt": 1,
+          "retry_in": 34.0,
+          "detail": "per minute: {\"error\":{\"message\":\"Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01kcpawq5vecv8na8y22z8xpx0` service tier `on_demand` on output tokens per minute (OTPM): Limit 1000, Used 999, Requested 549. Please try again in 32.88s. Need more tokens? Upgrade to Dev Tier today at https://c",
+          "files": [
+            "application.md",
+            "email.md",
+            "loss-runs.md",
+            "schedule.csv"
+          ]
+        }
+      ],
+      "gold_route": "carrier_b",
+      "route_used": "senior_referral"
+    },
+    {
+      "submission": "SUB-152",
+      "format": "typed md app, email, csv, non-panel carrier loss summary in its own layout",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "hit",
+        "route": "miss"
+      },
+      "system_status": "complete \u2014 review pending",
+      "status_safety": "safe",
+      "status_automation": null,
+      "extracted_named_insured": "Blue Mesa Outfitters LLC",
+      "retries": [
+        {
+          "kind": "rate_limit_429",
+          "attempt": 1,
+          "retry_in": 5.0,
+          "detail": "per minute: {\"error\":{\"message\":\"Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01kcpawq5vecv8na8y22z8xpx0` service tier `on_demand` on output tokens per minute (OTPM): Limit 1000, Used 998, Requested 66. Please try again in 3.84s. Need more tokens? Upgrade to Dev Tier today at https://con",
+          "files": [
+            "application.md",
+            "email.md",
+            "loss-runs.md",
+            "schedule.csv"
+          ]
+        },
+        {
+          "kind": "rate_limit_429",
+          "attempt": 2,
+          "retry_in": 37.0,
+          "detail": "per minute: {\"error\":{\"message\":\"Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01kcpawq5vecv8na8y22z8xpx0` service tier `on_demand` on output tokens per minute (OTPM): Limit 1000, Used 912, Requested 677. Please try again in 35.34s. Need more tokens? Upgrade to Dev Tier today at https://c",
+          "files": [
+            "application.md",
+            "email.md",
+            "loss-runs.md",
+            "schedule.csv"
+          ]
+        }
+      ],
+      "gold_route": "carrier_a",
+      "route_used": "no_match"
+    },
+    {
+      "submission": "SUB-153",
+      "format": "typed md app, email, csv, two typed loss runs (one accepted layout, one undated)",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "miss",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "miss",
+        "route": "miss"
+      },
+      "system_status": "complete \u2014 review pending",
+      "status_safety": "safe",
+      "status_automation": "not_automated",
+      "extracted_named_insured": "Lone Star Paper & Office Co., LLC",
+      "retries": [
+        {
+          "kind": "rate_limit_429",
+          "attempt": 1,
+          "retry_in": 38.0,
+          "detail": "per minute: {\"error\":{\"message\":\"Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01kcpawq5vecv8na8y22z8xpx0` service tier `on_demand` on output tokens per minute (OTPM): Limit 1000, Used 932, Requested 677. Please try again in 36.54s. Need more tokens? Upgrade to Dev Tier today at https://c",
+          "files": [
+            "application.md",
+            "email.md",
+            "loss-runs-a.md",
+            "loss-runs-b.md",
+            "schedule.csv"
+          ]
+        }
+      ],
+      "gold_route": "carrier_a",
+      "route_used": "senior_referral"
+    }
+  ],
+  "counted": {
+    "named_insured": {
+      "hit": 7,
+      "hit (needs review)": 0,
+      "miss": 0,
+      "not_credited": 0,
+      "call_failed": 0,
+      "flagged": 0
+    },
+    "premises": {
+      "hit": 7,
+      "hit (needs review)": 0,
+      "miss": 0,
+      "not_credited": 0,
+      "call_failed": 0,
+      "flagged": 0
+    },
+    "effective_date": {
+      "hit": 7,
+      "hit (needs review)": 0,
+      "miss": 0,
+      "not_credited": 0,
+      "call_failed": 0,
+      "flagged": 0
+    },
+    "operations": {
+      "hit": 5,
+      "hit (needs review)": 0,
+      "miss": 2,
+      "not_credited": 0,
+      "call_failed": 0,
+      "flagged": 0
+    },
+    "sales": {
+      "hit": 7,
+      "hit (needs review)": 0,
+      "miss": 0,
+      "not_credited": 0,
+      "call_failed": 0,
+      "flagged": 0
+    },
+    "tiv": {
+      "hit": 6,
+      "hit (needs review)": 0,
+      "miss": 1,
+      "not_credited": 0,
+      "call_failed": 0,
+      "flagged": 0
+    },
+    "construction": {
+      "hit": 6,
+      "hit (needs review)": 0,
+      "miss": 1,
+      "not_credited": 0,
+      "call_failed": 0,
+      "flagged": 0
+    },
+    "year_built": {
+      "hit": 7,
+      "hit (needs review)": 0,
+      "miss": 0,
+      "not_credited": 0,
+      "call_failed": 0,
+      "flagged": 0
+    },
+    "loss_runs": {
+      "hit": 4,
+      "hit (needs review)": 0,
+      "miss": 3,
+      "not_credited": 0,
+      "call_failed": 0,
+      "flagged": 0
+    },
+    "conflict": {
+      "hit": 6,
+      "hit (needs review)": 0,
+      "miss": 1,
+      "not_credited": 0,
+      "call_failed": 0,
+      "flagged": 0
+    },
+    "status": {
+      "hit": 5,
+      "hit (needs review)": 0,
+      "miss": 2,
+      "not_credited": 0,
+      "call_failed": 0,
+      "flagged": 0
+    },
+    "route": {
+      "hit": 0,
+      "hit (needs review)": 0,
+      "miss": 7,
+      "not_credited": 0,
+      "call_failed": 0,
+      "flagged": 0
+    }
+  },
+  "status_split": {
+    "false_complete": 0,
+    "false_complete_ids": [],
+    "gold_complete": 4,
+    "automated": 2,
+    "call_failed": 0
+  },
+  "route_gate": {
+    "unsafe": 0,
+    "unsafe_ids": [],
+    "hits": 0,
+    "scored": 7,
+    "files": 7,
+    "evaluable": true,
+    "pass": false,
+    "verdict": "FAIL"
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "prompt_version": "759b3e6bc9b2",
+  "files": [
+    "application.pdf",
+    "email.md"
+  ],
+  "usage": {
+    "queue_time": 0.065784373,
+    "prompt_tokens": 813,
+    "prompt_time": 0.055761485,
+    "completion_tokens": 758,
+    "completion_time": 1.516698873,
+    "total_tokens": 1571,
+    "total_time": 1.5724603579999998
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Cesar Chavez Tax LLC",
+        "source": "application.pdf",
+        "quote": "Named insured: Cesar Chavez Tax LLC",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": null,
+        "source": null,
+        "quote": null,
+        "confidence": 0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-01-01",
+        "source": "application.pdf",
+        "quote": "Effective date: 2027-01-01",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "accounting office",
+        "source": "application.pdf",
+        "quote": "Operations: accounting office",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "390000",
+        "source": "application.pdf",
+        "quote": "Sales: 390000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "450000",
+        "source": "application.pdf",
+        "quote": "Building TIV: 450000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "masonry",
+        "source": "application.pdf",
+        "quote": "Construction: masonry",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": "2004",
+        "source": "application.pdf",
+        "quote": "Year built: 2004",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-09-10",
+        "source": "application.pdf",
+        "quote": "Valued through: 2026-09-10",
+        "confidence": 1.0
+      }
+    ],
+    "conflicts": [
+      {
+        "field": "premises_address",
+        "values": [
+          {
+            "value": "1400 Cesar Chavez Blvd, San Antonio, TX 78207",
+            "source": "application.pdf",
+            "quote": "Premises: 1400 Cesar Chavez Blvd, San Antonio, TX 78207",
+            "confidence": 1.0
+          },
+          {
+            "value": "410 Cesar Chavez Blvd, San Antonio, TX 78207",
+            "source": "email.md",
+            "quote": "Cesar Chavez Tax LLC is at 410 Cesar Chavez Blvd, San Antonio, TX 78207.",
+            "confidence": 1.0
+          }
+        ]
+      }
+    ]
+  }
+}

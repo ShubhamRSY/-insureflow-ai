@@ -1418,7 +1418,7 @@ D-004 (user, 2026-10-09): Sanger & Altgelt agency pipeline. Eight steps. No auto
   - [x] The key is OPENAI_API_KEY from the environment and is not stored in the repo
   - [x] A hold-out score from a successful model call
 - Output: underwriting_pipeline/ai/llm_extract.py, underwriting_pipeline/ai/sources.py
-- Notes: D-010 and D-012. The first paid-key call returned HTTP 401. The Groq call on openai/gpt-oss-120b succeeded and T-029 recorded that score. SUB-017 through SUB-026 are the development set. Do not count a null as a hit. 2026-10-11: owner handle changed from the retired @ai-engineer to @ai-engineer-assistant (D-017). No other change. 2026-10-11, @pm, round wrap-up, recorded as the reviewers wrote it: @senior-underwriter, REVIEW, "Verdict: REJECT. Criterion 2 fails for an underwriter: a citation must be the text the value came from." @model-risk, OBJECTION, "Verdict: REJECT. Production veto on extraction stands." "(1) readers: met for typed PDF, Excel, image scans; (2) citation: not met; (3) 0.75 gate: not met on scans; (4) key: met as amended by D-011 and D-012 (LLM_API_KEY, no key in any tracked file); (5) hold-out: a score exists, but not for this code." Boxes 2 and 3 are unticked for that reason. Box 5 is left as it was with @model-risk's words beside it. The veto is open. D-037 (user): all four things @model-risk says resolve it are accepted and on the demo path. (a) citations, (b) confidence, (c) unread content: one proposal, P-016, T-080; not written, not approved, not built. (d) a new 20-file hold-out after (a) to (c) are frozen and committed: T-091, T-092, T-093. Lines 3 and 9 of team/DEMO-BLOCKERS.md. Medium and Low: B-036 to B-038 and B-122 to B-137. Stays IN_REVIEW. Lifting the veto is @model-risk's call (D-037). @pm gives no verdict.
+- Notes: D-010 and D-012. The first paid-key call returned HTTP 401. The Groq call on openai/gpt-oss-120b succeeded and T-029 recorded that score. SUB-017 through SUB-026 are the development set. Do not count a null as a hit. 2026-10-11: owner handle changed from the retired @ai-engineer to @ai-engineer-assistant (D-017). No other change. 2026-10-11, @pm, round wrap-up, recorded as the reviewers wrote it: @senior-underwriter, REVIEW, "Verdict: REJECT. Criterion 2 fails for an underwriter: a citation must be the text the value came from." @model-risk, OBJECTION, "Verdict: REJECT. Production veto on extraction stands." "(1) readers: met for typed PDF, Excel, image scans; (2) citation: not met; (3) 0.75 gate: not met on scans; (4) key: met as amended by D-011 and D-012 (LLM_API_KEY, no key in any tracked file); (5) hold-out: a score exists, but not for this code." Boxes 2 and 3 are unticked for that reason. Box 5 is left as it was with @model-risk's words beside it. The veto is open. D-037 (user): all four things @model-risk says resolve it are accepted and on the demo path. (a) citations, (b) confidence, (c) unread content: one proposal, P-016, T-080; not written, not approved, not built. (d) a new 20-file hold-out after (a) to (c) are frozen and committed: T-091, T-092, T-093. Lines 3 and 9 of team/DEMO-BLOCKERS.md. Medium and Low: B-036 to B-038 and B-122 to B-137. Stays IN_REVIEW. Lifting the veto is @model-risk's call (D-037). @pm gives no verdict. 2026-10-19, @model-risk, gate memo after the official T-108 run (SUB-206-237, `deliverables/ai-engineer/evals/SUB-206-237-holdout-v7.{md,json}`): **Verdict KEEP — the T-027 veto is not lifted.** Run integrity holds (code `457f1bf`, prompt `759b3e6bc9b2`, scorer v7, gold manifest `11933e96…`, single run/score, 0 call_failed) and the T-027 route gate PASSES (0 unsafe, 18/20), but the P-055 scope gate FAILS (1 leak SUB-233: fields, provisional route, automated draft, send enabled; recall 11/12) and two fields are below the 18/20 floor (operations 9/20, loss_runs 5/20). Memo `deliverables/model-risk/T-027-memo.md`; High H1 (scope detector, backlog B-432) and H2 (operations/loss-run completeness, B-433). Resolves only when: fixes on dev with @model-risk checks (no High), code and scorer re-frozen and hashed, a fresh 20+12 hold-out gold-first and lint-passing, run once and scored once meeting every gate-table criterion (all 9 fields ≥ 18/20, 0 false completes, 0 unsafe, 0 leaks, 100% recall). An approved P-### is not a production approval. 2026-10-21, @model-risk, T-027 memo after the official T-117 run (SUB-238-269, `deliverables/ai-engineer/evals/SUB-238-269-holdout-v11.{md,json}`, run `05c3110`): **Verdict KEEP — the T-027 veto is not lifted.** Run integrity holds; safety gates pass (0 false completes, 0 unsafe, route 19/20, 0 leaks, recall 12/12); operations 13/20 and loss_runs 16/20 fail the 18/20 floor. Highs H1 (cooking line dropped, B-451), H2 (0/3 planted conflicts, B-452), H3 (Carrier C build format, B-453). Memo `deliverables/model-risk/T-027-memo-T-117.md`. Resolves only when H1/H2 are fixed on dev under approved P-### with a @model-risk check (no High), the H3 lint rule and a v-next scorer are frozen and hashed, and a fresh 20+12 hold-out (look-again on every gold fix) is run and scored once meeting every gate plus planted-conflict recall 100%. 2026-10-24, @model-risk, T-027 memo after the official T-119 run (SUB-340-371, `deliverables/ai-engineer/evals/SUB-340-371-holdout-v11.{md,json}`, run 20261024T000318-70195, D-130): **Verdict KEEP — the T-027 veto is not lifted.** Run integrity holds; safety gates pass (0 leaks, recall 12/12, 0 false completes, 0 unsafe, route 20/20, loss runs 20/20). Fails: operations 9/20 (H1, B-468; 9 dropped "Cooking operations: None", D-127) and planted-conflict recall 2/3 (H2, B-469; SUB-345 sales conflict raised by the model, discarded by the pipeline, file passes the send gate as "complete — review pending"). Memo `deliverables/model-risk/T-027-memo-T-119.md`. Resolves only when H1/H2 are fixed under approved P-### with a @model-risk check (no High), a v-next scorer is re-frozen, and a fresh 20+12 hold-out with at least 5 measurable planted conflicts meets every gate plus planted-conflict recall 100%.
 
 ### T-028 — Gold answers for hold-out SUB-027 through SUB-036
 - Owner: @senior-underwriter
@@ -1565,7 +1565,7 @@ D-004 (user, 2026-10-09): Sanger & Altgelt agency pipeline. Eight steps. No auto
 ### T-103 — Hold-out SUB-154–173: the planned mix (plan only; written before any file exists)
 - Owner: @producer (files), @senior-underwriter (gold first)
 - Requested by: @user (D-095 item 3)
-- Status: TODO. Plan only; do not build. No SUB-154–173 file or gold exists. Build only when the user says so.
+- Status: TODO. Plan only; do not build. No SUB-154–173 file or gold exists. Build only when the user says so.  2026-10-16 (D-101): built (33e399a), run and scored once (v4): 0 false completes, 0 unsafe, route 16/20, field floor not met; @model-risk T-027 memo KEEP. B-394–B-396.
 - Priority: P0 (T-027 resolution path)
 - Depends on: P-048 built and checked (D-095); operations gold rule (deliverables/senior-underwriter/operations-gold-rule.md); scorer v2 with the route column (eval_holdout_v2.py)
 - Reviewers: @model-risk (approves the mix)
@@ -1607,3 +1607,230 @@ D-004 (user, 2026-10-09): Sanger & Altgelt agency pipeline. Eight steps. No auto
   - [ ] Gold is written from the documents only by @senior-underwriter (not by anyone who changed the code), committed and frozen before any extraction. smoke_readers.py passes first. .venv python, paced, scorer v2, run and scored once on a frozen commit (T-027 path: all 9 fields 9/10 or better, 0 false completes). Live and cache outputs kept apart (B-363).
 - Output: simulation/inbox/SUB-154 … SUB-173, deliverables/senior-underwriter/gold-set/SUB-154.md … SUB-173.md
 - Notes: D-095 item 3. Plan only. 2026-10-16, @model-risk: APPROVED WITH CONDITIONS (deliverables/model-risk/check-P-048.md): (1) file 8 states its commodities are not hazardous; (2) file 11 states a TIV; (3) one non-carrier run is a JPG scan of an applicant note under a copied carrier header (probe M1; which non-carrier slot it replaces is settled with @model-risk before any file is built); (4) build only after P-048 H1 is closed. Not built; the user decides when.
+
+### T-104a — P-055 out-of-scope detector and manual-intake card
+- Owner: @ai-engineer-assistant · Status: DONE · Decision: D-105 (approve change P-055 rev 3)
+- Acceptance criteria:
+  - [ ] Deterministic detector, no model call, versioned and entered in deliverables/model-risk/model-inventory.md (Tier 2) before use.
+  - [ ] Criteria 1–4 exactly as in deliverables/pm/proposal-P-055.md; fail closed (error, unsure language count, unknown text layer, no identifiable application → manual intake).
+  - [ ] An out-of-scope file is manual intake as a whole file: no field shown complete, no status complete / complete — review pending, no carrier, provisional or suggested route, no automated missing-info draft, send blocked with the reason. extraction_failed keeps precedence (D-021).
+  - [ ] Workbench card lists every matched reason in plain language; send refusal shows the reason (D-065); What's new line; screenshot under deliverables/software-engineer/screenshots/ (temp copy, D-069).
+  - [ ] Self-checks on dev files incl. SUB-142/143 (email-only, Spanish), a SUB-170-style scanned application, a SUB-172-style multi-location file, and in-scope boundary cases (scanned loss run + typed application, Spanish email beside English application, one-row schedule, mailing address). pyright on changed files.
+- Output: code in underwriting_pipeline/, deliverables/ai-engineer/p-055-as-built.md
+
+### T-104 — Hold-out (P-055): 20 in scope + 12 out of scope, gold only
+- Owner: @producer (files), @senior-underwriter (gold) · Status: GOLD FROZEN, NOT RUN (code 1cf001f) · Decision: D-105, D-107
+- Acceptance criteria:
+  - [ ] Mix per P-055 "Next hold-out": 20 in scope with at least 6 boundary cases; 12 out of scope with at least 4 per criterion 1–3, at least 3 two-criteria files, a near-pass form per criterion, and at least 2 email-only / application-not-identified files (criterion 4).
+  - [ ] Gold from documents and written rules only, scope label in every gold file, D-102 conventions ("not in documents"; hold is a status, never a route), operations checklist for scorer v5.
+  - [ ] Gold frozen and committed, hash recorded. The pipeline is not run on T-104.
+
+### T-104b — P-057 scorer v6 and P-058 numbered locations
+- Owner: @ai-engineer-assistant · Status: DONE (re-frozen; @model-risk APPROVE, no High) · Decision: D-108
+- Acceptance criteria:
+  - [ ] Scorer v6 = v5 plus the P-055 measures: leakage 0 (any out-of-scope file shown complete, routed, or given an automated missing-info draft), detection recall 100% per criterion and overall, in-scope files wrongly sent to manual intake ≤ 2 of 20; v5 field scores and the route gate (0 unsafe, ≥ 18/20) on in-scope files. Built from the gold format only; no T-104 file or gold read. v4/v5 unchanged. Self-checks on dev data.
+  - [ ] Detector catches numbered locations/buildings/premises ("Location No. 2", "Loc #2", "Building 2", "Bldg 2", "Premises 2", ...), version bumped; self-checks on dev; pyright on changed files.
+
+### T-105 — Manager demo prep (no pipeline code changes)
+- Owner: @senior-underwriter (files), @software-engineer (workbench + screenshots), @pm (guide, summary), @senior-test-engineer (rehearsal) · Status: DONE (rehearsal READY WITH FIXES; guide setup fixed by the orchestrator with run-demo.sh, re-run clean, 0 live calls, D-069 clean) · Decision: D-110
+- Acceptance criteria:
+  - [ ] 3 demo files from dev data, none from a hold-out: (a) messy in-scope file that reaches a carrier quote, (b) out-of-scope file sent to manual intake with a plain reason, (c) senior-referral file confirmed by a senior (P-052). Each runs cleanly on frozen code 6e7cfa2, 0 live calls where saved replies exist.
+  - [ ] Workbench shows each cleanly; Playwright screenshots of each step in deliverables/software-engineer/screenshots/demo/, made on a temp copy (D-069). No pipeline code changes; problems are reported, not fixed.
+  - [ ] deliverables/pm/demo-guide.md: 10-minute script for a non-technical manager, the 3 files listed, honest T-104 scores, cost per file and estimated time saved per submission with stated assumptions.
+  - [ ] deliverables/pm/where-we-are.md: one page; what works, the 2 open gaps (operations details, routing rules), what production still needs (T-027 veto, SSO B-190, concurrent writes B-191, real carrier formats R-030), next steps.
+  - [ ] Rehearsal: the guide dry-run step by step on a temp copy; everything that breaks is listed.
+
+### T-106a — P-059 operations from cooking, hood and line-of-business lines
+- Owner: @ai-engineer-assistant · Status: DONE (@model-risk APPROVE WITH CHANGES, no High; live check M1 owed) · Decision: D-111 (approve change P-059)
+- Acceptance criteria:
+  - [ ] The operations answer keeps items stated on "Cooking operations", "Hood & extinguishing system" and "Line of business" lines (and the "Operations" line), e.g. "no gas", "snack warmer", "no cooking", hood inspection dates, "no liquor".
+  - [ ] The whole-document check flags any operations-rule item (the items the routing/appetite rules read) present in the documents but missing from the answer; flagged means needs review, never a silent value.
+  - [ ] Self-checks on dev files only (no T-104 file or gold opened to tune); pyright on changed files; prompt/extraction version bumped and model-inventory.md updated.
+  - [ ] Written explanation of why the existing check missed the 3 T-104 silent errors (SUB-180, 201, 204), from the code and the published mismatch file only.
+- Output: code in underwriting_pipeline/, deliverables/ai-engineer/p-059-p-060-as-built.md
+
+### T-106b — Routes check of the 4 T-104 route misses (report only)
+- Owner: @head-of-underwriting · Status: DONE (report; P-061, P-062 drafted, not built) · Decision: D-111
+- Acceptance criteria:
+  - [ ] For SUB-174, 182, 186, 201: the pipeline route, the gold route, and what the written rules (carrier-match.md R1–R16, W1, W2, appetite guides) say, rule by rule.
+  - [ ] Each miss classed "code wrong" (→ a proposed P-### fix, not built) or "gold wrong" (→ a gold lesson for future sets).
+  - [ ] Nothing built; T-104 scores not changed.
+- Output: deliverables/head-of-underwriting/T-104-route-check.md
+
+### T-106c — P-060 scorer v7 (loss runs)
+- Owner: @ai-engineer-assistant · Status: DONE (@model-risk APPROVE) · Decision: D-111 (approve change P-060)
+- Acceptance criteria:
+  - [ ] eval_holdout_v7.py = v6 plus: loss runs "correct" when the pipeline matches the gold expectation, including "needs review" when gold expects review; null + needs review where gold expects a date is "not credited", not a miss.
+  - [ ] v6 (and v2–v5) unchanged, sha256 of v6 still 4bf1cd63…; published score files untouched.
+  - [ ] Self-checks on dev data (temp cache copy, 0 calls, HOLDOUT_OUT in a temp folder); pyright on changed files.
+- Output: underwriting_pipeline/ai/eval_holdout_v7.py, section in deliverables/ai-engineer/p-059-p-060-as-built.md
+
+### T-106d — Test-file lint before any hold-out gold freeze
+- Owner: @senior-test-engineer · Status: DONE (@model-risk H1, H2 closed in look-again 2; gate in RUN-RULES) · Decision: D-111
+- Acceptance criteria:
+  - [ ] One script checks a hold-out's files and gold: every loss-run valued date is before the run date; every gold Scope line is valid (same parse as scorer v6/v7); the mix matches the written plan (in/out counts, per-criterion counts, other plan counts given).
+  - [ ] Exit non-zero on any failure with a plain reason per file; must pass before a gold freeze (added to RUN-RULES).
+  - [ ] Self-check: passes on a clean temp set; fails on T-104's post-run-date loss runs (read-only, files only, no pipeline run).
+- Output: script under underwriting_pipeline/ai/ or deliverables/senior-test-engineer/, note in deliverables/senior-test-engineer/T-106d-lint.md
+
+### T-107a — P-061 class lines, P-062 nightclub/lounge R1, one prohibited-class table
+- Owner: @ai-engineer-assistant (code), @head-of-underwriting (rules text) · Status: IN_PROGRESS · Decision: D-112 (approve change P-061, P-062)
+- Acceptance criteria:
+  - [ ] P-061: `_match()` reads the application's "Line of business:" and "Cooking operations:" lines (not the insured's name) for R9, R10, R14 and bar/prohibited words; stated cooking equipment in operations or the Cooking operations line is R9 evidence; R17 keeps reading the operations text only.
+  - [ ] P-062: nightclub(s), lounge(s), hookah, adult entertainment, cannabis words stay R1 even with R9 evidence; R2 stays for bar(s), tavern(s), pub(s) beside real restaurant evidence; "pre-packaged snacks only", "snacks only", "snack warmer" are not restaurant evidence.
+  - [ ] carrier-match.md: W1 and W1b merged into one prohibited-class table; where they conflicted the stricter rule wins; each row cites its source (AG line, D-###, P-###).
+  - [ ] Self-checks on dev only, including SUB-174/182/186/201 style cases and "restaurant and lounge" with real cooking; pyright on changed files; code-review on the worktree diff.
+- Output: code in underwriting_pipeline/, deliverables/head-of-underwriting/carrier-match.md, deliverables/ai-engineer/p-061-p-062-as-built.md
+
+### T-107b — B-415 live check: P-059 with P-061/P-062
+- Owner: @ai-engineer-assistant · Status: TODO · Decision: D-112
+- Acceptance criteria:
+  - [ ] 41 live calls (quick 15 = 5 calls, dev SUB-127–173 = 36), qwen, paced 55 s, .venv; temp outputs (D-069).
+  - [ ] Report vs the old saved replies: operations hits, silent errors, routes, false completes, unsafe routes.
+- Output: deliverables/ai-engineer/b-415-live-check.md
+
+### T-107c — Account-manager check passes a senior-confirmed carrier
+- Owner: @software-engineer · Status: TODO · Decision: D-112 (B-412)
+- Acceptance criteria:
+  - [ ] A P-052 senior-confirmed carrier passes the account-manager check without a typed override in the normal demo flow; all other gates unchanged.
+  - [ ] Every refusal shows its real reason on the card; never "not in appetite" for a senior referral.
+  - [ ] Self-check; D-065 (workbench, What's new line, screenshot).
+
+### T-107d — "What's new" shows the latest 5 plus "show all"
+- Owner: @software-engineer · Status: TODO · Decision: D-112 (B-410)
+
+### T-107e — T-104 best-case demo file routed straight to Carrier A
+- Owner: @senior-underwriter (pick), @software-engineer (wire into run-demo.sh) · Status: TODO · Decision: D-112 (B-414)
+
+### T-107f — Time-saved 25–35 min assumptions checked or labelled unmeasured
+- Owner: @senior-underwriter · Status: TODO · Decision: D-112
+
+### T-107g — Second rehearsal with run-demo.sh; demo-guide.md and screenshots updated
+- Owner: @senior-test-engineer (rehearsal), @pm (guide), @software-engineer (screenshots) · Status: TODO · Decision: D-112
+
+### T-108 — Next hold-out: 20 in-scope + 12 out-of-scope, gold first, no run
+- Owner: @producer (submission files, mix), @senior-underwriter (gold, mix, routes), @senior-test-engineer (plan JSON lint) · Status: IN_PROGRESS · Decision: D-113
+- Requested by: @user, 2026-10-19 (session answers: full build, task id T-108, commit the code freeze first)
+- Code under test (recorded per acceptance criterion 1): `ai-team` git SHA `457f1bf5784cd8a0c95af72724ca9341be3ba207`, prompt version `759b3e6bc9b2` (P-059), scorer `v7`. Gold manifest sha256 `11933e96b8370f57321ce5c1e1c6c3c3105a4f0517d841fbbbb8821bca18633d` (32 gold cards + route table), lint exit 0 at run date 2026-10-19. @model-risk build checks: `deliverables/model-risk/T-108-check.md` (H1 board, M1, L1 fixed) and `deliverables/model-risk/T-108-M2-close.md` (M2 CLOSED; H1 SUB-211 premises conflict found and fixed — gold `incomplete — hold: open conflict`, route unchanged). Gold compared field-by-field against builder source data (`deliverables/senior-underwriter/T-108-gold-vs-source.md`); no OCR drift in any scanned field.
+- Acceptance criteria:
+  - [x] Code frozen first: the B-428/B-411 workbench fix and this board are committed on `ai-team`; the task records that git SHA, prompt version 759b3e6bc9b2 (P-059) and scorer v7 as the code under test. No pipeline change after the freeze without a new freeze note.
+  - [x] 32 new submission files written under `simulation/inbox/` as SUB-206 to SUB-237 (nothing reused from dev or T-104), no extraction, no model call, nothing run. 20 in-scope, 12 out-of-scope covering proposal-P-055 criteria 1-4 (scanned application, multiple locations, non-English, no application identified): 4 / 5 / 4 / 2 with 3 files carrying two criteria and 2 carrying criterion 4 alone, as in T-104.
+  - [x] Build rules from the T-027 gate memo (D-109, resolution 2): every carrier loss run valued before the run date (use a run date of 2026-10-19 or later, so value them before today), at least two held W1 (prohibited-class) files, at least two office-lessor / deli-style class files.
+  - [x] `deliverables/producer/T-108-mix.md` (mix, written before gold) and `deliverables/senior-test-engineer/T-108-plan.json` (ids, in, out, per_criterion, two_criteria, criterion_4, routes) with routes stated under the current rules (P-049..P-062, merged W1/W1b table), and `undated_loss_runs` declared for every typed loss run that has no valued date (B-424).
+  - [x] Gold first: 20 in-scope gold files under `deliverables/senior-underwriter/gold-set/SUB-206*.md`.. written by hand from the documents and the written rules only (proposal-P-055.md criteria 1-4, carrier-match.md, operations-gold-rule.md D-102/D-103, carrier-loss-run-formats.md, required-fields.md) — no pipeline, scope detector, extraction, OCR script or scorer run or read. Every gold card has a `- Scope:` line and an `- Operations items:` line; empty fields say `not in documents`; no route is "hold". The 12 out-of-scope gold files carry the `- Scope:` line and the criteria codes only.
+  - [x] Lint passes before the gold freeze: `.venv/bin/python deliverables/senior-test-engineer/lint_holdout.py deliverables/senior-test-engineer/T-108-plan.json --run-date 2026-10-19` exits 0. Any FAIL line is fixed in the files or the plan, never in the lint.
+  - [x] Gold frozen: a freeze note in the mix records the gold SHA/hash and the code SHA above. The pipeline is **not** run on T-108 and no score exists (D-020: gold first, run once, score once, at a later session with the user's approval).
+  - [x] @model-risk checks the build (High only) before it is called frozen: mix vs plan vs gold counts, loss-run dates, W1 and office-lessor/deli coverage, gold-first integrity, D-069 (nothing real written by a test run).
+
+
+### T-109a — P-063: scope labels anywhere + send-time scope re-check
+- Owner: @ai-engineer-assistant (built in the orchestrator session) · Status: DONE · Decision: D-116
+- Acceptance criteria:
+  - [x] The detector finds location labels anywhere in a field or body text ("Loc 1 … ; Loc #2 …", "Location 2", "Bldg 2"), not only at line start, list items or schedule cells; version bumped (scope-v4).
+  - [x] The send gate re-checks scope at send time and refuses any out-of-scope file, with the reason shown, independent of status (carrier send and producer approve; workbench card).
+  - [x] Self-checks on dev including SUB-233; dev sweep scope-v3 vs v4; pyright on changed files (0 new).
+  - [x] D-065: workbench "What's new" line, screenshot `deliverables/software-engineer/screenshots/T-109a-scope-send-refused.png`.
+  - [x] @model-risk check, High only: APPROVE, no High (`deliverables/model-risk/check-P-063-P-064-T-109c.md`). @senior-underwriter UI check (D-065): APPROVE WITH CHANGES, H1 (hold wording, no next step) fixed in the same task: top alert "Send blocked — … Next step: re-run extraction …", no route/hold lines on the card; screenshot retaken.
+- Deliverables: `underwriting_pipeline/ai/scope.py`, `underwriting_pipeline/ai/prepare.py`, `underwriting_pipeline/app/package.py`, `underwriting_pipeline/app/workbench.py`, `deliverables/ai-engineer/p-063-p-064-as-built.md`.
+
+### T-109b — P-064: scorer v8 (loss-run valued-as-of line)
+- Owner: @ai-engineer-assistant · Status: DONE · Decision: D-116
+- Acceptance criteria:
+  - [x] Loss-run gold names the valued-as-of date explicitly ("Loss runs valued as of: <date>"); v8 compares that date only, never the policy-period start; v7 stays frozen (unchanged file).
+  - [x] A card that expects a date without the line stops v8 before any call; self-check on synthetic gold.
+  - [x] Gold convention written in `deliverables/ai-engineer/evals/RUN-RULES.md`.
+  - [x] @model-risk check, High only: APPROVE, no High.
+- Deliverables: `underwriting_pipeline/ai/eval_holdout_v8.py`, `deliverables/ai-engineer/evals/RUN-RULES.md`, `deliverables/ai-engineer/p-063-p-064-as-built.md`.
+
+### T-109c — Test the test: the lint scores perfect and wrong answers before any freeze
+- Owner: @senior-test-engineer (built in the orchestrator session) · Status: DONE · Decision: D-116
+- Acceptance criteria:
+  - [x] Before any gold freeze, (a) a perfect answer file built from the gold scores 100% on the scorer, and (b) a set of deliberately wrong answers (one per field, plus a leak and an unsafe route) is each caught. Freeze is blocked if either fails.
+  - [x] Run on T-108's gold now as a check (dev data); write-up with findings.
+  - [x] @model-risk check, High only: APPROVE, no High.
+- Deliverables: `deliverables/senior-test-engineer/lint_holdout.py`, `deliverables/senior-test-engineer/T-109c-lint-check.md` (+ two raw outputs).
+
+### T-109d — Pilot-readiness checklist (no build)
+- Owner: @pm · Status: DONE · Decision: D-116
+- Acceptance criteria:
+  - [x] `deliverables/pm/pilot-readiness.md`: @model-risk's C1–C8 (`deliverables/model-risk/T-027-assist-mode-pilot.md`) as a checklist with a status each, plus B-190 (SSO) and B-191 (concurrent writes) with a short build plan each. No build.
+ 2>&1 | tail -2 2>&1 | tail -2
+### T-116 — P-069: business_type operations slot, scorer v11
+- Owner: @ai-engineer-assistant (scorer, lint), @senior-underwriter (operations-gold-rule.md) · Status: DONE (frozen) · Decision: D-119
+- Acceptance criteria:
+  - [x] A `business_type` operations slot whose values are the class list in `deliverables/head-of-underwriting/carrier-match.md` (allow-list + referral + prohibited classes).
+  - [x] Every operations item that matters is a slot; items that fit no slot are removed from the scored checklist and listed as unscored notes.
+  - [x] `deliverables/senior-underwriter/operations-gold-rule.md` updated to match (P-069 section, bar-word line).
+  - [x] Scorer `underwriting_pipeline/ai/eval_holdout_v11.py`; `eval_holdout_v10.py` unchanged (sha256 `ffd1afdd…302b`).
+  - [x] Lint (`deliverables/senior-test-engineer/lint_holdout.py`, v11 default): perfect answers score 100%; every wrong answer, including near-miss negatives, is caught.
+  - [x] Validated on SUB-127–173 and a dev re-score of T-108 (SUB-206–237) with 0 model calls (cache only, temp paths per D-069).
+  - [x] @model-risk check, High only: OBJECTION H1 (bar word dropped from SUB-211/222 dev gold), resolved by a rule line + gold fix; look-again APPROVE, no High (`deliverables/model-risk/check-T-116-P-069.md`). M1–M6, L1–L2 to backlog.
+  - [x] If no High: code and scorer v11 frozen (v11 sha256 `7ddcfb50521b7af17f00c0e148891ca40008d019ce257b9b5d121c7fa6d3fcbb`, lint `01147a7532bdd7f1ec00861200d1d5e6bbf87f12612389416ff58b78844ea653`, prompt `759b3e6bc9b2`); code-under-test commit, prompt hash and scorer sha256 recorded in NEXT-SESSION.md.
+
+### T-117 — Next hold-out: SUB-238–269 (20 in-scope + 12 out-of-scope), gold first, no run
+- Owner: @producer (files, mix), @senior-underwriter (gold), @senior-test-engineer (plan JSON, lint) · Status: DONE (gold frozen, not run) · Decision: D-119 · Code under test: `ai-team` `8d605acce37f06f719b5a865a79d783bc3e9c800`, prompt `759b3e6bc9b2`, scorer v11 sha256 `7ddcfb50521b7af17f00c0e148891ca40008d019ce257b9b5d121c7fa6d3fcbb`
+- Acceptance criteria:
+  - [x] 32 new files under `simulation/inbox/` as SUB-238 to SUB-269, nothing reused; 20 in-scope, 12 out-of-scope over proposal-P-055 criteria 1–4 as in T-108; no extraction, no model call, nothing run.
+  - [x] Build rules as T-108: every carrier loss run valued before the run date, at least two held W1 files, at least two office-lessor / deli-style class files.
+  - [x] `deliverables/producer/T-117-mix.md` (written before gold) and `deliverables/senior-test-engineer/T-117-plan.json`.
+  - [x] Gold first, by hand from the documents and written rules only: every in-scope card has `- Scope:`, `- Operations items:` slots per operations-gold-rule.md (P-069), and `Loss runs valued as of: <date>` where loss runs exist.
+  - [x] Lint PASS (scorer v11) before the gold freeze; gold manifest sha256 `9ab5960db77f49e02b27518fb13eaff7a0ceb8d6e78c498c430bd2ba350a943d` recorded in the mix and NEXT-SESSION.md.
+  - [x] Not run, not scored (D-020).
+- Notes: 2026-10-21 @model-risk build check OBJECTION H1/H2 (gold only; `deliverables/model-risk/T-117-check.md`). @senior-underwriter fixed SUB-246, SUB-248 (→ senior_referral, R17) and SUB-249 (retail removed); routes now carrier_a 0, senior_referral 16, no_match 4. Lint PASS, check-gold 32 ok. **Re-frozen: gold manifest sha256 `7e076534432f1276bfe6198643547498b613c4f2b7aceb2ed618314b5e39fd33`** (supersedes `9ab5960d…`). Code, prompt, scorer v11 and lint unchanged. Not run.
+
+### T-118 — P-070: the stated cooking line is carried into operations; a disagreement between documents is an open conflict and a hold
+- Owner: @ai-engineer-assistant (build), @senior-underwriter (UI review), @model-risk (check) · Status: IN_REVIEW (built on `fix-t117`; @model-risk check and @senior-underwriter UI review pending) · Decision: D-122 (the user approved P-070 on 2026-10-21) · Proposal: `deliverables/ai-engineer/proposal-P-070.md` · As built: `deliverables/ai-engineer/P-070-as-built.md`
+- Acceptance criteria:
+  - [x] The stated cooking line is carried into the operations value (`; no cooking`) when the cited document states `Cooking operations: None` and the value does not carry it; the cooking line is a second cited part, so the card shows both lines; a document that mentions cooking equipment is left alone; the flag clears because the value carries the source, not because a rule was off.
+  - [x] Square feet: `square footage` and the `sq_ft` column are read, so two documents that state two areas raise the `square_feet` conflict with both sides, each keeping the whole cited line or schedule row.
+  - [x] Sales: a sales amount stated differently in two documents (labelled line or an amount near sales/revenue/turnover in free text) raises an open `sales_or_payroll` conflict; the sales value is emptied with a plain reason; the file is held.
+  - [x] An occupancy count: two documents that state a different count of the same noun (suite/unit/apartment/tenant) raise an open conflict on that noun's topic; the operations value is kept; the file is held.
+  - [x] The topics read as English on the card, in the resolve form, in the send refusal and in the producer request ("square footage", "sales or payroll", "suite count", …).
+  - [x] New dev set `simulation/inbox-dev/document_conflicts/` (SUB-290–295) with dev notes and a manifest in `deliverables/senior-underwriter/gold-set-document_conflicts/dev/`; no hold-out file used; no model call; no published score rewritten.
+  - [x] `prepare.py` self-check → `prepare ok`; `workbench.py` → `workbench ok`; `package.py` → `package ok`; `points.py` → `points ok` (model file unchanged); `pytest tests/pipeline` → 43 passed; frozen v11 self-check ok; frozen lint PASS; pyright no new finding.
+  - [x] Request equality: zero changed requests — `PROMPT_VERSION` (`759b3e6bc9b2`) and the `cache_key` are the same before and after (`ab7653c9…a61372`); the baseline is not re-baselined.
+  - [x] D-065: the workbench shows the completed value with both cited lines, the plain topic names with each side in words, the plain reason on the emptied value and the send refusal; one "What's new" line (2026-10-21, T-118, D-122); a Playwright screenshot on a temp copy under `deliverables/software-engineer/screenshots/`.
+  - [ ] @senior-underwriter reviews the UI part, High findings only.
+  - [ ] @model-risk checks the fix on dev with no High before it counts toward H1/H2 closure (T-027 veto stays until its conditions are met).
+- Notes: 2026-10-21, built on `fix-t117` (never `main`). Refinements over the proposal: the count topic follows the noun counted (`suite_count`/`unit_count`/`apartment_count`/`tenant_count`); the sales rule compares documents only; only a scored field in dispute is emptied. Known risks (in the proposal): the wording `; no cooking`; a rounded free-text sales figure holds the file (tolerance = separate P-###); a count may be a different kind of unit; the square-feet vocabulary can only add a conflict where two documents state two areas. The frozen v11 has no word for a suite count, so a v-next scorer is needed to credit that topic; the 18/20 operations floor still needs the v-next scorer for the M-class readings.
+- 2026-10-23 T-118 update (Claude Code session): P-071 (D-123) built on `fix-t117` for @model-risk High H1; see `deliverables/ai-engineer/P-070-as-built.md` § P-071. @model-risk fresh check pending.
+- 2026-10-23 T-118 update (Claude Code session): P-072 (D-124) built on `fix-t117`; the "; no cooking" add removed (P-070 change 1 and P-071 withdrawn). @model-risk fresh check pending.
+- 2026-10-23 T-118: @model-risk check 3 APPROVE, no High (`deliverables/model-risk/T-118-check-3.md`); counts toward H2 on dev only; H1 moves to the v-next scorer (D-124); Medium/Low in B-461–B-463. Not a production approval; the T-027 veto stands.
+
+### T-119 — Next hold-out: SUB-340–371 (20 in-scope + 12 out-of-scope), plan only, not built
+- Owner: @producer (files, mix), @senior-underwriter (gold), @senior-test-engineer (plan JSON, lint), @model-risk (look-again on every gold fix, B-457) · Status: DONE (built, gold frozen D-128, run and scored once 2026-10-24, D-130) · Planned by: orchestrator, Claude Code session, 2026-10-23, from the user's own list.
+- Numbers: SUB-340 to SUB-371. SUB-290–296 are the document_conflicts dev set; SUB-321, SUB-322 and SUB-330 appear in self-checks, so the range starts at 340.
+- Acceptance criteria (for the build):
+  - [ ] 32 new files under `simulation/inbox/`, nothing reused from any hold-out or dev set: 20 in-scope and 12 out-of-scope over proposal-P-055 criteria 1–4 (at least two per criterion), as in T-108 and T-117.
+  - [ ] Direct Carrier A routes: at least 3 in-scope files that route straight to Carrier A (R14: allow-list class, no W1/W2 word, TIV ≤ 5M, clean loss run). T-117 had none (B-449).
+  - [ ] Planted conflicts (the H2 case): at least 3 files where two documents state different values for a scored or rating figure (a floor area, a sales figure, a unit or suite count), each written into the gold as an open conflict with both sides.
+  - [ ] Cooking lines (the H1 case): files with `Cooking operations: None` whose operations answer must carry it, and files where the cooking line is stated only in another document (equipment or plain words such as "cook", "stove", "hot food"). The expected gold depends on the outcome of the H1 fix (P-070/P-071 and its follow-up); the gold is written to the rule in force at gold time.
+  - [ ] Loss runs: typed, in the published carrier formats (`CARRIER_RUN_FORMATS`), including at least 2 Carrier C runs and at least 1 Carrier B run; every run valued before the run date (T-108 rule); no `| None reported |` rows (T-118 M4).
+  - [ ] SUB-252-style case (bar/restaurant R1 vs R2): included only after @head-of-underwriting rules on B-448/B-458; until then it is left out, not guessed.
+  - [ ] Build rules as T-108/T-117: at least two held W1 files and at least two office-lessor or deli-style class files.
+  - [ ] `deliverables/producer/T-119-mix.md` written before the gold; `deliverables/senior-test-engineer/T-119-plan.json`.
+  - [ ] Gold first, by hand from the documents and written rules only; @model-risk look-again on every gold fix (B-457); lint PASS with the scorer in force, then the gold manifest sha256 recorded.
+  - [ ] Not run and not scored until the user says so (D-020); scored once, with no code change after the gold exists.
+- Noted before the run (D-127, 2026-10-23): under v11, answers that omit the cooking slot where gold says no cooking count as misses; results list these separately.
+- Noted before the run (D-128, 2026-10-23): under v11 the SUB-348 and SUB-349 conflict marks (cooking) can't be measured; they are reported separately and excluded from the conflict rate.
+- Depends on (updated 2026-10-23): settled. H1 in the pipeline: no automatic "no cooking" (D-124); scorer: v11 (D-127); SUB-252-style case: rule A, R2 senior referral (D-125). Lint with v11.
+- Update 2026-10-23 (orchestrator): BUILT, gold FROZEN, not run. 32 files SUB-340–371 (`simulation/inbox/build_SUB-340-371.py`); mix `deliverables/producer/T-119-mix.md`; gold by @senior-underwriter; plan + lint by @senior-test-engineer; routes carrier_a 4 / senior_referral 12 / no_match 4; planted conflicts 344 (sq ft), 345 (sales), 346 (suites), cooking 348/349; pub case 352 R2 (D-125). @model-risk build check BLOCK (H1) → D-128 gold fixes → look-again APPROVE. Lint v11: only the two D-128 marks fail. Gold manifest sha256 `2feba3b2b007ab197c22a40427b105242585ee0783bed7c5e5a575408fd55fcc`. Status: FROZEN, awaiting the user's word to run (D-020). 2026-10-24: RUN once and scored once (D-130), run 20261024T000318-70195; results `deliverables/ai-engineer/evals/SUB-340-371-results.md`; @model-risk T-027 memo KEEP. DONE.
+### T-120 — Next hold-out: SUB-450–481 (20 in-scope + 12 out-of-scope), plan only, not built
+- Owner: @producer (files, mix), @senior-underwriter (gold), @senior-test-engineer (plan JSON, lint), @model-risk (build check, one look-again) · Status: PLANNED (not built; build starts only on the user's word) · Planned by: orchestrator, Claude Code session, 2026-10-26, from the user's own list (D-131, D-133).
+- Numbers: SUB-450 to SUB-481. SUB-372–449 are not used for hold-outs: self-checks in prepare.py and package.py use SUB-400–449, dev sets end at SUB-303.
+- Code under test: pilot-integration after P-074 (D-132) and P-075 (D-133); code, PROMPT_VERSION, scorer v11 and lint sha256 frozen in team/NEXT-SESSION.md before any file is built.
+- Acceptance criteria (for the build):
+  - [ ] 32 new files under `simulation/inbox/`, nothing reused from any hold-out or dev set: 20 in-scope and 12 out-of-scope over proposal-P-055 criteria 1–4 (at least two per criterion), as in T-117 and T-119.
+  - [ ] Planted conflicts: at least 5 measurable ones (B-473), each on a scored or rating figure (sales, floor area, unit/suite count, TIV), both sides stated as plain figures in two documents, written into the gold as an open conflict with both sides. At least one uses words for the amount ("$1.42 million") and at least one is approximate ("about", "roughly", "~") against an exact figure (P-074).
+  - [ ] Cooking stated: several files whose application says `Cooking operations: None` (or No / No kitchen) with no cooking word anywhere else (P-075 copies the line).
+  - [ ] Cooking conflicts: at least 2 files where the application says none and another document states cooking (equipment or plain words, incl. a word from the P-075 probe set), each in the gold as an open cooking conflict. Under v11 these conflict marks may not be measurable (no figure); record that in the plan before the gold, as D-128 did, if the lint shows it.
+  - [ ] Direct Carrier A: at least 3 in-scope files that route straight to Carrier A (R14/R17: allow-list words only, no W1/W2 word, TIV ≤ $5M, clean typed loss run).
+  - [ ] Loss runs: typed, in the published carrier formats (`CARRIER_RUN_FORMATS`), at least 2 Carrier C and 1 Carrier B; Carrier C periods "D - D" and claim numbers "C-<digits>"; every run valued before the run date; no `| None reported |` rows; every typed run passes `carrier_run_check`.
+  - [ ] Build rules as T-108/T-117/T-119: at least two held W1 files, two office-lessor and two deli-style files; the SUB-252-style pub case under rule A (D-125).
+  - [ ] `deliverables/producer/T-120-mix.md` written before the gold; `deliverables/senior-test-engineer/T-120-plan.json`.
+  - [ ] **Operations gate (D-134):** C1 enforced via approved P-076 (code) before build; C2 silent-error script frozen before gold (scored miss with no specific item-naming reason; C1 policy reason never counts), target 0; C3 0 understated hazards; C4 operations present ≥18/20 and hits ≥15/20 under v11 (set now). C5 other gates unchanged. **C6:** ≥12 files with "Cooking operations: None"-type lines, ≥3 with cooking stated, ≥2 with planted cooking conflicts. **C7:** gate recorded in DECISIONS.md before any gold exists.
+  - [ ] Gold first, by hand from the documents and written rules only; every conflict line names a field actually in conflict in the builder source data (B-465, checked by hand until the lint does it); lint PASS with v11 (or only failures recorded before the run, as D-128); gold manifest sha256 recorded.
+  - [ ] @model-risk build check (gold vs builder source, scope, slots, valued-as-of, routes vs written rules), High only, one look-again (D-129).
+  - [ ] Not run and not scored until the user says so (D-020); scored once, with no code change after the gold exists.
+- Open before the build (the user decides): whether T-120 also uses the operations gate @model-risk set out in `deliverables/model-risk/T-027-operations-gate-answer.md` (C1–C7); if yes, it must be recorded in DECISIONS.md before any T-120 gold exists (C7), C1 needs its own P-###, and C6 adds file counts (at least 12 none-line, 3 cooking, 2 planted cooking conflicts).
+

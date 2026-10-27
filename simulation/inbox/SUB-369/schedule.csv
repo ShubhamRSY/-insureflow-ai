@@ -1,0 +1,3 @@
+source,loc,address,city,zip,bldg_tiv,construction,year_built,sq_ft,sprinklers,cooking
+application,1,1601 W Harrison Ave,Harlingen,78550,$340000,Masonry,1981,3100,No,Yes
+application,2,711 W Expressway 83,San Benito,78586,$120000,Masonry,1995,1200,No,No

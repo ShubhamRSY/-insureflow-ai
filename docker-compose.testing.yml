@@ -1,0 +1,106 @@
+# Testing overlay — hermetic, disposable.
+# Usage: docker compose -p insureflow-test -f docker-compose.yml -f docker-compose.testing.yml up --build
+# No external side effects: simulated oracles, no SMTP, ephemeral DB volume.
+# Base observability services are disabled; only api + db + redis are used.
+
+version: "3.9"
+
+x-api-env: &api-env
+  LLM_API_KEY: ${LLM_API_KEY:-}
+  LLM_CHEAP_API_KEY: ${LLM_CHEAP_API_KEY:-}
+  LLM_EXPENSIVE_API_KEY: ${LLM_EXPENSIVE_API_KEY:-}
+  CLAUDE_API_KEY: ${CLAUDE_API_KEY:-}
+  LLM_MODEL: ${LLM_MODEL:-gpt-4o-mini}
+  LLM_CHEAP_MODEL: ${LLM_CHEAP_MODEL:-gpt-4o-mini}
+  LLM_EXPENSIVE_MODEL: ${LLM_EXPENSIVE_MODEL:-gpt-4o}
+  DATABASE_URL: postgresql://insureflow:${POSTGRES_PASSWORD:-insureflow}@db:5432/insureflow_test
+  REDIS_URL: redis://redis:6379/0
+  CELERY_BROKER_URL: redis://redis:6379/0
+  CELERY_RESULT_BACKEND: redis://redis:6379/0
+  JOB_STORE_BACKEND: file
+  JOB_STORE_PATH: /app/.tmp/testing/job_store
+  ENCRYPTION_KEY: ${ENCRYPTION_KEY:-}
+  SECRET_KEY: ${SECRET_KEY:-test-secret-key-not-for-production-at-least-32-chars}
+  ENVIRONMENT: testing
+  BANK_MODE: "false"
+  ALLOW_OPEN_REGISTRATION: "true"
+  ALLOW_AUTH_RESET: "true"
+  ALLOW_SIMULATED_BIND: "true"
+  LOAD_DEMO_PORTFOLIO: "false"
+  ORACLE_MODE: simulated
+  REQUIRE_LIVE_ORACLES: "false"
+  LANGSMITH_API_KEY: ""
+  LANGSMITH_TRACING: "false"
+  CLOUDWATCH_LOGS: "false"
+  AWS_REGION: ${AWS_REGION:-us-east-1}
+  AWS_SECRETS_ARN: ""
+  PYTHONPATH: /app
+  WEB_CONCURRENCY: 1
+  METRICS_BACKEND: ${METRICS_BACKEND:-redis}
+  INSURANCE_USE_CELERY: "0"
+  PROMETHEUS_MULTIPROC_DIR: /tmp/rytera-prom
+  METRICS_BEARER: ""
+  OPENOBSERVE_ENABLED: "false"
+  CLAMAV_HOST: ""
+
+services:
+  api:
+    ports: !override ["8012:8000"]
+    environment:
+      <<: *api-env
+    restart: "no"
+    depends_on: !override
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  worker:
+    environment:
+      <<: *api-env
+    restart: "no"
+    depends_on: !override
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  worker-large:
+    environment:
+      <<: *api-env
+    restart: "no"
+    depends_on: !override
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  clamav:
+    profiles: ["disabled"]
+
+  prometheus:
+    profiles: ["disabled"]
+
+  grafana:
+    profiles: ["disabled"]
+
+  openobserve:
+    profiles: ["disabled"]
+
+  redis:
+    ports: !override ["6381:6379"]
+    restart: "no"
+
+  db:
+    ports: !override ["5434:5432"]
+    environment:
+      - POSTGRES_USER=insureflow
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-insureflow}
+      - POSTGRES_DB=insureflow_test
+    volumes:
+      - pgdata-test:/var/lib/postgresql/data
+      - ./scripts/db/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
+    restart: "no"
+
+volumes:
+  pgdata-test:

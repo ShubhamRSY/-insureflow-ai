@@ -6,7 +6,7 @@ Wrap up the session. Do this in the main session, in this order. Stop at the fir
 
 1. **Wait for running turns.** If a subagent turn is still running, wait for it to hand back. Start no new build or review turn.
 
-2. **Standup entries.** Every role that took a turn this session has an entry in `team/STANDUP.md` for today. If one is missing, list it in the final report; do not write a role's entry for it. Append-only files are never edited.
+2. **Standup entries.** Every role that took a turn this session has an entry in `team/STANDUP.md` for today. If one is missing, the orchestrator writes a short entry for that role from what the role did this session, labelled "written by orchestrator" (D-102 item 5, D-103 item 5), and lists it in the final report. It never writes an entry for a role that took no turn. Append-only files are never edited.
 
 3. **Self-checks.** Run each from the repo root with the `.venv` python, with no model call (unset `LLM_API_KEY`, `LLM_BASE_URL`, `LLM_MODEL` for these runs so nothing can reach a host):
    - `underwriting_pipeline/ai/llm_extract.py`

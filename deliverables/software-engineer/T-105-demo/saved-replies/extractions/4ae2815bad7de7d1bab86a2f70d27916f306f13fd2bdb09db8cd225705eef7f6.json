@@ -1,0 +1,87 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "prompt_version": "b025802c0dfa",
+  "files": [
+    "application.md",
+    "email.md",
+    "loss-runs.pdf",
+    "schedule.csv"
+  ],
+  "usage": {
+    "queue_time": 0.333605999,
+    "prompt_tokens": 1296,
+    "prompt_time": 0.117400085,
+    "completion_tokens": 827,
+    "completion_time": 1.7221672689999998,
+    "total_tokens": 2123,
+    "total_time": 1.8395673540000002
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Sunny Side Grill LLC",
+        "source": "application.md",
+        "quote": "Named insured: Sunny Side Grill LLC",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": "620 N LBJ Dr, San Marcos, TX 78666",
+        "source": "application.md",
+        "quote": "Premises address: 620 N LBJ Dr, San Marcos, TX 78666",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-01-15",
+        "source": "application.md",
+        "quote": "Effective date: 2027-01-15",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "Restaurant. Breakfast and lunch counter service, 48 seats, dine-in and takeout. No alcohol of any kind. Cooking operations: Flat-top, 2 fryers, 4-burner range, Type I hood with UL 300 suppression, hood cleaned 2026-07",
+        "source": "application.md",
+        "quote": "Operations: Restaurant. Breakfast and lunch counter service, 48 seats, dine-in and takeout. No alcohol of any kind.\nNumber of employees: 14\nAnnual sales: $860,000\nBuilding TIV: $430,000\nBusiness personal property: $96,000\nSquare footage: 2,700\nConstruction: Masonry\nYear built: 1989\nStories: 1\nSprinklers: Yes\nCooking operations: Flat-top, 2 fryers, 4-burner range, Type I hood with UL 300 suppression, hood cleaned 2026-07",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "860000",
+        "source": "application.md",
+        "quote": "Annual sales: $860,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "430000",
+        "source": "application.md",
+        "quote": "Building TIV: $430,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "Masonry",
+        "source": "application.md",
+        "quote": "Construction: Masonry",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": "1989",
+        "source": "application.md",
+        "quote": "Year built: 1989",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-09-30",
+        "source": "loss-runs.pdf",
+        "quote": "Valuation date: 2026-09-30",
+        "confidence": 1.0
+      }
+    ],
+    "conflicts": []
+  }
+}

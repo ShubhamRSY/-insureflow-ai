@@ -39,8 +39,8 @@ def _signup_free(client: TestClient) -> dict[str, Any]:
         },
     )
     assert resp.status_code == 201, resp.text
-    body: dict[str, Any] = resp.json()
-    return body
+    data: dict[str, Any] = resp.json()
+    return data
 
 
 def _auth(data: dict[str, Any]) -> dict[str, str]:

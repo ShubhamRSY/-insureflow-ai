@@ -1,0 +1,3 @@
+source,loc,address,city,zip,bldg_tiv,construction,year_built,sq_ft,sprinklers,cooking
+application,1,1815 S Closner Blvd,Edinburg,78539,$520000,Masonry,1990,5200,Yes,Yes
+application,2,903 E Griffin Pkwy,Mission,78572,$120000,Masonry,2011,1600,No,No

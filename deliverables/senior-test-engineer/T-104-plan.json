@@ -1,0 +1,4 @@
+{"ids": "174-205", "in": 20, "out": 12,
+ "per_criterion": {"1": 4, "2": 5, "3": 4, "4": 2},
+ "two_criteria": 3, "criterion_4": 2,
+ "routes": {"carrier_a": 5, "carrier_b": 6, "carrier_c": 4, "senior_referral": 3, "no_match": 2}}

@@ -1,0 +1,87 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "prompt_version": "b025802c0dfa",
+  "files": [
+    "application.md",
+    "email.md",
+    "loss-runs.md",
+    "schedule.csv"
+  ],
+  "usage": {
+    "queue_time": 0.019897448,
+    "prompt_tokens": 1117,
+    "prompt_time": 0.093480079,
+    "completion_tokens": 614,
+    "completion_time": 1.22665178,
+    "total_tokens": 1731,
+    "total_time": 1.320131859
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Ellison Bookkeeping & Payroll PLLC",
+        "source": "application.md",
+        "quote": "Named insured: Ellison Bookkeeping & Payroll PLLC",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": "5900 W Plano Pkwy, Plano, TX 75093",
+        "source": "application.md",
+        "quote": "Premises address: 5900 W Plano Pkwy, Plano, TX 75093",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-03-01",
+        "source": "application.md",
+        "quote": "Effective date: 2027-03-01",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "Office suite. Clients by appointment. No inventory.",
+        "source": "application.md",
+        "quote": "Operations: Office suite. Clients by appointment. No inventory.",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "720000",
+        "source": "application.md",
+        "quote": "Annual sales: $720,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "310000",
+        "source": "application.md",
+        "quote": "Building TIV: $310,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "Masonry",
+        "source": "application.md",
+        "quote": "Construction: Masonry",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": "1999",
+        "source": "application.md",
+        "quote": "Year built: 1999",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "source": null,
+        "quote": null,
+        "confidence": 0
+      }
+    ],
+    "conflicts": []
+  }
+}

@@ -1,0 +1,49 @@
+provider https://api.groq.com/openai/v1 model qwen/qwen3.8-27b
+20:02 SUB-174 ok attempts 1 retries []
+20:02 SUB-175 ok attempts 1 retries []
+20:03 SUB-176 ok attempts 1 retries []
+20:04 SUB-177 ok attempts 1 retries ['rate_limit_429']
+20:05 SUB-178 ok attempts 1 retries []
+20:06 SUB-179 ok attempts 1 retries []
+20:07 SUB-180 ok attempts 1 retries []
+20:08 SUB-181 ok attempts 1 retries []
+20:09 SUB-182 ok attempts 1 retries []
+20:10 SUB-183 ok attempts 1 retries []
+20:11 SUB-184 ok attempts 1 retries []
+20:12 SUB-185 ok attempts 1 retries ['rate_limit_429', 'rate_limit_429', 'rate_limit_429']
+20:13 SUB-186 ok attempts 1 retries []
+20:13 SUB-187 ok attempts 1 retries []
+20:14 SUB-188 ok attempts 1 retries []
+20:16 SUB-189 ok attempts 1 retries []
+20:17 SUB-190 ok attempts 1 retries []
+20:18 SUB-191 ok attempts 1 retries []
+20:19 SUB-192 ok attempts 1 retries []
+20:20 SUB-193 ok attempts 1 retries []
+20:21 SUB-194 ok attempts 1 retries []
+20:22 SUB-195 ok attempts 1 retries []
+20:23 SUB-196 ok attempts 1 retries []
+20:24 SUB-197 ok attempts 1 retries []
+20:25 SUB-198 ok attempts 1 retries []
+20:26 SUB-199 ok attempts 1 retries []
+20:26 SUB-200 ok attempts 1 retries ['rate_limit_429']
+20:27 SUB-201 ok attempts 1 retries []
+20:28 SUB-202 ok attempts 1 retries []
+20:29 SUB-203 ok attempts 1 retries []
+20:30 SUB-204 ok attempts 1 retries []
+20:31 SUB-205 ok attempts 1 retries []
+/Users/disastershubz/INSURANCE FLOW AI/insureflow-ai-team/deliverables/ai-engineer/evals/SUB-174-205-holdout-v6.md
+named_insured {'hit': 20, 'hit (needs review)': 0, 'miss': 0, 'not_credited': 0, 'call_failed': 0, 'flagged': 0}
+premises {'hit': 20, 'hit (needs review)': 0, 'miss': 0, 'not_credited': 0, 'call_failed': 0, 'flagged': 0}
+effective_date {'hit': 20, 'hit (needs review)': 0, 'miss': 0, 'not_credited': 0, 'call_failed': 0, 'flagged': 0}
+operations {'hit': 12, 'hit (needs review)': 0, 'miss': 8, 'not_credited': 0, 'call_failed': 0, 'flagged': 0}
+sales {'hit': 19, 'hit (needs review)': 0, 'miss': 1, 'not_credited': 0, 'call_failed': 0, 'flagged': 0}
+tiv {'hit': 20, 'hit (needs review)': 0, 'miss': 0, 'not_credited': 0, 'call_failed': 0, 'flagged': 0}
+construction {'hit': 20, 'hit (needs review)': 0, 'miss': 0, 'not_credited': 0, 'call_failed': 0, 'flagged': 0}
+year_built {'hit': 20, 'hit (needs review)': 0, 'miss': 0, 'not_credited': 0, 'call_failed': 0, 'flagged': 0}
+loss_runs {'hit': 9, 'hit (needs review)': 0, 'miss': 8, 'not_credited': 3, 'call_failed': 0, 'flagged': 0}
+conflict {'hit': 15, 'hit (needs review)': 0, 'miss': 5, 'not_credited': 0, 'call_failed': 0, 'flagged': 0}
+status {'hit': 11, 'hit (needs review)': 0, 'miss': 9, 'not_credited': 0, 'call_failed': 0, 'flagged': 0}
+route {'hit': 16, 'hit (needs review)': 0, 'miss': 4, 'not_credited': 0, 'call_failed': 0, 'flagged': 0}
+metrics {"scored": 180, "silent": 3, "automated": 147, "silent_error_rate": 0.017, "automation_rate": 0.817}
+failed attempts {'rate_limit_429': 5, 'timeout': 0, 'other': 0, 'reply_not_usable': 0} {'rate_limit_429': 'per minute: {"error":{"message":"Request too large for model `qwen/qwen3.8-27b` in organization `org_01kcpawq5vecv8na8y22z8xpx0` service tier `on_demand` on output tokens per minute (OTPM): Limit 1000, Requested 1400. The request\'s expected output tokens exceed the enforced limit; reduce max_tokens (or the requ'}
+tokens {"run": "20261017T200158-46947", "skipped_lines": 0, "this_run": {"model_calls": 20, "from_cache": 0, "tokens": 35455, "tokens_per_call": 1773}, "last_24_hours": {"qwen/qwen3.8-27b": {"calls": 20, "tokens": 35455}}}

@@ -1,0 +1,87 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "prompt_version": "b025802c0dfa",
+  "files": [
+    "application.md",
+    "email.md",
+    "loss-runs.pdf",
+    "schedule.csv"
+  ],
+  "usage": {
+    "queue_time": 0.138423027,
+    "prompt_tokens": 1206,
+    "prompt_time": 0.108898814,
+    "completion_tokens": 800,
+    "completion_time": 1.6780198689999999,
+    "total_tokens": 2006,
+    "total_time": 1.7869186830000001
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Garden Row Apartments LLC",
+        "source": "application.md",
+        "quote": "Named insured: Garden Row Apartments LLC",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": "1400 Franklin Ave, Waco, TX 76701",
+        "source": "application.md",
+        "quote": "Premises address: 1400 Franklin Ave, Waco, TX 76701",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-05-01",
+        "source": "application.md",
+        "quote": "Effective date: 2027-05-01",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "Residential apartments, 16 units in two two-story buildings, long-term leases. Occupancy 93 percent. No cooking operations (tenant electric ranges only).",
+        "source": "application.md",
+        "quote": "Operations: Residential apartments, 16 units in two two-story buildings, long-term leases. Occupancy 93 percent.\nNumber of employees: 2\nAnnual sales: $288,000 (gross annual rents)\nBuilding TIV: $2,350,000\nBusiness personal property: $25,000\nSquare footage: 14,200\nConstruction: Wood frame with masonry veneer\nYear built: 2001\nStories: 2\nSprinklers: Yes, NFPA 13 system\nCooking operations: None (tenant electric ranges only)",
+        "confidence": 0.95
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "288000",
+        "source": "application.md",
+        "quote": "Annual sales: $288,000 (gross annual rents)",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "2350000",
+        "source": "application.md",
+        "quote": "Building TIV: $2,350,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "Wood frame with masonry veneer",
+        "source": "application.md",
+        "quote": "Construction: Wood frame with masonry veneer",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": "2001",
+        "source": "application.md",
+        "quote": "Year built: 2001",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-09-30",
+        "source": "loss-runs.pdf",
+        "quote": "Valued: 2026-09-30",
+        "confidence": 1.0
+      }
+    ],
+    "conflicts": []
+  }
+}

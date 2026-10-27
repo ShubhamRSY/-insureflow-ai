@@ -18,20 +18,27 @@ import unicodedata
 from pathlib import Path
 
 import llm_extract
+import scope
 import sources
 
 ROOT = Path(__file__).resolve().parents[2]
+_APP = ROOT / "underwriting_pipeline" / "app"
+if str(_APP) not in sys.path:
+    sys.path.insert(0, str(_APP))
+import pilot  # noqa: E402  (after the app path is added)
+
 # G2 (D-029): the send gate reads the last saved run at this path. It never calls process_submission and never trusts a passed-in report.
 EXTRACT_DIR = ROOT / "deliverables" / "data-engineer" / "extractions"
 HASH_ALGORITHM = "sha256"
 INBOX_DIR = ROOT / "simulation" / "inbox"
 # P-010 part 1: these two statuses are refused for every actor, including the user. There is no override.
-REFUSED_STATUSES = ("extraction_failed", "all_values_rejected")
+MANUAL_INTAKE = "manual_intake"  # P-055 (D-105): the detector put the whole file out of pilot scope; a person reads it. Refused like the two below.
+REFUSED_STATUSES = ("extraction_failed", "all_values_rejected", MANUAL_INTAKE)
 REJECT_REASON = "the model answered but every value was rejected by the gate"
 # G2 (D-029): the reader accepts only this closed set. A missing, empty, or unknown status is refused, not allowed.
 # P-041 (D-088): every field present, but a value needs review or a conflict is open. Not "complete".
 REVIEW_PENDING = "complete — review pending"
-STATUSES = ("complete", REVIEW_PENDING, "incomplete", "extraction_failed", "all_values_rejected")
+STATUSES = ("complete", REVIEW_PENDING, "incomplete", "extraction_failed", "all_values_rejected", MANUAL_INTAKE)
 
 FIELDS = (
     "named_insured",
@@ -69,6 +76,13 @@ PLAIN = {
     "construction": "construction type",
     "year_built": "year built",
     "loss_run_valued_through": "currently valued carrier loss runs (a no-known-loss letter does not count)",
+    # P-070 (D-122): a conflict topic in plain words. The producer and the underwriter read these, not the field name.
+    "square_feet": "square footage",
+    "suite_count": "suite count",
+    "unit_count": "unit count",
+    "apartment_count": "apartment count",
+    "tenant_count": "tenant count",
+    "cooking": "cooking operations",  # P-075 (D-133)
 }
 
 
@@ -160,7 +174,7 @@ def _same_row(a: dict, b: dict) -> bool:
 
 def fuller(rows: list[dict]) -> dict:
     """P-036: of agreeing values keep the fuller one; the other quotes stay on it as also_quoted."""
-    base = dict(max(rows, key=lambda row: len(words(row.get("value") or ""))))
+    base = dict(max(rows, key=lambda row: (not row.get("approximate"), len(words(row.get("value") or "")))))  # P-074 (C): an exact figure beats a hedged one
     also = [{"quote": row["quote"], "source": row.get("source")} for row in rows if row.get("quote") and row.get("quote") != base.get("quote")]
     for item in also:  # each other quote with its file, so the card says which document said what
         if item not in (base.get("also_quoted") or []):
@@ -285,7 +299,7 @@ def _request(folder: str, missing: list[str], conflicts: list[str]) -> str:
         parts.append("")
     if conflicts:
         parts.append("These fields disagree across documents. Both values are stored as data, not only in this email:")
-        parts.extend(f"- {item}" for item in conflicts)
+        parts.extend(f"- {PLAIN.get(item, item)}" for item in conflicts)
     return "\n".join(parts).rstrip() + "\n"
 
 
@@ -388,12 +402,7 @@ def _items(value: str) -> list[tuple[str, bool]]:
 
 def _without_name(blob: str, name: str | None, texts: dict) -> str:
     """P-015 T2: remove the named insured (the extracted value and any 'Named insured:' line) before cue words are looked for."""
-    names = {name} if name else set()
-    for text in texts.values():
-        for row in extract_labeled(text, LABELS["named_insured"]):
-            if row.get("value"):
-                names.add(row["value"])
-    for n in sorted(names, key=len, reverse=True):
+    for n in _insured_names(name, texts):
         blob = re.sub(re.escape(n), " ", blob, flags=re.I)
     return blob
 
@@ -423,6 +432,18 @@ def cooking_facts(texts: dict) -> dict:
                 fact["reason"] = REASON_COOKING
             break
         out[key] = fact
+    return out
+
+
+CLASS_LINES = {"line_of_business": ("line of business:",), "cooking_operations": ("cooking operations:",)}
+
+
+def class_lines(texts: dict) -> dict:
+    """P-061 (D-112): the text of the application's "Line of business:" and "Cooking operations:" lines (first one found), for carrier match.
+    The insured's name is never read. None when the line is absent."""
+    out = {}
+    for key, labels in CLASS_LINES.items():
+        out[key] = next((row["value"] for text in texts.values() if (row := extract_labeled(text, labels)[0])["value"]), None)
     return out
 
 
@@ -653,9 +674,11 @@ def _set_cited(merged: dict, field: str, value: str, source: str, start: int, en
     confidence, flag, reason = 0.95, False, None
     quote = texts[source][start:end] if texts and source in texts else None
     if scans and source in scans:
-        confidence = min(confidence, llm_extract.cited_ocr_score(quote or value, value, scans[source]))
-        if confidence < llm_extract.SCAN_FLOOR:
+        exact = field in llm_extract.NUMBER_FIELDS + llm_extract.DATE_FIELDS  # check H1: numbers and dates are not averaged
+        floor = (llm_extract.cited_ocr_score if exact else llm_extract.cited_ocr_floor)(quote or value, value, scans[source])
+        if min(confidence, floor) < llm_extract.SCAN_FLOOR:  # P-056 (b)
             return
+        confidence = min(confidence, llm_extract.cited_ocr_score(quote or value, value, scans[source]))
         if field == "loss_run_valued_through":  # S2
             flag, reason = True, llm_extract.REASON_SCAN
         if confidence < llm_extract.MIN_CONFIDENCE:  # P-025
@@ -673,32 +696,44 @@ def _set_cited(merged: dict, field: str, value: str, source: str, start: int, en
     }
 
 
+# P-070 (D-122): the words a document uses for a floor area. "Square footage" and a "sq_ft" column are the same
+# fact as "square feet"; the old list only knew "square feet", "sqft" and "sf", so an area stated in the other words
+# was never read and two documents that disagreed about it looked the same.
+AREA_WORD = re.compile(r"(?i)\s*(?:square\s+feet|square\s+footage|sq\.?\s*ft\.?|sqft|sf)\b.*$")
+AREA_HEADERS = ("sqft", "sf", "sq_ft", "sq ft", "sq. ft.", "square feet", "square_feet", "square footage")
+
+
+def _area_amount(text: str) -> int | None:
+    """The number of a floor area. "2,800 square footage" and "2,800 sq ft" are the same number."""
+    return amount_value(AREA_WORD.sub("", text))
+
+
 def _square_feet(texts: dict) -> list[tuple[str, str, str]]:
     found = []
     for name, text in texts.items():
-        area = r"(\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?)[ \t]*([kmb])?[ \t]*(?:square[ \t]+feet|sq\.?[ \t]*ft\.?|sqft|sf)\b"
+        area = r"(\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?)[ \t]*([kmb])?[ \t]*(?:square[ \t]+feet|square[ \t]+footage|sq\.?[ \t]*ft\.?|sqft|sf)\b"
         for match in re.finditer(area, text, re.I):
-            amount = amount_value(match.group(0))
+            amount = _area_amount(match.group(0))
             if amount is not None:
                 found.append((str(amount), name, match.group(0)))
-        labeled = r"(?im)^(?:square\s+feet|sq\.?\s*ft\.?|sqft|sf):\s*(\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?)\s*([kmb])?"
+        labeled = r"(?im)^(?:square\s+feet|square\s+footage|sq\.?\s*ft\.?|sqft|sf):\s*(\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?)\s*([kmb])?"
         for match in re.finditer(labeled, text):
             amount = amount_value(match.group(0).split(":", 1)[1])
             if amount is not None:
-                found.append((str(amount), name, match.group(0)))
+                found.append((str(amount), name, match.group(0).strip()))
         headers = None
         for line in text.splitlines():
             cells = [cell.strip() for cell in line.split("\t")]
             low = [cell.lower() for cell in cells]
-            if headers is None and any(cell in {"sqft", "sf"} for cell in low):
+            if headers is None and any(cell in AREA_HEADERS for cell in low):
                 headers = low
                 continue
-            key = "sqft" if headers and "sqft" in headers else "sf" if headers and "sf" in headers else ""
+            key = next((cell for cell in (headers or []) if cell in AREA_HEADERS), "")  # the column name, then the cell under it
             if key and len(cells) == len(headers):
                 raw = cells[headers.index(key)]
                 amount = amount_value(raw)
                 if amount is not None:
-                    found.append((str(amount), name, raw))
+                    found.append((str(amount), name, line.strip()))  # P-070: the cited text is the whole row, so the underwriter sees which row said it
     return found
 
 
@@ -742,7 +777,8 @@ def apply_locations(merged: dict, conflicts: list, texts: dict, scans: dict | No
     if len(locations) < 2:
         return []
     primary = next(row for row in locations if row["primary"])
-    kept = [item for item in conflicts if item.get("field") not in {"premises_address", "premises"}]
+    kept = [item for item in conflicts if item.get("field") not in {"premises_address", "premises"}
+            or any(side.get("unverified") for side in item.get("values") or [])]  # P-074 (check M3): an unverified side is never dropped here
     conflicts[:] = kept
     source_text = texts.get(primary["source"], "")
     at = source_text.find(primary["address"])
@@ -757,6 +793,139 @@ def apply_locations(merged: dict, conflicts: list, texts: dict, scans: dict | No
             scans=scans,  # P-037: a scan's primary address never replaces a typed one
         )
     return locations
+
+
+# P-070 (D-122): two documents that state different sales figures disagree. Before this, only the model's own
+# answer could raise a conflict, and a second document that said a different figure was silently ignored.
+SALES_LABELS = ("sales or payroll:", "annual sales:", "gross sales:", "sales:", "gross revenue:", "annual revenue:", "revenue:", "turnover:")
+SALES_WORD = r"(?:gross\s+|annual\s+|net\s+|estimated\s+)?(?:sales|revenue|turnover)s?"
+AMOUNT_TOKEN = rf"{llm_extract.AMOUNT_PREFIX}(?:\d{{1,3}}(?:,\d{{3}})+|\d+(?:\.\d+)?)(?:\s*{llm_extract.UNITS})?\b"  # P-074 (B, C): "1.42 million", "close to"
+SALES_BEFORE = re.compile(rf"(?P<amount>{AMOUNT_TOKEN})\s*(?:(?:in|of)\s*)?\b{SALES_WORD}\b", re.I)  # one quantifier per run of spaces (ReDoS)
+SALES_AFTER = re.compile(rf"\b{SALES_WORD}\b(?:\s+(?:of|was|were|is|at|totaled|totalled|stood at))?(?:\s*[:\-])?\s*(?P<amount>{AMOUNT_TOKEN})", re.I)
+SALES_MIN = 1000  # a sales figure is a real figure: a year or a percentage is not
+
+
+def _sales_figures(text: str) -> list[tuple[int, str]]:
+    """The sales figures a document states: a labelled sales line, or an amount beside a sales word."""
+    found: list[tuple[int, str]] = []
+
+    def add(token: str, quote: str, tail: str = "") -> None:
+        amount = amount_value(token.strip())
+        if amount is None or amount < SALES_MIN or "%" in tail or 1900 <= amount <= 2100:
+            return
+        if not any(amount == known and quote == known_quote for known, known_quote in found):
+            found.append((amount, quote))
+
+    for line in text.splitlines():
+        stripped = line.lstrip()
+        low = stripped.lower()
+        for label in SALES_LABELS:
+            if not low.startswith(label):
+                continue
+            rest = stripped[len(label) :]
+            token = re.search(AMOUNT_TOKEN, rest, re.I)
+            if token:
+                add(token.group(0), line.strip(), rest[token.end() : token.end() + 1])
+            break
+    for match in SALES_BEFORE.finditer(text):
+        quote = text[max(0, text.rfind("\n", 0, match.start()) + 1) : text.find("\n", match.start()) if text.find("\n", match.start()) >= 0 else len(text)].strip()
+        add(match.group("amount"), quote, text[match.end() : match.end() + 1])
+    for match in SALES_AFTER.finditer(text):
+        start = text.rfind("\n", 0, match.start()) + 1
+        end = text.find("\n", match.start())
+        quote = text[start : end if end >= 0 else len(text)].strip()
+        add(match.group("amount"), quote, text[match.end() : match.end() + 1])
+    return found
+
+
+def apply_sales_conflicts(merged: dict, conflicts: list, texts: dict) -> None:
+    """P-070 (D-122): two documents that state different sales figures are an open conflict.
+
+    The sales value is emptied and both figures are stored as the two sides of the conflict, so the file cannot
+    read as complete with one of the two figures silently kept. The producer is asked which figure stands."""
+    figures: dict[str, list[tuple[int, str]]] = {}
+    for name, text in texts.items():
+        found = _sales_figures(text)
+        if found:
+            figures[name] = found
+    if len(figures) < 2:
+        return
+    sides: list[tuple[int, str, str]] = []
+    for name, found in figures.items():
+        amount, quote = found[0]
+        if not any(amount == side[0] for side in sides):
+            sides.append((amount, name, quote))
+    if len(sides) < 2:
+        return
+    if any(item.get("field") == "sales_or_payroll" for item in conflicts):
+        return  # a conflict on sales is already open: one open conflict, not two
+    conflicts.append(
+        {
+            "field": "sales_or_payroll",
+            "values": [{"value": str(amount), "source": name, "quote": quote} for amount, name, quote in sides],
+            "resolution": "unresolved",
+            "resolved_value": None,
+            "resolved_by": None,
+        }
+    )
+    row = merged.get("sales_or_payroll") or {}
+    if row.get("value") is not None:
+        merged["sales_or_payroll"] = {**row, "value": None, "needs_review": True, "reason": "the documents state different sales figures"}
+
+
+# P-070 (D-122): two documents that state a different number of the same thing (offices, units) disagree.
+# The count is not a scored field, so the operations value stays and the disagreement is an open conflict.
+COUNT_WORDS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10, "eleven": 11, "twelve": 12}
+COUNT_NOUNS = {"suite": "suite_count", "suites": "suite_count", "unit": "unit_count", "units": "unit_count",
+               "apartment": "apartment_count", "apartments": "apartment_count", "tenant": "tenant_count", "tenants": "tenant_count"}
+COUNT_RE = re.compile(r"(?i)\b(\d{1,3}|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s+(?:[a-z]+\s+)?(suites?|units?|apartments?|tenants?)\b")
+
+
+def _count_figures(text: str) -> list[tuple[str, int, str]]:
+    """The unit counts a text states: (topic, count, the cited line)."""
+    found = []
+    for match in COUNT_RE.finditer(text):
+        word = match.group(1).lower()
+        count = int(word) if word.isdigit() else COUNT_WORDS.get(word, 0)
+        if not count:
+            continue
+        start = text.rfind("\n", 0, match.start()) + 1
+        end = text.find("\n", match.start())
+        found.append((COUNT_NOUNS[match.group(2).lower()], count, text[start : end if end >= 0 else len(text)].strip()))
+    return found
+
+
+def apply_count_conflicts(merged: dict, conflicts: list, texts: dict) -> None:
+    """P-070 (D-122): two documents that state a different count of the same thing are an open conflict.
+
+    The count is not a scored field: the operations value stays as the answer and the two counts are stored as
+    the two sides of the conflict, so the file is held for the underwriter instead of reading as complete."""
+    row = merged.get("operations") or {}
+    value, source = row.get("value"), row.get("source")
+    figures: dict[str, list[tuple[int, str, str]]] = {}
+    for topic, count, quote in _count_figures(value or ""):
+        figures.setdefault(topic, []).append((count, str(source or ""), quote))
+    for name, text in texts.items():
+        for topic, count, quote in _count_figures(text):
+            figures.setdefault(topic, []).append((count, name, quote))
+    for topic, items in figures.items():
+        sides: list[tuple[int, str, str]] = []
+        for count, name, quote in items:
+            if not any(count == side[0] for side in sides):
+                sides.append((count, name, quote))
+        if len(sides) < 2:
+            continue
+        if any(item.get("field") == topic for item in conflicts):
+            continue  # a conflict on this count is already open
+        conflicts.append(
+            {
+                "field": topic,
+                "values": [{"value": str(count), "source": name, "quote": quote} for count, name, quote in sides],
+                "resolution": "unresolved",
+                "resolved_value": None,
+                "resolved_by": None,
+            }
+        )
 
 
 def apply_document_rules(merged: dict, conflicts: list, texts: dict, scans: dict | None = None) -> None:
@@ -789,20 +958,20 @@ def apply_document_rules(merged: dict, conflicts: list, texts: dict, scans: dict
     for item in areas:
         if item[0] not in {row[0] for row in distinct}:
             distinct.append(item)
-    if len(distinct) < 2:
-        return
-    blob = json.dumps(conflicts)
-    if all(item[0] in blob for item in distinct):
-        return
-    conflicts.append(
-        {
-            "field": "square_feet",
-            "values": [{"value": item[0], "source": item[1], "quote": item[2]} for item in distinct],
-            "resolution": "unresolved",
-            "resolved_value": None,
-            "resolved_by": None,
-        }
-    )
+    if len(distinct) >= 2:
+        blob = json.dumps(conflicts)
+        if not all(item[0] in blob for item in distinct):
+            conflicts.append(
+                {
+                    "field": "square_feet",
+                    "values": [{"value": item[0], "source": item[1], "quote": item[2]} for item in distinct],
+                    "resolution": "unresolved",
+                    "resolved_value": None,
+                    "resolved_by": None,
+                }
+            )
+    apply_sales_conflicts(merged, conflicts, texts)  # P-070 (D-122): two documents, two sales figures
+    apply_count_conflicts(merged, conflicts, texts)  # P-070 (D-122): two documents, two counts of the same thing
 
 
 # P-047 (b), D-094: the operations gold rule items (deliverables/senior-underwriter/operations-gold-rule.md).
@@ -827,6 +996,40 @@ OPS_ITEMS = (
 )
 OPS_COUNTS = (("seats", r"(\d[\d,]*)\s+(?:seats|seating|asientos)|seating (?:for|capacity of)\s+(\d[\d,]*)", r"seat"),
               ("units", r"(\d[\d,]*)\s+(?:\w+\s+)?(?:units|unidades|departamentos)", r"unit|apartment"))
+# P-059 (D-111): items the labeled cooking, hood and line-of-business lines state that the word list above cannot name.
+# ponytail: fixed word lists and one clause rule, not a parser; add words when a dev file shows a gap.
+OPS_GAS = (r"no gas|gas[- ]fired|natural gas|gas (?:fryers?|ranges?|ovens?|char\w*|burners?|roasters?|kilns?)|lpg|propane", r"gas|lpg|propane")
+OPS_NO_COOK = (r"cooking(?: operations)?\s*:\s*(?:none|n/?a|nil)\b", r"no (?:commercial )?cooking|no kitchen|not cook\w*|no food|none")
+OPS_EXTRA = (("gas", *OPS_GAS), ("no cooking", *OPS_NO_COOK))
+OPS_LINE = re.compile(r"(?im)^[ \t>*-]*(cooking operations|hood\b[\w &/-]{0,40}|line of business)\s*:\s*(.+)$")
+OPS_SKIP = {"and", "the", "with", "over", "each", "all", "only", "both", "from", "that", "this", "bop", "none", "listed", "unknown"}  # words that name no item
+
+
+def ops_line_missing(value: str, text: str) -> list[str]:
+    """P-059: what a Cooking operations, Hood or Line of business line states that the answer lacks. Cooking: each clause (split on , ; .)
+    needs its words (4+ letters, first 5 letters compared, numbers left out) in the answer. Hood: the inspection date. Line of business:
+    only its "no ..." clauses. "None"/"n/a" under Cooking needs "no cooking" (or none) in the answer."""
+    low_v = value.casefold()
+    stems = {w[:5] for w in re.findall(r"[a-z]{4,}", low_v)}
+    found = []
+    for match in OPS_LINE.finditer(text):
+        label, body = match.group(1).casefold(), re.sub(r"\(.*?\)", "", match.group(2)).casefold()
+        if label.startswith("hood"):
+            dates = re.findall(r"20\d\d-\d\d(?:-\d\d)?", body)
+            found += [f"hood inspection {d}" for d in dates if d not in low_v]
+            continue
+        for clause in re.split(r"[,;.]| - ", body):
+            clause = clause.strip()
+            if not clause or (label.startswith("line") and not clause.startswith("no ")):
+                continue
+            if not label.startswith("line") and re.search(r"\bhood\b|\bul 300\b", clause):
+                continue  # P-059: the hood system is read from the hood line and the operations sentence, not clause by clause
+            words = [w for w in re.findall(r"[a-z]{4,}", clause) if w not in OPS_SKIP]
+            if words and any(w[:5] not in stems for w in words) and clause not in low_v:
+                found.append(clause)
+    return found
+
+
 OPS_MISSING = "operations may be missing: {}"
 # P-047 H1 (@model-risk): labeled lines elsewhere in the cited file that state a rule item are part of the operations source.
 # Any label (up to 40 characters, slashes allowed) that contains a rule-item word: "Bar / liquor:", "Liquor sales:", "Seating capacity:".
@@ -856,7 +1059,7 @@ def ops_missing(value: str, source: str) -> list[str]:
     """P-047 (b): rule items the source states that the answer does not carry."""
     low_v, low_s = value.casefold(), source.casefold()
     has = lambda pattern, text: re.search(rf"(?<!\w)(?:{pattern})(?!\w)", text)
-    missing = [label for label, src, ans in OPS_ITEMS if has(src, low_s) and not has(ans, low_v)]
+    missing = [label for label, src, ans in OPS_ITEMS + OPS_EXTRA if has(src, low_s) and not has(ans, low_v)]
     for label, src, ans in OPS_COUNTS:
         for match in re.finditer(src, low_s):
             number = (match.group(1) or match.group(2)).replace(",", "")
@@ -865,8 +1068,171 @@ def ops_missing(value: str, source: str) -> list[str]:
     return missing
 
 
+def ops_missing_all(value: str, text: str) -> list[str]:
+    return ops_missing(value, text) + ops_line_missing(value, text)
+
+
+# P-075 (D-133): copy the application's own "Cooking operations: None" line, cited; a cooking word in any other place opens a conflict.
+# The rule never reads silence as "no cooking": it copies a line that is there, and only after every document was scanned and found nothing.
+# ponytail: a finite word list, not a parser (@model-risk showed no list is complete). The copied line keeps a review note, so a missed word
+# cannot turn a held file into a clean complete. A negation never voids a word; only a clause that is exactly an agreeing phrase is exempt.
+COOKING_LINE = re.compile(r"(?im)^[ \t>*-]*(cooking operations[ \t]*:)(.*)$")
+COOKING_NONE_BODIES = {"none", "no", "nil", "no cooking", "no commercial cooking", "no kitchen"}
+COOKING_TABLE_EXT = (".csv", ".tsv", ".xlsx", ".xls")
+REASON_COOKING_COPIED = "cooking line copied from the application (P-075); check the other documents for cooking"  # never claims absence: the word list is finite (P-075 check H1)
+REASON_COOKING_CONFLICT = "cooking: the documents disagree"
+_CLAUSE = re.compile(r"[^.;,\n!?|]+")
+_COOK_NONE_PHRASES = sorted((b for b in COOKING_NONE_BODIES if b.startswith("no ")), key=len, reverse=True)  # "no cooking", "no kitchen"...
+_COOK_EXEMPT = {f"{lead}{body}" for lead in ("", "cooking operations: ") for body in COOKING_NONE_BODIES} | {
+    "no cooking on the premises", "no commercial cooking on the premises", "no cooking on site", "no kitchen on site", "no food prep", "no food preparation",
+    "no food preparation of any kind", "do not cook", "does not cook", "we do not cook", "the insured does not cook"}
+_COOK_STARTS = (
+    "cook", "fry", "frial", "fries", "fried", "frit", "freid", "frei", "grill", "griddle", "plancha", "parrill", "comal", "stove", "estufa", "hotplate", "hotdog", "burner", "oven", "horno",
+    "horne", "salamander", "smoker", "smoked", "smokehouse", "barbec", "bbq", "barbac", "rotiss", "tandoor", "panini", "toast", "waffle", "pancake", "skillet",
+    "steamer", "sous", "warmer", "warmed", "warming", "reheat", "bak", "boil", "kitchen", "cocin", "coce", "galley", "meal", "cafe", "restaurant", "dinn", "diner",
+    "eatery", "lunch", "brunch", "breakfast", "snack", "soup", "microwav", "microond", "ansul", "greas", "chef", "saut", "simmer", "roast", "brais", "hibachi",
+    "teppan", "tempura", "pizz", "taco", "burger", "quesadilla", "burrito", "bistro", "brasserie", "steak", "sandwich", "pastr", "bagel", "dough", "calzon", "popcorn",
+    "nacho", "induction", "crock", "kettle", "noodle", "omelet", "jerky", "kebab", "gyro", "shawarma", "falafel", "dumpling", "bacon", "sausage", "chicken", "cater",
+    "gastropub", "asam", "asar", "asad", "calent", "calien", "comida", "tortill", "taquer", "hervi", "fogon", "charcoal", "pretzel", "donut", "doughnut", "pasta",
+)
+_COOK_CONTAINS = ("broil", "grill", "griddl")
+_COOK_TOKENS = {"wok", "woks", "hood", "hoods", "sear", "sears", "seared", "searing", "deli", "delis", "delicatessen", "hob", "eggs", "egg", "pub", "pubs", "ul300"}
+_COOK_PHRASES = re.compile(
+    r"(?<!\w)(?:flat top|hot plate|hot (?:food|foods|dog|dogs|breakfast|lunch|meal|meals|soup|soups|plate|plates)|wood fire|wood fired|wood burning|open flame|open fire|"
+    r"steam (?:table|kettle|jacket|oven)|heat lamps?|heating lamps?|heat(?:s|ed|ing)? (?:up|food|soup|meals?|water)|heated (?:display|case|cabinet|food|tray|trays|counter|shelf|drawer)|"
+    r"food (?:prep\w*|service|truck|trucks|served|court|and drink|and beverage|handling)|serv(?:e|es|ed|ing) (?:hot )?food|we serve|prepared (?:on site|food|meals|in house)|"
+    r"ul ?300|nfpa 96|class k|wet chem(?:ical)?|coffee shop|smoke house|slow cooker|tilt skillet|warming (?:cabinet|oven|drawer))(?!\w)")
+_COOK_RANGE_SKIP = re.compile(r"(?<!\w)(?:price range|age range|range of|within range|wide range|full range)(?!\w)")
+
+
+def _cook_norm(text: str) -> str:
+    """Lower case, accents off, hyphens and punctuation to one space (the colon stays). Linear in the length."""
+    text = "".join(ch for ch in unicodedata.normalize("NFKD", text.lower()) if not unicodedata.combining(ch))
+    return " ".join(re.sub(r"[^\w:]+", " ", text.replace("-", " ")).split())
+
+
+def cooking_word(clause: str) -> str | None:
+    """The first cooking word or phrase in one clause, or None. A clause that is exactly an agreeing phrase is not read; anything else in it is."""
+    norm = _cook_norm(clause)
+    if not norm or norm in _COOK_EXEMPT:
+        return None
+    norm = _COOK_RANGE_SKIP.sub(" ", norm)
+    phrase = _COOK_PHRASES.search(norm)
+    if phrase:
+        return phrase.group(0)
+    for token in re.findall(r"[^\W\d_]+", norm):
+        if token in ("range", "ranges"):
+            return token
+        if token in _COOK_TOKENS or token.startswith(_COOK_STARTS) or any(part in token for part in _COOK_CONTAINS):
+            return token
+    return None
+
+
+def cooking_none_line(texts: dict, scans: dict | None = None) -> dict | None:
+    """P-075 (A): the typed application's "Cooking operations:" line whose whole body is a none-shape. None for a scan, N/A, blank or extra words."""
+    for name, text in texts.items():
+        if not name.lower().startswith("application") or name in (scans or {}):
+            continue
+        for match in COOKING_LINE.finditer(text):
+            body = " ".join(match.group(2).split()).casefold().rstrip(".").strip()
+            if body in COOKING_NONE_BODIES:
+                end = match.start(2) + len(match.group(2).rstrip())
+                return {"source": name, "start": match.start(1), "end": end, "quote": text[match.start(1) : end]}
+    return None
+
+
+def _insured_names(name: str | None, texts: dict) -> list[str]:
+    names = {name} if name else set()
+    for text in texts.values():
+        for row in extract_labeled(text, LABELS["named_insured"]):
+            if row.get("value"):
+                names.add(row["value"])
+    return sorted(names, key=len, reverse=True)
+
+
+def cooking_hits(texts: dict, skip: dict | None = None) -> list[dict]:
+    """P-075 (B): every document that states a cooking word, one hit per document (UI check H1), documents other than the application first. Not read: the matched none-line (skip) only. The insured's name IS read
+    (code review: "Main Street Pizza & Grill LLC" holds; a false hold at worst). Schedule files: the "cooking" column (a header alone is not read), every other cell is."""
+    hits = []
+    for doc, text in texts.items():
+        scan = text
+        table = doc.lower().endswith(COOKING_TABLE_EXT)
+        column, first_row = None, 0
+        if table:  # the header is within the first lines (an xlsx text starts with "sheet: Name"); its "cooking" cell is not a cooking word
+            offset = 0
+            for line in scan.split("\n")[:5]:
+                cells = line.split("\t")  # sources._csv_text already parsed the CSV (quotes); a comma inside a cell is not a separator
+                at = next((i for i, c in enumerate(cells) if c.strip().casefold() == "cooking"), None)
+                if at is not None:
+                    column, first_row = at, offset + len(line) + 1
+                    mark = re.search(r"(?i)(?<![\w])cooking(?![\w])", line)
+                    if mark:
+                        scan = scan[: offset + mark.start()] + " " * (mark.end() - mark.start()) + scan[offset + mark.end() :]
+                    break
+                offset += len(line) + 1
+        if skip and skip.get("source") == doc:
+            scan = scan[: skip["start"]] + " " * (skip["end"] - skip["start"]) + scan[skip["end"] :]
+        if column is not None:
+            offset = first_row
+            for line in text[first_row:].split("\n"):
+                cells = line.split("\t")
+                value = cells[column].strip().casefold() if column < len(cells) else ""
+                if value not in {"", "no", "none", "n/a", "na", "0", "false"}:
+                    hits.append({"source": doc, "start": offset, "end": offset + len(line), "quote": line.strip(), "word": value})
+                    break
+                offset += len(line) + 1
+            if hits and hits[-1]["source"] == doc:
+                continue
+        for clause in _CLAUSE.finditer(scan):
+            word = cooking_word(clause.group(0))
+            if not word:
+                continue
+            ls = text.rfind("\n", 0, clause.start()) + 1
+            le = text.find("\n", clause.end())
+            le = len(text) if le < 0 else le
+            start, end = max(ls, clause.start() - 120), min(le, clause.end() + 120)
+            hits.append({"source": doc, "start": start, "end": end, "quote": text[start:end].strip(), "word": word})
+            break
+    return sorted(hits, key=lambda h: h["source"].lower().startswith("application"))  # stable: the email or schedule sentence comes before the application's own other lines
+
+
+COOKING_OPS_NONE = re.compile(r"(?i)(?<!\w)(?:%s|cooking operations: ?(?:%s))(?!\w)" % ("|".join(map(re.escape, _COOK_NONE_PHRASES)), "|".join(map(re.escape, sorted(COOKING_NONE_BODIES, key=len, reverse=True)))))  # one list: COOKING_NONE_BODIES
+
+
+def apply_cooking_rule(merged: dict, conflicts: list, texts: dict, scans: dict | None = None) -> None:
+    """P-075 (D-133), before check_operations. B: the application line (or the operations answer) says none, and any document states cooking
+    -> an open `cooking` conflict, the file is held, nothing is copied. A: otherwise the line is copied as written, cited, with a review note.
+    The words "no cooking" are never written by this rule, and the confidence is not raised (D-124)."""
+    row = merged.get("operations") or {}
+    line = cooking_none_line(texts, scans)
+    ops_none = bool(COOKING_OPS_NONE.search(row.get("value") or ""))
+    if not line and not ops_none:
+        return
+    hits = cooking_hits(texts, line)
+    if hits:
+        if any(item.get("field") == "cooking" for item in conflicts):
+            return
+        first = {"value": line["quote"], "source": line["source"], "quote": line["quote"], "start": line["start"], "end": line["end"]} if line else {
+            "value": row["value"], "source": row.get("source"), "quote": row.get("quote") or row["value"]}
+        conflicts.append(_conflict("cooking", [first] + [{"value": h["quote"], "source": h["source"], "quote": h["quote"], "start": h["start"], "end": h["end"]} for h in hits]))
+        if row.get("value"):
+            row["reason"] = f"{row['reason']}; {REASON_COOKING_CONFLICT}" if row.get("reason") else REASON_COOKING_CONFLICT
+            row["needs_review"] = True
+            row["confidence"] = min(row.get("confidence") or 0.0, llm_extract.MIN_CONFIDENCE - 0.01)
+        return
+    if not line or not row.get("value") or ops_missing_all(row["value"], line["quote"]) == []:
+        return  # nothing to copy: no operations answer, or the answer already carries the line
+    row["value"] = f"{row['value']}; {line['quote']}"
+    row["also_quoted"] = (row.get("also_quoted") or []) + [{"quote": line["quote"], "source": line["source"], "start": line["start"], "end": line["end"]}]
+    row["rule_copied"] = True
+    row["needs_review"] = True  # the copied line never makes a file read complete (D-133 answer 1)
+    row["reason"] = f"{row['reason']}; {REASON_COOKING_COPIED}" if row.get("reason") else REASON_COOKING_COPIED
+    row["confidence"] = min(row.get("confidence") or 0.0, llm_extract.MIN_CONFIDENCE - 0.01)  # not raised (the withdrawn P-070 set 0.95)
+
+
 def check_operations(merged: dict, texts: dict) -> None:
-    """P-047 (b): the cited source line names a rule item the answer lacks -> needs review, below the confidence line, with the items."""
+    """P-047 (b), P-056 (f): the cited document names a rule item anywhere that the answer lacks -> needs review, below the confidence
+    line, with the items. The labeled lines (context) are still what carrier match reads."""
     row = merged["operations"]
     text = texts.get(row.get("source") or "")
     if not row.get("value") or not text or row.get("start") is None:
@@ -875,7 +1241,11 @@ def check_operations(merged: dict, texts: dict) -> None:
     context = ops_lines(text, cited)
     if context:
         row["context"] = context  # P-047 (c): carrier match and the D-079 referral read it too
-    missing = ops_missing(row["value"], f"{cited}\n{context}")
+    missing = ops_missing_all(row["value"], text)  # P-059 adds the labeled-line items; P-056 (f): the whole cited document, not only the cited line and labeled lines
+    for other, other_text in texts.items():  # P-075 (C): the application's stated cooking line is read whichever document operations is cited from
+        if other != row.get("source") and other.lower().startswith("application"):
+            for match in COOKING_LINE.finditer(other_text):
+                missing += [m for m in ops_missing_all(row["value"], match.group(1) + match.group(2)) if m not in missing]
     if missing:
         reason = OPS_MISSING.format(", ".join(missing))
         row["reason"] = f"{row['reason']}; {reason}" if row.get("reason") else reason
@@ -922,6 +1292,12 @@ def unread_rows(docs: list[dict], not_sent: list[str]) -> list[dict]:
 
 def _carry_flag(cur: dict, other: dict) -> None:
     """P-024: two agreeing values merge into one; the saved row is needs_review if either side was, and keeps the reason and quote."""
+    if other.get("approximate") and not cur.get("approximate"):  # P-074 (C): the exact side wins; the hedged quote stays as also_quoted
+        note = f"approximate figure: {' '.join((other.get('quote') or '').split())[:160]}"  # rebuilt as accept_field wrote it; only this exact string is removed (recheck H1)
+        rest = re.sub(r"(?:; )+", "; ", (other.get("reason") or "").replace(note, "")).strip("; ")
+        if not rest:
+            return
+        other = {**other, "reason": rest}  # check M1: any other review reason (per-location, scan, date order) is carried as before P-074
     if other.get("needs_review") and not cur.get("needs_review"):
         cur["needs_review"] = True
         for k in ("reason", "quote", "source", "start", "end"):
@@ -964,6 +1340,9 @@ def _flag_scan_differs(row: dict, differ: list[dict]) -> None:
 def process_submission(folder: Path) -> dict:
     docs = sources.read_folder(folder)
     texts = {doc["name"]: doc["text"] for doc in docs}
+    scope_result = scope.detect(docs)  # P-055 (D-105): never raises; an error is manual intake
+    if not scope_result["in_scope"]:
+        return _manual_intake(folder, docs, scope_result)  # the whole file: no model call, no value, no route, no draft
     merged = {
         field: {
             "field_id": field,
@@ -998,7 +1377,14 @@ def process_submission(folder: Path) -> dict:
     scans = {doc["name"]: doc["ocr_words"] for doc in docs if doc.get("ocr_words")}  # P-037: files whose text came from OCR; one list for every rule
     for row in extracted["fields"]:
         field_id = row.get("field_id")
-        if field_id not in merged or not row.get("value"):
+        if field_id not in merged:
+            continue
+        if not row.get("value"):
+            # P-067 (D-117): a value the model read but the gate rejected carries its reason to the card.
+            # Before this, a rejected row was skipped and its reason dropped, so the field showed as silently
+            # missing. Only a real reason is carried (a plain null keeps reason None and stays silent).
+            if row.get("reason") and merged[field_id]["value"] is None and not merged[field_id].get("reason"):
+                merged[field_id] = {**merged[field_id], "needs_review": True, "reason": row["reason"], "source": row.get("source")}
             continue
         cur = merged[field_id]
         if cur["value"] is None:
@@ -1025,12 +1411,13 @@ def process_submission(folder: Path) -> dict:
     for item in extracted["conflicts"]:
         field_id = item.get("field")
         kept = [{**side, "field_id": field_id} for side in item.get("values") or [] if side.get("value")]
-        first = _typed_first(field_id, kept, scans) if field_id in merged and merged[field_id]["value"] is None else None
+        unverified = any(side.get("unverified") for side in kept)  # P-074 (A): an unverified side keeps the conflict open; nothing merges or outranks it
+        first = _typed_first(field_id, kept, scans) if field_id in merged and merged[field_id]["value"] is None and not unverified else None
         if first:  # P-037: the typed sides agree; a scan side never makes this an open conflict
             merged[field_id] = {**merged[field_id], **first, "confidence": first.get("confidence") or 0.0}
             continue
         sides = [side.get("value") or "" for side in item.get("values") or [] if side.get("value")]
-        if len(sides) >= 2 and all(agrees(item.get("field"), a, b) for i, a in enumerate(sides) for b in sides[i + 1 :]):  # H3: every pair
+        if not unverified and len(sides) >= 2 and all(agrees(item.get("field"), a, b) for i, a in enumerate(sides) for b in sides[i + 1 :]):  # H3: every pair
             field_id = item.get("field")
             if field_id in merged and merged[field_id]["value"] is None:
                 kept = [side for side in item["values"] if side.get("value")]
@@ -1049,6 +1436,7 @@ def process_submission(folder: Path) -> dict:
         conflicts.append(item)
     _apply_reply(conflicts, texts.get("reply.md", ""))
     apply_document_rules(merged, conflicts, texts, scans)
+    apply_cooking_rule(merged, conflicts, texts, scans)  # P-075 (D-133): copy the application's cooking none-line, or hold on a cooking word elsewhere
     check_operations(merged, texts)  # P-047 (b), after every rule that can set operations
     gate_loss_run(merged, texts, scans)  # P-040/P-044/P-045/B-343, after every rule that can set the date
     locations = apply_locations(merged, conflicts, texts, scans)
@@ -1060,6 +1448,11 @@ def process_submission(folder: Path) -> dict:
         ]
     blob = _without_name("\n".join(texts.values()), merged["named_insured"].get("value"), texts).lower()  # P-015 T2: the insured's name never starts an ask
     cooking = cooking_facts(texts)
+    open_cook = next((c for c in conflicts if c.get("field") == "cooking" and c.get("resolution") != "resolved"), None)
+    if open_cook:  # P-075 (code review): while another document states cooking, the application's "None" is never read as no cooking; no points until the call
+        side = open_cook["values"][1]  # the strongest hit (UI check H1)
+        cooking["equipment"] = {"state": "needs_review", "terms": [], "negated": [], "source": side.get("source"), "start": side.get("start"), "end": side.get("end"),
+                                "quote": side.get("quote"), "reason": REASON_COOKING_CONFLICT}
     extra = []
     if any(word in blob for word in ("restaurant", "fryer", "kitchen")):  # P-015 T2: cuisine words ("taco") are not cues
         for label, cues in (
@@ -1090,11 +1483,13 @@ def process_submission(folder: Path) -> dict:
     report["folder"] = folder.name
     report["sprinklers"] = "yes" if sprinklers_yes(texts) else "no"
     report["cooking"] = cooking
+    report["class_lines"] = class_lines(texts)  # P-061 (D-112)
     report["needs_human"] = needs_human
     report["unread"] = unread
     report["locations"] = locations
     report["error"] = error
     report.update(_run_metadata())
+    report["scope"] = scope_result
     report["cache_key"] = key  # P-028 (D-075)
     report["retries"] = llm_extract.ATTEMPTS[attempts_before:]  # D-094 item 5: each failed attempt and retry of this file's call; [] when none
     # D-024: an answered reply the gate rejected is not a failed call, and it gets no request and no draft.
@@ -1121,6 +1516,27 @@ def process_submission(folder: Path) -> dict:
             text += "\nAlso send:\n" + "\n".join(f"- {item}" for item in extra) + "\n"
         report["request"] = text
     return report
+
+
+def _manual_intake(folder: Path, docs: list[dict], scope_result: dict) -> dict:
+    """P-055: the report of an out-of-scope file. Every field empty, nothing complete, no request, no model call (the documents are not read for values)."""
+    rows = [{"field_id": f, "value": None, "start": None, "end": None, "source": None, "confidence": 0.0, "needs_review": True} for f in FIELDS]
+    report = completeness(rows)
+    report.update(
+        conflicts=[], extra=[], fields=rows, folder=folder.name, sprinklers=None, cooking=None, locations=[], error=None, cache_key=None, retries=[],
+        needs_human=[d["name"] for d in docs if d.get("needs_human")], unread=unread_rows(docs, []), scope=scope_result,
+        status=MANUAL_INTAKE, status_reason="; ".join(scope.reasons_text(scope_result)), complete=False, request=None,
+    )
+    report.update(_run_metadata())
+    return report
+
+
+def status_refusal(saved: dict) -> str:
+    """The status as a plain phrase for a refusal message; a manual-intake file names its reasons (P-055)."""
+    if saved.get("status") == MANUAL_INTAKE:
+        why = [t.removeprefix("Manual intake: ") for t in scope.reasons_text(saved.get("scope"))]
+        return "manual intake (" + ("; ".join(why) or "out of pilot scope") + ")"
+    return str(saved.get("status"))
 
 
 def _run_metadata() -> dict:
@@ -1201,6 +1617,24 @@ def manifest_problem(submission: str, extract_dir: Path | None = None, inbox: Pa
     return ""
 
 
+def scope_problem(submission: str, extract_dir: Path | None = None, inbox: Path | None = None) -> str:
+    """P-063 (B-432): send-gate scope re-check, independent of status. Empty string = in scope. Else the refusal reason.
+    Refuses when the saved run recorded the file out of scope, or the current detector, run now on the folder, puts it out of scope.
+    Fails closed: no saved run, an unreadable folder or a detector error refuses."""
+    try:
+        saved = read_saved_run(submission, extract_dir).get("scope")
+    except ValueError as exc:
+        return str(exc)
+    try:
+        now = scope.detect(sources.read_folder((Path(inbox) if inbox is not None else INBOX_DIR) / submission))
+    except Exception:  # read_folder failed; detect itself never raises
+        return f"the input folder for {submission} cannot be read for the scope check; refusing"
+    why = [t.removeprefix("Manual intake: ") for s in (saved, now) for t in scope.reasons_text(s)]
+    if (saved or {}).get("in_scope") is False or not now["in_scope"]:
+        return f"out of pilot scope at send time ({'; '.join(dict.fromkeys(why)) or 'scope check'}, {now['version']}); a person reads this file"
+    return ""
+
+
 def current_status(submission: str, extract_dir: Path | None = None) -> str:
     """The status of the last saved run, read, hash-checked, and validated by the gate itself (G2)."""
     return read_saved_run(submission, extract_dir)["status"]
@@ -1221,6 +1655,7 @@ def _saved_payload(report: dict) -> dict:
                 "end": row.get("end"),
                 "quote": row.get("quote"),  # P-016 Q1: the exact cited text. The app shows it
                 **({"also_quoted": row["also_quoted"]} if row.get("also_quoted") else {}),  # P-036: the agreeing values' other quotes
+                **({"rule_copied": True} if row.get("rule_copied") else {}),  # P-075: the row carries a line the rule copied, not model text
                 **({"context": row["context"]} if row.get("context") else {}),  # P-047 H1: operations rule lines outside the cited text
                 "reason": row.get("reason"),  # P-016 R1: why the row is flagged or has no value
             }
@@ -1234,6 +1669,7 @@ def _saved_payload(report: dict) -> dict:
         "needs_human": report.get("needs_human") or [],
         "unread": report.get("unread") or [],  # P-016 (c): file and page not read, with the reason
         "sprinklers": report.get("sprinklers"),
+        "class_lines": report.get("class_lines"),  # P-061 (D-112): Line of business and Cooking operations lines for carrier match; an older run has none
         "cooking": report.get("cooking"),  # P-015 S3: equipment and hood/suppression facts with their citation; an older run has none = not stated
         "model_version": report.get("model_version"),
         "prompt_version": report.get("prompt_version"),
@@ -1241,6 +1677,7 @@ def _saved_payload(report: dict) -> dict:
         "host": report.get("host"),
         "temperature": report.get("temperature"),
         "cache_key": report.get("cache_key"),  # P-028 (D-075): the extraction cache key, under saved_hash
+        "scope": report.get("scope"),  # P-055 (D-105): detector version, in_scope, every reason; None in a run saved before P-055
         "fields": fields,
     }
 
@@ -1249,6 +1686,7 @@ def write_drafts(inbox: Path, draft_dir: Path, conflict_dir: Path) -> list[dict]
     """Drafts go to pending-approval. Conflicts go to a data file. Never to-producer."""
     if draft_dir.name == "to-producer":
         raise RuntimeError("drafts are not sent to the producer")
+    pilot.guard("draft")
     draft_dir.mkdir(parents=True, exist_ok=True)
     conflict_dir.mkdir(parents=True, exist_ok=True)
     extract_dir = conflict_dir.parent / "extractions"
@@ -1261,8 +1699,11 @@ def write_drafts(inbox: Path, draft_dir: Path, conflict_dir: Path) -> list[dict]
         refused = report.get("status") in REFUSED_STATUSES
         dest = draft_dir / f"{folder.name}.md"
         side = conflict_dir / f"{folder.name}.json"
-        if report["request"]:
-            dest.write_text(report["request"])
+        if report["request"] and not refused:  # P-055: a manual-intake file gets no automated missing-info draft
+            if pilot.active():  # C2: no draft leaves the tool, even when the reply has a missing-info request
+                dest.unlink(missing_ok=True)
+            else:
+                dest.write_text(report["request"])
         elif refused and dest.exists():
             # D1: a failed call or an all-rejected answer removes the old draft. Nothing is sent to the producer.
             dest.unlink()
@@ -1271,6 +1712,8 @@ def write_drafts(inbox: Path, draft_dir: Path, conflict_dir: Path) -> list[dict]
             side.write_text(
                 json.dumps({"submission": folder.name, "conflicts": conflicts_out}, indent=2) + "\n"
             )
+        elif report.get("status") == MANUAL_INTAKE:
+            side.unlink(missing_ok=True)  # P-055: no conflict file for a manual-intake file; the disk agrees with the card
         elif refused:
             # D1: the conflict file is kept as it is for the human.
             pass
@@ -1307,10 +1750,14 @@ def approve(
         sys.path.insert(0, str(app))
     from package import agency_problem
 
+    pilot.guard("producer-request", draft.stem)
     current = read_saved_run(draft.stem)  # G2: the file's current status, read and hash-checked here
     status = current.get("status")
     if status in REFUSED_STATUSES:
-        raise ValueError(f"this file's status is {status}; it cannot be approved or sent, for any actor")
+        raise ValueError(f"this file's status is {status_refusal(current)}; it cannot be approved or sent, for any actor")
+    problem = scope_problem(draft.stem)  # P-063: every actor, whatever the status says
+    if problem:
+        raise ValueError(problem)
     name = (actor or "").strip().lstrip("@").lower().replace(" ", "-")
     if name not in {"user", "account-manager"}:
         raise ValueError("only the user or the account manager may approve; no AI role can send")
@@ -1388,6 +1835,7 @@ def _save_run(directory: Path, submission: str, status: str, error: str | None =
 
 
 if __name__ == "__main__":
+    real_detect = scope.detect
     if len(sys.argv) == 5 and sys.argv[1] == "--approve":
         approve(Path(sys.argv[2]), sys.argv[3], Path(sys.argv[4]))
         print("approved", sys.argv[2])
@@ -1401,6 +1849,9 @@ if __name__ == "__main__":
                 "; ".join(item["field"] for item in report["conflicts"]),
             )
     else:
+        # The checks below test extraction rules on short stub files. The real detector runs on every one (33 of 57 stay in scope);
+        # the 24 stubs with no application file or a terse one are let through. Scope (P-055) is checked at the end.
+        scope.detect = lambda docs: real_detect(docs) if real_detect(docs)["in_scope"] else {"version": "test", "in_scope": True, "reasons": []}
         text = "\n".join(
             [
                 "named_insured: Example LLC",
@@ -1609,14 +2060,29 @@ if __name__ == "__main__":
         text = "Operations: Mexican restaurant, 70 seats.\nSales: $900,000\nLiquor: full bar, 35% of sales\nCooking operations: wood-fired oven, two fryers.\n"
         probe = {"operations": {**row, "value": "Mexican restaurant, 70 seats", "end": 40}}
         check_operations(probe, {"a.md": text})
-        assert probe["operations"]["reason"] == "operations may be missing: liquor, bar, frying or open flame", probe["operations"]["reason"]
+        assert probe["operations"]["reason"] == "operations may be missing: liquor, bar, frying or open flame, wood-fired oven, two fryers"  # P-059: the cooking line clauses, probe["operations"]["reason"]
+        whole = {"operations": {**row, "value": "Mexican restaurant, 70 seats", "end": 40}}
+        check_operations(whole, {"a.md": "Operations: Mexican restaurant, 70 seats.\nSales: $900,000\nRemarks: live music on Fridays.\n"})
+        assert whole["operations"]["reason"] == "operations may be missing: live music or entertainment", "P-056 (f): an unlabeled line elsewhere in the document is read"
         forms = "Bar / liquor: Full bar, last call 1am\nCooking / hood / suppression: two fryers\nLiquor sales: 8 percent\nSeating capacity: 60 seats\nPatio: yes\nSecurity: door staff Fri-Sat\nHazardous materials: propane\nAnnual sales: $1\nStories: 2\nBarbecue pit: no\n"
         assert ops_lines(forms).splitlines() == forms.splitlines()[:7], ops_lines(forms)
-        assert ops_missing("restaurant", ops_lines(forms)) == ["liquor", "bar", "hours", "frying or open flame", "patio", "security staff", "hazardous materials", "60 seats"], ops_missing("restaurant", ops_lines(forms))
+        assert ops_missing("restaurant", ops_lines(forms)) == ["liquor", "bar", "hours", "frying or open flame", "patio", "security staff", "hazardous materials", "gas", "60 seats"], ops_missing("restaurant", ops_lines(forms))
         assert probe["operations"]["context"] == "Liquor: full bar, 35% of sales\nCooking operations: wood-fired oven, two fryers." and "context" in _saved_payload({"fields": [probe["operations"]]})["fields"][0]
         two = {"operations": {**row, "value": "Mexican restaurant, 70 seats, wood-fired oven, two fryers", "end": 40, "spans": [(0, 40), (text.index("Cooking"), len(text) - 1)]}}
         check_operations(two, {"a.md": text})  # P-048 (d): both cited lines are read, the sales line between them is not
         assert two["operations"]["reason"] == "operations may be missing: liquor, bar" and two["operations"]["context"] == "Liquor: full bar, 35% of sales", two["operations"]
+        # P-059 (D-111): items stated only on the cooking, hood and line-of-business lines (cases from the published T-104 mismatch file)
+        t180 = "Operations: Pottery studio and gallery. Two electric kilns (240V), retail sales of finished work.\nCooking operations: Two electric kilns, no gas\n"
+        assert ops_missing_all("Pottery studio and gallery. Two electric kilns (240V), retail sales of finished work.", t180) == ["gas"]
+        assert ops_missing_all("Pottery studio and gallery. Two electric kilns (240V), retail sales of finished work. No gas.", t180) == []
+        t201 = "Operations: Nightclub and lounge. Small kitchen, pre-packaged snacks only.\nCooking operations: Snack warmer\n"
+        assert ops_missing_all("Nightclub and lounge. Small kitchen, pre-packaged snacks only.", t201) == ["snack warmer"] and ops_missing_all("Nightclub and lounge. Small kitchen. Snack warmer", t201) == []
+        t204 = "Operations: Pool chemicals, pumps. Forklift x2.\nCooking operations: None. Forklifts electric and LPG.\n"
+        assert ops_missing_all("Pool chemicals, pumps. Forklifts electric and LPG.", t204) == ["no cooking"] and "no cooking" not in ops_missing_all("Pool chemicals, pumps. No cooking. Forklifts electric and LPG.", t204)
+        assert class_lines({"a.md": t201 + "Line of business: restaurant and bar\n"}) == {"line_of_business": "restaurant and bar", "cooking_operations": "Snack warmer"} and class_lines({"a.md": "x"}) == {"line_of_business": None, "cooking_operations": None}  # P-061
+        t175 = "Line of business: BOP - bakery/cafe, no liquor\nHood & extinguishing system last inspected: 2026-08-12 (semi-annual service)\n"
+        assert "hood inspection 2026-08-12" in ops_line_missing("Bakery", t175) and not ops_line_missing("Bakery, no liquor, hood inspected 2026-08-12", t175)
+        assert ops_line_missing("x", "Line of business: commercial property, restaurant\n") == [] and ops_line_missing("x", "Cooking operations: not listed\n") == []
         assert same_operations(
             "habitational, 8 units, no commercial cooking",
             "Small apartments, 8 units, sprinklers throughout.",
@@ -2184,6 +2650,13 @@ if __name__ == "__main__":
     on_run = {"loss_run_valued_through": {"source": "loss-runs.md"}}
     clean = run_case(on_run, {"loss-runs.md": run_107})
     assert clean["status"] == "complete" and clean["complete"] and ready_to_route(clean) and clean["request"] is None, clean["status"]
+    # P-067 (D-117): a value the model read but the gate rejected carries its reason to the card; a plain null stays silent.
+    rejected = run_case({"tiv_building": {"value": None, "needs_review": True, "reason": "value not inside the cited text"}}, {})
+    row = {r["field_id"]: r for r in rejected["fields"]}["tiv_building"]
+    assert row["value"] is None and row["needs_review"] and row["reason"] == "value not inside the cited text", ("a rejected value must keep its reason", row)
+    silent = run_case({"tiv_building": {"value": None, "needs_review": True, "reason": None}}, {})
+    row = {r["field_id"]: r for r in silent["fields"]}["tiv_building"]
+    assert row["value"] is None and not row.get("reason"), ("a plain null is not a rejected value", row)
     for src, extra in (("application.md", {}), (None, {}), ("schedule.csv", {"schedule.csv": "location,valued\n1,2026-01-01\n"}), ("email.md", {"email.md": "Loss runs valued 2026-01-01."})):
         box = {"loss_run_valued_through": {"field_id": "loss_run_valued_through", "value": "2026-01-01", "source": src, "quote": "2026-01-01", "needs_review": False, "reason": None}}
         gate_loss_run(box, {"loss-runs.md": run_110.replace("Valuation date: 2026-09-30\n", ""), "application.md": "Loss runs valued 2026-01-01", **extra})
@@ -2259,4 +2732,327 @@ if __name__ == "__main__":
     assert rep_["status"] == REVIEW_PENDING and not ready_to_route(rep_) and rep_["request"], "an open conflict: review pending, held, producer asked"
     rep_ = run_case({**on_run, "year_built": {"value": None}}, {"loss-runs.md": run_107})
     assert rep_["status"] == "incomplete", "a missing field is incomplete, not review pending"
+    # P-055 (D-105): an out-of-scope file is manual intake as a whole file. Temp dirs only; the model call raises if it is ever made.
+    scope.detect = real_detect
+    APP55 = ("Named insured: Example Roofing LLC\nPremises address: 100 Main St, Austin, TX 78701\nEffective date: 2027-01-01\nYears in business: 9\n"
+             "Operations: General office work for the business, no public visits, and the staff are all on site.\nConstruction: masonry\n")
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp_path = Path(tmp)
+        inbox55 = tmp_path / "inbox"
+        for name, files in (
+            ("SUB-601", {"email.md": "Hola, quiero una cotizacion para la tienda y el seguro de mi negocio. Gracias."}),  # email-only, Spanish
+            ("SUB-602", {"application.md": APP55, "schedule.csv": "loc,address\n1,100 Main St\n2,200 Oak Ave\n"}),  # two premises
+            ("SUB-603", {"application.md": APP55, "email.md": "Subject: quote\n\nPlease quote this for the business and send it to the producer."}),  # in scope
+        ):
+            (inbox55 / name).mkdir(parents=True)
+            for fname, body in files.items():
+                (inbox55 / name / fname).write_text(body)
+        calls55 = []
+        real_llm = llm_extract.llm_extract
+
+        def stub55(docs):
+            calls55.append([d["name"] for d in docs])
+            return {"fields": [{"field_id": "named_insured", "value": "Example Roofing LLC", "source": "application.md", "quote": "Example Roofing LLC", "confidence": 0.95, "needs_review": False, "reason": None}], "conflicts": [], "not_sent": []}
+
+        llm_extract.llm_extract = stub55
+        try:
+            pending = tmp_path / "pending"
+            pending.mkdir()
+            (pending / "SUB-601.md").write_text("old draft")  # a stale automated draft from an earlier run
+            (tmp_path / "conflicts").mkdir()
+            (tmp_path / "conflicts" / "SUB-602.json").write_text('{"conflicts": []}')  # a stale conflict file from an earlier run
+            reps = {r["folder"]: r for r in write_drafts(inbox55, pending, tmp_path / "conflicts")}
+        finally:
+            llm_extract.llm_extract = real_llm
+        assert calls55 == [["application.md", "email.md"]], ("only the in-scope file reaches the model", calls55)
+        for sub, code in (("SUB-601", "not_identified"), ("SUB-602", "multiple_locations")):
+            r = reps[sub]
+            assert r["status"] == MANUAL_INTAKE and r["complete"] is False and r["request"] is None, (sub, r["status"])
+            assert all(f["value"] is None for f in r["fields"]) and code in [x["code"] for x in r["scope"]["reasons"]], sub
+            assert not (pending / f"{sub}.md").exists(), "no automated missing-info draft, and a stale one is removed"
+            saved55 = read_saved_run(sub, tmp_path / "extractions")
+            assert saved55["status"] == MANUAL_INTAKE and saved55["scope"]["version"] == scope.VERSION and not saved55["complete"]
+            assert current_status(sub, tmp_path / "extractions") == MANUAL_INTAKE and not manifest_problem(sub, tmp_path / "extractions", inbox55)
+            assert status_refusal(saved55).startswith("manual intake (") and status_refusal(saved55) != "manual intake (out of pilot scope)", status_refusal(saved55)
+        assert not (tmp_path / "conflicts" / "SUB-602.json").exists(), "a manual-intake file keeps no conflict file"
+        assert reps["SUB-603"]["status"] != MANUAL_INTAKE and reps["SUB-603"]["scope"]["in_scope"] and [r["value"] for r in reps["SUB-603"]["fields"]][0] == "Example Roofing LLC"
+        assert (pending / "SUB-603.md").exists(), "an in-scope file keeps its missing-info draft"
+        assert scope_problem("SUB-603", tmp_path / "extractions", inbox55) == "", "an in-scope file passes the send-time scope check"
+        # P-063 (B-432): a SUB-233-shaped file saved in scope (an older detector missed it) is refused at send time, whatever its status says
+        inbox63 = tmp_path / "inbox63"
+        (inbox63 / "SUB-604").mkdir(parents=True)
+        (inbox63 / "SUB-604" / "application.md").write_text(APP55.replace("100 Main St, Austin, TX 78701", "Loc 1: 3412 S Georgia St, Amarillo, TX 79109; Loc #2: 6901 Bell St, Amarillo, TX 79106"))
+        (inbox63 / "SUB-604" / "email.md").write_text("Subject: quote\n\nPlease quote this for the business and send it to the producer.")
+        scope.detect = lambda docs: {"version": "old", "in_scope": True, "reasons": []}  # the detector that leaked
+        llm_extract.llm_extract = stub55
+        try:
+            rep63 = write_drafts(inbox63, pending, tmp_path / "conflicts")[0]
+        finally:
+            llm_extract.llm_extract, scope.detect = real_llm, real_detect
+        assert rep63["status"] not in REFUSED_STATUSES and (pending / "SUB-604.md").exists(), "the leak: an ordinary status and a draft"
+        assert not manifest_problem("SUB-604", tmp_path / "extractions", inbox63), "documents unchanged"
+        why63 = scope_problem("SUB-604", tmp_path / "extractions", inbox63)
+        assert why63.startswith("out of pilot scope at send time (multiple locations, " + scope.VERSION), why63
+        assert scope_problem("SUB-999", tmp_path / "extractions", inbox63).startswith("no saved run"), "no saved run fails closed"
+        (pending / "SUB-604.md").write_text("Nothing has been declined")
+        real_dir, real_inbox = globals()["EXTRACT_DIR"], globals()["INBOX_DIR"]
+        globals()["EXTRACT_DIR"], globals()["INBOX_DIR"] = tmp_path / "extractions", inbox63
+        try:
+            approve(pending / "SUB-604.md", "user", tmp_path / "to-producer")
+            raise SystemExit("an approve of an out-of-scope file must be refused, even by the user")
+        except ValueError as exc:
+            assert str(exc) == why63, exc
+        finally:
+            globals()["EXTRACT_DIR"], globals()["INBOX_DIR"] = real_dir, real_inbox
+        assert not (tmp_path / "to-producer").exists()
+        (pending / "SUB-601.md").write_text("Nothing has been declined")
+        real_dir = globals()["EXTRACT_DIR"]
+        globals()["EXTRACT_DIR"] = tmp_path / "extractions"
+        try:
+            approve(pending / "SUB-601.md", "user", tmp_path / "to-producer")
+            raise SystemExit("an approve of a manual-intake file must be refused")
+        except ValueError as exc:
+            assert "manual intake" in str(exc) and "not identified" in str(exc), exc
+        finally:
+            globals()["EXTRACT_DIR"] = real_dir
+        # extraction_failed keeps precedence for an in-scope file whose call raises (D-021); nothing changes for it
+        llm_extract.llm_extract = _raiser(RuntimeError("boom"))
+        try:
+            assert process_submission(inbox55 / "SUB-603")["status"] == "extraction_failed"
+        finally:
+            llm_extract.llm_extract = real_llm
+        # P-070 (D-122): the document_conflicts dev set. Two documents that disagree are an open conflict;
+        # the same figure in other words is not a conflict. P-072 (D-124): no "no cooking" is ever added to operations.
+        dev_root = ROOT / "simulation" / "inbox-dev" / "document_conflicts"
+
+        def dev_file(sid: str) -> tuple[dict, dict]:
+            docs = sources.read_folder(dev_root / sid)
+            texts = {doc["name"]: doc["text"] for doc in docs}
+            merged = {
+                field: {"field_id": field, "value": None, "source": None, "start": None, "end": None, "confidence": 0.0, "needs_review": False, "reason": None, "quote": None}
+                for field in FIELDS
+            }
+            app = texts["application.md"]
+            for field, label in (("operations", LABELS["operations"]), ("sales_or_payroll", LABELS["sales_or_payroll"])):
+                row = extract_labeled(app, label)[0]
+                if row["value"] is None:
+                    continue
+                merged[field] = {"field_id": field, "value": _canonical(field, row["value"]), "source": "application.md",
+                                 "start": row["start"], "end": row["end"], "confidence": 0.9, "needs_review": False, "reason": None,
+                                 "quote": app[row["start"] : row["end"]], "spans": [(row["start"], row["end"])]}
+            return texts, merged
+
+        dev_cases = (
+            ("SUB-290", {"square_feet": {"2800", "3150"}}),
+            ("SUB-291", {"suite_count": {"2", "3"}}),
+            ("SUB-292", {"sales_or_payroll": {"412000", "540000"}}),
+            ("SUB-293", {}),
+            ("SUB-294", {}),
+            ("SUB-295", {}),
+            ("SUB-296", {}),
+            ("SUB-297", {}),  # P-074: the email has no sales word, so only the model's conflict (stubbed below) raises it
+            ("SUB-298", {"sales_or_payroll": {"1150000", "1200000"}}),  # P-074: "Sales ~$1.2m" is read by the P-070 rule
+        )
+        for sid, expect in dev_cases:
+            texts, merged = dev_file(sid)
+            dev_conflicts: list = []
+            apply_document_rules(merged, dev_conflicts, texts)
+            check_operations(merged, texts)
+            got = {item["field"]: {side["value"] for side in item["values"]} for item in dev_conflicts}
+            assert got == expect, (sid, got, expect)
+            if sid in ("SUB-293", "SUB-296"):  # P-072 (D-124): "Cooking operations: None" is never added; the flag stays for the underwriter
+                assert "no cooking" not in merged["operations"]["value"], (sid, merged["operations"]["value"])
+                assert merged["operations"]["needs_review"], (sid, "the flag stays for the underwriter")
+            if sid == "SUB-291":  # the count is not a scored field: the operations value stays
+                assert merged["operations"]["value"] and merged["operations"]["value"].startswith("Lessor"), merged["operations"]
+            if sid == "SUB-292":  # the sales value is emptied and the reason is on the row
+                assert merged["sales_or_payroll"]["value"] is None and merged["sales_or_payroll"]["needs_review"], merged["sales_or_payroll"]
+                assert "different sales figures" in merged["sales_or_payroll"]["reason"], merged["sales_or_payroll"]
+        # P-072 (D-124), the @model-risk T-118 H1 case end to end: SUB-296 (published Carrier A run, so it does not hold on
+        # the loss run) with each email below, the @model-risk re-check sentences among them. "no cooking" is never added and
+        # the operations flag stays, so no version of the file is complete.
+        # The stub answers with the labelled lines, and llm_extract.accept_field grounds each answer as a real reply is grounded.
+        def stub296(docs):
+            rows, by_name = [], {doc["name"]: doc["text"] for doc in docs}
+            for doc in docs:
+                labels = {"loss_run_valued_through": ("valued as of:",)} if doc["name"] == "loss-runs.md" else LABELS if doc["name"] == "application.md" else {}
+                for field, label in labels.items():
+                    row = extract_labeled(doc["text"], label)[0]
+                    if row["value"] is not None:
+                        item = {"field_id": field, "value": row["value"], "source": doc["name"], "quote": doc["text"][row["start"] : row["end"]], "confidence": 0.95}
+                        rows.append(llm_extract.accept_field(item, by_name))
+            return {"fields": rows, "conflicts": [], "not_sent": []}
+
+        import shutil
+
+        emails = ("Since the application the tenant added a flat-top griddle and a wok station for staff lunches.",  # SUB-296 as built
+                  "Nothing to add; the loss run from Carrier A is attached.",  # neutral: no cooking word at all
+                  "We started cooking hot breakfast for staff on a stove in the back.", "The lobby now has a cafe serving hot food.",
+                  "Staff use a hot plate and a panini press.", "On Fridays there is a barbecue and a rotisserie out back.",
+                  "We fry chicken wings for the Friday lunch.", "We put in a range and a commercial hood.")
+        llm_extract.llm_extract = stub296
+        try:
+            for n, email in enumerate(emails):
+                case = tmp_path / "p072" / f"case{n}" / "SUB-296"
+                shutil.copytree(dev_root / "SUB-296", case)
+                (case / "email.md").write_text(f"Subject: Harborview Insurance Agency LLC\n\nHi,\n{email}\nThanks\n")
+                rep296 = process_submission(case)
+                ops296 = next(r for r in rep296["fields"] if r["field_id"] == "operations")
+                assert rep296["status"] != "complete" and "no cooking" not in (ops296["value"] or "") and ops296["needs_review"], (email, rep296["status"], ops296)
+        finally:
+            llm_extract.llm_extract = real_llm
+        # P-074 (D-132): SUB-297/298 and the merge-vs-conflict cases, end to end through the real conflict loop. Only the model host is stubbed
+        # (the SUB-345 stored reply shape: conflict values as numbers, the sales field empty); a temp cache; no model call.
+        def stubbed(folder: Path, sides: list, *, field: dict | None = None) -> dict:
+            docs74 = sources.read_folder(folder)
+            rows74 = []
+            for doc in docs74:
+                labels = {"loss_run_valued_through": ("valued as of:",)} if doc["name"] == "loss-runs.md" else LABELS if doc["name"] == "application.md" else {}
+                for fid, label in labels.items():
+                    row = extract_labeled(doc["text"], label)[0]
+                    if row["value"] is not None and fid != "sales_or_payroll":
+                        rows74.append({"field_id": fid, "value": row["value"], "source": doc["name"], "quote": doc["text"][row["start"] : row["end"]], "confidence": 0.95})
+            reply74 = {"fields": rows74 + ([field] if field else []), "conflicts": [{"field": "sales_or_payroll", "values": sides}] if sides else []}
+            real_post, real_cache, real_env = llm_extract._post, llm_extract.CACHE, (os.environ.get("LLM_BASE_URL"), os.environ.get("LLM_MODEL"))
+            os.environ["LLM_BASE_URL"], os.environ["LLM_MODEL"] = "http://localhost:11434/v1", "p074-stub"
+            llm_extract.CACHE = tmp_path / f"p074-cache-{len(list(tmp_path.glob('p074-cache-*')))}"
+            llm_extract._post = lambda settings, payload: {"choices": [{"message": {"content": json.dumps(reply74)}}], "usage": {"total_tokens": 1}}
+            try:
+                return process_submission(folder)
+            finally:
+                llm_extract._post, llm_extract.CACHE = real_post, real_cache
+                for name, old in zip(("LLM_BASE_URL", "LLM_MODEL"), real_env):
+                    os.environ.pop(name, None) if old is None else os.environ.__setitem__(name, old)
+
+        def sales_of(rep: dict) -> dict:
+            return next(r for r in rep["fields"] if r["field_id"] == "sales_or_payroll")
+
+        def copy74(sid: str, tag: str, email: str | None = None, app_sales: str | None = None) -> Path:
+            case = tmp_path / "p074" / tag / sid
+            shutil.copytree(dev_root / sid, case)
+            if email is not None:
+                (case / "email.md").write_text(f"Subject: x\n\nHi,\n{email}\nThanks\n")
+            if app_sales:
+                (case / "application.md").write_text(re.sub(r"Annual sales: \$[\d,]+", f"Annual sales: ${app_sales}", (case / "application.md").read_text()))
+            return case
+
+        app297 = {"value": 1180000, "source": "application.md", "quote": "Annual sales: $1180000", "confidence": 1.0}
+        mail297 = {"value": 1350000, "source": "email.md", "quote": "Last year we did about $1.35 million", "confidence": 1.0}
+        rep = stubbed(dev_root / "SUB-297", [app297, mail297])  # SUB-345 shape: both sides verify, the email side is approximate
+        assert [c["field"] for c in rep["conflicts"]] == ["sales_or_payroll"] and not sales_of(rep)["value"], rep["conflicts"]
+        assert rep["status"] != "complete" and not rep["complete"] and not ready_to_route(rep), rep["status"]
+        assert [(v["value"], bool(v.get("approximate"))) for v in rep["conflicts"][0]["values"]] == [("1180000", False), ("1350000", True)]
+        rep = stubbed(dev_root / "SUB-297", [app297, {**mail297, "quote": "we made 1.35 million"}])  # D1: the email side is not in the document
+        assert rep["conflicts"] and rep["status"] != "complete" and not sales_of(rep)["value"] and not ready_to_route(rep), rep["status"]
+        assert [bool(v.get("unverified")) for v in rep["conflicts"][0]["values"]] == [False, True] and "quote not found" in rep["conflicts"][0]["values"][1]["reason"], rep["conflicts"]
+        rep = stubbed(dev_root / "SUB-298", [{**app297, "value": 1150000, "quote": "Sales 1.15 million"}, {**mail297, "value": 1200000, "quote": "we did 1.2 million"}])  # SUB-298, D2
+        assert [bool(v.get("unverified")) for v in rep["conflicts"][0]["values"]] == [True, True] and rep["status"] != "complete" and not ready_to_route(rep), rep["conflicts"]
+        assert rep["status"] != "all_values_rejected", "a reply whose only content is that conflict is an answer with an open conflict"
+        # merge: the same amount in other words is one number; the exact side wins and the hedged quote stays as also_quoted
+        same = copy74("SUB-297", "merge", "We did about $1.18 million.")
+        rep = stubbed(same, [app297, {"value": "$1.18 million", "source": "email.md", "quote": "about $1.18 million", "confidence": 1.0}])
+        assert rep["conflicts"] == [] and sales_of(rep)["value"] == "1180000" and sales_of(rep)["quote"] == "Annual sales: $1180000", sales_of(rep)
+        assert not sales_of(rep)["needs_review"] and any("about $1.18 million" in a["quote"] for a in sales_of(rep).get("also_quoted") or []), sales_of(rep)
+        # conflict: a different number is a conflict, held
+        diff = copy74("SUB-297", "differ", "We did about $1.2 million.")
+        rep = stubbed(diff, [app297, {"value": "$1.2 million", "source": "email.md", "quote": "about $1.2 million", "confidence": 1.0}])
+        assert [c["field"] for c in rep["conflicts"]] == ["sales_or_payroll"] and not ready_to_route(rep), rep["conflicts"]
+        # an approximate quote on a number field with no conflict: kept, flagged, never dropped, never exact
+        solo = copy74("SUB-297", "solo", "We did about $1.35 million.")
+        rep = stubbed(solo, [], field={"field_id": "sales_or_payroll", "value": 1350000, "source": "email.md", "quote": "We did about $1.35 million.", "confidence": 1.0})
+        row = sales_of(rep)
+        assert row["value"] == "1350000" and row["needs_review"] and row["approximate"] and row["reason"].startswith("approximate figure:"), row
+        assert rep["status"] == REVIEW_PENDING, rep["status"]
+        for word in ("nearly", "almost", "close to", "circa", "roughly", "approximately", "around", "~"):  # each hedge word, end to end
+            rep = stubbed(copy74("SUB-297", f"w-{word.strip('~') or 'tilde'}", f"We did {word} $1.35 million."), [],
+                          field={"field_id": "sales_or_payroll", "value": 1350000, "source": "email.md", "quote": f"We did {word} $1.35 million.", "confidence": 1.0})
+            assert sales_of(rep)["needs_review"] and sales_of(rep).get("approximate"), (word, sales_of(rep))
+        exact = copy74("SUB-297", "exact", "We did $1.35 million.")  # no hedge: exact, no review note
+        rep = stubbed(exact, [], field={"field_id": "sales_or_payroll", "value": 1350000, "source": "email.md", "quote": "We did $1.35 million.", "confidence": 1.0})
+        assert sales_of(rep)["value"] == "1350000" and not sales_of(rep)["needs_review"] and not sales_of(rep).get("approximate"), sales_of(rep)
+        # check M2: a hedge across a currency code, a colon or both never verifies an exact figure
+        for quote in ("about US$1.2 million", "about USD 1.2 million", "about: $1.2m", "Approximately: $1,200,000", "roughly C$1.2 million", "around: US$ 1.2 million"):
+            assert llm_extract.is_approximate("1200000", quote), quote
+        assert not llm_extract.is_approximate("1200000", "Annual sales: US$1.2 million")
+        assert _sales_figures("Sales about USD 1.2 million") == [(1200000, "Sales about USD 1.2 million")]
+        # check M1: the exact side wins, but a review reason that is not the approximate note is still carried
+        clean = {"value": "1", "needs_review": False, "reason": None, "quote": "q"}
+        _carry_flag(clean, {"value": "1", "approximate": True, "needs_review": True, "quote": "about 1",
+                            "reason": "values differ by location: loc 1 x; approximate figure: about 1"})
+        assert clean["needs_review"] and clean["reason"] == "values differ by location: loc 1 x", clean
+        clean = {"value": "1", "needs_review": False, "reason": None}
+        _carry_flag(clean, {"value": "1", "approximate": True, "needs_review": True, "quote": "about 1", "reason": "approximate figure: about 1"})
+        assert not clean["needs_review"], "an approximate note alone is not carried onto the exact side"
+        clean = {"value": "1", "needs_review": False, "reason": None}  # recheck H1: the order llm_extract writes on the per-location path
+        _carry_flag(clean, {"value": "1", "approximate": True, "needs_review": True, "quote": "about $1.2 million",
+                            "reason": "approximate figure: about $1.2 million; values differ by location: loc 1 x; loc 2 y"})
+        assert clean["needs_review"] and clean["reason"] == "values differ by location: loc 1 x; loc 2 y", clean
+        # check M3: a premises conflict with an unverified side survives labelled locations
+        keep74 = [{"field": "premises_address", "values": [{"value": "a", "unverified": True}, {"value": "b"}]}, {"field": "premises_address", "values": [{"value": "a"}, {"value": "b"}]}]
+        apply_locations({"premises_address": {"value": None}}, keep74, {"application.md": "Main premises 1 A St, Houston TX 77001. Second premises 2 B St, Houston TX 77002."})
+        assert len(keep74) == 1 and any(s.get("unverified") for s in keep74[0]["values"]), keep74  # recheck L8: fails on []
+        # P-070 backstop reads the units too: "$1.2 million in sales" beside a sales word
+        assert [amount for amount, _ in _sales_figures("Our sales were $1.2 million last year.")] == [1200000]
+        assert [amount for amount, _ in _sales_figures("Annual sales: 250 thousand")] == [250000]
+        # P-075 (D-133): the cooking none-line is copied as written, or a cooking word anywhere holds the file. Only the model host is stubbed.
+        def ops_of(rep: dict) -> dict:
+            return next(r for r in rep["fields"] if r["field_id"] == "operations")
+
+        def stub75(sid: str) -> dict:  # the application's own sales line, as the model would return it (stubbed() leaves sales out)
+            sales = re.search(r"Annual sales: \$(\d+)", (dev_root / sid / "application.md").read_text())
+            assert sales, sid
+            return stubbed(dev_root / sid, [], field={"field_id": "sales_or_payroll", "value": int(sales.group(1)), "source": "application.md", "quote": sales.group(0), "confidence": 1.0})
+
+        LINE = "Cooking operations: None"
+        rep = stub75("SUB-299")  # SUB-348 shape: another line of the application and the email
+        assert [c["field"] for c in rep["conflicts"]] == ["cooking"] and not ready_to_route(rep) and rep["status"] != "complete" and not rep["complete"], rep["status"]
+        assert [v["source"] for v in rep["conflicts"][0]["values"]] == ["application.md", "application.md"] or rep["conflicts"][0]["values"][1]["source"] in ("application.md", "email.md"), rep["conflicts"]
+        assert LINE not in ops_of(rep)["value"] and not ops_of(rep).get("rule_copied") and ops_of(rep)["needs_review"] and REASON_COOKING_CONFLICT in ops_of(rep)["reason"], ops_of(rep)
+        assert rep["conflicts"][0]["values"][0]["quote"] == LINE, rep["conflicts"]
+        assert rep["cooking"]["equipment"]["state"] == "needs_review" and rep["cooking"]["equipment"]["reason"] == REASON_COOKING_CONFLICT, rep["cooking"]  # code review 3
+        assert [v["source"] for v in rep["conflicts"][0]["values"]] == ["application.md", "email.md", "application.md"], rep["conflicts"]  # UI check H1: the email first, the application's own line last
+        assert "stove top" in rep["conflicts"][0]["values"][1]["quote"], rep["conflicts"]
+        rep = stub75("SUB-300")  # SUB-349 shape: the schedule cooking column says Yes
+        assert [c["field"] for c in rep["conflicts"]] == ["cooking"] and rep["status"] != "complete" and not ready_to_route(rep), rep["conflicts"]
+        assert {"schedule.csv", "email.md"} <= {v["source"] for v in rep["conflicts"][0]["values"]}, rep["conflicts"]  # UI check H1: every document that states cooking
+        rep = stub75("SUB-301")  # T-119 shape: clean; the stub drops the line
+        row = ops_of(rep)
+        assert rep["conflicts"] == [] and row["value"].endswith("; " + LINE) and row["rule_copied"] and row["needs_review"] and REASON_COOKING_COPIED in row["reason"], row
+        assert "no other document" not in row["reason"].lower() and "check the other documents" in row["reason"], row["reason"]  # P-075 check H1: never a claim of absence
+        assert row["also_quoted"][0]["quote"] == LINE and row["also_quoted"][0]["source"] == "application.md" and "no cooking" not in row["value"].lower(), row
+        assert (row["confidence"] or 0) < llm_extract.MIN_CONFIDENCE and rep["status"] == REVIEW_PENDING, (row["confidence"], rep["status"], rep.get("missing"), rep.get("status_reason"))
+        app301 = (dev_root / "SUB-301" / "application.md").read_text()
+        assert app301[row["also_quoted"][0]["start"] : row["also_quoted"][0]["end"]] == LINE
+        rep = stub75("SUB-302")  # negations
+        assert [c["field"] for c in rep["conflicts"]] == ["cooking"] and not ready_to_route(rep), rep["conflicts"]
+        for sentence in ("No fryer on site.", "Fryer removed last year.", "No beer, we fry wings.", "Wings fried daily and beer none.", "No cooking, but we fry wings."):
+            assert cooking_hits({"email.md": sentence}), sentence
+        for sentence in ("No cooking.", "No kitchen.", "We do not cook.", "Cooking operations: None", "The office is in a quiet neighborhood near Coventry Park."):
+            assert not cooking_hits({"email.md": sentence}), sentence
+        rep = stub75("SUB-303")  # SUB-350 shape: the model carried the line itself
+        assert rep["conflicts"] == [] and ops_of(rep)["value"] == "Plumbing supplies, no cooking" and not ops_of(rep).get("rule_copied"), ops_of(rep)
+        for sid in ("SUB-294", "SUB-295"):  # the older none-line files: line copied, status unchanged
+            rep = stub75(sid)
+            assert rep["conflicts"] == [] and ops_of(rep)["value"].endswith("; " + LINE) and rep["status"] == REVIEW_PENDING, (sid, rep["status"])
+        rep = stub75("SUB-293")  # "no kitchen or any cooking on site" is not an exact agreeing phrase: a false hold by design
+        assert [c["field"] for c in rep["conflicts"]] == ["cooking"], rep["conflicts"]
+        # none-shapes: only a whole-body none line is copied; N/A, blank, or extra words keep the P-059 flag
+        for body, shape in (("None", True), ("No.", True), ("nil", True), ("No commercial cooking", True), ("No kitchen", True), ("N/A", False), ("", False), ("None; microwave", False), ("Electric ranges only", False)):
+            assert bool(cooking_none_line({"application.md": f"Cooking operations: {body}\n"})) is shape, body
+        assert cooking_none_line({"application.md": "Cooking operations: None\n"}, {"application.md": [["Cooking", 0.9]]}) is None  # a scan is never copied from
+        # C: operations cited from the email; the application's stated cooking line is read
+        merged_c = {"operations": {"value": "Insurance office", "source": "email.md", "start": 0, "end": 16, "confidence": 0.9, "needs_review": False, "reason": None}}
+        check_operations(merged_c, {"email.md": "Insurance office, 40 seats", "application.md": "Cooking operations: Electric ranges only\n"})
+        assert merged_c["operations"]["needs_review"] and "electric" in merged_c["operations"]["reason"] and "ranges" in merged_c["operations"]["reason"], merged_c["operations"]
+        # the schedule: header only is not read; a Yes is; the insured's name is not read
+        assert not cooking_hits({"schedule.csv": "location\tsq_ft\tcooking\nMain\t3700\tNo\n"}) and cooking_hits({"schedule.csv": "location\tcooking\nMain\tYes\n"})
+        assert not cooking_hits({"schedule.xlsx": "sheet: Schedule\nloc\tsq_ft\tcooking\n1\t900\tnone\n"}) and cooking_hits({"schedule.xlsx": "sheet: Schedule\nloc\tcooking\n1\tYes\n"})
+        assert cooking_hits({"email.md": "Grill Masters LLC is the insured."}) and cooking_hits({"email.md": "Grill Masters LLC is next door."})  # the name is read (code review 2)
+        assert cooking_hits({"schedule.csv": "address\tno\tcooking\n12 Main St, Unit 2\tNo\tYes\n"}) and not cooking_hits({"schedule.csv": "address\tcooking\n12 Main St, Unit 2\tNo\n"})  # code review 1: the cell is not split on its comma
+        pizza = {"application.md": "Named insured: Main Street Pizza & Grill LLC\nOperations: Office\nCooking operations: None\n"}
+        merged_p, conf_p = {"operations": {"value": "Office", "source": "application.md", "needs_review": False, "confidence": 0.9}, "named_insured": {"value": "Main Street Pizza & Grill LLC"}}, []
+        apply_cooking_rule(merged_p, conf_p, pizza)
+        assert [c["field"] for c in conf_p] == ["cooking"] and not merged_p["operations"].get("rule_copied"), conf_p  # code review 2: held, not copied
+        request = _request("SUB-290", [], ["square_feet", "suite_count"])
+        assert "- square footage" in request and "- suite count" in request, request
     print("prepare ok")

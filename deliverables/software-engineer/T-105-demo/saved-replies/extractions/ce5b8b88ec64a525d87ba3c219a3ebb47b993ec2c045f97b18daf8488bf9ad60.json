@@ -1,0 +1,138 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "prompt_version": "b025802c0dfa",
+  "files": [
+    "application.jpg",
+    "email.md",
+    "schedule.csv"
+  ],
+  "usage": {
+    "queue_time": 0.02216556,
+    "prompt_tokens": 1336,
+    "prompt_time": 0.107489828,
+    "completion_tokens": 1093,
+    "completion_time": 2.144915966,
+    "total_tokens": 2429,
+    "total_time": 2.252405794
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Bluebonnet Kitchen Co LLC",
+        "source": "application.jpg",
+        "quote": "named insured? piueponnet Kitches co LLC",
+        "confidence": 0.95
+      },
+      {
+        "field_id": "premises_address",
+        "value": null,
+        "source": null,
+        "quote": null,
+        "confidence": 0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-03-01",
+        "source": "email.md",
+        "quote": "Eff 3/1/27.",
+        "confidence": 0.9
+      },
+      {
+        "field_id": "operations",
+        "value": "Restaurant; 2 locations; Burgers, chicken and breakfast; dine-in and takeout; Beer and wine, no Liquor License; flat-top, 2 fryers, charbroiler, 8-burner range, Type I hood UL 300 at both locations",
+        "source": "application.jpg",
+        "quote": "pestaurant: 2 jocations- Burgers. chicke\u00ae and preakfast gine-it and takeout: Beer and wine, no Liquor License: ... cooking operations ' Flat-teP: 2 fryerse charbroiler: g-purner range: TYpe sis nood with gL 300 at poth yocations:",
+        "confidence": 0.85
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": 53300000,
+        "source": "application.jpg",
+        "quote": "annual gales* 53, 300,000 combined",
+        "confidence": 0.9
+      },
+      {
+        "field_id": "tiv_building",
+        "value": 1586000,
+        "source": "application.jpg",
+        "quote": "Building TIV: 51,040,009 toc Li 5465, 000 toc 2",
+        "confidence": 0.8
+      },
+      {
+        "field_id": "construction",
+        "value": null,
+        "source": null,
+        "quote": null,
+        "confidence": 0
+      },
+      {
+        "field_id": "year_built",
+        "value": null,
+        "source": null,
+        "quote": null,
+        "confidence": 0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "source": null,
+        "quote": null,
+        "confidence": 0
+      }
+    ],
+    "conflicts": [
+      {
+        "field": "premises_address",
+        "values": [
+          {
+            "value": "4808 Slide Rd, Lubbock, TX 79414",
+            "source": "application.jpg",
+            "quote": "agos8 glide Rd; puppock. TX 79414",
+            "confidence": 0.9
+          },
+          {
+            "value": "2200 N Judge Ely Blvd, Abilene, TX 79601",
+            "source": "application.jpg",
+            "quote": "2200 N Judge BLY piva, Abilene: TX 79601",
+            "confidence": 0.9
+          }
+        ]
+      },
+      {
+        "field": "construction",
+        "values": [
+          {
+            "value": "Masonry",
+            "source": "application.jpg",
+            "quote": "Masonry {loc ape",
+            "confidence": 0.9
+          },
+          {
+            "value": "Metal",
+            "source": "application.jpg",
+            "quote": "metal {Loc 2)",
+            "confidence": 0.9
+          }
+        ]
+      },
+      {
+        "field": "year_built",
+        "values": [
+          {
+            "value": "2004",
+            "source": "application.jpg",
+            "quote": "2004 (Loc Ly",
+            "confidence": 0.9
+          },
+          {
+            "value": "1998",
+            "source": "application.jpg",
+            "quote": "1998 {lec \u00a323)",
+            "confidence": 0.9
+          }
+        ]
+      }
+    ]
+  }
+}

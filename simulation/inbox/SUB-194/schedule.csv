@@ -1,0 +1,3 @@
+source,loc,address,city,zip,bldg_tiv,construction,year_built,sq_ft,sprinklers,cooking
+FICTIONAL,1,1450 E Price Rd,Brownsville,78520,310000,Joisted Masonry,1983,2800,No,"Horno de piso, horno de conveccion"
+FICTIONAL,2,1700 Boca Chica Blvd (tienda),Brownsville,78521,120000,Masonry,1990,1400,No,Solo horno de conveccion

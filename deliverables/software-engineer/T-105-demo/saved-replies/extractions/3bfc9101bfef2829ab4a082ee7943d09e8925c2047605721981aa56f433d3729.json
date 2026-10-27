@@ -1,0 +1,86 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "prompt_version": "b025802c0dfa",
+  "files": [
+    "application.md",
+    "email.md",
+    "schedule.csv"
+  ],
+  "usage": {
+    "queue_time": 0.004456146,
+    "prompt_tokens": 1115,
+    "prompt_time": 0.095781792,
+    "completion_tokens": 843,
+    "completion_time": 1.867780401,
+    "total_tokens": 1958,
+    "total_time": 1.963562193
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Rio Bend Kitchen & Bar LLC",
+        "source": "application.md",
+        "quote": "Named insured: Rio Bend Kitchen & Bar LLC",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": "210 Losoya St, San Antonio, TX 78205",
+        "source": "application.md",
+        "quote": "Premises address: 210 Losoya St, San Antonio, TX 78205",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-02-01",
+        "source": "application.md",
+        "quote": "Effective date: 2027-02-01",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "Restaurant and bar. Full liquor (TABC mixed beverage permit), 140 seats, live music Thursday to Sunday until midnight. Dinner service and weekend brunch. Charbroiler, 2 fryers, flat-top, 8-burner range, pizza oven. Type I hood with UL 300 system, serviced 2026-08.",
+        "source": "application.md",
+        "quote": "Operations: Restaurant and bar. Full liquor (TABC mixed beverage permit), 140 seats, live music Thursday to Sunday until midnight. Dinner service and weekend brunch.\nNumber of employees: 32\nAnnual sales: $2,350,000\nBuilding TIV: $1,180,000\nBusiness personal property: $310,000\nSquare footage: 5,600\nConstruction: Joisted masonry\nYear built: 1931\nStories: 2\nSprinklers: Yes, wet pipe throughout\nCooking operations: Charbroiler, 2 fryers, flat-top, 8-burner range, pizza oven. Type I hood with UL 300 system, serviced 2026-08.",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": "2350000",
+        "source": "application.md",
+        "quote": "Annual sales: $2,350,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": "1180000",
+        "source": "application.md",
+        "quote": "Building TIV: $1,180,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "Joisted masonry",
+        "source": "application.md",
+        "quote": "Construction: Joisted masonry",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": "1931",
+        "source": "application.md",
+        "quote": "Year built: 1931",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": null,
+        "source": null,
+        "quote": null,
+        "confidence": 0
+      }
+    ],
+    "conflicts": []
+  }
+}

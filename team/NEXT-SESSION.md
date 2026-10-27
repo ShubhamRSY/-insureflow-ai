@@ -1,40 +1,76 @@
 # Next session
 
-Written 2026-10-16 by the orchestrator at wrap-up. Wrap-up commit: `b4c4790` on `ai-team`, pushed to `origin/ai-team` (private).
+Written 2026-10-21 (third session) by the orchestrator at wrap-up. Wrap-up commit: `dea2eb5` on `ai-team`, pushed to `origin/ai-team` (private). Previous: `50b9205`. The T-117 run commit `05c3110` was made outside this conversation; the user asked for its results to be read here.
 
-- Budget rule 8: demo blockers only (the weekly limit resets 2026-10-17).
-- Standing rules: D-065, D-069, the CLAUDE.md "Plugins" section (D-097). One AI session on this repo (D-090). The frontend/ files and `.claude/settings*.json` belong to the user and are never staged.
-- **Run every pipeline command with `.venv/bin/python`.**
-- **Score files are written only with `--write`.** Re-scores use `HOLDOUT_RESCORE=1`, a temp copy of the cache in `LLM_CACHE_DIR`, and `LLM_PACE_SECONDS=0`.
-- Hold-outs are scored with **`eval_holdout_v4`**. v2 and v3 are frozen; their self-checks now fail on the old sprinklered → carrier_c route. This is expected and recorded in RUN-RULES.
-- Model: qwen/qwen3.8-27b (P-039), `LLM_PACE_SECONDS=55` for live runs.
-- The context7 plugin needs authorization (`/mcp`); until then use the `ctx7` CLI. The pyright CLI is not installed; VS Code diagnostics were empty for the changed files.
+- Budget rule 8: demo blockers only until the demo is done.
+- Standing rules: D-065, D-069, the CLAUDE.md "Plugins" section (D-097). One AI session on this repo (D-090). The `frontend/` files and `.claude/settings*.json` belong to the user and are never staged.
+- **Work in the permanent worktree `/Users/disastershubz/INSURANCE FLOW AI/insureflow-ai-team` (branch `ai-team`, D-101).** Never touch the main folder `-insureflow-ai-1`; its `team/NEXT-SESSION.md` is stale.
+- **Run every pipeline command with `.venv/bin/python`.** New hold-outs are scored with **`eval_holdout_v11`** (v10 and earlier frozen). Gold check: `HOLDOUT_IDS=<a-b> .venv/bin/python underwriting_pipeline/ai/eval_holdout_v11.py --check-gold`.
+- pyright: `npx --yes pyright@1.1.390 --pythonpath .venv/bin/python <files>`. Playwright only via `/opt/homebrew/opt/python@3.14/bin/python3.14`.
+- @producer cannot write `deliverables/`; it writes to the scratchpad and the orchestrator copies it.
 
-## Where we stopped (D-097)
+## 2026-10-26: P-074 and P-075 merged; T-120 planned (not built) — read this first
 
-- **P-049 is built** (`96deed8`, `a6cebb3`, `213d884`, `b4c4790`). The rules file is `deliverables/head-of-underwriting/carrier-match.md` (R1–R14, W1, W2); notes show the rule ID.
-  - Carrier A is the only direct route.
-  - Restaurants and apartments, sprinklered or not, go to senior_referral, with Carrier B or C as the suggested market. **D-059 item 6 is replaced** (AG:37, AG:62).
-  - W2 referral words (hazardous goods, lab/medical, cold storage, liquor, vacant) always win over class words.
-  - The Carrier B $2M cap is removed.
-  - Senior-referral cards say "No send from this screen".
-- **Scorer v4** implements H3: "hold" is a status, not a route; unsafe = a carrier route, held or not, where gold says senior_referral or no_match. @model-risk: APPROVE.
-- **Dev re-check SUB-127–146** (v4, cache, 0 calls, clean `a6cebb3`; confirmed by @model-risk at `213d884`):
+- pilot-integration: P-074 (D-132, unverifiable conflict sides stay open; million read; approximate amounts) and P-075 (D-133, cited cooking none-line copied; cooking elsewhere holds) merged. tests/pipeline 93 passed; 0 of 143 requests changed; PROMPT_VERSION 759b3e6bc9b2. @model-risk APPROVE on both after fixes.
+- T-120 (SUB-450–481) planned in team/TASKS.md, not built. Before building: freeze code/prompt/scorer/lint in this file; the user decides on the operations gate (deliverables/model-risk/T-027-operations-gate-answer.md, C1–C7).
+- Commits are made by hand in the worktrees (the commit-commands plugin runs in the main folder, which holds the user's own work).
 
-  | Measure | Result |
+## T-119 run and scored, 2026-10-24 (D-130) — T-027 veto KEPT
+
+- Run 20261024T000318-70195, once, v11 `--write`; commit 46aacbe. Results `deliverables/ai-engineer/evals/SUB-340-371-results.md`.
+- Safety gates pass (0 leaks, recall 12/12, 0 false completes, 0 unsafe, route 20/20, loss runs 20/20). Fail: operations 9/20 (B-468), planted-conflict recall 2/3 (B-469; SUB-345 passes the send gate with the conflict discarded).
+- @model-risk memo KEEP: `deliverables/model-risk/T-027-memo-T-119.md`; backlog B-468–B-477. Next: the user decides on P-### drafts for H1/H2.
+- Fast lane D-129 is in CLAUDE.md and AGENTS.md (both branches).
+
+## T-119 built and gold frozen, 2026-10-23 (D-128) — not run
+
+- 32 files `simulation/inbox/SUB-340` … `SUB-371`; gold `deliverables/senior-underwriter/gold-set/SUB-340.md` … `SUB-371.md` + `T-119-routes.md`.
+- Gold manifest `deliverables/senior-underwriter/T-119-gold-manifest.sha256`, sha256 `2feba3b2b007ab197c22a40427b105242585ee0783bed7c5e5a575408fd55fcc`. Freeze note at the end of `deliverables/producer/T-119-mix.md`.
+- Lint v11: only the SUB-348/349 conflict marks fail (D-128: not measurable under v11, reported separately, excluded from the conflict rate). @model-risk look-again APPROVE (`deliverables/model-risk/T-119-build-check-2.md`).
+- Next: run T-119 only on the user's word (D-020), against the freeze below; at write-up apply D-127, D-128 and B-467.
+
+## Freeze 2026-10-23 (D-127), for the T-119 hold-out — read this first
+
+Recorded by the orchestrator in the Claude Code session, 2026-10-23. Supersedes the older freeze below for T-119.
+- Worktree and branch: `/Users/disastershubz/INSURANCE FLOW AI/insureflow-integration`, `pilot-integration` (pushed; never `main`).
+- Code under test: `pilot-integration` commit `b6a35b7d94de4afa36d7457b21d28d6f4c8b4358` (pipeline code identical to the merge `d7949d2`: T-118 P-070 conflicts with the cooking add removed by P-072).
+- `PROMPT_VERSION` `759b3e6bc9b2` (`llm_extract.py` unchanged since T-117; request equality 143/143 identical at `d7949d2`).
+- Scorer: **v11** (`underwriting_pipeline/ai/eval_holdout_v11.py`) sha256 `7ddcfb50521b7af17f00c0e148891ca40008d019ce257b9b5d121c7fa6d3fcbb`, self-check ok. v12 dropped (D-127; parked in `deliverables/backlog/P-073-v12/`).
+- Lint: `deliverables/senior-test-engineer/lint_holdout.py` sha256 `01147a7532bdd7f1ec00861200d1d5e6bbf87f12612389416ff58b78844ea653`, SELF-CHECK PASS.
+- Under v11 an answer that omits the cooking slot where gold says no cooking is a miss; T-119 results list these separately (D-127).
+- Next: build T-119 (SUB-340–371) per `team/TASKS.md`, gold first, lint PASS with v11, @model-risk build check, freeze gold, record the manifest. Do not run it.
+
+## Frozen code under test (D-119)
+
+| Item | Value |
+|---|---|
+| Code-under-test commit | `8d605acce37f06f719b5a865a79d783bc3e9c800` (P-069 freeze) |
+| Prompt hash (`PROMPT_VERSION`) | `759b3e6bc9b2` |
+| Scorer v11 sha256 | `7ddcfb50521b7af17f00c0e148891ca40008d019ce257b9b5d121c7fa6d3fcbb` |
+| Lint sha256 | `01147a7532bdd7f1ec00861200d1d5e6bbf87f12612389416ff58b78844ea653` |
+| **T-117 gold manifest sha256** | **`7e076534432f1276bfe6198643547498b613c4f2b7aceb2ed618314b5e39fd33`** (supersedes `9ab5960d…`) |
+
+Any byte change to v11, the lint or the gold reopens the check. Commits after `8d605ac` touch docs and gold only, so the code under test is unchanged.
+
+## Where we stopped
+
+- **T-117 was run once and scored once** (`05c3110`): frozen `8d605ac`, scorer v11 `--write`, gold `7e076534…`, run id `20261021T112723-44537`, 20 calls, 0 failed, fresh cache.
+
+  | Gate | Result |
   |---|---|
-  | Route gate | **PASS** |
-  | Unsafe routes | 0 |
-  | Route accuracy | 18/20 |
-  | False completes | 0 |
-  | Loss runs, hit / miss / not credited | 8 / 0 / 12 |
-  | Operations | 19/20 |
+  | named_insured, premises, effective_date, sales, tiv, construction, year_built | 20/20 each |
+  | operations | **13/20 FAIL** |
+  | loss_runs | **16/20 FAIL** |
+  | False completes / unsafe routes / leaks | 0 / 0 / 0 |
+  | Route accuracy | 19/20 (miss SUB-252, B-448) |
+  | Recall / false manual intake | 12/12 / 0/20 |
 
-  The 2 misses are SUB-135 (thrift shop) and SUB-143 (clothing store): no_match where gold says carrier_a, which is the safe direction. This is dev data with gold changed alongside the code, so it is not hold-out evidence (B-379).
-- **Reviews:**
-  - @model-risk: P-049 routing **OBJECTION, H1**. "office building with ground-floor pub", "retail store and cocktail lounge", "office building, no utilities" and "office, unoccupied" still route to carrier_a. It resolves when those never route to carrier_a, rule lines are added to carrier-match.md, each case has a self-check, **and the user approves a new P-###**.
-  - @senior-underwriter UI: APPROVE WITH CHANGES. Its High was resolved by the "No send" line.
-- Backlog: B-377 (3 clean years) to B-381.
+- **@model-risk T-027 memo** (`deliverables/model-risk/T-027-memo-T-117.md`): **KEEP**, veto not lifted. Run integrity verified.
+  - H1 (B-451): the "Cooking operations: None" line is dropped on 4 files. Real misses. Crediting the 3 scorer-reading cases still gives only 16/20.
+  - H2 (B-452): 0 of 3 planted conflicts raised (SUB-257 sales $412k vs ~$540k, no hold). Planted-conflict recall 100% joins the gate from the next hold-out.
+  - H3 (B-453): the 4 loss-run misses are a build/gold error (Carrier C format). The model read every date.
+  - Medium/Low: B-454 to B-459, including the skipped look-again on the gold fix (B-457).
+- Per the user, nothing was fixed. Self-checks 6/6 ok at `dea2eb5`.
 
 ## Approved, not built
 
@@ -47,30 +83,26 @@ Written 2026-10-16 by the orchestrator at wrap-up. Wrap-up commit: `b4c4790` on 
 
 ## Pending decisions for the user
 
-1. **P-051 (to approve):** close @model-risk H1 of P-049.
-   - Add pub(s) and lounge(s) as words that block carrier_a. With restaurant evidence they still give the R2 referral; with office/retail words they give senior_referral; alone, as now.
-   - Add "no utilities" (read before the negation drop) and "unoccupied" to W2e vacant.
-   - Rule lines go into carrier-match.md and each H1 case gets a self-check.
-2. **Senior-referral send path.** Today a senior_referral file cannot be sent from the workbench: overrides are only allowed on no_match (D-060). Since P-049, that covers every restaurant and apartment file. Should the underwriter be able to confirm the suggested market and send in the workbench? That would change a send gate.
-3. W1 prohibited words: the rules file says "overridable by a person", but the code keeps them not overridable (D-057/D-060). Confirm which.
-4. When to build T-103. Its gold rows change under P-049 (rows 3, 5, 6, 10, 17, 19 → senior_referral), so the mix needs @senior-underwriter and @model-risk re-approval.
+1. Whether to raise proposals for H1 (B-451, keep the cooking line in operations) and H2 (B-452, raise planted conflicts). Each needs `approve change P-###`. The alternative for H1 is a @head-of-underwriting scoring ruling before the next gold.
+2. H3 (B-453): a lint rule that runs every built carrier loss run through `carrier_run_check`, plus a v-next scorer for the 3 scorer-reading operations cases. Both must be frozen and hashed before any new gold.
+3. B-458: a SUB-252 R1 vs R2 ruling by @head-of-underwriting.
+4. When to build the next 20+12 hold-out: at least 2 direct carrier routes (B-459), a look-again on every gold fix, and the planted-conflict gate.
 
 ## Open vetoes and what resolves each
 
 | Task | Holder | Resolves when |
 |---|---|---|
-| T-027 | @model-risk (production) | T-103 runs: gold first, smoke first, .venv, paced, scorer v4 with `--write`, run and scored once on a frozen commit. It needs all 9 fields at 9/10 or better, 0 false completes, 0 unsafe routes and route at least 18/20. |
+| T-027 | @model-risk (production), KEEP 2026-10-21 | H1/H2 fixed on dev under an approved P-### with a @model-risk check (no High); the H3 lint rule and a v-next scorer frozen and hashed; a fresh 20+12 hold-out (look-again on every gold fix) run and scored once, meeting every gate plus planted-conflict recall 100%. |
 | T-082 | @responsible-ai (fairness) | As written in its veto message in team/DISCUSSION.md. |
-| P-049 routing | @model-risk (OBJECTION H1) | P-051 approved and built, as above. |
 
 ## First 3 tasks next session
 
-1. User decisions: P-051, the senior-referral send path, W1 overridable.
-2. Build P-051 if approved. Run a read-only v4 dev re-score, then a @model-risk look-again on H1.
-3. @senior-underwriter rewrites the T-103 gold plan under P-049; @model-risk re-approves the mix. Build T-103 only when the user says so.
+1. User decisions on H1/H2 proposals and the H3 lint/scorer work. @ai-engineer-assistant drafts P-### for H1 and H2 if asked.
+2. Addenda (no score rewrite) to the T-117 run record and mismatches for B-454 and B-456. @head-of-underwriting rules on B-458.
+3. Backlog: @model-risk M1–M6 and L1–L2 from `check-T-116-P-069.md`, one line each (still not in BACKLOG.md).
 
 ## For the AI Engineer
 
-- Pending proposals: P-051 (close P-049 H1: pub/lounge, no utilities, unoccupied). P-049 is built; scorer v4 is approved.
-- Latest scores (dev SUB-127–146, v4, cache): route gate PASS (0 unsafe, 18/20), 0 false completes, loss runs 8/0/12, operations 19/20, 0 silent errors.
-- Top failure to fix next: prohibited and vacant words that still reach carrier_a (P-049 H1), then the no-send path for senior referrals.
+- Pending proposals: none open; H1 (B-451) and H2 (B-452) need new P-### to proceed.
+- Latest scores (T-117 hold-out, v11, scored once): 7 fields 20/20, operations 13/20, loss_runs 16/20, 0 false completes, 0 unsafe, route 19/20, 0 leaks, recall 12/12.
+- Top failure to fix next: the operations answer drops "Cooking operations: None" (B-451), then conflicts never raised (B-452).

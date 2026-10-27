@@ -1,0 +1,2240 @@
+{
+  "label": "9 of 9 extracted fields scored; claims not read; loss runs = date only",
+  "commit": "58cc1709edb1574bc371289fda1700bdcc0e74e1 (last pipeline commit d7949d268f59ceb60593e840a5eef181c6d226c5)",
+  "uncommitted": [],
+  "model": "qwen/qwen3.8-27b",
+  "host": "api.groq.com",
+  "submissions": [
+    {
+      "submission": "SUB-340",
+      "format": "typed md app, typed md loss run (Carrier A), email",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "miss",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "miss",
+        "route": "hit"
+      },
+      "system_status": "complete \u2014 review pending",
+      "status_safety": "safe",
+      "status_automation": "not_automated",
+      "extracted_named_insured": "Tallgrass Office LLC",
+      "scope": "in",
+      "manual_intake": false,
+      "ops_rule": "checklist",
+      "retries": [
+        {
+          "kind": "rate_limit_429",
+          "attempt": 1,
+          "retry_in": 3.0,
+          "detail": "per minute: {\"error\":{\"message\":\"Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01kcpawq5vecv8na8y22z8xpx0` service tier `on_demand` on output tokens per minute (OTPM): Limit 1000, Used 434, Requested 588. Please try again in 1.319999999s. Need more tokens? Upgrade to Dev Tier today at htt",
+          "files": [
+            "application.md",
+            "email.md",
+            "loss-runs.md"
+          ]
+        }
+      ],
+      "gold_route": "carrier_a",
+      "route_used": "carrier_a",
+      "metrics": {
+        "named_insured": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "premises": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "effective_date": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "operations": {
+          "correct": false,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "sales": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "tiv": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "construction": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "year_built": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "loss_runs": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        }
+      },
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-341",
+      "format": "typed md app, typed md loss run (Carrier A), email",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "miss",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "miss",
+        "route": "hit"
+      },
+      "system_status": "complete \u2014 review pending",
+      "status_safety": "safe",
+      "status_automation": "not_automated",
+      "extracted_named_insured": "Pinecrest Threads LLC",
+      "scope": "in",
+      "manual_intake": false,
+      "ops_rule": "checklist",
+      "retries": [],
+      "gold_route": "carrier_a",
+      "route_used": "carrier_a",
+      "metrics": {
+        "named_insured": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "premises": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "effective_date": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "operations": {
+          "correct": false,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "sales": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "tiv": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "construction": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "year_built": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "loss_runs": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        }
+      },
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-342",
+      "format": "typed md app, typed md loss run (Carrier A), email",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "miss",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "miss",
+        "route": "hit"
+      },
+      "system_status": "complete \u2014 review pending",
+      "status_safety": "safe",
+      "status_automation": "not_automated",
+      "extracted_named_insured": "Prairie Dry Goods Co LLC",
+      "scope": "in",
+      "manual_intake": false,
+      "ops_rule": "checklist",
+      "retries": [],
+      "gold_route": "carrier_a",
+      "route_used": "carrier_a",
+      "metrics": {
+        "named_insured": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "premises": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "effective_date": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "operations": {
+          "correct": false,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "sales": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "tiv": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "construction": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "year_built": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "loss_runs": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        }
+      },
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-343",
+      "format": "typed md app, typed md loss run (Carrier A), schedule csv, email",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "miss",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "miss",
+        "route": "hit"
+      },
+      "system_status": "complete \u2014 review pending",
+      "status_safety": "safe",
+      "status_automation": "not_automated",
+      "extracted_named_insured": "Old Mill Thrift Co LLC",
+      "scope": "in",
+      "manual_intake": false,
+      "ops_rule": "checklist",
+      "retries": [],
+      "gold_route": "carrier_a",
+      "route_used": "carrier_a",
+      "metrics": {
+        "named_insured": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "premises": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "effective_date": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "operations": {
+          "correct": false,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "sales": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "tiv": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "construction": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "year_built": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "loss_runs": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        }
+      },
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-344",
+      "format": "typed pdf app (text layer), typed md loss run (Carrier B), schedule csv, email",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "miss",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "flagged",
+        "status": "hit",
+        "route": "hit"
+      },
+      "system_status": "complete \u2014 review pending",
+      "status_safety": "safe",
+      "status_automation": null,
+      "extracted_named_insured": "Gulf Plains Electrical Contractors LLC",
+      "scope": "in",
+      "manual_intake": false,
+      "ops_rule": "checklist",
+      "retries": [],
+      "gold_route": "senior_referral",
+      "route_used": "senior_referral",
+      "metrics": {
+        "named_insured": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "premises": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "effective_date": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "operations": {
+          "correct": false,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "sales": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "tiv": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "construction": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "year_built": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "loss_runs": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        }
+      },
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-345",
+      "format": "typed md app, typed md loss run (Carrier C), email",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "miss",
+        "status": "hit",
+        "route": "hit"
+      },
+      "system_status": "complete \u2014 review pending",
+      "status_safety": "safe",
+      "status_automation": null,
+      "extracted_named_insured": "Brazos Janitorial Supply LLC",
+      "scope": "in",
+      "manual_intake": false,
+      "ops_rule": "checklist",
+      "retries": [],
+      "gold_route": "senior_referral",
+      "route_used": "senior_referral",
+      "metrics": {
+        "named_insured": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "premises": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "effective_date": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "operations": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "sales": {
+          "correct": true,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "tiv": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "construction": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "year_built": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "loss_runs": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        }
+      },
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-346",
+      "format": "typed md app, typed md loss run (Carrier A), schedule csv, email",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "miss",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "flagged",
+        "status": "hit",
+        "route": "hit"
+      },
+      "system_status": "complete \u2014 review pending",
+      "status_safety": "safe",
+      "status_automation": null,
+      "extracted_named_insured": "Ironwood Professional Plaza LLC",
+      "scope": "in",
+      "manual_intake": false,
+      "ops_rule": "checklist",
+      "retries": [],
+      "gold_route": "senior_referral",
+      "route_used": "senior_referral",
+      "metrics": {
+        "named_insured": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "premises": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "effective_date": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "operations": {
+          "correct": false,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "sales": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "tiv": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "construction": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "year_built": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "loss_runs": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        }
+      },
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-347",
+      "format": "typed md app, typed md loss run (Carrier C), schedule csv, email",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "miss",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "miss",
+        "route": "hit"
+      },
+      "system_status": "complete \u2014 review pending",
+      "status_safety": "safe",
+      "status_automation": "not_automated",
+      "extracted_named_insured": "Lamar Professional Center LLC",
+      "scope": "in",
+      "manual_intake": false,
+      "ops_rule": "checklist",
+      "retries": [],
+      "gold_route": "senior_referral",
+      "route_used": "senior_referral",
+      "metrics": {
+        "named_insured": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "premises": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "effective_date": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "operations": {
+          "correct": false,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "sales": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "tiv": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "construction": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "year_built": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "loss_runs": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        }
+      },
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-348",
+      "format": "typed md app, typed md loss run (Carrier B), email",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "miss",
+        "status": "hit",
+        "route": "hit"
+      },
+      "system_status": "incomplete",
+      "status_safety": "safe",
+      "status_automation": null,
+      "extracted_named_insured": "Sunny Side Deli LLC",
+      "scope": "in",
+      "manual_intake": false,
+      "ops_rule": "checklist",
+      "retries": [],
+      "gold_route": "senior_referral",
+      "route_used": "senior_referral",
+      "metrics": {
+        "named_insured": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "premises": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "effective_date": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "operations": {
+          "correct": true,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "sales": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "tiv": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "construction": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "year_built": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "loss_runs": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        }
+      },
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-349",
+      "format": "typed md app, typed md loss run (Carrier A), schedule csv, email",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "miss",
+        "status": "hit",
+        "route": "hit"
+      },
+      "system_status": "incomplete",
+      "status_safety": "safe",
+      "status_automation": null,
+      "extracted_named_insured": "Cornerstone Sandwich Bar LLC",
+      "scope": "in",
+      "manual_intake": false,
+      "ops_rule": "checklist",
+      "retries": [],
+      "gold_route": "senior_referral",
+      "route_used": "senior_referral",
+      "metrics": {
+        "named_insured": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "premises": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "effective_date": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "operations": {
+          "correct": true,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "sales": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "tiv": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "construction": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "year_built": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "loss_runs": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        }
+      },
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-350",
+      "format": "typed md app, email, dated no-known-loss letter",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "miss",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "hit",
+        "route": "hit"
+      },
+      "system_status": "incomplete",
+      "status_safety": "safe",
+      "status_automation": null,
+      "extracted_named_insured": "Hollis Plumbing Supply Co",
+      "scope": "in",
+      "manual_intake": false,
+      "ops_rule": "checklist",
+      "retries": [],
+      "gold_route": "senior_referral",
+      "route_used": "senior_referral",
+      "metrics": {
+        "named_insured": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "premises": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "effective_date": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "operations": {
+          "correct": false,
+          "flagged": false,
+          "silent": true,
+          "automated": false
+        },
+        "sales": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "tiv": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "construction": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "year_built": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "loss_runs": {
+          "correct": true,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        }
+      },
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-351",
+      "format": "typed pdf app (text layer), typed md loss run (Carrier C), email",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "hit",
+        "route": "hit"
+      },
+      "system_status": "complete",
+      "status_safety": "safe",
+      "status_automation": "automated",
+      "extracted_named_insured": "Blue Plate Pancake House LLC",
+      "scope": "in",
+      "manual_intake": false,
+      "ops_rule": "checklist",
+      "retries": [],
+      "gold_route": "senior_referral",
+      "route_used": "senior_referral",
+      "metrics": {
+        "named_insured": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "premises": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "effective_date": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "operations": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "sales": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "tiv": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "construction": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "year_built": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "loss_runs": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        }
+      },
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-352",
+      "format": "typed pdf app (text layer), typed md loss run (Carrier C), email",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "miss",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "miss",
+        "route": "hit"
+      },
+      "system_status": "complete \u2014 review pending",
+      "status_safety": "safe",
+      "status_automation": "not_automated",
+      "extracted_named_insured": "Foxhole Pub & Kitchen LLC",
+      "scope": "in",
+      "manual_intake": false,
+      "ops_rule": "checklist",
+      "retries": [],
+      "gold_route": "senior_referral",
+      "route_used": "senior_referral",
+      "metrics": {
+        "named_insured": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "premises": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "effective_date": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "operations": {
+          "correct": false,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "sales": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "tiv": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "construction": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "year_built": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "loss_runs": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        }
+      },
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-353",
+      "format": "typed md app, typed md loss run (Carrier B), email",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "miss",
+        "route": "hit"
+      },
+      "system_status": "incomplete",
+      "status_safety": "safe",
+      "status_automation": "not_automated",
+      "extracted_named_insured": "Velvet Crane Cocktail Lounge LLC",
+      "scope": "in",
+      "manual_intake": false,
+      "ops_rule": "checklist",
+      "retries": [],
+      "gold_route": "no_match",
+      "route_used": "no_match",
+      "metrics": {
+        "named_insured": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "premises": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "effective_date": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "operations": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "sales": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "tiv": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "construction": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "year_built": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "loss_runs": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        }
+      },
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-354",
+      "format": "typed md app, typed md loss run (Carrier C), email",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "miss",
+        "route": "hit"
+      },
+      "system_status": "complete \u2014 review pending",
+      "status_safety": "safe",
+      "status_automation": "not_automated",
+      "extracted_named_insured": "Neon Harbor Nightclub LLC",
+      "scope": "in",
+      "manual_intake": false,
+      "ops_rule": "checklist",
+      "retries": [],
+      "gold_route": "no_match",
+      "route_used": "no_match",
+      "metrics": {
+        "named_insured": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "premises": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "effective_date": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "operations": {
+          "correct": true,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "sales": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "tiv": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "construction": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "year_built": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "loss_runs": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        }
+      },
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-355",
+      "format": "typed md app, typed md loss run (Carrier A), email",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "miss",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "miss",
+        "route": "hit"
+      },
+      "system_status": "complete \u2014 review pending",
+      "status_safety": "safe",
+      "status_automation": "not_automated",
+      "extracted_named_insured": "Ember Smoke Hookah Lounge LLC",
+      "scope": "in",
+      "manual_intake": false,
+      "ops_rule": "checklist",
+      "retries": [],
+      "gold_route": "no_match",
+      "route_used": "no_match",
+      "metrics": {
+        "named_insured": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "premises": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "effective_date": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "operations": {
+          "correct": false,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "sales": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "tiv": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "construction": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "year_built": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "loss_runs": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        }
+      },
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-356",
+      "format": "typed pdf app (text layer), typed md loss run (Carrier C), email",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "hit",
+        "route": "hit"
+      },
+      "system_status": "complete",
+      "status_safety": "safe",
+      "status_automation": "automated",
+      "extracted_named_insured": "Juniper Glen Apartments LP",
+      "scope": "in",
+      "manual_intake": false,
+      "ops_rule": "checklist",
+      "retries": [],
+      "gold_route": "senior_referral",
+      "route_used": "senior_referral",
+      "metrics": {
+        "named_insured": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "premises": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "effective_date": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "operations": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "sales": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "tiv": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "construction": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "year_built": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "loss_runs": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        }
+      },
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-357",
+      "format": "typed md app, typed md loss run (Carrier B), email",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "miss",
+        "route": "hit"
+      },
+      "system_status": "incomplete",
+      "status_safety": "safe",
+      "status_automation": "not_automated",
+      "extracted_named_insured": "Redbud Court Apartments LLC",
+      "scope": "in",
+      "manual_intake": false,
+      "ops_rule": "checklist",
+      "retries": [],
+      "gold_route": "senior_referral",
+      "route_used": "senior_referral",
+      "metrics": {
+        "named_insured": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "premises": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "effective_date": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "operations": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "sales": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "tiv": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "construction": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "year_built": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "loss_runs": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        }
+      },
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-358",
+      "format": "typed md app, typed md loss run (Carrier A), schedule csv, email",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "miss",
+        "route": "hit"
+      },
+      "system_status": "complete \u2014 review pending",
+      "status_safety": "safe",
+      "status_automation": "not_automated",
+      "extracted_named_insured": "Tejas Metal Fabrication LLC",
+      "scope": "in",
+      "manual_intake": false,
+      "ops_rule": "checklist",
+      "retries": [],
+      "gold_route": "no_match",
+      "route_used": "no_match",
+      "metrics": {
+        "named_insured": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "premises": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "effective_date": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "operations": {
+          "correct": true,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "sales": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "tiv": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "construction": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "year_built": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "loss_runs": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        }
+      },
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-359",
+      "format": "typed md app, email; no loss run",
+      "error": null,
+      "call": "called: reply used",
+      "checks": {
+        "named_insured": "hit",
+        "effective_date": "hit",
+        "operations": "miss",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "hit",
+        "route": "hit"
+      },
+      "system_status": "incomplete",
+      "status_safety": "safe",
+      "status_automation": null,
+      "extracted_named_insured": "Piney Creek Floors LLC",
+      "scope": "in",
+      "manual_intake": false,
+      "ops_rule": "checklist",
+      "retries": [],
+      "gold_route": "senior_referral",
+      "route_used": "senior_referral",
+      "metrics": {
+        "named_insured": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "premises": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "effective_date": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "operations": {
+          "correct": false,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        },
+        "sales": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "tiv": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "construction": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "year_built": {
+          "correct": true,
+          "flagged": false,
+          "silent": false,
+          "automated": true
+        },
+        "loss_runs": {
+          "correct": true,
+          "flagged": true,
+          "silent": false,
+          "automated": false
+        }
+      },
+      "attempts": 1
+    }
+  ],
+  "counted": {
+    "named_insured": {
+      "hit": 20,
+      "hit (needs review)": 0,
+      "miss": 0,
+      "not_credited": 0,
+      "call_failed": 0,
+      "flagged": 0
+    },
+    "premises": {
+      "hit": 20,
+      "hit (needs review)": 0,
+      "miss": 0,
+      "not_credited": 0,
+      "call_failed": 0,
+      "flagged": 0
+    },
+    "effective_date": {
+      "hit": 20,
+      "hit (needs review)": 0,
+      "miss": 0,
+      "not_credited": 0,
+      "call_failed": 0,
+      "flagged": 0
+    },
+    "operations": {
+      "hit": 9,
+      "hit (needs review)": 0,
+      "miss": 11,
+      "not_credited": 0,
+      "call_failed": 0,
+      "flagged": 0
+    },
+    "sales": {
+      "hit": 20,
+      "hit (needs review)": 0,
+      "miss": 0,
+      "not_credited": 0,
+      "call_failed": 0,
+      "flagged": 0
+    },
+    "tiv": {
+      "hit": 20,
+      "hit (needs review)": 0,
+      "miss": 0,
+      "not_credited": 0,
+      "call_failed": 0,
+      "flagged": 0
+    },
+    "construction": {
+      "hit": 20,
+      "hit (needs review)": 0,
+      "miss": 0,
+      "not_credited": 0,
+      "call_failed": 0,
+      "flagged": 0
+    },
+    "year_built": {
+      "hit": 20,
+      "hit (needs review)": 0,
+      "miss": 0,
+      "not_credited": 0,
+      "call_failed": 0,
+      "flagged": 0
+    },
+    "loss_runs": {
+      "hit": 20,
+      "hit (needs review)": 0,
+      "miss": 0,
+      "not_credited": 0,
+      "call_failed": 0,
+      "flagged": 0
+    },
+    "conflict": {
+      "hit": 15,
+      "hit (needs review)": 0,
+      "miss": 3,
+      "not_credited": 0,
+      "call_failed": 0,
+      "flagged": 2
+    },
+    "status": {
+      "hit": 9,
+      "hit (needs review)": 0,
+      "miss": 11,
+      "not_credited": 0,
+      "call_failed": 0,
+      "flagged": 0
+    },
+    "route": {
+      "hit": 20,
+      "hit (needs review)": 0,
+      "miss": 0,
+      "not_credited": 0,
+      "call_failed": 0,
+      "flagged": 0
+    }
+  },
+  "status_split": {
+    "false_complete": 0,
+    "false_complete_ids": [],
+    "gold_complete": 13,
+    "automated": 2,
+    "call_failed": 0
+  },
+  "route_gate": {
+    "unsafe": 0,
+    "unsafe_ids": [],
+    "hits": 20,
+    "scored": 20,
+    "files": 20,
+    "evaluable": true,
+    "pass": true,
+    "verdict": "PASS"
+  },
+  "p055_gate": {
+    "out_of_scope": 12,
+    "in_scope": 20,
+    "leaks": 0,
+    "leak_ids": [],
+    "recall": {
+      "1": {
+        "detected": 4,
+        "files": 4
+      },
+      "2": {
+        "detected": 5,
+        "files": 5
+      },
+      "3": {
+        "detected": 4,
+        "files": 4
+      },
+      "4": {
+        "detected": 3,
+        "files": 3
+      }
+    },
+    "recall_overall": {
+      "detected": 12,
+      "files": 12,
+      "missed_ids": []
+    },
+    "reasons_ok": 11,
+    "reasons_cards": 12,
+    "reasons_bad_ids": [
+      "SUB-371"
+    ],
+    "false_manual": 0,
+    "false_manual_ids": [],
+    "ceiling_met": true,
+    "criteria_without_files": [],
+    "verdict": "PASS"
+  },
+  "scope_rows": [
+    {
+      "submission": "SUB-360",
+      "criteria": [
+        1
+      ],
+      "detected": true,
+      "reason_codes": [
+        "scanned_application"
+      ],
+      "leaks": [],
+      "reasons_ok": true,
+      "scope": "out",
+      "format": null,
+      "error": null,
+      "call": "not sent: no readable text",
+      "checks": {},
+      "retries": [],
+      "metrics": {},
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-361",
+      "criteria": [
+        1
+      ],
+      "detected": true,
+      "reason_codes": [
+        "scanned_application"
+      ],
+      "leaks": [],
+      "reasons_ok": true,
+      "scope": "out",
+      "format": null,
+      "error": null,
+      "call": "not sent: no readable text",
+      "checks": {},
+      "retries": [],
+      "metrics": {},
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-362",
+      "criteria": [
+        2
+      ],
+      "detected": true,
+      "reason_codes": [
+        "multiple_locations"
+      ],
+      "leaks": [],
+      "reasons_ok": true,
+      "scope": "out",
+      "format": null,
+      "error": null,
+      "call": "not sent: no readable text",
+      "checks": {},
+      "retries": [],
+      "metrics": {},
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-363",
+      "criteria": [
+        2
+      ],
+      "detected": true,
+      "reason_codes": [
+        "multiple_locations"
+      ],
+      "leaks": [],
+      "reasons_ok": true,
+      "scope": "out",
+      "format": null,
+      "error": null,
+      "call": "not sent: no readable text",
+      "checks": {},
+      "retries": [],
+      "metrics": {},
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-364",
+      "criteria": [
+        3
+      ],
+      "detected": true,
+      "reason_codes": [
+        "non_english"
+      ],
+      "leaks": [],
+      "reasons_ok": true,
+      "scope": "out",
+      "format": null,
+      "error": null,
+      "call": "not sent: no readable text",
+      "checks": {},
+      "retries": [],
+      "metrics": {},
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-365",
+      "criteria": [
+        3
+      ],
+      "detected": true,
+      "reason_codes": [
+        "non_english"
+      ],
+      "leaks": [],
+      "reasons_ok": true,
+      "scope": "out",
+      "format": null,
+      "error": null,
+      "call": "not sent: no readable text",
+      "checks": {},
+      "retries": [],
+      "metrics": {},
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-366",
+      "criteria": [
+        4
+      ],
+      "detected": true,
+      "reason_codes": [
+        "not_identified"
+      ],
+      "leaks": [],
+      "reasons_ok": true,
+      "scope": "out",
+      "format": null,
+      "error": null,
+      "call": "not sent: no readable text",
+      "checks": {},
+      "retries": [],
+      "metrics": {},
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-367",
+      "criteria": [
+        4
+      ],
+      "detected": true,
+      "reason_codes": [
+        "not_identified"
+      ],
+      "leaks": [],
+      "reasons_ok": true,
+      "scope": "out",
+      "format": null,
+      "error": null,
+      "call": "not sent: no readable text",
+      "checks": {},
+      "retries": [],
+      "metrics": {},
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-368",
+      "criteria": [
+        1,
+        2
+      ],
+      "detected": true,
+      "reason_codes": [
+        "scanned_application",
+        "multiple_locations"
+      ],
+      "leaks": [],
+      "reasons_ok": true,
+      "scope": "out",
+      "format": null,
+      "error": null,
+      "call": "not sent: no readable text",
+      "checks": {},
+      "retries": [],
+      "metrics": {},
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-369",
+      "criteria": [
+        2,
+        3
+      ],
+      "detected": true,
+      "reason_codes": [
+        "multiple_locations",
+        "non_english"
+      ],
+      "leaks": [],
+      "reasons_ok": true,
+      "scope": "out",
+      "format": null,
+      "error": null,
+      "call": "not sent: no readable text",
+      "checks": {},
+      "retries": [],
+      "metrics": {},
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-370",
+      "criteria": [
+        1,
+        3
+      ],
+      "detected": true,
+      "reason_codes": [
+        "scanned_application",
+        "non_english"
+      ],
+      "leaks": [],
+      "reasons_ok": true,
+      "scope": "out",
+      "format": null,
+      "error": null,
+      "call": "not sent: no readable text",
+      "checks": {},
+      "retries": [],
+      "metrics": {},
+      "attempts": 1
+    },
+    {
+      "submission": "SUB-371",
+      "criteria": [
+        2,
+        4
+      ],
+      "detected": true,
+      "reason_codes": [
+        "not_identified"
+      ],
+      "leaks": [],
+      "reasons_ok": false,
+      "scope": "out",
+      "format": null,
+      "error": null,
+      "call": "not sent: no readable text",
+      "checks": {},
+      "retries": [],
+      "metrics": {},
+      "attempts": 1
+    }
+  ],
+  "metrics": {
+    "fields": {
+      "named_insured": {
+        "scored": 20,
+        "silent": 0,
+        "automated": 20,
+        "silent_error_rate": 0.0,
+        "automation_rate": 1.0
+      },
+      "premises": {
+        "scored": 20,
+        "silent": 0,
+        "automated": 20,
+        "silent_error_rate": 0.0,
+        "automation_rate": 1.0
+      },
+      "effective_date": {
+        "scored": 20,
+        "silent": 0,
+        "automated": 20,
+        "silent_error_rate": 0.0,
+        "automation_rate": 1.0
+      },
+      "operations": {
+        "scored": 20,
+        "silent": 1,
+        "automated": 5,
+        "silent_error_rate": 0.05,
+        "automation_rate": 0.25
+      },
+      "sales": {
+        "scored": 20,
+        "silent": 0,
+        "automated": 19,
+        "silent_error_rate": 0.0,
+        "automation_rate": 0.95
+      },
+      "tiv": {
+        "scored": 20,
+        "silent": 0,
+        "automated": 20,
+        "silent_error_rate": 0.0,
+        "automation_rate": 1.0
+      },
+      "construction": {
+        "scored": 20,
+        "silent": 0,
+        "automated": 20,
+        "silent_error_rate": 0.0,
+        "automation_rate": 1.0
+      },
+      "year_built": {
+        "scored": 20,
+        "silent": 0,
+        "automated": 20,
+        "silent_error_rate": 0.0,
+        "automation_rate": 1.0
+      },
+      "loss_runs": {
+        "scored": 20,
+        "silent": 0,
+        "automated": 18,
+        "silent_error_rate": 0.0,
+        "automation_rate": 0.9
+      }
+    },
+    "overall": {
+      "scored": 180,
+      "silent": 1,
+      "automated": 162,
+      "silent_error_rate": 0.006,
+      "automation_rate": 0.9
+    },
+    "failed_call_files": 0,
+    "definitions": "silent error: a value is shown, it is wrong, and it is not flagged needs review or in an open conflict; automation: the value is correct and not flagged. An empty field counts as flagged (it shows as missing). Rates are over scored field values; files whose call failed are left out and counted apart (D-084)."
+  }
+}

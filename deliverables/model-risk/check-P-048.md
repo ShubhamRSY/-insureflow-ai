@@ -50,3 +50,14 @@ What I re-ran: `eval_holdout_v2 --self-check` passes. All outputs went to my scr
 ### Backlog (one line each)
 - L4: the re-score mode is opt-in. A re-score run without `HOLDOUT_RESCORE=1` is a live run: it makes calls, but it can no longer overwrite a score file. Write the flag into RUN-RULES.md and the T-103 run steps.
 - L5: when a re-score is refused, it says only that "a file" has no saved reply. Name the submission id.
+
+## T-103 condition 3 slot and the mix under R1–R17 (2026-10-16, @model-risk, after look-again-P-054)
+- **Condition 3 slot: file 13.** Its "unknown carrier layout" run becomes a JPG scan of an applicant note under a copied carrier header. The rest of file 13 stays the same: office, TIV over $5M, gold incomplete, gold route senior_referral (R13; AG:16). I picked 13 for two reasons. An unrecognised layout is the closest existing probe, and files 11 (B-350) and 14 (layout with no valued line) still cover the typed "unclear" cases. Files 9, 10, 11, 12 and 14 do not change. The carrier-format mix and its 4 scans do not change either; this extra JPG is a non-carrier run.
+- **Condition 1: replaced.** Under the written R17 ("wholesale: whether it is light is a person's call"), file 8 now gives senior_referral with Carrier A suggested, even when it says "non-hazardous". Fix: change file 8's business to allow-list words only (for example "dry retail" or "office"). That keeps a gold-complete carrier_a on a scanned run (P-048 b). If file 8 stays light wholesale, its gold is senior_referral (Carrier A suggested), and condition 1 still applies, so it is not held on hazardous goods (W2a).
+- **Condition 2: stands as written.** File 11 (roofing) states a TIV, so R11 gives senior_referral with Carrier B suggested and R6 does not hold it.
+- **Mix: changes needed.**
+  - Gold routes. Files 3, 5, 6, 10, 17 and 19 become senior_referral, with the market they suggest (Carrier B: R10; Carrier C: R12).
+  - Every-route criterion. It becomes "carrier_a, senior_referral, no_match, hold".
+  - Suggested market. Each senior_referral gold records it.
+  - Carrier A files (1, 2, 8, 9). Every carrier_a gold file uses R17 words only, and no note on the file excludes Carrier A.
+  - Gate. With 3–4 direct carrier_a files out of 20, route accuracy says little about direct-route precision. Report it as a limitation; do not add files (budget rule 8).

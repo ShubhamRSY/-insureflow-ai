@@ -1,0 +1,3 @@
+source,loc,address,city,zip,bldg_tiv,construction,year_built,sq_ft,sprinklers,cooking
+application,1,5210 McPherson Rd,Laredo,78041,$90000,Masonry,2001,1800,No,No
+application,2,2101 San Bernardo Ave,Laredo,78040,$60000,Masonry,1994,1300,No,No

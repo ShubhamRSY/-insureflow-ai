@@ -27,26 +27,15 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
+import lob_config
+
 MIN_CONFIDENCE = 0.75
 MAX_CHARS = 120000  # P-016 L1: text sent to the model in one call
 DEFAULT_KEY = "ollama"
 MAX_WAIT = float(os.environ.get("LLM_MAX_WAIT") or 60)  # seconds to wait on one 429; a batch scorer sets this higher
 
-SYSTEM = """You extract commercial insurance fields from the documents.
-Return one JSON object and nothing else.
-Use only facts copied from the documents. If a fact is not there, value is null and confidence is 0.
-Never guess. A no-known-loss letter is not a loss-run date; leave loss_run_valued_through null.
-Spanish and unlabeled email prose are allowed. Put the English value in value. quote must be copied character for character from one file, with no added words and no added accents.
-For operations, keep the specific English words from the source and do not shorten them to one class word. Keep every stated detail: business type; alcohol (full liquor license, beer and wine, beer only, no alcohol); seat count; unit count and stories or floor; cooking (kitchen, fryer, grill, open flame, no cooking); hours; live music or entertainment; delivery or catering; 24-hour; on-site processing or repair; patio; security staff; hazardous or flammable materials. Leave out only marketing adjectives. The quote must contain every detail in the value. If they cook a named food, the value must contain that food word and the word restaurant. If the source is Spanish, translate it and still quote the Spanish line exactly. A bar or night club is a bar and nightclub. mamposteria means masonry, and the construction value is the English word.
-sales_or_payroll is gross annual revenue (sales), returned as a single number copied from the document, with no labels or other figures. Payroll is never part of sales.
-loss_run_valued_through is only the valued-through date copied from the file. Never invent a date. If the file does not show that date, use null even if you think runs exist.
-If square feet or the premises address differ across files, do not pick a side. Leave that field null and add a conflict whose values include both numbers or both addresses, each with an exact quote.
-quote must be an exact substring of one document. source is that document's file name.
-confidence is a number from 0 to 1. Use below 0.75 when you are unsure.
-If two documents disagree, do not pick a side. Leave that field null and add a conflict with both values.
-Fields: named_insured, premises_address, effective_date, operations, sales_or_payroll, tiv_building, construction, year_built, loss_run_valued_through.
-Schema: {"fields":[{"field_id":"","value":null,"source":"","quote":"","confidence":0}],"conflicts":[{"field":"","values":[{"value":"","source":"","quote":"","confidence":0}]}]}
-"""
+# Engine step 1: the prompt text lives in the small_commercial pack, unchanged.
+SYSTEM = lob_config.load("small_commercial").prompt_system
 
 
 # P-007. A model result is saved under a key made from the files, the prompt, the OCR settings, and the model.
@@ -284,48 +273,61 @@ def find_quote(text: str, quote: str) -> tuple[int, int] | None:
 
 
 # P-016 (D-039). Exact citations: no quote match, no value. The value must be inside the quote.
+# P-074 (D-132): hedge words that make an amount approximate when directly before it ("or so" / "give or take" after it).
+HEDGE = r"(?:about|around|approximately|approx\.?|roughly|nearly|almost|close\s+to|circa|~)"
+CURRENCY = r"(?:US\$|USD|C\$|CAD)"  # P-074 (check M2): a hedge is seen across a currency code or a colon
+UNITS = r"(?:million|thousand|mm|[kmb])"  # P-074 (B): "1.42 million", "250 thousand", "250k", "1.2m", "1.2mm"
+# Security review (ReDoS): each run of spaces belongs to one quantifier, so a long run of spaces cannot backtrack.
+# Same amounts as "HEDGE? \s* :? \s* CURRENCY? \s* $? \s*" before it; leading spaces belong to the caller's pattern.
+AMOUNT_PREFIX = rf"(?:{HEDGE}\s*)?(?::\s*)?(?:{CURRENCY}\s*)?(?:\$\s*)?"
 _AMOUNT = re.compile(
-    r"(?i)^(?:about|around|approximately|roughly)?\s*"
-    r"\$?\s*(\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?)\s*(mm|[kmb])?"
+    rf"(?i)^\s*{AMOUNT_PREFIX}"
+    rf"(\d{{1,3}}(?:,\d{{3}})+|\d+(?:\.\d+)?)(?:\s*({UNITS}))?"
     r"(?:\s*(?:square\s+feet|sq\.?\s*ft\.?|sqft|sf))?\s*$"
 )
+_FACTOR = {"": 1, "k": 1_000, "thousand": 1_000, "m": 1_000_000, "mm": 1_000_000, "million": 1_000_000, "b": 1_000_000_000}
 
 
 def amount_value(value: str) -> int | None:
-    """220k, $1.2M, $1.2MM (million, P-021), 220,000, and 2,200 sq ft are numbers. A sentence is not. (Moved here from prepare.py for N2; rules unchanged.)"""
+    """220k, $1.2M, $1.2MM (million, P-021), 1.2 million, 220,000, and 2,200 sq ft are numbers. A sentence is not. (Moved here from prepare.py for N2; rules unchanged.)"""
     if not value:
         return None
     match = _AMOUNT.match(value.strip())
     if not match:
         return None
     number = float(match.group(1).replace(",", ""))
-    suffix = (match.group(2) or "").lower()
-    factor = {"": 1, "k": 1_000, "m": 1_000_000, "mm": 1_000_000, "b": 1_000_000_000}[suffix]
-    return int(round(number * factor))
+    return int(round(number * _FACTOR[(match.group(2) or "").lower()]))
 
 
 NUMBER_FIELDS = ("sales_or_payroll", "tiv_building", "year_built", "square_feet")
 DATE_FIELDS = ("effective_date", "loss_run_valued_through")
 TEXT_FIELDS = ("named_insured", "premises_address")
 SOFT_FIELDS = ("operations", "construction")
-_NUM = re.compile(r"(?<![\d.,])\d[\d,]*(?:\.\d+)?(?:\s?(?:mm|[kmb])\b)?", re.I)
+_NUM = re.compile(rf"(?<![\d.,])\d[\d,]*(?:\.\d+)?(?:\s?{UNITS}\b)?", re.I)
+_HEDGE_BEFORE = re.compile(rf"(?:\b{HEDGE}|~)\s*(?::\s*)?(?:{CURRENCY}\s*)?(?:\$\s*)?$", re.I)
+_HEDGE_AFTER = re.compile(r"\s*(?:or so|give or take)\b", re.I)
 _DATE_SHAPE = re.compile(r"\d{4}-\d{2}-\d{2}|\d{1,2}/\d{1,2}/\d{2,4}")
-_DATES = re.compile(r"\d{4}-\d{2}-\d{2}|\d{1,2}[/.-]\d{1,2}[/.-]\d{4}|[A-Za-z]{3,9}\.?\s+\d{1,2}(?:st|nd|rd|th)?,?\s+\d{4}|\d{1,2}(?:st|nd|rd|th)?\s+[A-Za-z]{3,9}\.?,?\s+\d{4}")
+_DATES = re.compile(r"\d{4}-\d{2}-\d{2}|(?<![\d/.-])\d{1,2}[/.-]\d{1,2}[/.-](?:\d{4}|\d{2})(?![\d/.-]\d)|[A-Za-z]{3,9}\.?\s+\d{1,2}(?:st|nd|rd|th)?,?\s+\d{4}|\d{1,2}(?:st|nd|rd|th)?\s+[A-Za-z]{3,9}\.?,?\s+\d{4}")
+_RANGE = re.compile(r"(\d{1,2}([/.])\d{1,2}\2\d{2,4})\s*[-–—]\s*(?=\d{1,2}([/.])\d{1,2}\3\d{2,4}(?!\d))")  # P-056 M1: "3/15/2026-3/15/2027"
+REASON_DATE_ORDER = "date read month first (US order): check the month and day"  # P-056 (a)
 REASON_QUOTE = "quote not found in {}"
 REASON_VALUE = "value not inside the cited text"
 REASON_REWORDED = "value is not in the cited text (translated or reworded)"
-REASON_SCAN = "number or date read from a scan"
 SCAN_FLOOR = 0.50  # P-025 (D-067): on a scan, 0.50 to below MIN_CONFIDENCE is stored for review, not dropped
+REASON_SCAN = "number or date read from a scan"
 REASON_LOW_SCAN = "Low-confidence scan read — check against the page"
+REASON_SCAN_DATE_REVIEW = "read from a scan — check it against the page"  # P-067
+_JOIN = re.compile(r"\n|\s*(?:\.\.\.|…)\s*")  # P-056 (c): how a quote joins two cited lines
 
 
 def _squash(text: str) -> str:
     return " ".join(text.casefold().split())
 
 
-def _quote_numbers(quote: str) -> set[int]:
-    """Whole numbers in the quote (N2: amount_value reads 1.2M). H2: a number joined to other digits by - or / is not whole, except inside a date."""
-    found = set()
+def _quote_amounts(quote: str) -> list[tuple[int, bool]]:
+    """Whole numbers in the quote with whether the quote hedges each one (P-074 C). N2: amount_value reads 1.2M.
+    H2: a number joined to other digits by - or / is not whole, except inside a date."""
+    found = []
     for match in _NUM.finditer(quote):
         raw = match.group(0).rstrip(",")
         before, after = quote[max(0, match.start() - 2) : match.start()], quote[match.end() : match.end() + 2]
@@ -334,27 +336,47 @@ def _quote_numbers(quote: str) -> set[int]:
             continue
         number = amount_value(raw)
         if number is not None:
-            found.add(number)
+            hedged = bool(_HEDGE_BEFORE.search(quote[: match.start()]) or _HEDGE_AFTER.match(quote, match.end()))
+            found.append((number, hedged))
     return found
 
 
-def _quote_dates(quote: str) -> set:
-    """D2: ISO dates, and dates in a short fixed list of formats. A day-first or month-first date that cannot be told apart is skipped."""
+def _quote_numbers(quote: str) -> set[int]:
+    return {number for number, _ in _quote_amounts(quote)}
+
+
+def is_approximate(value: str, quote: str) -> bool:
+    """P-074 (C): the value is in the quote only as a hedged number ("about $1.42 million"): it does not confirm an exact figure."""
+    number = amount_value(value)
+    amounts = _quote_amounts(quote)
+    return number is not None and any(n == number and h for n, h in amounts) and not any(n == number and not h for n, h in amounts)
+
+
+def _quote_dates(quote: str, unsure: set | None = None) -> set:
+    """D2: ISO dates, and dates in a short fixed list of formats.
+
+    P-056 (a): a 2-digit year is 20YY ("3/1/27" is 2027). A date whose day and month cannot be told apart is read month first
+    (US documents) and also put in `unsure`, so the caller flags it for review.
+    """
     import datetime
 
     found = set()
-    for match in _DATES.finditer(quote):
+    for match in _DATES.finditer(_RANGE.sub(r"\1 ", quote)):  # a policy-period range is two dates
         raw = match.group(0)
         try:
             if re.fullmatch(r"\d{4}-\d{2}-\d{2}", raw):
                 found.add(datetime.date.fromisoformat(raw))
-            elif re.fullmatch(r"\d{1,2}[/.-]\d{1,2}[/.-]\d{4}", raw):
+            elif re.fullmatch(r"\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}", raw):
                 one, two, year = (int(x) for x in re.split(r"[/.-]", raw))
+                year += 2000 if year < 100 else 0
                 if one > 12 or one == two:
                     found.add(datetime.date(year, two, one))
                 elif two > 12:
                     found.add(datetime.date(year, one, two))
-                # both could be the month: not stored
+                else:
+                    found.add(datetime.date(year, one, two))
+                    if unsure is not None:
+                        unsure.add(datetime.date(year, one, two))
             else:
                 clean = re.sub(r"(?<=\d)(st|nd|rd|th)", "", raw.replace(",", " ").replace(".", " "))
                 for form in ("%B %d %Y", "%b %d %Y", "%d %B %Y", "%d %b %Y"):
@@ -384,23 +406,38 @@ def value_in_span(field_id: str, value: str, span_text: str) -> str | None:
         number = amount_value(value)
         return None if number is not None and number in _quote_numbers(span_text) else REASON_VALUE
     if field_id in DATE_FIELDS:
-        try:
-            day = datetime.date.fromisoformat(value)
-        except ValueError:
+        day = parse_day(value)
+        if day is None:
             return "the date does not parse"
-        return None if day in _quote_dates(span_text) else REASON_VALUE
+        unsure: set = set()
+        if day not in _quote_dates(span_text, unsure):
+            return REASON_VALUE
+        return REASON_DATE_ORDER if day in unsure else None
     if field_id in SOFT_FIELDS:
         low = _squash(span_text)
-        return None if all(word in low for word in _squash(value).split()) else REASON_REWORDED
+        bare = [word.strip(".,;:!?") for word in _squash(value).split()]  # P-056 (d): "only)." is the quote's "only)"
+        return None if all(word in low for word in bare if word) else REASON_REWORDED
     return None
+
+
+def parse_day(value: str):
+    """P-056 (a): an ISO date, or the one date a short value holds ("4/1/27" is 2027-04-01, read month first)."""
+    import datetime
+
+    try:
+        return datetime.date.fromisoformat(str(value).strip())
+    except ValueError:
+        pass
+    days = _quote_dates(str(value))
+    return next(iter(days)) if len(days) == 1 else None
 
 
 def _tokens(text: str) -> list[str]:
     return re.findall(r"[a-z0-9]+", text.casefold())
 
 
-def cited_ocr_score(quote: str, value: str, words: list) -> float:
-    """P-016 (b), option C3. The lowest Tesseract score among the quote's words that hold the value (all the quote's words if none do).
+def _cited_scores(quote: str, value: str, words: list) -> list[float]:
+    """The Tesseract score of each of the quote's words that hold the value (all the quote's words if none do).
 
     A cited word that is not in the page's word list counts as 0. A word seen more than once takes its lowest score.
     # ponytail: the word list has no position in the text, so a repeated word takes its lowest score. Add boxes if that costs too many right values.
@@ -411,7 +448,20 @@ def cited_ocr_score(quote: str, value: str, words: list) -> float:
             scores[token] = min(score, scores.get(token, 1.0))
     held = set(_tokens(value))
     cited = [token for token in _tokens(quote) if token in held] or _tokens(quote)
-    return min((scores.get(token, 0.0) for token in cited), default=0.0)
+    return [scores.get(token, 0.0) for token in cited]
+
+
+def cited_ocr_score(quote: str, value: str, words: list) -> float:
+    """P-016 (b), option C3. The lowest score among the cited words: the field's confidence and its review flag."""
+    return min(_cited_scores(quote, value, words), default=0.0)
+
+
+def cited_ocr_floor(quote: str, value: str, words: list) -> float:
+    """P-056 (b): the average score of the cited words, tested against SCAN_FLOOR for text fields. One low word flags the field
+    (cited_ocr_score), it does not drop it; a value whose cited words are low on average is still dropped. Numbers and dates are not
+    averaged (@model-risk check H1): one garbled digit group ("$1,040,000" with "000" at 0.05) still drops the value."""
+    found = _cited_scores(quote, value, words)
+    return sum(found) / len(found) if found else 0.0
 
 
 def accept_field(item: dict, docs: dict[str, str], ocr_confidence: dict | None = None, ocr_words: dict | None = None) -> dict:
@@ -431,11 +481,15 @@ def accept_field(item: dict, docs: dict[str, str], ocr_confidence: dict | None =
     confidence = model_confidence
     on_scan = bool(ocr_confidence and source in ocr_confidence)
     cited = None
+    floor = confidence
     if on_scan:
         if ocr_words and ocr_words.get(source):
-            cited = cited_ocr_score(quote, str(value or ""), ocr_words[source])
+            held = quote if field_id in DATE_FIELDS else str(value or "")  # check H1: "3/15/27" holds 2027-03-15 in words the ISO value does not share
+            cited = cited_ocr_score(quote, held, ocr_words[source])
+            floor = min(model_confidence, cited if field_id in NUMBER_FIELDS + DATE_FIELDS else cited_ocr_floor(quote, held, ocr_words[source]))  # P-056 (b); check H1: a number or date keeps the lowest of its own digits
         else:
             cited = ocr_confidence[source]
+            floor = min(model_confidence, cited)
         confidence = min(model_confidence, cited)
     base = {
         "field_id": field_id,
@@ -452,15 +506,43 @@ def accept_field(item: dict, docs: dict[str, str], ocr_confidence: dict | None =
     }
     if value is None or str(value).strip() == "" or str(value).lower() == "null":
         return base
-    low_scan = on_scan and SCAN_FLOOR <= confidence < MIN_CONFIDENCE
-    if confidence < MIN_CONFIDENCE and not low_scan:
-        base["reason"] = f"confidence {confidence:.2f} is under {MIN_CONFIDENCE}"
-        return base
+    # P-067: special handling for loss_run_valued_through from scan - check digits before dropping
+    if field_id == "loss_run_valued_through" and on_scan:
+        import prepare  # P-067: same-directory import; the package root is not on sys.path when the pipeline runs as a script
+        day = parse_day(value)
+        if day is not None:
+            doc_text = docs.get(source, "") if docs else ""
+            if prepare.digits_of(str(day)) in prepare.digits_of(doc_text):
+                # Keep it for review - don't drop due to low confidence
+                pass  # will proceed below with flag set appropriately
+    drop = (on_scan and floor < SCAN_FLOOR) or (not on_scan and confidence < MIN_CONFIDENCE)  # P-056 (b): on a scan a text field is dropped on its cited words' AVERAGE (floor); one low word only flags it
+    low_scan = on_scan and ((SCAN_FLOOR <= confidence < MIN_CONFIDENCE) or (cited is not None and cited < MIN_CONFIDENCE))  # the field is in the review band, or one cited word is under the line
+    if drop:
+        # P-067: check if this is a loss_run_valued_through scan with matching digits
+        if field_id == "loss_run_valued_through" and on_scan:
+            import prepare  # P-067: same-directory import; the package root is not on sys.path when the pipeline runs as a script
+            day = parse_day(value)
+            if day is not None:
+                doc_text = docs.get(source, "") if docs else ""
+                if prepare.digits_of(str(day)) in prepare.digits_of(doc_text):
+                    # Keep for review - don't drop
+                    base["reason"] = f"confidence {confidence:.2f} is under {MIN_CONFIDENCE}"  # will be overridden later? no
+                    # but better to not return; let it proceed
+                    pass
+                else:
+                    base["reason"] = f"confidence {confidence:.2f} is under {MIN_CONFIDENCE}"
+                    return base
+            else:
+                base["reason"] = f"confidence {confidence:.2f} is under {MIN_CONFIDENCE}"
+                return base
+        else:
+            base["reason"] = f"confidence {confidence:.2f} is under {MIN_CONFIDENCE}"
+            return base
     text = docs.get(source, "")
     span = find_quote(text, quote)  # P-016 N: the old fallback to the value's own characters is gone
     spans = [span] if span else None
-    if span is None and "\n" in (quote or ""):  # P-048 (d) (B-365): one quote may cite non-adjacent lines of the same document; each must be found
-        parts = [find_quote(text, part) for part in quote.split("\n") if part.strip()]
+    if span is None and _JOIN.search(quote or ""):  # P-048 (d) (B-365), P-056 (c): non-adjacent lines of the same document, joined by a newline or " ... "; each must be found
+        parts = [find_quote(text, part) for part in _JOIN.split(quote) if part.strip()]
         spans = sorted(parts) if parts and all(parts) else None
     if not spans:
         base["confidence"] = 0.0
@@ -472,15 +554,47 @@ def accept_field(item: dict, docs: dict[str, str], ocr_confidence: dict | None =
         return base
     problem = value_in_span(field_id, value, cited_text)
     flag, reason = False, None
-    if problem == REASON_REWORDED:
+    if problem in (REASON_REWORDED, REASON_DATE_ORDER):
         flag, reason = True, problem
     elif problem:
         base["reason"] = problem
         return base
+    if field_id in DATE_FIELDS:
+        day = parse_day(value)  # P-056 (a): "4/1/27" is stored as 2027-04-01; value_in_span has parsed it
+        value = day.isoformat() if day else value
+    own = reason  # code-review: a scan reason never hides the date-order or reword reason
+    # P-067: special handling for loss_run_valued_through from scan
+    if field_id == "loss_run_valued_through" and on_scan:
+        import prepare  # P-067: same-directory import; the package root is not on sys.path when the pipeline runs as a script
+        day = parse_day(value)
+        if day is not None:
+            doc_text = docs.get(source, "") if docs else ""
+            if prepare.digits_of(str(day)) in prepare.digits_of(doc_text):
+                base.update({
+                    "value": day.isoformat(),
+                    "source": source,
+                    "start": span[0],
+                    "end": span[1],
+                    "confidence": confidence,
+                    "model_confidence": model_confidence,
+                    "ocr_cited_confidence": cited,
+                    "needs_review": True,
+                    "reason": REASON_SCAN_DATE_REVIEW,
+                    "quote": cited_text,
+                })
+                if len(spans) > 1:
+                    base["spans"] = spans
+                return base
     if on_scan and field_id in NUMBER_FIELDS + DATE_FIELDS:  # S2
         flag, reason = True, REASON_SCAN
     if low_scan:
         flag, reason = True, REASON_LOW_SCAN
+    if own and reason != own:
+        reason = f"{reason}; {own}"
+    approximate = field_id in NUMBER_FIELDS and is_approximate(str(value), cited_text)  # P-074 (C): kept, never counted as the exact figure
+    if approximate:
+        note = f"approximate figure: {' '.join(cited_text.split())[:160]}"
+        flag, reason = True, f"{reason}; {note}" if reason else note
     return {
         "field_id": field_id,
         "value": str(value).strip(),
@@ -494,6 +608,7 @@ def accept_field(item: dict, docs: dict[str, str], ocr_confidence: dict | None =
         "reason": reason,
         "quote": cited_text,
         **({"spans": spans} if len(spans) > 1 else {}),  # P-048 (d): each cited part, for the operations check
+        **({"approximate": True} if approximate else {}),
     }
 
 
@@ -695,7 +810,28 @@ def split_schedule(values: list[dict], texts: dict[str, str]) -> tuple[list[dict
     return [side for side in sides if side.get("source") not in lists], listed
 
 
-def llm_extract(docs: list[dict]) -> dict:
+_LOC = r"\s*\(?\s*loc(?:ation)?\.?\s*#?\s*(\d+)\b"
+
+
+def location_sides(sides: list[dict], texts: dict[str, str]) -> list[tuple[int, dict]]:
+    """P-056 (e): two or more values from one document that is not a schedule, each followed in that document by its own location
+    number ("2012 (loc 1)", "710 Lake Air Dr, Waco, TX 76710 (loc 3)"), are per-location values, not a conflict. Returns
+    (location number, side) in location order, or [] when any side has no label or two share one."""
+    sources = {side.get("source") for side in sides}
+    if len(sides) < 2 or len(sources) != 1 or _schedule_file(next(iter(sources))):
+        return []
+    text = texts.get(next(iter(sources)) or "", "")
+    found: dict[int, dict] = {}
+    for side in sides:
+        match = re.search(r"(?:^|[:;,/])\s*" + re.escape(str(side.get("value") or "").strip()) + _LOC, text, re.I | re.M)  # the value starts a list item
+        if not match or int(match.group(1)) in found:
+            return []
+        found[int(match.group(1))] = side
+    return sorted(found.items(), key=lambda pair: pair[0]) if 1 in found else []  # code-review: never promote loc 2 to the premises
+
+
+def request_for(docs: list[dict]) -> dict:
+    """Build the exact model request and cache key for these documents, with no call and no cache read."""
     settings = provider_guard(calling=False)  # refused only below, when the cache has no result and a model call is next
     docs = [doc for doc in docs if not doc.get("unread")]  # P-016 (c): a file type that is not read, or a file that cannot be opened, never reaches the model or the key
     parts, not_sent, size = [], [], 0
@@ -720,10 +856,47 @@ def llm_extract(docs: list[dict]) -> dict:
         ],
     }
     names = [doc["name"] for doc in docs]
+    return {
+        "docs": docs,
+        "payload": payload,
+        "key": cache_key(docs, settings["model"]),
+        "files": names,
+        "not_sent": not_sent,
+        "settings": settings,
+    }
+
+
+_SIDE_KEYS = ("value", "source", "start", "end", "quote", "needs_review", "reason", "confidence")
+
+
+def _side(side: dict) -> dict:
+    """A conflict side. P-074: `unverified` / `approximate` ride along only when set, so other sides keep their shape."""
+    return {**{k: side.get(k) for k in _SIDE_KEYS}, **{k: True for k in ("unverified", "approximate") if side.get(k)}}
+
+
+def _open_conflict(field: str, sides: list[dict]) -> dict:
+    return {"field": field, "values": [side if side.get("reason") == "schedule address" else _side(side) for side in sides], "resolution": "unresolved", "resolved_value": None, "resolved_by": None}
+
+
+def same_value(field: str, left: str, right: str) -> bool:
+    """P-074: two stated values that are one value (amounts by number, text by case and spacing). An unverified side that equals a kept value is no disagreement."""
+    if field in NUMBER_FIELDS:
+        number = amount_value(left)
+        return number is not None and number == amount_value(right)
+    return _squash(left) == _squash(right)
+
+
+def llm_extract(docs: list[dict]) -> dict:
+    request = request_for(docs)
+    settings = request["settings"]
+    docs = request["docs"]
+    payload = request["payload"]
+    names = request["files"]
+    not_sent = request["not_sent"]
+    key = request["key"]
     if CACHE not in _swept:  # D-028: once per run and per cache folder, before the first read or write
         _swept.add(CACHE)
         _sweep_tmp()
-    key = cache_key(docs, settings["model"])
     settings = {**settings, "files": names, "cache_key": key}  # so every log row names its files and its cache key
     saved = CACHE / "extractions" / f"{key}.json"
     parsed = None
@@ -789,6 +962,32 @@ def llm_extract(docs: list[dict]) -> dict:
         ]
         kept = [side for side in sides if side["value"]]
         rejected = [side for side in sides if not side["value"]]
+        # P-074 (A, D-132): a side the gate rejected but the model did state is an unverified conflict side, never dropped.
+        ordered, unverified = [], []
+        for stated, side in zip(values, sides):
+            if side["value"]:
+                ordered.append(side)
+            elif stated.get("value") is not None and str(stated["value"]).strip().lower() not in ("", "null"):
+                ordered.append(
+                    {"value": str(stated["value"]).strip(), "source": side["source"], "quote": stated.get("quote") or None, "needs_review": True,
+                     "reason": side["reason"], "confidence": side["confidence"], "unverified": True}
+                )
+                unverified.append(ordered[-1])
+        field_id = item.get("field")
+        differs = [u for u in unverified if not any(same_value(field_id, u["value"], k["value"]) for k in kept)]
+        per_location = [] if listed or rejected else location_sides(kept, by_name)  # a rejected side keeps the conflict
+        if per_location:  # P-056 (e): location 1 is the field; a premises keeps the others as locations, any other field names them for review
+            first = per_location[0][1]
+            if item.get("field") == "premises_address":
+                fields.append(first)
+                schedule += [{"address": side["value"], "source": side["source"]} for _, side in per_location[1:]]
+            else:
+                note = "values differ by location: " + "; ".join(f"loc {n} {side['value']}" for n, side in per_location)
+                fields.append({**first, "needs_review": True, "reason": f"{first['reason']}; {note}" if first.get("reason") else note})
+            continue
+        if differs and len(ordered) >= 2:  # D1-D5: one conflict, every stated side on it
+            conflicts.append(_open_conflict(field_id, ordered + [{"value": row["address"], "source": row["source"], "needs_review": True, "reason": "schedule address"} for row in listed]))
+            continue
         if not listed and len(kept) == 1 and rejected:  # P-038 (c): keep the valid side, flagged; never pick a number out of the rejected one
             said = "; ".join(f"\"{item['value']}\" ({item.get('source')})" for item in values if item.get("value") and item.get("value") != kept[0]["value"])
             if said:  # @model-risk L1: an empty side is no disagreement; M1: the kept side's own reason stays
@@ -802,23 +1001,11 @@ def llm_extract(docs: list[dict]) -> dict:
             if agree and any(all(same_address(side["value"], row["address"]) for side in kept) for row in listed):  # H4, H6: every side agrees with one row
                 fields.extend(kept)  # P-036: the premises once the schedule is set aside; the merge keeps the fuller value and both quotes
             else:  # M2/H5: every other side stays, with the schedule rows, as a conflict
-                conflicts.append({"field": item.get("field"), "resolution": "unresolved", "resolved_value": None, "resolved_by": None, "values":
-                                  [{k: side.get(k) for k in ("value", "source", "start", "end", "quote", "needs_review", "reason", "confidence")} for side in kept]
-                                  + [{"value": row["address"], "source": row["source"], "needs_review": True, "reason": "schedule address"} for row in listed]})
+                conflicts.append(_open_conflict(field_id, [_side(side) for side in kept]
+                                                + [{"value": row["address"], "source": row["source"], "needs_review": True, "reason": "schedule address"} for row in listed]))
             continue
         elif len(kept) >= 2 and len({side["value"] for side in kept}) > 1:
-            conflicts.append(
-                {
-                    "field": item.get("field"),
-                    "values": [  # P-024: each side keeps its flag, reason and quote so an agreeing merge cannot lose them
-                        {k: side.get(k) for k in ("value", "source", "start", "end", "quote", "needs_review", "reason", "confidence")}
-                        for side in kept
-                    ],
-                    "resolution": "unresolved",
-                    "resolved_value": None,
-                    "resolved_by": None,
-                }
-            )
+            conflicts.append(_open_conflict(field_id, [_side(side) for side in kept]))  # P-024: each side keeps its flag, reason and quote so an agreeing merge cannot lose them
     return {"fields": fields, "conflicts": conflicts, "not_sent": not_sent, "schedule": schedule}
 
 
@@ -903,6 +1090,13 @@ if __name__ == "__main__":
                                            {"value": "2215 Bayou Crest Dr, Dallas, TX 75201; 880 Kirby Meadow Ln, Houston, TX 77098", "source": "schedule.xlsx", "quote": "x", "confidence": 0.95}]
         got = llm_extract(sched)
         assert [c["field"] for c in got["conflicts"]] == ["premises_address"], "H6: Houston on the application, Dallas on the schedule stays a conflict"
+        locs = [{"name": "application.md", "text": "Bayou LLC\nPremises address: 1 Oak St, Waco, TX 76710 (loc 1); 2 Elm St, Waco, TX 76711 (loc 2)\nYear built: 2012 (loc 1), 2015 (loc 2)", "sha256": "s12"}]
+        two = lambda v: {"value": v, "source": "application.md", "quote": v, "confidence": 0.95}
+        reply["conflicts"] = [{"field": "premises_address", "values": [two("2 Elm St, Waco, TX 76711"), two("1 Oak St, Waco, TX 76710")]}, {"field": "year_built", "values": [two("2012"), two("2015")]}]
+        got = llm_extract(locs)  # P-056 (e), SUB-172's shape
+        by_field = {r["field_id"]: r for r in got["fields"]}
+        assert got["conflicts"] == [] and by_field["premises_address"]["value"] == "1 Oak St, Waco, TX 76710" and [r["address"] for r in got["schedule"]] == ["2 Elm St, Waco, TX 76711"], got
+        assert by_field["year_built"]["value"] == "2012" and by_field["year_built"]["needs_review"] and by_field["year_built"]["reason"] == "values differ by location: loc 1 2012; loc 2 2015", by_field["year_built"]
         assert not same_address("100 Main St", "100 Main St N") and not same_address("100 Main St, Austin", "100 Main St W, Austin"), "M6"
         # P-038 (D-086). (a) the prompt says sales is one revenue number, never payroll
         assert "single number" in SYSTEM and "Payroll is never part of sales" in SYSTEM
@@ -922,9 +1116,69 @@ if __name__ == "__main__":
                      {"value": "$1,250,000", "source": "email.md", "quote": "Revenue is around 1.25 million", "confidence": 0.95}]}]}
         got = llm_extract(app)
         sales = [r for r in got["fields"] if r["field_id"] == "sales_or_payroll"]
-        assert got["conflicts"] == [] and [r["value"] for r in sales] == ["$1,050,000"] and sales[0]["needs_review"], got  # (c) SUB-094
-        assert sales[0]["reason"].startswith("conflict with rejected value") and "$1,250,000" in sales[0]["reason"] and sales[0]["quote"] == "Annual sales:** $1,050,000"
+        # (c) SUB-094, changed by P-074 (D-132): "around 1.25 million" now verifies (B) and is approximate (C), so the two figures are one open conflict
+        assert [r["value"] for r in sales] == [] and len(got["conflicts"]) == 1, got
+        assert [(v["value"], bool(v.get("approximate"))) for v in got["conflicts"][0]["values"]] == [("$1,050,000", False), ("$1,250,000", True)]
         assert [r["value"] for r in got["fields"] if r["field_id"] == "tiv_building"] == [None], "the gate never picks one number out of a mixed value"
+        # P-074 (D-132). B: units. C: hedge words. A: D1-D5 unverified sides. (own cache folder and post count, so the counts below stay as they were)
+        outer_cache, outer_posts = CACHE, len(posts)
+        CACHE = Path(tempfile.mkdtemp(dir=tmp))
+        for text, number in (("$1.42 million", 1_420_000), ("1.2 MILLION", 1_200_000), ("250 thousand", 250_000), ("250k", 250_000), ("1.2m", 1_200_000), ("1.2mm", 1_200_000), ("$1.2 million", 1_200_000)):
+            assert amount_value(text) == number and number in _quote_numbers(f"we did {text} last year"), text
+        for hedge in ("about", "around", "approximately", "approx.", "roughly", "nearly", "almost", "close to", "circa", "~", "About"):
+            assert is_approximate("1240000", f"sales {hedge} $1,240,000 a year"), hedge
+            assert is_approximate("1420000", f"{hedge} $1.42 million"), hedge
+        assert is_approximate("1240000", "$1,240,000 or so") and is_approximate("1240000", "$1,240,000 give or take")
+        assert not is_approximate("1240000", "Annual sales: $1,240,000") and not is_approximate("1240000", "Estimated annual sales: $1,240,000")
+        assert not is_approximate("1240000", "about 5 of them, sales $1,240,000"), "a hedge only counts directly before the amount"
+        assert not is_approximate("1240000", "about $1.24 million; Annual sales: $1,240,000"), "the exact figure in the quote wins"
+
+        def conflict_case(sides, texts, field="sales_or_payroll"):
+            global reply
+            reply = {"fields": [{"field_id": "named_insured", "value": "Bayou LLC", "source": "application.md", "quote": "Bayou LLC", "confidence": 0.95}],
+                     "conflicts": [{"field": field, "values": [{"confidence": 0.95, **side} for side in sides]}]}
+            docs = [{"name": name, "text": text, "sha256": f"p74{i}{name}{len(posts)}"} for i, (name, text) in enumerate(texts.items())]
+            return llm_extract(docs)
+
+        sales_app = "Bayou LLC\nAnnual sales: $1,240,000"
+        mail = "Last year we did about $1.42 million"
+        side_a = {"value": "1240000", "source": "application.md", "quote": "Annual sales: $1,240,000"}
+        side_e = {"value": "1420000", "source": "email.md", "quote": "about $1.42 million"}
+        two = {"application.md": sales_app, "email.md": mail}
+        got = conflict_case([side_a, side_e], two)  # SUB-345: both sides verify, the email one is approximate
+        assert [(v["value"], bool(v.get("approximate")), bool(v.get("unverified"))) for v in got["conflicts"][0]["values"]] == [("1240000", False, False), ("1420000", True, False)]
+        got = conflict_case([side_a, {**side_e, "quote": "we made 1.42 million"}], two)  # D1: one side unverifiable (quote not found)
+        assert not [r for r in got["fields"] if r["field_id"] == "sales_or_payroll" and r.get("value")], "a rejected value is never promoted"
+        sides = got["conflicts"][0]["values"]
+        assert [(v["value"], bool(v.get("unverified"))) for v in sides] == [("1240000", False), ("1420000", True)] and sides[1]["reason"] == "quote not found in email.md"
+        got = conflict_case([{**side_a, "quote": "Sales 9"}, {**side_e, "quote": "nope"}], two)  # D2: every side unverifiable
+        assert [bool(v.get("unverified")) for v in got["conflicts"][0]["values"]] == [True, True]
+        got = conflict_case([{**side_a, "confidence": 0.2}], {"application.md": sales_app})  # a single stated side is no disagreement
+        assert got["conflicts"] == []
+        got = conflict_case([side_a, {**side_a, "source": "email.md", "quote": "about $1.24 million", "value": "$1.24 million"}], {**two, "email.md": "we did about $1.24 million"})  # equal amounts: the conflict item stays, prepare merges it
+        assert len(got["conflicts"]) == 1 and not any(v.get("unverified") for v in got["conflicts"][0]["values"]), "equal amounts are merged downstream, not unverified"
+        got = conflict_case([side_a, {**side_a, "source": "email.md", "quote": "nope"}], two)  # an unverified side that states the same figure is no disagreement
+        assert got["conflicts"] == []
+        got = conflict_case([side_a, {"value": "", "source": "email.md", "quote": ""}], two)  # an empty side is no disagreement
+        assert got["conflicts"] == []
+        three = {**two, "fax.md": "Annual sales: $1,240,000"}
+        side_f = {**side_a, "source": "fax.md"}
+        got = conflict_case([side_a, side_f, {**side_e, "quote": "nope"}], three)  # D3: two kept with the same value, one unverified with another
+        assert len(got["conflicts"]) == 1 and len(got["conflicts"][0]["values"]) == 3
+        got = conflict_case([side_a, side_e, {**side_e, "source": "fax.md", "quote": "nope", "value": "990000"}], three)  # D5: a rejected third side stays on the conflict
+        assert [bool(v.get("unverified")) for v in got["conflicts"][0]["values"]] == [False, False, True]
+        # D4: premises with a schedule, a kept side that agrees with a row, plus a rejected side
+        addr = {"name": "application.md", "text": "Premises address: 2215 Bayou Crest Dr, Houston, TX 77063", "sha256": "p74s1"}
+        sched = {"name": "schedule.xlsx", "text": "1\t2215 Bayou Crest Dr\tHouston\t77063\n2\t880 Kirby Meadow Ln\tHouston\t77098", "sha256": "p74s2"}
+        reply = {"fields": [{"field_id": "named_insured", "value": "Bayou LLC", "source": "application.md", "quote": "Bayou LLC", "confidence": 0.95}],
+                 "conflicts": [{"field": "premises_address", "values": [
+                     {"value": "2215 Bayou Crest Dr, Houston, TX 77063", "source": "application.md", "quote": "2215 Bayou Crest Dr, Houston, TX 77063", "confidence": 0.95},
+                     {"value": "99 Nowhere Rd, Austin, TX 78701", "source": "application.md", "quote": "99 Nowhere Rd", "confidence": 0.95}]}]}
+        got = llm_extract([addr, sched])
+        assert any(v.get("unverified") for c in got["conflicts"] for v in c["values"]), got
+        CACHE = outer_cache
+        del posts[outer_posts:]
+
         # P-013. A half-written saved file, and one with no result in it, are not trusted: the model is called again.
         reply = {"fields": [{"field_id": "named_insured", "value": "Example LLC", "source": "a.md", "quote": "Example LLC", "confidence": 0.9}]}
         whole = CACHE / "extractions" / f"{cache_key(page, provider_guard(calling=False)['model'])}.json"
@@ -947,7 +1201,7 @@ if __name__ == "__main__":
             pass
         finally:
             os.replace = real_replace
-        assert len(list(whole.parent.glob("*.json"))) == 8, "a write that was killed must not leave a result under the key"
+        assert len(list(whole.parent.glob("*.json"))) == 9, "a write that was killed must not leave a result under the key"
         # D-028. The next run removes the temp file the killed write left, and nothing else.
         left = [path for path in whole.parent.iterdir() if path.suffix == ".tmp"]
         assert len(left) == 1 and _TMP.fullmatch(left[0].name), "the killed write leaves exactly one temp file, with the name the cleanup knows"
@@ -1375,7 +1629,49 @@ if __name__ == "__main__":
     for bad_date in ("2O2H-01-O1", "RO2F-O1-01", "A2F-O1-O1", "2026-13-45"):
         row = one("effective_date", bad_date, f"Effective: {bad_date}", f"Effective: {bad_date}")
         assert row["value"] is None and row["reason"] == "the date does not parse", bad_date
-    assert one("effective_date", "2026-01-02", "Effective: 01/02/2026", "Effective: 01/02/2026")["value"] is None, "day-first and month-first cannot be told apart"
+    row = one("effective_date", "2026-01-02", "Effective: 01/02/2026", "Effective: 01/02/2026")
+    assert row["value"] == "2026-01-02" and row["needs_review"] and row["reason"] == REASON_DATE_ORDER, "P-056 (a): read month first, flagged"
+    assert one("effective_date", "2026-02-01", "Effective: 01/02/2026", "Effective: 01/02/2026")["value"] is None, "P-056 (a): the day-first reading is not taken"
+    for value in ("2027-03-01", "3/1/27"):  # P-056 (a): SUB-170 "Eff 3/1/27.", SUB-168 the model's own "4/1/27" form
+        row = one("effective_date", value, "Eff 3/1/27.", "Producer note. Eff 3/1/27. Thanks")
+        assert row["value"] == "2027-03-01" and row["reason"] == REASON_DATE_ORDER, (value, row)
+    assert not one("effective_date", "2027-03-13", "Eff 3/13/27", "Eff 3/13/27")["needs_review"], "a date read one way only is not flagged"
+    assert one("effective_date", "2027-03-01", "Ref 123/1/27", "Ref 123/1/27")["value"] is None, "digits before the day: not a date"
+    import datetime
+
+    for period in ("3/15/2026-3/15/2027", "03/15/2026-03/15/2027", "3/15/26 – 3/15/27", "3/15/26-3/15/27", "3/15/2026 - 3/15/2027"):  # P-056 M1
+        quote = f"Policy period: {period}"
+        assert one("effective_date", "2026-03-15", quote, quote)["value"] == "2026-03-15", period
+        assert _quote_dates(period) == {datetime.date(2026, 3, 15), datetime.date(2027, 3, 15)}, period
+    assert _quote_dates("Ref 12/1/2026-3/1/27/5") == {datetime.date(2026, 12, 1)}, "a range does not open a longer digit chain"
+    # P-056 (b): one low word flags the field; a low average still drops it
+    ocr = [["Operations:", 0.9], ["Restaurant,", 0.9], ["dine-in", 0.85], ["and", 0.9], ["takeout", 0.29]]
+    row = one("operations", "Restaurant, dine-in and takeout", "Operations: Restaurant, dine-in and takeout", "Operations: Restaurant, dine-in and takeout", conf=0.85, scan=0.56, words=ocr)
+    assert row["value"] and row["needs_review"] and row["reason"] == REASON_LOW_SCAN and row["ocr_cited_confidence"] == 0.29, row
+    tiv = one("tiv_building", "1040000", "Building TIV: $1,040,000", "Building TIV: $1,040,000", conf=0.9, scan=0.6, words=[["Building", 0.9], ["TIV:", 0.9], ["$1,040,000", 0.9], ["000", 0.05]])
+    assert tiv["value"] is None, "check H1: a number's own low digit group still drops it"
+    day = one("effective_date", "2027-03-15", "Eff 3/15/27", "Eff 3/15/27", conf=0.9, scan=0.6, words=[["Eff", 0.95], ["3/15", 0.9], ["27", 0.2]])
+    assert day["value"] is None, "check H1: a date is not averaged either"
+    bad = [[w, 0.3] for w, _ in ocr]
+    assert one("operations", "Restaurant, dine-in and takeout", "Operations: Restaurant, dine-in and takeout", "Operations: Restaurant, dine-in and takeout", conf=0.85, scan=0.3, words=bad)["value"] is None
+    # P-056 (c): " ... " joins two lines of the same document
+    doc = "Operaciones: Restaurante, 60 asientos.\nEmpleados: 9\nCocina: Comal, 2 freidoras."
+    row = one("operations", "Restaurante, 60 asientos. Comal, 2 freidoras.", "Restaurante, 60 asientos. ... Comal, 2 freidoras.", doc)
+    assert row["value"] and "Empleados" not in row["quote"] and len(row["spans"]) == 2, row
+    assert one("operations", "x", "Restaurante, 60 asientos. ... Bar, 2 freidoras.", doc)["reason"] == REASON_QUOTE.format("f"), "each part must be found"
+    # P-056 (d): a trailing period is not a reword
+    assert not one("operations", "Apartments, electric ranges only).", "Apartments, electric ranges only)", "Apartments, electric ranges only)")["needs_review"]
+    # P-056 (e): per-location values from one application are not a conflict
+    app = "Premises address: 1 Oak St, Waco, TX 76710 (loc 1); 2 Elm St, Waco, TX 76711 (loc 2)\nYear built: 2012 (loc 1), 2015 (loc 2)"
+    side = lambda v: {"value": v, "source": "application.md", "quote": v, "confidence": 0.9}
+    assert [n for n, _ in location_sides([side("2015"), side("2012")], {"application.md": app})] == [1, 2]
+    assert location_sides([side("2012"), side("2015")], {"schedule.csv": app}) == [] and location_sides([side("2012"), side("1999")], {"application.md": app}) == []
+    assert location_sides([side("2015"), side("2017")], {"application.md": "Year built: 2015 (loc 2), 2017 (loc 3)"}) == [], "no loc 1: stays a conflict"
+    scan_date = one("effective_date", "2027-04-01", "Effective 4/1/27", "Effective 4/1/27", conf=0.99, scan=0.9, words=[["Effective", 0.9], ["4/1/27", 0.9]])
+    assert scan_date["reason"] == f"{REASON_SCAN}; {REASON_DATE_ORDER}", scan_date["reason"]
+    mixed = {"application.md": "Construction: Joisted masonry (loc 1), masonry (loc 2)"}
+    assert [n for n, _ in location_sides([side("Masonry"), side("Joisted masonry")], mixed)] == [1, 2], "masonry is not read inside Joisted masonry (loc 1)"
+    assert location_sides([{**side("2012"), "source": "email.md"}, side("2015")], {"application.md": app, "email.md": app}) == [], "two documents stay a conflict"
     assert one("loss_run_valued_through", "2026-01-05", "Valued through: 2026-01-06", "Valued through: 2026-01-06")["value"] is None, "the value must be the date in the quote"
     # Names and addresses: the value is in the quote, case and runs of spaces ignored.
     assert one("named_insured", "ACME  llc", "Named insured: Acme LLC", "Named insured: Acme LLC")["value"] == "ACME  llc"

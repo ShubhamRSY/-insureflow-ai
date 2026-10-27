@@ -140,8 +140,8 @@ include = ["insureflow*", "evaluations*"]
 [tool.ruff]
 target-version = "py311"
 line-length = 200
-# Team-simulation tree: frozen scorers + P-### gated AI code (D-017, D-097), not linted.
-extend-exclude = ["-insureflow-ai", "deliverables", "underwriting_pipeline", "simulation"]
+# underwriting_pipeline/ and lint_holdout.py are linted (F rules) by the pipeline CI job.
+extend-exclude = ["-insureflow-ai", "underwriting_pipeline", "tests/pipeline", "deliverables", "simulation"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W"]
@@ -173,6 +173,11 @@ exclude = [
     "(^|/)frontend/",
     "(^|/)\\.venv",
     "(^|/)venv/",
+    # The underwriting pipeline has its own CI job (pipeline): ruff F rules, pyright, tests/pipeline, self-checks.
+    "(^|/)underwriting_pipeline/",
+    "(^|/)tests/pipeline/",
+    "(^|/)deliverables/",
+    "(^|/)simulation/",
 ]
 
 [[tool.mypy.overrides]]
@@ -233,3 +238,11 @@ warn_unused_ignores = false
 [[tool.mypy.overrides]]
 module = ["transformers", "transformers.*"]
 follow_imports = "skip"
+
+[tool.pyright]
+pythonVersion = "3.12"
+# The pipeline loads its modules through sys.path (ai/, app/, models/), not as a package.
+executionEnvironments = [
+    { root = "underwriting_pipeline", extraPaths = ["underwriting_pipeline/ai", "underwriting_pipeline/app", "underwriting_pipeline/models"] },
+    { root = "deliverables", extraPaths = ["underwriting_pipeline/ai", "underwriting_pipeline/app", "underwriting_pipeline/models"] },
+]

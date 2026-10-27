@@ -27,6 +27,7 @@ CONTRACTING_WORDS = ("contractor", "painting")
 # Status -> reason when not scored. "complete" and "complete — review pending" (P-041) are the scored statuses.
 NOT_SCORED = {
     "extraction_failed": "extraction failed",
+    "manual_intake": "manual intake (outside the pilot scope, P-055)",
     "all_values_rejected": "every value was rejected",  # D-024; the status is decided, T-070 puts it in the code
 }
 
@@ -130,6 +131,8 @@ def score_run(report: dict) -> dict:
     lines = [LOSS_LINE, cooking_line(f["cooking_equipment"]), hood_line]
     if isinstance(report, dict) and report.get("status") == "extraction_failed":  # D-079 (B-295): nothing was read
         lines = [f"{label}: Not read — extraction failed" for label in ("Loss history", "Cooking", "Hood and suppression")]
+    elif isinstance(report, dict) and report.get("status") == prepare.MANUAL_INTAKE:  # P-055: no derived fact for a file that was never read
+        lines = [f"{label}: not read (manual intake)" for label in ("Loss history", "Cooking", "Hood and suppression")]
     out = {"scored": why is None, "points": None, "reason_codes": [], "not_scored_reason": why and f"Not scored — {why}",
            "lines": lines, "points_version": POINTS_VERSION}
     if why is None and f["cooking_equipment"].get("state") == "needs_review":  # B-278 (D-073): never a normal number

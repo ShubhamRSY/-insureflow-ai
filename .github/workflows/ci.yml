@@ -41,6 +41,7 @@ jobs:
       backend: ${{ steps.filter.outputs.backend }}
       frontend: ${{ steps.filter.outputs.frontend }}
       infra: ${{ steps.filter.outputs.infra }}
+      pipeline: ${{ steps.filter.outputs.pipeline }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -59,6 +60,12 @@ jobs:
               - 'scripts/**'
             frontend:
               - 'frontend/**'
+            pipeline:
+              - 'underwriting_pipeline/**'
+              - 'tests/pipeline/**'
+              - 'simulation/**'
+              - 'deliverables/senior-test-engineer/lint_holdout.py'
+              - 'pyproject.toml'
             infra:
               - '.github/**'
               - 'docker-compose*.yml'
@@ -113,7 +120,9 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-      - run: pip install -e ".[dev,ml]"
+      - name: OCR programs (tesseract, poppler) for image and scanned-PDF tests
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends tesseract-ocr poppler-utils
+      - run: pip install -e ".[dev,ml,ocr]"
       - name: Full suite + in-process E2E (with coverage)
         run: |
           pytest tests/ -v \
@@ -152,6 +161,45 @@ jobs:
           files: coverage.xml
           flags: unit
           fail_ci_if_error: false
+
+  # The underwriting pipeline (underwriting_pipeline/) is not part of the src/ lint and type rules.
+  # It gets its own gate: pyflakes rules, no new pyright error, its tests and its self-checks.
+  pipeline:
+    needs: changes
+    if: needs.changes.outputs.pipeline == 'true' || needs.changes.outputs.infra == 'true'
+    runs-on: ubuntu-latest
+    env:
+      # No model host in CI: the self-checks and tests make no model call (D-011).
+      LLM_API_KEY: ""
+      LLM_BASE_URL: ""
+      LLM_MODEL: ""
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: OCR programs (tesseract, poppler)
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends tesseract-ocr poppler-utils
+      - run: pip install -e ".[dev,ml,ocr]" pyright==1.1.414
+      - name: Ruff, pyflakes rules only
+        # The two F401s in ai/ are unused imports; removing them changes ai/ code, which needs an approved P-###.
+        run: >
+          ruff check --isolated --target-version py312 --select F
+          --per-file-ignores "underwriting_pipeline/ai/llm_extract.py:F401"
+          --per-file-ignores "underwriting_pipeline/ai/smoke_readers.py:F401"
+          underwriting_pipeline/ deliverables/senior-test-engineer/lint_holdout.py
+      - name: Pyright, no new error against the baseline
+        run: |
+          pyright --pythonpath "$(which python)" --outputjson underwriting_pipeline/ deliverables/senior-test-engineer/lint_holdout.py > pyright.json || true
+          python .github/pipeline/pyright_gate.py pyright.json
+      - name: Pipeline tests
+        run: pytest tests/pipeline -q -p no:cacheprovider
+      - name: Self-checks
+        run: |
+          for f in ai/llm_extract.py ai/prepare.py app/intake.py app/package.py app/workbench.py models/points.py; do
+            echo "== $f"; python "underwriting_pipeline/$f"
+          done
 
   frontend:
     needs: changes
