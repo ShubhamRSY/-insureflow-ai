@@ -87,7 +87,7 @@ def test_bind_cutover_rejects_localhost_pas_as_dev_gateway(monkeypatch: MonkeyPa
     `bind_allowed` would lie about being ready to bind against a real
     carrier system."""
     monkeypatch.setenv("OPERATING_MODE", "ready")
-    monkeypatch.setenv("GUIDEWIRE_API_KEY", "rytera-pilot-oeX4AvHtbqEW0oKAAHgTHXtuOiaUF0-G")
+    monkeypatch.setenv("GUIDEWIRE_API_KEY", "rytera-pilot-test-key-not-real")
     monkeypatch.setenv("GUIDEWIRE_API_URL", "http://127.0.0.1:8002/integrations/policy/guidewire/v1")
     monkeypatch.setenv("BRITECORE_API_KEY", "")
     monkeypatch.setenv("BRITECORE_API_URL", "")
@@ -100,7 +100,7 @@ def test_bind_cutover_rejects_localhost_pas_as_dev_gateway(monkeypatch: MonkeyPa
 def test_bind_cutover_rejects_pilot_prefixed_oracle_keys(monkeypatch: MonkeyPatch) -> None:
     """Same class of gap for CLUE/A-PLUS: a rytera-pilot-* key against the
     local gateway must not count as a 'live oracle' either."""
-    monkeypatch.setenv("CLUE_API_KEY", "rytera-pilot-oeX4AvHtbqEW0oKAAHgTHXtuOiaUF0-G")
+    monkeypatch.setenv("CLUE_API_KEY", "rytera-pilot-test-key-not-real")
     monkeypatch.setenv("CLUE_API_URL", "http://127.0.0.1:8002/integrations/oracles/clue/v2")
     monkeypatch.setenv("APLUS_API_KEY", "")
     monkeypatch.setenv("APLUS_API_URL", "")
@@ -113,7 +113,7 @@ def test_bind_cutover_accepts_a_genuine_external_pas_url(monkeypatch: MonkeyPatc
     """Sanity check the fix isn't overly broad — a real-looking external
     vendor URL with a non-placeholder key must still pass."""
     monkeypatch.setenv("OPERATING_MODE", "ready")
-    monkeypatch.setenv("GUIDEWIRE_API_KEY", "gw-live-a1b2c3d4e5f6")
+    monkeypatch.setenv("GUIDEWIRE_API_KEY", "test-key-not-real-00")
     monkeypatch.setenv("GUIDEWIRE_API_URL", "https://api.guidewire-carrier.example.com/policy/v1")
     monkeypatch.setenv("BRITECORE_API_KEY", "")
     monkeypatch.setenv("BRITECORE_API_URL", "")

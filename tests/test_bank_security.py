@@ -49,7 +49,7 @@ def test_validate_startup_secrets_ok_when_strong(monkeypatch: MonkeyPatch) -> No
     monkeypatch.setenv("BANK_MODE", "true")
     monkeypatch.setenv("ALLOW_OPEN_REGISTRATION", "false")
     monkeypatch.setenv("ALLOW_AUTH_RESET", "false")
-    monkeypatch.setenv("INTEGRATION_GATEWAY_API_KEY", "prod-gateway-key-not-the-dev-placeholder-xx")
+    monkeypatch.setenv("INTEGRATION_GATEWAY_API_KEY", "test-key-not-real-0000000000000000000000000")
     monkeypatch.setenv("JOB_STORE_BACKEND", "redis")
     monkeypatch.setenv("REDIS_URL", "redis://localhost:6379/0")
     for key in (
@@ -75,7 +75,7 @@ def test_validate_startup_rejects_dev_gateway_key(monkeypatch: MonkeyPatch) -> N
     monkeypatch.setenv("BANK_MODE", "true")
     monkeypatch.setenv("ALLOW_OPEN_REGISTRATION", "false")
     monkeypatch.setenv("ALLOW_AUTH_RESET", "false")
-    monkeypatch.setenv("INTEGRATION_GATEWAY_API_KEY", "rytera-dev-gateway-key-change-in-production")
+    monkeypatch.setenv("INTEGRATION_GATEWAY_API_KEY", "rytera-dev-test-key-not-real")
     monkeypatch.setenv("JOB_STORE_BACKEND", "redis")
     posture = resolve_security_posture()
     errors = validate_startup_secrets(
@@ -94,7 +94,7 @@ def test_validate_startup_rejects_pilot_prefixed_gateway_key(monkeypatch: Monkey
     monkeypatch.setenv("BANK_MODE", "true")
     monkeypatch.setenv("ALLOW_OPEN_REGISTRATION", "false")
     monkeypatch.setenv("ALLOW_AUTH_RESET", "false")
-    monkeypatch.setenv("INTEGRATION_GATEWAY_API_KEY", "rytera-pilot-oeX4AvHtbqEW0oKAAHgTHXtuOiaUF0-G")
+    monkeypatch.setenv("INTEGRATION_GATEWAY_API_KEY", "rytera-pilot-test-key-not-real")
     monkeypatch.setenv("JOB_STORE_BACKEND", "redis")
     posture = resolve_security_posture()
     errors = validate_startup_secrets(
@@ -111,7 +111,7 @@ def test_validate_startup_ignores_unset_optional_vendor_keys(monkeypatch: Monkey
     monkeypatch.setenv("BANK_MODE", "true")
     monkeypatch.setenv("ALLOW_OPEN_REGISTRATION", "false")
     monkeypatch.setenv("ALLOW_AUTH_RESET", "false")
-    monkeypatch.setenv("INTEGRATION_GATEWAY_API_KEY", "a-genuinely-unique-production-secret")
+    monkeypatch.setenv("INTEGRATION_GATEWAY_API_KEY", "test-key-not-real-000000000000000000")
     monkeypatch.setenv("JOB_STORE_BACKEND", "redis")
     monkeypatch.delenv("CLUE_API_KEY", raising=False)
     posture = resolve_security_posture()

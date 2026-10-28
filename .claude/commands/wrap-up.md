@@ -24,6 +24,8 @@ Wrap up the session. Do this in the main session, in this order. Stop at the fir
    - a staged file's content matches `gsk_[A-Za-z0-9]{20,}`, `sk-[A-Za-z0-9_-]{20,}`, or `AIza[0-9A-Za-z_-]{20,}`;
    - a staged path (added or modified, not a deletion) is `.env` or `.env.*` other than an `.example` file, `token_log.jsonl`, or under `underwriting_pipeline/cache/`.
 
+   - `gitleaks git --pre-commit --staged --redact --no-banner` reports any finding (it covers `src/`, `tests/` and every other staged path; also run `gitleaks dir src --redact` and `gitleaks dir tests --redact` before a push).
+
    Print only the file name and line number of a match, never the matched text. On a stop, unstage nothing and tell the user what was found.
 
 6. **Show the file list.** `git diff --cached --stat`, and the count of added, modified and deleted files.

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import uuid
 from datetime import datetime
 from typing import List, Optional
 
@@ -23,7 +22,7 @@ class CompanyBase(BaseModel):
 
 
 class CompanyCreate(CompanyBase):
-    owner_id: Optional[str] = None
+    """owner_id is not accepted: the API sets it from the signed-in user."""
 
 
 class CompanyUpdate(BaseModel):

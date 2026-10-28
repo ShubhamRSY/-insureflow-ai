@@ -13,6 +13,7 @@ import time
 from typing import Any
 
 import pytest
+from cryptography.fernet import Fernet
 from fastapi.routing import APIRoute
 from fastapi.testclient import TestClient
 from pydantic import TypeAdapter
@@ -126,7 +127,7 @@ def test_retry_without_a_saved_submission_says_so(client: TestClient, captured: 
 # ── 3. Job records are encrypted at rest ──
 
 
-KEY = "x0nb3v8Uq0m7yZB2vX2c7V8uL5a1Q9e4kz3RfT6gW0s="
+KEY = Fernet.generate_key().decode()  # generated per run; never a real key
 
 
 def test_file_job_store_encrypts_records_and_reads_old_ones(tmp_path: Any, monkeypatch: pytest.MonkeyPatch) -> None:
