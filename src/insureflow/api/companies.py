@@ -19,8 +19,8 @@ _COMPANIES: Dict[str, Dict[str, Any]] = {}
 
 def _slugify(name: str) -> str:
     slug = name.lower().strip()
-    slug = re.sub(r'[^a-z0-9]+', '-', slug)
-    slug = slug.strip('-')
+    slug = re.sub(r"[^a-z0-9]+", "-", slug)
+    slug = slug.strip("-")
     return slug or f"company-{uuid.uuid4().hex[:8]}"
 
 
@@ -48,7 +48,7 @@ def create_company(payload: CompanyCreate, current: TokenData | None = Depends(g
     company_id = str(uuid.uuid4())
     specialties = payload.specialties
     if isinstance(specialties, str):
-        specialties = [s.strip() for s in specialties.split(',') if s.strip()]
+        specialties = [s.strip() for s in specialties.split(",") if s.strip()]
 
     company = {
         "id": company_id,
@@ -84,7 +84,7 @@ def update_company(slug: str, payload: CompanyUpdate, current: TokenData | None 
 
     update_data = payload.model_dump(exclude_unset=True)
     if "specialties" in update_data and isinstance(update_data["specialties"], str):
-        update_data["specialties"] = [s.strip() for s in update_data["specialties"].split(',') if s.strip()]
+        update_data["specialties"] = [s.strip() for s in update_data["specialties"].split(",") if s.strip()]
 
     company.update(update_data)
     company["updated_at"] = datetime.now(timezone.utc).isoformat()
