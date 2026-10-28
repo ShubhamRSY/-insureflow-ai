@@ -237,8 +237,8 @@ if integration_gateway_router is not None:
     app.include_router(integration_gateway_router, prefix="/integrations")
 
 try:
-    from insureflow.api.platform_router import router as platform_router
     from insureflow.api.companies import router as companies_router
+    from insureflow.api.platform_router import router as platform_router
 
     app.include_router(platform_router)
     app.include_router(companies_router, prefix="/api")
