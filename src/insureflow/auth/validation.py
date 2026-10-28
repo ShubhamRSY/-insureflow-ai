@@ -4,7 +4,7 @@ import os
 import re
 from dataclasses import dataclass
 
-_USERNAME_RE = re.compile(r"^[a-zA-Z0-9._-]{3,50}$")
+_USERNAME_RE = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9 ._-]{2,49}$")
 _EMAIL_RE = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
 _PASSWORD_SPECIAL_RE = re.compile(r"[!@#$%^&*(),.?\":{}|<>\-_=+\[\]\\;'/`~]")
 
@@ -25,7 +25,9 @@ def validate_username(username: str) -> ValidationResult:
     elif len(username) > 50:
         errors.append("Username must be at most 50 characters")
     elif not _USERNAME_RE.match(username):
-        errors.append("Username may only contain letters, digits, dots, hyphens, and underscores")
+        errors.append("Username may only contain letters, digits, spaces, dots, hyphens, and underscores")
+    elif "  " in username:
+        errors.append("Username cannot contain multiple consecutive spaces")
     return ValidationResult(valid=len(errors) == 0, errors=errors)
 
 
