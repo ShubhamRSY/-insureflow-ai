@@ -86,9 +86,17 @@ job_store: JobStore = get_job_store()
 
 
 def _rate_limit_key(request: Request) -> str:
-    """Honor X-Forwarded-For only behind a trusted ALB/Caddy (TRUSTED_PROXY=true)."""
+    """Rate-limit per visitor, not per proxy. Only with TRUSTED_PROXY=true.
+
+    Railway's edge sets X-Real-IP to the visitor's address and sends no
+    X-Forwarded-For; ALB/Caddy send X-Forwarded-For. Without the flag every visitor
+    behind the proxy shares one counter.
+    """
     trusted = os.getenv("TRUSTED_PROXY", "").strip().lower() in {"1", "true", "yes", "on"}
     if trusted:
+        real_ip = (request.headers.get("x-real-ip") or "").strip()
+        if real_ip:
+            return real_ip
         forwarded = (request.headers.get("x-forwarded-for") or "").split(",")[0].strip()
         if forwarded:
             return forwarded

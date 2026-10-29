@@ -55,3 +55,20 @@ def test_validate_registration_reports_each_error_once(monkeypatch: pytest.Monke
     assert result.valid is False
     assert result.errors.count("Invalid email format") == 1
     assert any("Username may only contain" in err for err in result.errors)
+
+
+@pytest.mark.parametrize(
+    "email",
+    ["a@gmail.com", "a@GMAIL.com", "a@yahoo.co.in", "a@hotmail.fr", "a@outlook.com", "a@icloud.com", "a@proton.me", "a@mailinator.com"],
+)
+def test_personal_email_always_rejected(monkeypatch: pytest.MonkeyPatch, email: str) -> None:
+    monkeypatch.delenv("REGISTRATION_EMAIL_DOMAINS", raising=False)
+    result = validate_company_email(email)
+    assert result.valid is False
+    assert "company email" in result.errors[0].lower()
+
+
+@pytest.mark.parametrize("email", ["uw@acme-insurance.com", "a@livewire.io", "a@gmailer.co", "a@ryterainc.com"])
+def test_company_email_accepted(monkeypatch: pytest.MonkeyPatch, email: str) -> None:
+    monkeypatch.delenv("REGISTRATION_EMAIL_DOMAINS", raising=False)
+    assert validate_company_email(email).valid is True

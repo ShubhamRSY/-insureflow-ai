@@ -401,3 +401,29 @@ class TestForgotPassword:
         )
         assert resp.status_code == 200
         assert "message" in resp.json()
+
+
+def test_signup_rejects_personal_email(monkeypatch: pytest.MonkeyPatch) -> None:
+    client = _make_client(monkeypatch)
+    u = _unique("gm")
+    body = {"username": u, "email": f"{u}@gmail.com", "password": "StrongPass1!", "company_name": f"Gm {u}"}
+    for path in ("/auth/signup", "/auth/register"):
+        r = client.post(path, json=body)
+        assert r.status_code == 400
+        assert "company email" in r.json()["detail"].lower()
+
+
+def test_rate_limit_key_uses_railway_real_ip(monkeypatch: pytest.MonkeyPatch) -> None:
+    from starlette.requests import Request
+
+    from insureflow.api.main import _rate_limit_key
+
+    def req(headers: dict[str, str]) -> Request:
+        raw = [(k.lower().encode(), v.encode()) for k, v in headers.items()]
+        return Request({"type": "http", "headers": raw, "client": ("100.64.0.9", 1)})
+
+    monkeypatch.setenv("TRUSTED_PROXY", "true")
+    assert _rate_limit_key(req({"X-Real-IP": "203.0.113.7"})) == "203.0.113.7"
+    assert _rate_limit_key(req({"X-Forwarded-For": "198.51.100.1, 10.0.0.1"})) == "198.51.100.1"
+    monkeypatch.setenv("TRUSTED_PROXY", "")
+    assert _rate_limit_key(req({"X-Real-IP": "203.0.113.7"})) == "100.64.0.9"

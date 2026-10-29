@@ -46,15 +46,40 @@ def registration_email_domains() -> list[str]:
     return [part.strip().lower().lstrip("@") for part in raw.split(",") if part.strip()]
 
 
+# Personal and throwaway mailbox providers. Any TLD of the first group counts
+# (yahoo.co.in, hotmail.fr, outlook.de, ...).
+# ponytail: fixed list covers the big providers; swap for a maintained list if small ones slip through.
+_PERSONAL_EMAIL_BRANDS = frozenset({"gmail", "googlemail", "yahoo", "ymail", "rocketmail", "hotmail", "outlook", "live", "msn", "aol"})
+_PERSONAL_EMAIL_DOMAINS = frozenset(
+    {
+        "icloud.com", "me.com", "mac.com", "proton.me", "protonmail.com", "pm.me", "gmx.com", "gmx.net", "gmx.de",
+        "mail.com", "yandex.com", "yandex.ru", "zoho.com", "zohomail.com", "qq.com", "163.com", "126.com",
+        "rediffmail.com", "tutanota.com", "tuta.io", "fastmail.com", "hey.com", "web.de", "mail.ru", "inbox.com",
+        "hushmail.com", "mailinator.com", "guerrillamail.com", "10minutemail.com", "temp-mail.org", "yopmail.com",
+    }
+)  # fmt: skip
+
+
+def is_personal_email_domain(domain: str) -> bool:
+    domain = domain.strip().lower()
+    return domain in _PERSONAL_EMAIL_DOMAINS or domain.split(".", 1)[0] in _PERSONAL_EMAIL_BRANDS
+
+
 def validate_company_email(email: str) -> ValidationResult:
-    """Self-registration must use an approved company email domain."""
+    """Self-registration must use a company email: never a personal mailbox, and
+    one of REGISTRATION_EMAIL_DOMAINS when that is set."""
     base = validate_email(email)
     if not base.valid:
         return base
+    domain = email.strip().rsplit("@", 1)[-1].lower()
+    if is_personal_email_domain(domain):
+        return ValidationResult(
+            valid=False,
+            errors=[f"Please use your company email. Personal addresses like @{domain} can't be used to sign up."],
+        )
     allowed = registration_email_domains()
     if not allowed:
         return ValidationResult(valid=True, errors=[])
-    domain = email.strip().rsplit("@", 1)[-1].lower()
     if domain not in allowed:
         allowed_label = ", ".join(f"@{d}" for d in allowed)
         errors = [f"Registration requires a company email ({allowed_label})"]

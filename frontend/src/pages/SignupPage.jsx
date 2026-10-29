@@ -194,7 +194,10 @@ export default function SignupPage({ onSignedIn }) {
                 <input name="company_name" placeholder="Company / Organization name" required className="input-field" value={formData.company_name} onChange={updateField('company_name')} />
                 <input name="full_name" placeholder="Your full name (optional)" className="input-field" value={formData.full_name} onChange={updateField('full_name')} />
                 <input name="username" placeholder="Username" required minLength={3} className="input-field" autoComplete="username" value={formData.username} onChange={updateField('username')} />
-                <input name="email" type="email" placeholder="Work email" required className="input-field" autoComplete="email" value={formData.email} onChange={updateField('email')} />
+                <div>
+                  <input name="email" type="email" placeholder="Work email" required className="input-field" autoComplete="email" value={formData.email} onChange={updateField('email')} />
+                  <p className="mt-1 text-[11px] text-slate-400">Company email only. Personal addresses (Gmail, Yahoo, Outlook, iCloud…) can't be used.</p>
+                </div>
                 <PasswordInput placeholder="Password (min 8 chars, upper + lower + digit + special)" autoComplete="new-password" value={formData.password} onChange={updateField('password')} />
                 <button type="submit" disabled={loading} className="btn-primary w-full">
                   {loading ? 'Validating...' : 'Continue'}
