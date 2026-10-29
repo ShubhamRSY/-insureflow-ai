@@ -16,6 +16,11 @@ variable "ml_image" {
   default     = ""
 }
 
+variable "deploy_window" {
+  description = "true only while deploy.sh runs: lets the server push the ML image and write its secret"
+  default     = false
+}
+
 variable "ml_model_data" {
   description = "s3:// URI of model.tar.gz; empty until deploy.sh has uploaded the models"
   default     = ""
@@ -107,16 +112,6 @@ resource "aws_s3_bucket_lifecycle_configuration" "data" {
     }
   }
   rule {
-    id     = "audit-trail-1-year"
-    status = "Enabled"
-    filter {
-      prefix = "cloudtrail/"
-    }
-    expiration {
-      days = 365
-    }
-  }
-  rule {
     id     = "old-versions-30-days"
     status = "Enabled"
     filter {}
@@ -139,21 +134,6 @@ resource "aws_s3_bucket_policy" "data" {
         Resource  = [aws_s3_bucket.data.arn, "${aws_s3_bucket.data.arn}/*"]
         Condition = { Bool = { "aws:SecureTransport" = "false" } }
       },
-      {
-        Sid       = "CloudTrailAclCheck"
-        Effect    = "Allow"
-        Principal = { Service = "cloudtrail.amazonaws.com" }
-        Action    = "s3:GetBucketAcl"
-        Resource  = aws_s3_bucket.data.arn
-      },
-      {
-        Sid       = "CloudTrailWrite"
-        Effect    = "Allow"
-        Principal = { Service = "cloudtrail.amazonaws.com" }
-        Action    = "s3:PutObject"
-        Resource  = "${aws_s3_bucket.data.arn}/cloudtrail/AWSLogs/${local.account}/*"
-        Condition = { StringEquals = { "s3:x-amz-acl" = "bucket-owner-full-control" } }
-      },
     ]
   })
 }
@@ -169,7 +149,7 @@ resource "aws_secretsmanager_secret" "app" {
 
 resource "aws_ecr_repository" "ml" {
   name                 = "rytera-ml"
-  image_tag_mutability = "MUTABLE"
+  image_tag_mutability = "IMMUTABLE"
   force_delete         = true
   image_scanning_configuration {
     scan_on_push = true
@@ -206,21 +186,33 @@ resource "aws_iam_role_policy_attachment" "ec2_ssm" {
 resource "aws_iam_role_policy" "ec2_app" {
   name = "rytera-app"
   role = aws_iam_role.ec2.id
+  # The app's containers share this role (hop limit 2), so it holds only what the
+  # running app needs. Backups are add-only (no read/delete); the audit trail lives
+  # in a separate bucket this role can't reach.
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [
-      { Effect = "Allow", Action = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"], Resource = "${aws_s3_bucket.data.arn}/*" },
-      { Effect = "Allow", Action = ["s3:ListBucket"], Resource = aws_s3_bucket.data.arn },
-      { Effect = "Allow", Action = ["secretsmanager:GetSecretValue", "secretsmanager:PutSecretValue"], Resource = aws_secretsmanager_secret.app.arn },
+    Statement = concat([
+      {
+        Effect   = "Allow"
+        Action   = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"]
+        Resource = ["${aws_s3_bucket.data.arn}/draft-uploads/*", "${aws_s3_bucket.data.arn}/mortgage-uploads/*"]
+      },
+      { Effect = "Allow", Action = ["s3:GetObject"], Resource = "${aws_s3_bucket.data.arn}/deploy/*" },
+      { Effect = "Allow", Action = ["s3:PutObject"], Resource = "${aws_s3_bucket.data.arn}/backups/*" },
+      { Effect = "Allow", Action = ["secretsmanager:GetSecretValue"], Resource = aws_secretsmanager_secret.app.arn },
       { Effect = "Allow", Action = ["sagemaker:InvokeEndpoint", "sagemaker:DescribeEndpoint"], Resource = "arn:aws:sagemaker:${var.region}:${local.account}:endpoint/rytera-ml" },
+      { Effect = "Allow", Action = ["logs:CreateLogStream", "logs:PutLogEvents", "logs:DescribeLogStreams"], Resource = "${aws_cloudwatch_log_group.app.arn}:*" },
+      ], var.deploy_window ? [
+      # ponytail: deploy rights are on the shared role only while deploy.sh runs (it closes them on exit);
+      # a separate SSM-only role is the next step if deploys become frequent.
+      { Effect = "Allow", Action = ["secretsmanager:PutSecretValue"], Resource = aws_secretsmanager_secret.app.arn },
       { Effect = "Allow", Action = ["ecr:GetAuthorizationToken"], Resource = "*" },
       {
         Effect   = "Allow"
-        Action   = ["ecr:BatchCheckLayerAvailability", "ecr:InitiateLayerUpload", "ecr:UploadLayerPart", "ecr:CompleteLayerUpload", "ecr:PutImage", "ecr:BatchGetImage", "ecr:GetDownloadUrlForLayer"]
+        Action   = ["ecr:BatchCheckLayerAvailability", "ecr:InitiateLayerUpload", "ecr:UploadLayerPart", "ecr:CompleteLayerUpload", "ecr:PutImage", "ecr:DescribeImages"]
         Resource = aws_ecr_repository.ml.arn
       },
-      { Effect = "Allow", Action = ["logs:CreateLogStream", "logs:PutLogEvents", "logs:DescribeLogStreams"], Resource = "${aws_cloudwatch_log_group.app.arn}:*" },
-    ]
+    ] : [])
   })
 }
 
@@ -404,14 +396,102 @@ resource "aws_guardduty_detector" "main" {
   enable = true
 }
 
+# Audit trail in its own bucket: the server's role has no access, and Object Lock
+# (governance, 90 days) stops log files being altered or deleted.
+resource "aws_s3_bucket" "trail" {
+  bucket              = "rytera-trail-${local.account}"
+  object_lock_enabled = true
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "trail" {
+  bucket = aws_s3_bucket.trail.id
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "trail" {
+  bucket                  = aws_s3_bucket.trail.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_versioning" "trail" {
+  bucket = aws_s3_bucket.trail.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_object_lock_configuration" "trail" {
+  bucket = aws_s3_bucket.trail.id
+  rule {
+    default_retention {
+      mode = "GOVERNANCE"
+      days = 90
+    }
+  }
+  depends_on = [aws_s3_bucket_versioning.trail]
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "trail" {
+  bucket = aws_s3_bucket.trail.id
+  rule {
+    id     = "audit-trail-1-year"
+    status = "Enabled"
+    filter {}
+    expiration {
+      days = 365
+    }
+    noncurrent_version_expiration {
+      noncurrent_days = 30
+    }
+  }
+}
+
+resource "aws_s3_bucket_policy" "trail" {
+  bucket = aws_s3_bucket.trail.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "TlsOnly"
+        Effect    = "Deny"
+        Principal = "*"
+        Action    = "s3:*"
+        Resource  = [aws_s3_bucket.trail.arn, "${aws_s3_bucket.trail.arn}/*"]
+        Condition = { Bool = { "aws:SecureTransport" = "false" } }
+      },
+      {
+        Sid       = "CloudTrailAclCheck"
+        Effect    = "Allow"
+        Principal = { Service = "cloudtrail.amazonaws.com" }
+        Action    = "s3:GetBucketAcl"
+        Resource  = aws_s3_bucket.trail.arn
+      },
+      {
+        Sid       = "CloudTrailWrite"
+        Effect    = "Allow"
+        Principal = { Service = "cloudtrail.amazonaws.com" }
+        Action    = "s3:PutObject"
+        Resource  = "${aws_s3_bucket.trail.arn}/AWSLogs/${local.account}/*"
+        Condition = { StringEquals = { "s3:x-amz-acl" = "bucket-owner-full-control" } }
+      },
+    ]
+  })
+}
+
 resource "aws_cloudtrail" "main" {
   name                          = "rytera-trail"
-  s3_bucket_name                = aws_s3_bucket.data.id
-  s3_key_prefix                 = "cloudtrail"
+  s3_bucket_name                = aws_s3_bucket.trail.id
   is_multi_region_trail         = true
   include_global_service_events = true
   enable_log_file_validation    = true
-  depends_on                    = [aws_s3_bucket_policy.data]
+  depends_on                    = [aws_s3_bucket_policy.trail]
 }
 
 output "bucket" {

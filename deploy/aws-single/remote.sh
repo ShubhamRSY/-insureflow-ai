@@ -55,11 +55,16 @@ docker compose up -d --build --remove-orphans
 echo "App up (ML: ${ml_endpoint:-in-process})."
 
 # SageMaker image = the app image with the inference entrypoint.
-registry=${ECR%%/*}
-aws ecr get-login-password | docker login --username AWS --password-stdin "$registry" >/dev/null
-docker build -q -f Dockerfile.sagemaker -t "$ECR:$SHA" . >/dev/null
-docker push -q "$ECR:$SHA" >/dev/null
-echo "ML image pushed: $ECR:$SHA"
+# Tags are immutable in ECR, so an already-pushed commit is skipped.
+if aws ecr describe-images --repository-name "${ECR##*/}" --image-ids "imageTag=$SHA" >/dev/null 2>&1; then
+  echo "ML image already in ECR: $ECR:$SHA"
+else
+  registry=${ECR%%/*}
+  aws ecr get-login-password | docker login --username AWS --password-stdin "$registry" >/dev/null
+  docker build -q -f Dockerfile.sagemaker -t "$ECR:$SHA" . >/dev/null
+  docker push -q "$ECR:$SHA" >/dev/null
+  echo "ML image pushed: $ECR:$SHA"
+fi
 
 # Nightly database backup to S3 (kept 30 days by the bucket lifecycle rule).
 install -m 755 "$DIR/backup.sh" /usr/local/bin/rytera-backup

@@ -13,12 +13,18 @@ TF=infra/aws-single
 KEY=~/.ssh/rytera_aws
 [ -f "$KEY" ] || ssh-keygen -t ed25519 -N "" -f "$KEY" -C rytera-aws >/dev/null
 VARS=(-var "ssh_public_key=$(cat "$KEY.pub")" -var "alert_email=$ALERT_EMAIL" -var "ssh_cidr=${SSH_CIDR:-}")
-apply() { terraform -chdir="$TF" apply -input=false -auto-approve "${VARS[@]}" | grep -E "Apply complete|Error|error" || true; }
+TFLOG=$(mktemp)
+apply() {
+  terraform -chdir="$TF" apply -input=false -auto-approve -no-color "${VARS[@]}" "$@" >"$TFLOG" 2>&1 || { tail -40 "$TFLOG"; return 1; }
+  grep "Apply complete" "$TFLOG"
+}
 out() { terraform -chdir="$TF" output -raw "$1"; }
 
 terraform -chdir="$TF" init -input=false >/dev/null
-echo "== AWS resources"
-apply
+echo "== AWS resources (deploy rights open for this run)"
+apply -var deploy_window=true
+# Always close the server's deploy-only rights, even if a step fails.
+trap 'echo "== Close deploy rights"; apply -var deploy_window=false' EXIT
 BUCKET=$(out bucket) SECRET=$(out secret_arn) ECR=$(out ecr_repo) ID=$(out instance_id) URL=$(out url)
 SHA=$(git rev-parse --short HEAD)
 
@@ -63,7 +69,7 @@ if [ -n "$MODEL_DATA" ]; then
   echo "== SageMaker endpoint (create/update takes ~5-10 min)"
   # ponytail: the endpoint is updated on every deploy so ML code changes reach it; skip when only UI changed if deploys get slow.
   printf 'ml_image      = "%s"\nml_model_data = "%s"\n' "$ECR:$SHA" "$MODEL_DATA" > "$TF/ml.auto.tfvars"
-  apply
+  apply -var deploy_window=true
   aws sagemaker wait endpoint-in-service --endpoint-name rytera-ml
   echo "== Switch the app to SageMaker predictions"
   run_on_server
