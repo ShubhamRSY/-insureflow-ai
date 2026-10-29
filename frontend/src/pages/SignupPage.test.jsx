@@ -21,7 +21,7 @@ function renderPage() {
     <MemoryRouter initialEntries={['/dashboard/signup']}>
       <Routes>
         <Route path="/dashboard/signup" element={<SignupPage />} />
-        <Route path="/dashboard" element={<div>Dashboard home</div>} />
+        <Route path="/" element={<div>Dashboard home</div>} />
       </Routes>
     </MemoryRouter>
   );
