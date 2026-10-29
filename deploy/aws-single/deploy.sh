@@ -27,16 +27,15 @@ git archive --format=tar.gz HEAD | "${SSH[@]}" 'mkdir -p ~/app && tar -xzf - -C 
 "${SSH[@]}" "DOMAIN=${URL#https://} bash -s" <<'REMOTE'
 set -euo pipefail
 cd ~/app/deploy/aws-single
-# Secrets are generated once on the server and never copied anywhere.
-if [ ! -f .env ]; then
-  umask 077
-  {
-    echo "DOMAIN=$DOMAIN"
-    echo "POSTGRES_PASSWORD=$(openssl rand -hex 24)"
-    echo "SECRET_KEY=$(openssl rand -hex 32)"
-    echo "ENCRYPTION_KEY=$(python3 -c 'import base64,os;print(base64.urlsafe_b64encode(os.urandom(32)).decode())')"
-  } > .env
-fi
+# Secrets are generated once on the server (missing ones only) and never copied anywhere.
+umask 077
+touch .env
+add() { grep -q "^$1=" .env || echo "$1=$2" >> .env; }
+add DOMAIN "$DOMAIN"
+add POSTGRES_PASSWORD "$(openssl rand -hex 24)"
+add SECRET_KEY "$(openssl rand -hex 32)"
+add ENCRYPTION_KEY "$(python3 -c 'import base64,os;print(base64.urlsafe_b64encode(os.urandom(32)).decode())')"
+add INTEGRATION_GATEWAY_API_KEY "rytera-gw-$(openssl rand -hex 24)"
 sudo docker compose up -d --build
 sudo docker image prune -f >/dev/null
 REMOTE

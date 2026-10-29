@@ -12,9 +12,14 @@ services:
       INSURANCE_USE_CELERY: "0"
       SECRET_KEY: ${SECRET_KEY}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
-      ENVIRONMENT: production
+      INTEGRATION_GATEWAY_API_KEY: ${INTEGRATION_GATEWAY_API_KEY}
+      # staging, not production: production (bank posture) forbids open self-signup.
+      # Still stricter than Railway's "development": no auth reset, encryption required, 12-char passwords.
+      ENVIRONMENT: staging
       BANK_MODE: "false"
       ALLOW_OPEN_REGISTRATION: "true"
+      ALLOW_AUTH_RESET: "false"
+      REQUIRE_ENCRYPTION: "true"
       TRUSTED_PROXY: "true" # Caddy overwrites X-Real-IP with the visitor's address
       WEB_CONCURRENCY: "2"
       LLM_API_KEY: ${LLM_API_KEY:-}
