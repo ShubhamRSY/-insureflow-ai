@@ -57,8 +57,11 @@ def _build_database_url() -> str:
         url = os.getenv("DATABASE_URL", "")
     if not url:
         return ""
-    if url.startswith("postgres://"):
-        url = url.replace("postgres://", "postgresql://", 1)
+    # Name the installed driver: SQLAlchemy 2.1 maps a bare postgresql:// to psycopg v3,
+    # which isn't installed, so every login 503'd in production.
+    for bare in ("postgres://", "postgresql://"):
+        if url.startswith(bare):
+            url = "postgresql+psycopg2://" + url[len(bare) :]
     return url
 
 
