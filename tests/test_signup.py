@@ -86,6 +86,16 @@ class TestSignupEndpoint:
         assert me.json()["username"] == uname
         assert me.json()["role"] == "admin"
 
+    def test_new_user_can_log_in_with_password(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        client = _make_client(monkeypatch)
+        uname = _unique("login")
+        body = {"username": uname, "email": f"{uname}@example.com", "password": "StrongPass1!", "company_name": "Login Corp"}
+        api_key = client.post("/auth/signup", json=body).json()["api_key"]
+        assert client.post("/auth/login", json={"username": uname, "password": "StrongPass1!"}).status_code == 200
+        assert client.post("/auth/login", json={"username": body["email"], "password": "StrongPass1!"}).status_code == 200
+        # The API key is not a password.
+        assert client.post("/auth/login", json={"username": uname, "password": api_key}).status_code == 401
+
     def test_signup_rejects_duplicate_username(self, monkeypatch: pytest.MonkeyPatch) -> None:
         client = _make_client(monkeypatch)
         uname = _unique("dup")

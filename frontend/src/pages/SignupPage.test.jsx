@@ -16,11 +16,11 @@ vi.mock('../lib/api', () => ({
 
 import { auth, endpoints } from '../lib/api';
 
-function renderPage() {
+function renderPage(props = {}) {
   return render(
     <MemoryRouter initialEntries={['/dashboard/signup']}>
       <Routes>
-        <Route path="/dashboard/signup" element={<SignupPage />} />
+        <Route path="/dashboard/signup" element={<SignupPage {...props} />} />
         <Route path="/" element={<div>Dashboard home</div>} />
       </Routes>
     </MemoryRouter>
@@ -110,6 +110,30 @@ describe('SignupPage', () => {
     expect(screen.getByDisplayValue('key-123')).toBeInTheDocument();
     expect(auth.token).toBe('tok-1');
     expect(auth.user).toEqual({ username: 'jdoe' });
+  });
+
+  it('tells the app the new user is signed in', async () => {
+    endpoints.signup.mockResolvedValue({ token: 'tok-1', api_key: 'key-123' });
+    endpoints.me.mockResolvedValue({ username: 'jdoe' });
+    const onSignedIn = vi.fn();
+    renderPage({ onSignedIn });
+    fillStep1();
+    await waitFor(() => expect(screen.getByText('Create Account')).toBeInTheDocument());
+    fireEvent.click(screen.getByText('Create Account'));
+    await waitFor(() => expect(onSignedIn).toHaveBeenCalledWith({ username: 'jdoe' }));
+  });
+
+  it('confirms when the API key is copied', async () => {
+    endpoints.signup.mockResolvedValue({ token: 'tok-1', api_key: 'key-123' });
+    endpoints.me.mockResolvedValue({ username: 'jdoe' });
+    document.execCommand = vi.fn(() => true);
+    renderPage();
+    fillStep1();
+    await waitFor(() => expect(screen.getByText('Create Account')).toBeInTheDocument());
+    fireEvent.click(screen.getByText('Create Account'));
+    await waitFor(() => expect(screen.getByText('Copy')).toBeInTheDocument());
+    fireEvent.click(screen.getByText('Copy'));
+    await waitFor(() => expect(screen.getByText('✓ API key copied')).toBeInTheDocument());
   });
 
   it('shows an error message when account creation fails', async () => {

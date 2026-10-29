@@ -334,7 +334,7 @@ function AppRoutes() {
       <Suspense fallback={<div className="flex items-center justify-center py-24 text-sm text-slate-400">Loading…</div>}>
       <Routes>
         <Route path="broker/status/:token" element={<BrokerStatusPage />} />
-        <Route path="signup" element={<SignupPage />} />
+        <Route path="signup" element={<SignupPage onSignedIn={(u) => { setUser(u); refreshAll(); }} />} />
         <Route path="sso/callback" element={<SsoCallback />} />
           <Route element={<Layout health={health} pendingCount={pending.length} onRefresh={refreshAll} onLogin={() => setLoginOpen(true)} user={user} setUser={setUser} isLimited={isLimited} welcomeMessage={welcomeMessage} onDismissWelcome={() => setWelcomeMessage('')} />}>
           <Route index element={<Overview overview={overview} health={health} presets={presets} onRunDemo={runDemo} onOpenJob={openJob} onLogin={() => setLoginOpen(true)} marketCycle={marketCycle} queueStats={queueStats} insuranceJobs={insuranceJobs} isLimited={isLimited} remaining={remaining} trackView={trackView} />} />

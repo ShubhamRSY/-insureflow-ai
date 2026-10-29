@@ -263,6 +263,7 @@ export default function LoginModal({ open, onClose, onSuccess }) {
               <div>
                 <label htmlFor="login-password" className="mb-1.5 block text-xs font-medium text-slate-400">Password</label>
                 <PasswordInput id="login-password" autoComplete="current-password" placeholder="" />
+                <p className="mt-1 text-[11px] text-slate-500">Your account password, not your API key (ifly_…).</p>
               </div>
               <button type="submit" disabled={loading} className="btn-primary w-full">{loading ? 'Signing in…' : 'Sign In'}</button>
               <p className="text-center text-xs text-slate-500">

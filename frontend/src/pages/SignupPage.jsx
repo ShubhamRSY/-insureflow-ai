@@ -12,8 +12,9 @@ const PLANS = [
 
 const EMPTY_BILLING = { card_name: '', card_number: '', card_exp: '', card_cvc: '', billing_zip: '' };
 
-export default function SignupPage() {
+export default function SignupPage({ onSignedIn }) {
   const navigate = useNavigate();
+  const [copied, setCopied] = useState(false);
   const [step, setStep] = useState(1);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -85,6 +86,8 @@ export default function SignupPage() {
     auth.token = data.token;
     const me = await endpoints.me();
     auth.user = me;
+    // The app read the login once at page load; tell it the user is now signed in.
+    onSignedIn?.(me);
     setAccountCreated(true);
     setResult((prev) => ({ ...prev, api_key: data.api_key, token: data.token, org_id: data.org_id }));
     return data;
@@ -316,23 +319,19 @@ export default function SignupPage() {
                             document.execCommand('copy');
                             document.body.removeChild(ta);
                           }
-                          // simple feedback
-                          const btn = event?.currentTarget;
-                          if (btn) {
-                            const old = btn.textContent;
-                            btn.textContent = 'Copied';
-                            setTimeout(() => (btn.textContent = old), 1200);
-                          }
+                          setCopied(true);
+                          setTimeout(() => setCopied(false), 2000);
                         } catch (e) {
                           console.error('Failed to copy API key', e);
                         }
                       }}
                       className="rounded-xl border border-white/15 px-3 py-2 text-sm text-slate-200 hover:border-brand-light hover:text-brand-light transition-colors"
                     >
-                      Copy
+                      {copied ? 'Copied' : 'Copy'}
                     </button>
                   </div>
-                  <p className="mt-2 text-xs text-slate-400">Use this key for API/programmatic access. Your session is already active — you don’t need to paste this to sign in.</p>
+                  <p role="status" aria-live="polite" className="mt-2 text-xs font-medium text-emerald-400">{copied ? '✓ API key copied' : ''}</p>
+                  <p className="mt-1 text-xs text-slate-400">Use this key for API/programmatic access. You're already signed in. To sign in later, use your username or email and your password, not this key.</p>
                 </div>
               )}
 
