@@ -9,7 +9,7 @@ terraform {
 }
 
 variable "region" {
-  default = "us-east-1"
+  default = "us-east-2" # the AWS org only allows EC2 in us-east-2
 }
 
 variable "instance_type" {
