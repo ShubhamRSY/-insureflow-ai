@@ -1,0 +1,68 @@
+# Whole app on one server. Mirrors the Railway setup: API only (jobs run in-process,
+# no Celery worker, no ClamAV), plus Postgres, Redis and Caddy for HTTPS.
+# Secrets come from .env next to this file, generated on the server by setup.sh.
+
+services:
+  api:
+    build: ../..
+    environment:
+      DATABASE_URL: postgresql://insureflow:${POSTGRES_PASSWORD}@db:5432/insureflow
+      REDIS_URL: redis://redis:6379/0
+      JOB_STORE_BACKEND: redis
+      INSURANCE_USE_CELERY: "0"
+      SECRET_KEY: ${SECRET_KEY}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      ENVIRONMENT: production
+      BANK_MODE: "false"
+      ALLOW_OPEN_REGISTRATION: "true"
+      TRUSTED_PROXY: "true" # Caddy overwrites X-Real-IP with the visitor's address
+      WEB_CONCURRENCY: "2"
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_PROVIDER: ${LLM_PROVIDER:-}
+      LLM_MODEL: ${LLM_MODEL:-}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+
+  db:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_USER: insureflow
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: insureflow
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U insureflow"]
+      interval: 5s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redisdata:/data
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddydata:/data
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  redisdata:
+  caddydata:

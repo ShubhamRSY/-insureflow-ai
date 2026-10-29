@@ -1,0 +1,14 @@
+# Automatic Let's Encrypt HTTPS for $DOMAIN (e.g. 3-90-1-2.sslip.io or your own domain).
+{$DOMAIN} {
+	# Overwrite X-Real-IP so a visitor can't fake it to dodge rate limits.
+	reverse_proxy api:8000 {
+		header_up X-Real-IP {remote_host}
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+}

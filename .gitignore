@@ -78,3 +78,7 @@ underwriting_pipeline/cache/
 # B-190: the workbench sign-in audit log is run output, never source
 deliverables/software-engineer/auth-audit.jsonl
 deliverables/software-engineer/auth-audit.jsonl.lock
+
+# Single AWS server (deploy/aws-single): local Terraform state holds secrets
+infra/aws-single/.terraform/
+infra/aws-single/terraform.tfstate*
