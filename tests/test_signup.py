@@ -427,3 +427,15 @@ def test_rate_limit_key_uses_railway_real_ip(monkeypatch: pytest.MonkeyPatch) ->
     assert _rate_limit_key(req({"X-Forwarded-For": "198.51.100.1, 10.0.0.1"})) == "198.51.100.1"
     monkeypatch.setenv("TRUSTED_PROXY", "")
     assert _rate_limit_key(req({"X-Real-IP": "203.0.113.7"})) == "100.64.0.9"
+
+
+def test_dashboard_index_is_not_cached(monkeypatch: pytest.MonkeyPatch) -> None:
+    from insureflow.api.main import STATIC_DIR
+
+    if not (STATIC_DIR / "ui" / "index.html").exists():
+        pytest.skip("UI not built")
+    client = _make_client(monkeypatch)
+    for path in ("/dashboard/", "/dashboard/insurance/commercial"):
+        r = client.get(path)
+        assert r.status_code == 200
+        assert r.headers["cache-control"] == "no-cache"

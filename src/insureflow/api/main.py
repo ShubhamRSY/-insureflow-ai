@@ -984,7 +984,8 @@ def dashboard_spa(full_path: str) -> FileResponse:
 def _dashboard_index() -> FileResponse:
     ui_index = STATIC_DIR / "ui" / "index.html"
     if ui_index.exists():
-        return FileResponse(ui_index)
+        # no-cache: always revalidate, so a reload after a deploy gets the new asset names.
+        return FileResponse(ui_index, headers={"Cache-Control": "no-cache"})
     raise HTTPException(status_code=404, detail="Dashboard not found")
 
 
