@@ -27,7 +27,7 @@ export default function SignupPage() {
 
   useEffect(() => {
     if (auth.isLoggedIn) {
-      navigate('/dashboard', { replace: true });
+      navigate('/', { replace: true });
     }
   }, [navigate]);
 
@@ -162,7 +162,7 @@ export default function SignupPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-4">
       <div className="w-full max-w-lg">
         <div className="text-center mb-8">
-          <Link to="/dashboard" className="text-2xl font-bold text-white hover:text-brand-light transition-colors">
+          <Link to="/" className="text-2xl font-bold text-white hover:text-brand-light transition-colors">
             InsureFlow
           </Link>
           <p className="mt-2 text-sm text-slate-300">Create your account</p>
@@ -336,7 +336,7 @@ export default function SignupPage() {
                 </div>
               )}
 
-              <button type="button" onClick={() => navigate('/dashboard')} className="btn-primary w-full">
+              <button type="button" onClick={() => navigate('/')} className="btn-primary w-full">
                 Go to Dashboard
               </button>
             </div>
@@ -345,7 +345,7 @@ export default function SignupPage() {
 
         <p className="mt-6 text-center text-sm text-slate-400">
           Already have an account?{' '}
-          <Link to="/dashboard" className="text-brand-light hover:underline">Sign in</Link>
+          <Link to="/" className="text-brand-light hover:underline">Sign in</Link>
         </p>
       </div>
     </div>
