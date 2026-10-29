@@ -36,7 +36,7 @@ class TestSignupEndpoint:
                 "username": uname,
                 "email": f"{uname}@example.com",
                 "password": "StrongPass1!",
-                "company_name": "Test Corp",
+                "company_name": f"Test Corp {uname}",
                 "plan": "free",
             },
         )
@@ -58,7 +58,7 @@ class TestSignupEndpoint:
                 "username": uname,
                 "email": f"{uname}@example.com",
                 "password": "StrongPass1!",
-                "company_name": "Plan Corp",
+                "company_name": f"Plan Corp {uname}",
                 "plan": "starter",
             },
         )
@@ -74,7 +74,7 @@ class TestSignupEndpoint:
                 "username": uname,
                 "email": f"{uname}@example.com",
                 "password": "StrongPass1!",
-                "company_name": "JWT Corp",
+                "company_name": f"JWT Corp {uname}",
                 "plan": "free",
             },
         )
@@ -89,12 +89,64 @@ class TestSignupEndpoint:
     def test_new_user_can_log_in_with_password(self, monkeypatch: pytest.MonkeyPatch) -> None:
         client = _make_client(monkeypatch)
         uname = _unique("login")
-        body = {"username": uname, "email": f"{uname}@example.com", "password": "StrongPass1!", "company_name": "Login Corp"}
+        body = {"username": uname, "email": f"{uname}@example.com", "password": "StrongPass1!", "company_name": f"Login Corp {uname}"}
         api_key = client.post("/auth/signup", json=body).json()["api_key"]
         assert client.post("/auth/login", json={"username": uname, "password": "StrongPass1!"}).status_code == 200
         assert client.post("/auth/login", json={"username": body["email"], "password": "StrongPass1!"}).status_code == 200
         # The API key is not a password.
         assert client.post("/auth/login", json={"username": uname, "password": api_key}).status_code == 401
+
+    def test_many_signups_stay_separate(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Each new company gets its own org; every user can sign in."""
+        client = _make_client(monkeypatch)
+        base = _unique("many")
+        orgs = set()
+        for i in range(10):
+            u = f"{base}_{i}"
+            r = client.post("/auth/signup", json={"username": u, "email": f"{u}@example.com", "password": "StrongPass1!", "company_name": f"Co {u}"})
+            assert r.status_code == 201, r.text
+            orgs.add(r.json()["org_id"])
+            assert client.post("/auth/login", json={"username": u, "password": "StrongPass1!"}).status_code == 200
+        assert len(orgs) == 10
+
+    def test_signup_cannot_join_an_existing_company(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        client = _make_client(monkeypatch)
+        a, b = _unique("orga"), _unique("orgb") + "x"
+        company = f"Acme {a}"
+        assert client.post("/auth/signup", json={"username": a, "email": f"{a}@example.com", "password": "StrongPass1!", "company_name": company}).status_code == 201
+        r = client.post("/auth/signup", json={"username": b, "email": f"{b}@example.com", "password": "StrongPass1!", "company_name": company.upper()})
+        assert r.status_code == 409
+        assert "already has an account" in r.json()["detail"]
+        r = client.post("/auth/register", json={"username": b, "email": f"{b}@example.com", "password": "StrongPass1!", "company_name": company})
+        assert r.status_code == 409
+
+    def test_signup_rejects_reused_email_and_case_variant_username(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        client = _make_client(monkeypatch)
+        a = _unique("dup")
+        body = {"username": a, "email": f"{a}@example.com", "password": "StrongPass1!", "company_name": f"Dup {a}"}
+        assert client.post("/auth/signup", json=body).status_code == 201
+        same_email = {**body, "username": a + "z", "email": body["email"].upper(), "company_name": f"Other {a}"}
+        assert client.post("/auth/signup", json=same_email).status_code == 409
+        same_name_other_case = {**body, "username": a.upper(), "email": f"other_{a}@example.com", "company_name": f"Third {a}"}
+        assert client.post("/auth/signup", json=same_name_other_case).status_code == 409
+        # Original password still works: nothing was overwritten.
+        assert client.post("/auth/login", json={"username": a, "password": "StrongPass1!"}).status_code == 200
+
+    def test_signup_does_not_report_success_when_save_fails(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        from sqlalchemy.exc import OperationalError
+
+        from insureflow.auth import store as store_mod
+
+        client = _make_client(monkeypatch)
+
+        def boom(self, user, company_name):  # noqa: ANN001, ANN202
+            raise OperationalError("insert", {}, Exception("db down"))
+
+        monkeypatch.setattr(store_mod.UserStore, "create_account", boom)
+        monkeypatch.setattr(store_mod.PostgresUserStore, "create_account", boom)
+        u = _unique("fail")
+        r = client.post("/auth/signup", json={"username": u, "email": f"{u}@example.com", "password": "StrongPass1!", "company_name": f"F {u}"})
+        assert r.status_code >= 500
 
     def test_signup_rejects_duplicate_username(self, monkeypatch: pytest.MonkeyPatch) -> None:
         client = _make_client(monkeypatch)
@@ -103,7 +155,7 @@ class TestSignupEndpoint:
             "username": uname,
             "email": f"{uname}@example.com",
             "password": "StrongPass1!",
-            "company_name": "Dup Corp",
+            "company_name": f"Dup Corp {uname}",
         }
         resp1 = client.post("/auth/signup", json=body)
         assert resp1.status_code == 201
@@ -158,7 +210,7 @@ class TestSignupEndpoint:
                 "username": uname,
                 "email": f"{uname}@example.com",
                 "password": "StrongPass1!",
-                "company_name": "Default Corp",
+                "company_name": f"Default Corp {uname}",
             },
         )
         assert resp.status_code == 201
@@ -192,7 +244,7 @@ class TestSignupEndpoint:
                 "username": uname,
                 "email": f"{uname}@anydomain.com",
                 "password": "StrongPass1!",
-                "company_name": "Any Domain Corp",
+                "company_name": f"Any Domain Corp {uname}",
             },
         )
         assert resp.status_code == 201
@@ -206,7 +258,7 @@ class TestSignupEndpoint:
                 "username": uname,
                 "email": f"{uname}@example.com",
                 "password": "StrongPass1!",
-                "company_name": "Enterprise Corp",
+                "company_name": f"Enterprise Corp {uname}",
                 "plan": "enterprise",
             },
         )

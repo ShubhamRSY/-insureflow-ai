@@ -9,8 +9,8 @@ from collections.abc import ItemsView, Mapping
 from pathlib import Path
 from typing import Any
 
-from sqlalchemy import select
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import func, or_, select
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from insureflow.auth.models import Organization, User
 from insureflow.storage.lock import FileLock, atomic_write
@@ -123,12 +123,15 @@ class PostgresUserStore:
             row = session.execute(select(self._UserRow).where(self._UserRow.username == key)).scalar_one_or_none()
             if row:
                 return _row_to_user(row)
+            # Case-insensitive fallbacks. Older rows can share an email or differ only in
+            # case; take the oldest match instead of failing the whole lookup.
+            user_row = self._UserRow
             lower = key.lower()
-            row = session.execute(select(self._UserRow).where(self._UserRow.username.ilike(lower))).scalar_one_or_none()
-            if row:
-                return _row_to_user(row)
-            row = session.execute(select(self._UserRow).where(self._UserRow.email.ilike(lower))).scalar_one_or_none()
-            return _row_to_user(row) if row else None
+            for col in (user_row.username, user_row.email):
+                row = session.execute(select(user_row).where(func.lower(col) == lower).order_by(user_row.created_at).limit(1)).scalar()
+                if row:
+                    return _row_to_user(row)
+            return None
         except SQLAlchemyError as exc:
             logger.warning("Postgres resolve_user failed: %s", exc)
             return None
@@ -240,6 +243,56 @@ class PostgresUserStore:
             session.rollback()
             logger.warning("Postgres clear failed: %s", exc)
             return 0
+        finally:
+            session.close()
+
+    def create_account(self, user: User, company_name: str) -> str:
+        """Self-serve signup: a brand-new org plus its first user, in one transaction.
+
+        Returns "ok", "user_taken" (username or email already registered, any case)
+        or "org_taken" (that company already has an account; its admin adds people).
+        Never updates an existing user. Other database errors are raised, so the
+        caller can't report an account that was never saved.
+        """
+        session = self._session()
+        try:
+            user_row, org_row = self._UserRow, self._OrgRow
+            taken = [func.lower(user_row.username) == user.username.lower()]
+            if user.email:
+                taken.append(func.lower(user_row.email) == user.email.lower())
+            # ponytail: check-then-insert; the username unique index stops a same-name race,
+            # a same-email or same-company race in the same millisecond can still slip through.
+            if session.execute(select(user_row.id).where(or_(*taken)).limit(1)).first():
+                return "user_taken"
+            if session.execute(select(org_row.id).where(func.lower(org_row.name) == company_name.lower()).limit(1)).first():
+                return "org_taken"
+            org = org_row(name=company_name)
+            session.add(org)
+            session.flush()
+            user.org_id = str(org.id)
+            session.add(
+                user_row(
+                    username=user.username,
+                    email=user.email,
+                    hashed_password=user.hashed_password,
+                    role=user.role.value,
+                    disabled=user.disabled,
+                    org_id=user.org_id,
+                    company_name=user.company_name,
+                    department=user.department,
+                    team=user.team,
+                    office_location=user.office_location,
+                    full_name=user.full_name,
+                )
+            )
+            session.commit()
+            return "ok"
+        except IntegrityError:
+            session.rollback()
+            return "user_taken"
+        except SQLAlchemyError:
+            session.rollback()
+            raise
         finally:
             session.close()
 
@@ -366,6 +419,19 @@ class UserStore:
         with self._lock:
             self._users[username] = user
             self._save_locked()
+
+    def create_account(self, user: User, company_name: str) -> str:
+        """Same contract as PostgresUserStore.create_account (dev/file store)."""
+        org_id = company_name.lower().replace(" ", "_") or "default"
+        with self._lock:
+            if self.resolve_user(user.username) or (user.email and self.resolve_user(user.email)):
+                return "user_taken"
+            if any(u.org_id == org_id for u in self._users.values()):
+                return "org_taken"
+            user.org_id = org_id
+            self._users[user.username] = user
+            self._save_locked()
+            return "ok"
 
     def clear(self) -> int:
         with self._lock:

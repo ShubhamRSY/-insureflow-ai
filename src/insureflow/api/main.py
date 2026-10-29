@@ -658,28 +658,36 @@ def register_user(req: UserCreateRequest, request: Request) -> dict[str, str]:
     if not validation.valid:
         raise HTTPException(status_code=400, detail="; ".join(validation.errors))
 
-    store = get_user_store()
-    if username in store:
-        raise HTTPException(status_code=409, detail="Username already exists")
-
     role = Role.VIEWER
-    org_id = "default"
-    if isinstance(store, PostgresUserStore) and company_name:
-        org_id = store.get_or_create_org(company_name)
-
-    store[username] = User(
+    new_user = User(
         username=username,
         email=email,
         hashed_password=hash_password(req.password),
         role=role,
         full_name=req.full_name.strip() or username,
-        org_id=org_id,
         company_name=company_name,
         department=req.department.strip(),
         team=req.team.strip(),
         office_location=req.office_location.strip(),
     )
-    return {"message": f"User '{username}' created with role '{role.value}' in org '{company_name or org_id}'"}
+    _create_self_serve_account(new_user, company_name)
+    return {"message": f"User '{username}' created with role '{role.value}' in org '{company_name}'"}
+
+
+def _create_self_serve_account(user: User, company_name: str) -> None:
+    """Create a public signup's own new org and user, or raise a plain 409.
+
+    Joining an existing company is by invite only (its admin uses /auth/users), so a
+    stranger typing the same company name can't land inside that company's data.
+    """
+    result = get_user_store().create_account(user, company_name)
+    if result == "user_taken":
+        raise HTTPException(status_code=409, detail="That username or email is already registered. Sign in instead, or pick another.")
+    if result == "org_taken":
+        raise HTTPException(
+            status_code=409,
+            detail=f"'{company_name}' already has an account. Ask your company admin to add you, or use a different company name.",
+        )
 
 
 @app.post("/auth/signup", status_code=201)
@@ -707,27 +715,17 @@ def signup_user(req: SignupRequest, request: Request) -> dict[str, Any]:
     if not validation.valid:
         raise HTTPException(status_code=400, detail="; ".join(validation.errors))
 
-    store = get_user_store()
-    if username in store:
-        raise HTTPException(status_code=409, detail="Username already exists")
-
-    # Create org (Postgres) or use company_name as org_id
-    org_id = "default"
-    if isinstance(store, PostgresUserStore):
-        org_id = store.get_or_create_org(company_name)
-    else:
-        org_id = company_name.lower().replace(" ", "_") or "default"
-
-    # Create user as admin of their org
-    store[username] = User(
+    # New org + its first user (admin), in one step.
+    new_user = User(
         username=username,
         email=email,
         hashed_password=hash_password(req.password),
         role=Role.ADMIN,
         full_name=req.full_name.strip() or username,
-        org_id=org_id,
         company_name=company_name,
     )
+    _create_self_serve_account(new_user, company_name)
+    org_id = new_user.org_id
 
     # Set plan in pricing store. Paid plans stay pending until checkout completes,
     # so a plan choice alone never grants paid entitlements.
