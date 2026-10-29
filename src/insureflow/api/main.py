@@ -27,6 +27,7 @@ from insureflow.auth.models import LoginRequest, PasswordResetConfirm, PasswordR
 from insureflow.auth.store import PostgresUserStore, pg_store_unavailable
 from insureflow.auth.validation import validate_registration
 from insureflow.insurance.pipeline import InsurancePipeline
+from insureflow.ml.sagemaker import MLServiceUnavailableError
 from insureflow.models.mortgage import ProductLine
 from insureflow.security.posture import SecurityPosture, resolve_security_posture
 from insureflow.storage.draft_bundle_store import BundleTooLargeError, DraftBundleBusyError
@@ -199,6 +200,17 @@ async def _redis_unavailable_handler(request: Request, exc: Exception) -> JSONRe
 
 for _redis_exc in _redis_unavailable_types():
     app.add_exception_handler(_redis_exc, _redis_unavailable_handler)
+
+
+@app.exception_handler(MLServiceUnavailableError)
+async def _ml_unavailable_handler(request: Request, exc: MLServiceUnavailableError) -> JSONResponse:
+    """SageMaker endpoint down or cold-start timeout: a plain retryable 503, never a guessed answer."""
+    logger.error("ML service unavailable on %s %s: %s", request.method, request.url.path, exc.__cause__ or exc)
+    return JSONResponse(
+        status_code=503,
+        content={"detail": "The prediction service is temporarily unavailable. Nothing was scored; please try again in a minute."},
+        headers={"Retry-After": "30"},
+    )
 
 
 @app.exception_handler(Exception)
@@ -9091,11 +9103,10 @@ def ml_predict_mortgage_default(features: dict[str, Any], current: TokenData = D
     """Mortgage default risk — probability, delinquency band, risk factors."""
     from insureflow.ml.base import BaseMLModel
     from insureflow.ml.features import FeatureVector
+    from insureflow.ml.lob_registry import get_insurance_model
     from insureflow.ml.models import ModelType
-    from insureflow.ml.registry import get_ml_registry
 
-    registry = get_ml_registry()
-    model = registry.get(ModelType.MORTGAGE_DEFAULT_RISK)
+    model = get_insurance_model(ModelType.MORTGAGE_DEFAULT_RISK)
     if model is None or not isinstance(model, BaseMLModel):
         raise HTTPException(status_code=503, detail="Mortgage default-risk model not available")
     fv = FeatureVector(**{k: v for k, v in features.items() if k in FeatureVector.model_fields})
@@ -9107,11 +9118,10 @@ def ml_predict_lending_default(features: dict[str, Any], current: TokenData = De
     """Lending default risk — probability, risk level, recommended structure."""
     from insureflow.ml.base import BaseMLModel
     from insureflow.ml.features import FeatureVector
+    from insureflow.ml.lob_registry import get_insurance_model
     from insureflow.ml.models import ModelType
-    from insureflow.ml.registry import get_ml_registry
 
-    registry = get_ml_registry()
-    model = registry.get(ModelType.LENDING_DEFAULT_RISK)
+    model = get_insurance_model(ModelType.LENDING_DEFAULT_RISK)
     if model is None or not isinstance(model, BaseMLModel):
         raise HTTPException(status_code=503, detail="Lending default-risk model not available")
     fv = FeatureVector(**{k: v for k, v in features.items() if k in FeatureVector.model_fields})
@@ -9826,16 +9836,15 @@ def ml_list_models(current: TokenData = Depends(require_role(Role.VIEWER))) -> d
 def ml_explain(model_type: str, features: dict[str, Any], current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
     """Get feature importance explanation for a prediction."""
     from insureflow.ml.features import FeatureVector
+    from insureflow.ml.lob_registry import get_insurance_model
     from insureflow.ml.models import ModelType
-    from insureflow.ml.registry import get_ml_registry
 
-    registry = get_ml_registry()
     try:
         mt = ModelType(model_type)
     except ValueError:
         raise HTTPException(status_code=400, detail=f"Invalid model type: {model_type}")
 
-    model = registry.get(mt)
+    model = get_insurance_model(mt)
     if model is None or not hasattr(model, "explain"):
         raise HTTPException(status_code=403, detail=f"Model {model_type} does not support explanations")
     fv = FeatureVector(**{k: v for k, v in features.items() if k in FeatureVector.model_fields})

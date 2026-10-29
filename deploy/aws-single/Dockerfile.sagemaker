@@ -1,0 +1,7 @@
+# SageMaker inference image: the app image, serving ML predictions only.
+# Built on the server from the freshly built app image (see deploy.sh).
+ARG BASE=aws-single-api:latest
+FROM ${BASE}
+WORKDIR /app
+RUN rm -rf /app/ml_models && ln -s /opt/ml/model /app/ml_models
+ENTRYPOINT ["python3", "/app/scripts/sagemaker_serve.py"]

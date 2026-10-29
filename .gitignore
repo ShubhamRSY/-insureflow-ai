@@ -82,3 +82,4 @@ deliverables/software-engineer/auth-audit.jsonl.lock
 # Single AWS server (deploy/aws-single): local Terraform state holds secrets
 infra/aws-single/.terraform/
 infra/aws-single/terraform.tfstate*
+infra/aws-single/ml.auto.tfvars

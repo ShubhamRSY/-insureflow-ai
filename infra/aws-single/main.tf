@@ -21,7 +21,8 @@ variable "ssh_public_key" {
 }
 
 variable "ssh_cidr" {
-  description = "Only this address may SSH in, e.g. 203.0.113.7/32"
+  description = "Allow SSH from this address (e.g. 203.0.113.7/32). Empty = SSH closed; use Systems Manager."
+  default     = ""
 }
 
 provider "aws" {
@@ -58,11 +59,14 @@ resource "aws_security_group" "web" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = [var.ssh_cidr]
+  dynamic "ingress" {
+    for_each = var.ssh_cidr == "" ? [] : [var.ssh_cidr]
+    content {
+      from_port   = 22
+      to_port     = 22
+      protocol    = "tcp"
+      cidr_blocks = [ingress.value]
+    }
   }
   egress {
     from_port   = 0
@@ -77,6 +81,7 @@ resource "aws_instance" "app" {
   instance_type          = var.instance_type
   key_name               = aws_key_pair.deploy.key_name
   vpc_security_group_ids = [aws_security_group.web.id]
+  iam_instance_profile   = aws_iam_instance_profile.ec2.name
 
   root_block_device {
     volume_size = 30
@@ -86,6 +91,8 @@ resource "aws_instance" "app" {
 
   metadata_options {
     http_tokens = "required"
+    # 2 hops so the app's Docker containers can use the instance role too.
+    http_put_response_hop_limit = 2
   }
 
   user_data = <<-EOF

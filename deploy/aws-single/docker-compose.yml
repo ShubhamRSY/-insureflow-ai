@@ -1,6 +1,16 @@
 # Whole app on one server. Mirrors the Railway setup: API only (jobs run in-process,
 # no Celery worker, no ClamAV), plus Postgres, Redis and Caddy for HTTPS.
-# Secrets come from .env next to this file, generated on the server by setup.sh.
+# Secrets come from .env next to this file, written by remote.sh from Secrets Manager.
+
+name: aws-single
+
+# App and proxy logs go to CloudWatch (/rytera/single); `docker compose logs` still works.
+x-cloudwatch: &cloudwatch
+  driver: awslogs
+  options:
+    awslogs-group: /rytera/single
+    awslogs-region: ${AWS_REGION:-us-east-2}
+    tag: "{{.Name}}"
 
 services:
   api:
@@ -25,6 +35,11 @@ services:
       LLM_API_KEY: ${LLM_API_KEY:-}
       LLM_PROVIDER: ${LLM_PROVIDER:-}
       LLM_MODEL: ${LLM_MODEL:-}
+      # AWS access comes from the server's instance role (no keys on disk).
+      AWS_REGION: ${AWS_REGION:-us-east-2}
+      S3_UPLOADS_BUCKET: ${S3_UPLOADS_BUCKET:-}
+      SAGEMAKER_ML_ENDPOINT: ${SAGEMAKER_ML_ENDPOINT:-}
+    logging: *cloudwatch
     depends_on:
       db:
         condition: service_healthy
@@ -65,6 +80,7 @@ services:
       - caddydata:/data
     depends_on:
       - api
+    logging: *cloudwatch
     restart: unless-stopped
 
 volumes:

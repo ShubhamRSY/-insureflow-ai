@@ -137,5 +137,12 @@ def get_lob_registry() -> LOBModelRegistry:
 
 
 def get_insurance_model(model_type: ModelType, insurance_line: str | None = None) -> BaseMLModel | None:
-    """Primary entry point: LOB model when available, else global."""
+    """Primary entry point: LOB model when available, else global.
+
+    With SAGEMAKER_ML_ENDPOINT set, the same lookup runs on the SageMaker endpoint.
+    """
+    from insureflow.ml.sagemaker import SageMakerModel, sagemaker_endpoint
+
+    if sagemaker_endpoint():
+        return SageMakerModel(model_type, insurance_line)
     return get_lob_registry().get(model_type, insurance_line)
