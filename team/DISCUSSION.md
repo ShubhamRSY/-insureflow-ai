@@ -3469,3 +3469,8 @@ Q4 closed: 600 MB-of-zeros zip refused by declared size ("too large (over 500 MB
 [2026-10-30 | orchestrator -> @user, @software-engineer, @senior-test-engineer] TYPE: STATUS
 Re: T-122 (P-078, D-138)
 Message: Renumbered P-070/T-121/D-130 to P-078/T-122/D-138; P-077 kept for the scope words-only fix, T-121 for the planned hold-out. ClamAV image clamav/clamav-debian:stable: starts on arm64, EICAR blocked (plain and in a zip), clamd down blocks every file with a plain "scanner could not be reached" reason. Ported to pilot-integration (branch p078-security): tests/pipeline 93 passed, self-checks 6/6 ok. Quick-15 on pilot-integration: 0 field or status changes; only 5 of 15 reach the model there (B-498). Live paced run on ai-team code: see the next entry. The Mac slept during the runs; one ai-team run was stopped after Docker stopped answering and restarted.
+
+---
+[2026-10-31 | orchestrator -> @user] TYPE: STATUS
+Re: T-122 (P-078, D-138) quick-15
+Message: ai-team code, with vs without P-078 (real ClamAV on the with side): 0 field or status differences over 15 files; 0 failed calls; 0 model calls (5 cached, 10 manual intake by scope-v4). Quick-15 criterion met on both branches; the set reaching the model on only 5 files is B-498.
