@@ -970,7 +970,7 @@ def unread_rows(docs: list[dict], not_sent: list[str]) -> list[dict]:
         if doc.get("unread"):
             rows.append({"file": doc["name"], "page": None, "reason": doc["unread"]})
         elif doc.get("needs_human") and not pages:
-            rows.append({"file": doc["name"], "page": None, "reason": "scan not readable"})
+            rows.append({"file": doc["name"], "page": None, "reason": doc.get("flag") or "scan not readable"})  # T-122 (D-138): a macro file says so
         rows += [{"file": doc["name"], "page": row["page"], "reason": row["reason"]} for row in pages]
     return rows + [{"file": name, "page": None, "reason": f"not sent: text past {llm_extract.MAX_CHARS:,} characters"} for name in not_sent]
 
@@ -1136,7 +1136,7 @@ def process_submission(folder: Path) -> dict:
         ):
             if not any(re.search(rf"\b{re.escape(cue.strip())}", blob) for cue in cues):
                 extra.append(label)
-    needs_human = [doc["name"] for doc in docs if doc.get("needs_human")]
+    needs_human = [doc["name"] for doc in docs if doc.get("needs_human") or doc.get("flag")]  # T-122 (D-138 B): a flagged file is also for a person
     unread = unread_rows(docs, extracted.get("not_sent") or [])
     needs_human += [row["file"] for row in unread if row["file"] not in needs_human]
     drop_premises_without_zip(merged, needs_human)
@@ -1158,6 +1158,7 @@ def process_submission(folder: Path) -> dict:
     report["class_lines"] = class_lines(texts)  # P-061 (D-112)
     report["needs_human"] = needs_human
     report["unread"] = unread
+    report["security_flags"] = [{"file": doc["name"], "kind": f["kind"], "reason": f["reason"]} for doc in docs for f in doc.get("flags") or []]  # T-122 (D-138)
     report["locations"] = locations
     report["error"] = error
     report.update(_run_metadata())
@@ -1179,6 +1180,8 @@ def process_submission(folder: Path) -> dict:
     # A failed call or an all-rejected answer is not "no data". Nothing is asked of the producer and nothing is sent.
     if error or rejected:
         report["complete"] = False
+        report["request"] = None
+    elif any(row["page"] is None for row in unread):  # T-122 H2 (D-138): a file nobody read may hold the item; ask the producer for nothing
         report["request"] = None
     elif report["complete"] or (pending and not open_conflicts):  # P-041: a review is the underwriter's, nothing to ask the producer
         report["request"] = None

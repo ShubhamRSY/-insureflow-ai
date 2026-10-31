@@ -42,6 +42,7 @@ BANNER = ""  # set by serve(); the sandbox screenshots label the page with it
 MESSAGES: dict[str, tuple[bool, str]] = {}  # submission -> (ok, plain-words result of the last action); shown once
 # D-065 item 5: one line per user-visible feature: date, task or proposal, decision number, what an underwriter sees.
 WHATS_NEW = (
+    ("2026-10-27", "T-122", "D-138", "Security checks on every file: a locked or virus-flagged file is not opened and says why; a file with macros or scripts, or text that tries to steer the model, shows a \"Not opened\" or \"Read but flagged\" note naming the file and goes to a person; zips and emails are unpacked, unsafe ones refused."),
     ("2026-10-20", "P-067", "D-118", "A rejected value now keeps its reason on the card: a field the extraction could not trust shows why (\"value not inside the cited text\", \"the date does not parse\") instead of an empty reason."),
     ("2026-10-20", "P-066", "D-118", "Every refusal now names its reason in plain words, and no action can crash the page: a blocked send, approve or carrier package shows why it was refused."),
     ("2026-10-19", "P-067", "D-117", "Loss-run dates read from a scan are kept for review when the date digits appear in the cited text: the card shows \"read from a scan — check it against the page\" and is never silently dropped."),
@@ -829,6 +830,29 @@ def _send_panel(item: dict, report: dict, refused: bool, manifest: str) -> str:
     )
 
 
+def whole_unread(report: dict) -> list[str]:
+    """Files no value could come from: the saved run's whole-file unread rows (locked, virus, macros, unsupported type, damaged)."""
+    return sorted({row["file"] for row in report.get("unread") or [] if row.get("page") is None})
+
+
+def security_html(report: dict) -> str:
+    """T-122 (D-138, senior-underwriter H3): two kinds. Not opened = never sent to the model. Read but flagged = sent as is; check what came from it."""
+    flags = report.get("security_flags") or []
+    if not flags:
+        return ""
+    out = ""
+    closed = [f for f in flags if f.get("kind") == "not_opened"]
+    if closed:
+        out += ('<p class="msg bad" role="alert"><b>Not opened</b> — not sent to the model; its reason is in the Not read list above. An underwriter opens: '
+                + html.escape(", ".join(f["file"] for f in closed)) + "</p>")
+    for f in (f for f in flags if f.get("kind") == "flagged"):
+        cited = [r["field_id"] for r in report.get("fields") or [] if r.get("value") and r.get("source") == f["file"]]
+        use = (f"Values taken from it: {', '.join(cited)}. Check them against the source before relying on them." if cited
+               else "No extracted value cites it, but the model did read it. Confirm with the producer if anything looks odd.")
+        out += f'<p class="msg bad" role="alert"><b>Read but flagged</b> — {html.escape(f["file"])}: {html.escape(f["reason"])}. It was sent to the model unchanged. {html.escape(use)}</p>'
+    return out
+
+
 def whats_new_items(rows) -> str:
     return "".join(f"<li>{html.escape(d)} · {html.escape(t)} · {html.escape(n)}: {html.escape(w)}</li>" for d, t, n, w in rows)
 
@@ -1015,6 +1039,9 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
             reason = report.get("status_reason") or "every value was rejected by the gate"
             extraction = f"REJECTED — {reason}. No field was accepted. This is not a missing-data file. Sends are blocked."
         unread = report.get("unread") or []
+        unread_files = whole_unread(report)
+        if unread_files and extraction == "ok":
+            extraction = f"ok for the files that were read; {len(unread_files)} not read (see Not read)"
         failed = report.get("status") == "extraction_failed"
         none_ = NOT_READ if failed else MI_NOT_READ if manual else "none"  # D-080 (B-297): a failed card never says "none"; nor does a manual-intake card (T-104a UI H1)
         unread_html = f"<p>Not read: {none_}</p>" if not unread or manual else "<p>Not read:</p><ul>" + "".join(
@@ -1033,15 +1060,19 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
             f"<p>Saved run: status {html.escape(str(report.get('status')))} · hash check: ok · manifest check: "
             + (f'<span class="bad">FAILED — {html.escape(manifest)}. A send will be refused.</span>' if manifest else "ok")
             + "</p>",
+            (f'<p class="msg bad" role="alert"><b>{len(unread_files)} file{"s" if len(unread_files) != 1 else ""} not read</b> ({html.escape(", ".join(unread_files))}). '
+             "Nothing below says anything about what is in them.</p>" if unread_files and not manual else ""),
             review_pending_html(report),
             manual_intake_html(report),
             (f'<p class="msg bad" role="alert"><b>Send blocked</b> — {html.escape(item["scope_now"])}. Nothing on this file can be sent. '
              "Do not chase the missing items. Next step: re-run extraction on this file; the scope check then makes it manual intake, "
              "and an underwriter reads the whole file by hand.</p>" if item.get("scope_now") and not refused else ""),  # P-063, T-109a UI check H1
             f"<p>Files: {html.escape(', '.join(item['files']) or 'none')}</p>",
-            f"<p>Not read by extraction: {html.escape(none_ if manual else ', '.join(item['ignored']) or none_)}</p>",
+            f"<p>Not read by extraction: {html.escape(none_ if manual else ', '.join(sorted(set(item['ignored']) | set(unread_files))) or none_)}</p>",
         ]
         lines += score_html(item, report)
+        if unread_files and not manual and not refused:
+            lines.append(f'<p class="msg bad">Cooking, hood and the other "not stated" lines: {len(unread_files)} file{"s" if len(unread_files) != 1 else ""} unread ({html.escape(", ".join(unread_files))}) — these may hold this.</p>')
         if item.get("scope_now") and not refused:  # P-063 (T-109a UI check H1): no route or hold wording on an out-of-scope file
             lines.append("<p>Carrier match: none — out of pilot scope at send time (see the alert above)</p>")
         elif not refused:
@@ -1056,6 +1087,7 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
         lines += [
             f"<p>Extraction: {html.escape(extraction)}</p>",
             unread_html,
+            security_html(report),
             f"<p>Needs human read: {html.escape(none_ if manual else ', '.join(report.get('needs_human') or []) or none_)}</p>",
             f"<p>Address check: {html.escape(address_check)}</p>",
             f"<p>Locations: {html.escape('; '.join(('primary ' if row.get('primary') else 'other ') + row['address'] for row in report['locations']) or 'one premises') if report.get('locations') is not None else 'not stored in the saved run'}</p>",
@@ -1068,6 +1100,8 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
         if not refused:
             missing = report["missing"] + report.get("extra", [])
             lines += ["<h3>Missing</h3>", f"<p>{html.escape(', '.join(missing) or 'none')}</p>"]
+            if unread_files and not manual:
+                lines.append(f"<p>{len(unread_files)} file{'s' if len(unread_files) != 1 else ''} unread — these may hold the missing items. No missing-info request is drafted until they are read.</p>")
         # T-071: on a refused card there is no approve option. Edit and decline stay so a person decides.
         options = "<option>decline</option>" if manual else "<option>edit</option><option>decline</option>" if refused else "<option>approve</option><option>edit</option><option>decline</option>"
         acks = "".join(
@@ -1462,6 +1496,18 @@ if __name__ == "__main__":
         pf = render([flagged], None)
         assert "NEEDS REVIEW: number or date read from a scan" in pf and "Built 1942" in pf and 'name="ack" value="year_built"' in pf
         assert "a.pdf, page 2: blank" in pf and "b.docx, whole file:" in pf
+        # T-122 (D-138): a flagged file is named on the card with its reason.
+        sec = card("complete")
+        sec["report"]["security_flags"] = [{"file": "macro.pdf", "kind": "not_opened", "reason": "contains JavaScript; not sent to the model, an underwriter opens it by hand"},
+                                           {"file": "notes.md", "kind": "flagged", "reason": "the text has words that try to give the AI instructions"}]
+        sec["report"]["unread"] = [{"file": "macro.pdf", "page": None, "reason": "contains JavaScript; not sent to the model, an underwriter opens it by hand"}]
+        sec["report"]["needs_human"] = ["macro.pdf", "notes.md"]
+        sec["report"]["fields"] = [{"field_id": "operations", "value": "restaurant", "source": "notes.md"}]
+        pg_sec = render([sec], None).split("<article", 1)[1]
+        assert "<b>Not opened</b>" in pg_sec and "<b>Read but flagged</b> — notes.md" in pg_sec and "Values taken from it: operations" in pg_sec and "<b>Security check</b>" not in pg_sec
+        assert "1 file not read" in pg_sec and "Not read by extraction: macro.pdf" in pg_sec and "ok for the files that were read; 1 not read" in pg_sec, "H1"
+        assert "these may hold this" in pg_sec and "No missing-info request is drafted" in pg_sec, "H2"
+        assert "<b>Not opened</b>" not in render([card("complete")], None).split("<article", 1)[1]
         # B-428 (D-113): the "Not read by extraction" list comes from the saved run's unread rows, never from the file name.
         assert not_read_by_extraction({"unread": []}, ["application.pdf", "loss-runs.jpg", "email.md"]) == [], "a read pdf or jpg is not 'not read' (SUB-184, SUB-127/133)"
         assert not_read_by_extraction({"unread": [{"file": "a.pdf", "page": 2, "reason": "blank"}]}, ["a.pdf"]) == [], "a partly read file belongs on the Not read line, not here"
