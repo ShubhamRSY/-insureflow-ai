@@ -1498,3 +1498,15 @@ Then continue: P-066 concurrent-write tests, @pm pilot-readiness update, @model-
 - Rationale: the user's words in the Claude Code session on 2026-10-27 (pasted, D-032): "T-120 official run: GO (D-020). Verify every hash in NEXT-SESSION.md first (code fa604b9, PROMPT_VERSION 759b3e6bc9b2, scorer v11, lint, C2/C4 counter, gold manifest 534e65a5…); stop if any differs. smoke_readers first; no cached replies for SUB-450–481; qwen paced 55 s; retries per RUN-RULES; run once, score once with v11 and count_ops_gate.py. Report all gates … Mismatches file and run record. Fix nothing." Then @model-risk writes the T-027 memo.
 - Status: ACCEPTED by @user, 2026-10-27
 - Amends: none.
+
+## D-138 — P-078: security checks for the demo pipeline (intake agent stages 1, 2, 4)
+- Date / Owner: 2026-10-27 / @user
+- Context: the demo pipeline (`underwriting_pipeline/`) reads files with no type check, lock check, virus scan, macro check, prompt-injection check or ZIP/email unpacking. The main app has these in `src/insureflow/ingestion/intake.py` and `src/insureflow/fraud/genai_defense.py`.
+- Decision (in the user's words): 2026-10-27 "approve change P-070", "yes, override rule 8 for this", "yes, start Docker for ClamAV". P-070 was already used (T-118 cooking proposal), so on 2026-10-30 the user had it renumbered and re-approved: "approve change P-078 (security gate: unpacking, ClamAV fail-closed, macro/script to person, injection flag, unread-file warning) — typed by @user". Task renumbered T-121 → T-122 (T-121 kept for the planned hold-out); decision D-130 → D-138 (D-130–D-137 used on pilot-integration). P-077 is kept for the scope words-only fix.
+  - A. `sources.read_folder` runs every file through the main app's `ingestion.intake.prepare()` first. Locked or infected → not opened, `unread` with a plain reason. Macros/scripts → `needs_human` with the reason. Wrong extension → read as its real type. Reuse, no second copy.
+  - B. The existing `genai_defense` check runs on each file's text before the model call. Flag only (`needs_human` + reason naming the file); the text sent to the model is unchanged.
+  - C. `app/intake.py` unpacks `.zip` and `.eml` attachments into the submission before reading; each inner file goes through A like any other.
+  - D. Workbench (D-065): every block and flag in plain words, a "What's new" line, a screenshot.
+  - Plus: test the ClamAV path against a real clamd in Docker.
+- Conditions: stricter only (more to a person, never less). Built in the `insureflow-ai-team` worktree. After the build, run the quick set of 15 and report any field drop. No hold-out run, no scorer change. Budget rule 8 is overridden for this task only.
+- Status: ACCEPTED by @user, 2026-10-27; re-approved as P-078 on 2026-10-30. Not a production approval; the T-027 veto stands.

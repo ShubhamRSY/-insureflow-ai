@@ -30,6 +30,12 @@ deliverables/software-engineer/T-105-demo/run-demo.sh /tmp/t105-demo-$(date +%s)
 - The scripts and saved replies are in `deliverables/software-engineer/T-105-demo/`. They are demo tooling only, not pipeline code.
 - The steps are a replay of recorded actions, not a live click-through. Show the rendered pages from the temp folder's `shots/`, or the committed screenshots below (safest for the meeting).
 - The demo files are dev data (SUB-127 to SUB-184). None comes from the hold-out.
+- **Virus scan (T-122, P-078, D-138).** Start the scanner and point the shell at it, or the scan is skipped and nothing says so:
+  ```
+  docker compose up -d clamav            # clamav/clamav-debian:stable, runs natively on Apple Silicon; first start loads signatures (~1–2 min)
+  export CLAMAV_HOST=127.0.0.1           # port 3310 (CLAMAV_PORT); expose it with a ports: ["127.0.0.1:3310:3310"] override
+  ```
+  With `CLAMAV_HOST` set and the scanner down, every file is blocked and the card says "the antivirus scanner could not be reached" (fail-closed). With `CLAMAV_HOST` unset, files are read without a virus scan.
 
 Screenshots: the opening best-case steps are in `deliverables/software-engineer/screenshots/demo/` with names starting `T-107e-` (SUB-184 shots, being retaken now). Demo A to C shots are in the same folder with names starting `T-105-`. The queue screenshot `T-105-SUB-127-00-queue-all-three.png` shows all three demo cards before any action.
 
