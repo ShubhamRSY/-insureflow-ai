@@ -1,0 +1,4 @@
+INFO  SUB-468/loss-runs.md: declared undated in the plan; no valued date found, as declared
+FAIL  SUB-461/scorer: the perfect answer is marked miss on conflict (gold line not scorable as written)
+FAIL  SUB-463/scorer: the perfect answer is marked miss on conflict (gold line not scorable as written)
+FAIL: 2 failure(s), 1 info, 32 files, run date 2026-10-27

@@ -33,15 +33,21 @@ _ES_PRONE_LINES = frozenset(
     }
 )
 
-# Representative surplus-lines tax rates (state SL tax, not stamping fee).
-_SL_TAX: dict[str, float] = {
-    "CA": 0.03,
-    "NY": 0.036,
-    "TX": 0.0485,
-    "FL": 0.05,
-    "IL": 0.035,
-    "NJ": 0.05,
-}
+
+# Representative surplus-lines tax rates. Cited states live in
+# commercial.lobs.state_law.SURPLUS_LINES_TAX; every other state uses that
+# module's default so this file cannot drift from the quote path.
+def _surplus_tax_rate(state: str) -> float:
+    from insureflow.commercial.lobs.state_law import SURPLUS_LINES_TAX, SURPLUS_LINES_TAX_DEFAULT
+    from insureflow.regulatory.state_rules import StateRegulatoryEngine
+
+    st = (state or "").upper()
+    if st in SURPLUS_LINES_TAX:
+        return SURPLUS_LINES_TAX[st]
+    rule = StateRegulatoryEngine().get_rule(st) if st else None
+    if rule is not None and rule.surplus_lines_tax_rate:
+        return float(rule.surplus_lines_tax_rate)
+    return SURPLUS_LINES_TAX_DEFAULT
 
 
 @dataclass
@@ -98,7 +104,7 @@ def classify_surplus_lines(
     missing: list[str] = []
     findings: list[Finding] = []
     can_bind = True
-    sl_tax = _SL_TAX.get(st, 0.036) if status == "surplus_lines" else 0.0
+    sl_tax = _surplus_tax_rate(st) if status == "surplus_lines" else 0.0
 
     if status == "surplus_lines":
         if not re.search(r"diligent\s+search|affidavit\s+of\s+due\s+diligence", blob, re.I):

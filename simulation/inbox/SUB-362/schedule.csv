@@ -1,0 +1,3 @@
+source,loc,address,city,zip,bldg_tiv,construction,year_built,sq_ft,sprinklers,cooking
+application,1,5312 Bryant Irvin Rd,Fort Worth,76132,$300000,Metal,2001,3800,No,No
+application,2,1216 W State Hwy 114,Grapevine,76051,$90000,Metal,2014,1500,No,No

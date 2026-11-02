@@ -1377,6 +1377,128 @@ Then continue: P-066 concurrent-write tests, @pm pilot-readiness update, @model-
 - Status: ACCEPTED by @user, 2026-10-21
 - Amends: D-120 item 7 (umbrella criterion 5 timing) and D-120 items 1/10/12 by the Wave 2 decisions above. Not a production approval; the T-027 veto stands.
 
+## D-122 — approve change P-070 (carry the stated cooking line into operations; a disagreement between documents on a rating or scored figure becomes an open conflict and a hold)
+- Date / Owner: 2026-10-21 / @user
+- Context: the T-117 memo of @model-risk (`deliverables/model-risk/T-027-memo-T-117.md`) carries two High findings: H1 (on SUB-248/250/254/257 the stated application line `Cooking operations: None` is dropped from the operations answer) and H2 (0 of 3 planted document conflicts surfaced). The cause write-up is `deliverables/ai-engineer/analysis/T-117-H1-H2-cause.md`; the change is `deliverables/ai-engineer/proposal-P-070.md`.
+- Decision: In the user's words (typed in this session): "approve change P-070".
+- Conditions: the change is in `underwriting_pipeline/ai/prepare.py` only — no prompt, no model, no scorer, no gold, no hold-out file, no published score. The model request stays byte-identical (zero changed requests). Self-checks on development files only, shaped like SUB-249/252/257 but new files. D-065: the workbench card, one "What's new" line, a Playwright screenshot and @senior-underwriter's UI review (High only). The work lands on branch `fix-t117` and is pushed there only. @model-risk checks the result before any use beyond development; the T-027 veto stands.
+- Rationale: the user typed the exact approval in this session on 2026-10-21 (D-017).
+- Dissent: none
+- Follow-up tasks: @ai-engineer-assistant builds P-070 on `fix-t117` with the dev set `simulation/inbox-dev/document_conflicts/`; @senior-test-engineer and @model-risk own the v-next scorer (the M-class operations readings and the suite-count conflict topic), frozen before the next gold; @model-risk reviews the fix with no High before it counts towards the H1/H2 closure.
+- Status: ACCEPTED by @user, 2026-10-21
+- Amends: none. Not a production approval; the T-027 veto stands.
+- Confirmed: 2026-10-22, the user typed "approve change P-070" in the Claude Code session (D-045, D-053: the OpenCode record of 2026-10-21 is confirmed here).
+
+## D-123 — approve change P-071 (the stated cooking line is added only when no document in the folder states cooking)
+- Rationale: the user typed "approve change P-071" in the Claude Code session on 2026-10-23 (D-017), after reading `deliverables/ai-engineer/proposal-P-071.md`. Fixes @model-risk T-118 High H1 only.
+- Dissent: none
+- Follow-up tasks: build on `fix-t117` (dev files only, tests/pipeline green, request-equality changes listed); fresh @model-risk check, High only; then merge `fix-t117` into `pilot-integration`.
+- Status: ACCEPTED by @user, 2026-10-23
+- Amends: D-122 (P-070 change 1). Not a production approval; the T-027 veto stands.
+
+## D-124 — approve change P-072 (remove the "; no cooking" add from operations entirely)
+- Rationale: the user typed "approve change P-072" in the Claude Code session on 2026-10-23, with the text: remove the "; no cooking" add from operations entirely; files where cooking is not clearly stated keep their existing review flag; no automatic "no cooking" in any case; revert the P-070/P-071 add logic, keeping harmless refactoring only if it changes no behaviour; the H1 scoring gap moves to the next scorer version. Answers @model-risk T-118 re-check High H1 (`deliverables/model-risk/T-118-recheck.md`).
+- Dissent: none
+- Follow-up tasks: build on `fix-t117` (dev SUB-293 and SUB-296: no false complete, flag kept); fresh @model-risk check, High only; if no High, commit, merge into `pilot-integration`, full suite + request equality. The H1 scoring gap goes to the v-next scorer (@senior-test-engineer, @model-risk).
+- Status: ACCEPTED by @user, 2026-10-23
+- Amends: D-122 (P-070 change 1 withdrawn), D-123 (P-071 withdrawn). P-070 changes 2–5 stand. Not a production approval; the T-027 veto stands.
+
+## D-125 — B-448/B-458 (SUB-252): option A, restaurant evidence → R2 senior referral wins
+- Rationale: the user chose option A in the Claude Code session on 2026-10-23, from @head-of-underwriting's proposal (`deliverables/head-of-underwriting/B-448-SUB-252-rule-proposal.md`): when a bar word stands beside restaurant evidence, R2 senior referral wins, also when a non-food second operation (offices, retail) is present. Decided by @user.
+- Dissent: none
+- Follow-up tasks: @senior-underwriter updates the written rules (carrier-match.md W1 note) and any affected dev gold, each with a note citing D-125. No code change. Published hold-out gold and scores (T-117) are not rewritten (D-020); the next hold-out (T-119) includes a SUB-252-style case under this rule.
+- Status: ACCEPTED by @user, 2026-10-23
+- Amends: closes B-448 and B-458. Not a production approval; the T-027 veto stands.
+
+## D-126 — approve change P-073 (scorer v12, H1 only)
+- Rationale: the user typed "approve change P-073" in the Claude Code session on 2026-10-23, with the text: scorer v12 reads the cooking slot correctly when the answer leaves cooking out or says "no cooking" in plain words, per operations-gold-rule.md; v11 stays frozen; lint: perfect answers 100%, every wrong answer caught, including near-miss negatives (cooking vs no cooking; "cook/stove/fry/hot food" sentences); dev re-score on SUB-127–296 with 0 model calls; @model-risk check, High only.
+- Dissent: none
+- Follow-up tasks: @senior-test-engineer builds `eval_holdout_v12.py` and its lint cases and runs the dev re-score; fresh @model-risk check; if no High, freeze code (pilot-integration commit) and v12, recorded in team/NEXT-SESSION.md.
+- Status: ACCEPTED by @user, 2026-10-23
+- Amends: D-124 (the H1 scoring gap moves to v12). v11 and all published scores stay frozen (D-020). Not a production approval; the T-027 veto stands.
+- Superseded: by D-127 (2026-10-23), P-073/v12 dropped by @user after the @model-risk BLOCK.
+
+## D-127 — P-073/v12 dropped; v11 remains the scorer
+- Rationale: the user's words in the Claude Code session on 2026-10-23: "P-073/v12 dropped by @user; v11 remains the scorer. Omitted 'no cooking' slots score as misses under v11 (conservative). The H1 scorer fix is deferred to the backlog with P-073-v12-check.md and @model-risk's 45 answers as future lint cases." Follows the @model-risk BLOCK (`deliverables/model-risk/P-073-v12-check.md`, High H1).
+- Dissent: none
+- Follow-up tasks: operations-gold-rule.md states the v11 behaviour explicitly (no scoring change); the v12 files are parked in `deliverables/backlog/P-073-v12/`, off the pipeline path; backlog B-464; T-119 notes the v11 behaviour before any file is built.
+- Status: ACCEPTED by @user, 2026-10-23
+- Amends: supersedes D-126. v11 and every published score stay frozen (D-020). Not a production approval; the T-027 veto stands.
+
+## D-128 — T-119 cooking conflicts on SUB-348/349: true lines restored, not measured under v11
+- Rationale: the user's words in the Claude Code session on 2026-10-23: "A. Restore the true cooking-conflict lines on SUB-348 and SUB-349. Record: "Under v11 these two conflict marks can't be measured; they are reported separately and excluded from the conflict rate. Noted before the run." Fix SUB-344 (remove 'appraisal 2025' as a required match) and add it to the no-cooking backlog item." Follows the @model-risk T-119 build check BLOCK (`deliverables/model-risk/T-119-build-check.md`, High H1).
+- Dissent: none
+- Follow-up tasks: @senior-underwriter restores the SUB-348/349 conflict lines, moves "appraisal 2025" out of the SUB-344 Conflict line, adds SUB-344 to the no-cooking list (14 files); re-lint; lint record updated; @model-risk look-again (B-457); if it passes, freeze the gold and record the manifest sha256. T-119 is not run (D-020). Backlog B-465.
+- Status: ACCEPTED by @user, 2026-10-23
+- Amends: none. v11 and every published score stay frozen (D-020). Not a production approval; the T-027 veto stands.
+
+## D-129 — Fast lane (standing approval)
+- Rationale: the user's words in the Claude Code session on 2026-10-23 (pasted, D-032): "FAST LANE (standing approval by @user, 2026-10-23): Proceed without asking: gold fixes that make gold match the documents; new tests; docs; dev-only data; reviewer-requested UI text fixes; any change that is stricter only (sends more to a person, never less, never loosens a gate). Always stop and ask @user: anything that loosens a rule or gate; scorer changes; frozen files; hold-out runs; rule/routing/appetite decisions; merges into ai-team or main; real data; anything outside the worktrees. Decisions: collect all decisions for @user in one list per session, each with options and a recommendation. Reviews: High-only; at most one look-again per finding. If a fix fails a second time, stop and present 2–3 options instead of looping. Tracks: at most two AI tracks at once, each in its own worktree, one tool per worktree. Everything else in CLAUDE.md (frozen files, gold-first, run once, secret scan, never push main, decisions only typed by @user) still applies."
+- Dissent: none
+- Follow-up tasks: "Fast lane" section in CLAUDE.md and AGENTS.md on pilot-integration and ai-team.
+- Status: ACCEPTED by @user, 2026-10-23
+- Amends: none; D-017 approvals for extraction, prompts, OCR, models and scorers still need `approve change P-###`.
+
+## D-130 — T-119 official run: GO
+- Rationale: the user's words in the Claude Code session on 2026-10-23: "T-119 official run: GO (D-020, typed by @user)." Rules fixed before running: code b6a35b7, PROMPT_VERSION 759b3e6bc9b2, scorer v11 and lint sha256 and T-119 gold manifest 2feba3b2… must match NEXT-SESSION.md exactly, else stop; no changes during or after the run; .venv python; smoke_readers.py first, stop if any reader fails; qwen, paced 55 s; no cached replies for SUB-340–371; retries per RUN-RULES.md, all logged; other failures are "call failed" and counted; all 32 files once; scored once with v11 (--write); D-127/D-128/B-467 reporting; results, mismatches and run record; fix nothing. Then @model-risk writes the T-027 memo.
+- Dissent: none
+- Follow-up tasks: run and score T-119 once; results, mismatches, run record in deliverables/ai-engineer/evals/; @model-risk T-027 memo; findings to the backlog.
+- Status: ACCEPTED by @user, 2026-10-23
+- Amends: none. Published scores are never rewritten (D-020).
+
+## D-131 — After the T-119 memo: H2 first (P-074), then H1 (P-075), then plan T-120
+- Rationale: the user's words in the Claude Code session on 2026-10-24 (pasted, D-032): "Decisions: 1 = A. 2 = B (with guardrails below), not A. 3 = A (H2 first, then H1, same track, sequential). H2 → @ai-engineer-assistant drafts P-074 for me to read: when the model raises a conflict and the pipeline can't verify one side, the conflict stays open and the file is held — never dropped. The quote check reads "million"/"thousand"/"k"; approximate amounts ("about", "roughly", "~") are kept as approximate and never verify an exact figure. Stricter only otherwise. H1 → after P-074 is built and checked, draft P-075 for me to read: copy an explicit, cited cooking statement from the application (e.g. "Cooking operations: None") into operations. Never infer cooking status from missing words. Any cooking mention in any other document → open conflict, file held (per P-074). The whole-document check flags any stated cooking line missing from the answer (review). No scorer change; v11 stays frozen. List every request that changes (PROMPT_VERSION will change). For both: dev checks only (incl. SUB-345, SUB-293–296, SUB-348/349, SUB-350), tests/pipeline green, @model-risk check High only, one look-again max per the fast lane. Then plan T-120: 20 in-scope + 12 out-of-scope, at least 5 measurable planted conflicts (incl. a "million"/approximate one), cooking-stated and cooking-conflict cases, direct Carrier A files. Plan only. Show me each proposal text before building; I'll approve with "approve change P-###"."
+- Dissent: none
+- Follow-up tasks: @ai-engineer-assistant drafts P-074 (not built until `approve change P-074`); after P-074 is built and checked, P-075 drafted; then T-120 planned (plan only). Scorer option for H1 (B-464) not taken.
+- Status: ACCEPTED by @user, 2026-10-24
+- Amends: none. v11 and all published scores stay frozen (D-020). Not a production approval; the T-027 veto stands.
+
+## D-132 — P-074 approved (H2: unverifiable conflict sides stay open; "million" read; approximate amounts never verify)
+- Rationale: the user typed in the Claude Code session on 2026-10-24: "approve change P-074 as drafted, with: (1) keep the extra hedge words (nearly, almost, close to, circa); (2) equal-amount merging as drafted; (3) backup sales rule left out — add a backlog item: "second safety net for sales figures in sentences without a sales word, so a conflict is caught even when the model doesn't raise it."" Proposal: `deliverables/ai-engineer/proposal-P-074.md`.
+- Dissent: none
+- Follow-up tasks: build on a new branch from pilot-integration in the fix worktree; dev checks as in the proposal; @senior-underwriter UI check; @model-risk check (High only, one look-again max, D-129); if it passes, merge into pilot-integration, tests/pipeline + 143-folder request-equality (expect 0 request changes), push pilot-integration only. Then P-075 drafted, not built. Backlog B-478.
+- Status: ACCEPTED by @user, 2026-10-24
+- Amends: none. v11 and all published scores stay frozen (D-020). Not a production approval; the T-027 veto stands.
+
+## D-133 — P-075 approved (H1: copy the application's own cooking none-line, cited; any cooking mention elsewhere holds the file)
+- Rationale: the user typed in the Claude Code session on 2026-10-26: "approve change P-075 — 1: keep the review note; 2: rule only, 0 requests change; 3: ask @model-risk for the 45 probe sentences (store them as lint/test cases). Build per CLAUDE.md fast lane: pyright-lsp + code-review before review; playwright screenshot; @senior-underwriter UI check; @model-risk check, one look-again max. Merge into pilot-integration if no High; tests/pipeline + request-equality (expect 0 changes). Question for @model-risk (answer only, no change): would it accept, for T-027, "operations is never auto-accepted; the operations gate is 0 silent errors instead of the 18/20 hit floor"? Conditions and reasons. Then plan T-120 (plan only). Commit with commit-commands; push pilot-integration only." Proposal: `deliverables/ai-engineer/proposal-P-075.md`.
+- Dissent: none
+- Follow-up tasks: @model-risk supplies the 45 P-073 probe sentences (stored as test cases); build P-075 on a new branch in the fix worktree (rule only, review note kept, 0 changed requests); checks; @senior-underwriter UI check; @model-risk check (one look-again); merge if no High; @model-risk answers the T-027 operations-gate question (no change); plan T-120.
+- Status: ACCEPTED by @user, 2026-10-26
+- Amends: none. v11 and all published scores stay frozen (D-020). Not a production approval; the T-027 veto stands.
+
+## D-134 — Operations gate adopted for T-027 (C1–C7), recorded before T-120 gold (2026-10-26)
+- Rationale: The user typed in the Claude Code session on 2026-10-26: "Decisions (typed by @user): 1 = A — adopt the operations gate with @model-risk's C1–C7; record it now, before any T-120 gold. 2 = A — freeze and build T-120 after C1 is built. B-481 waits until after T-120. 1. @ai-engineer-assistant drafts the C1 proposal for me to read: operations is always flagged and must be acknowledged before any send, in all modes; reuse the pilot per-value confirm where possible. Do not build until I approve. 2. Freeze C2 (stricter silent-error count) and C4 (operations ≥15/20) in writing now, in the T-120 plan and the scorer notes. No scorer code change. 3. Add C6 (extra cooking files) to the T-120 plan. Commit, push pilot-integration only."
+- Decision:
+  - **C1:** Operations is never auto-accepted. After all rules/merges (including P-074/P-075), any operations row with a value is flagged `needs_review=True` with a policy note when no specific item-naming reason exists; shown on the card; send refused until acknowledged on the current run hash. Enforced by code change needing its own proposal (**P-076**, draft for user review, not built). Reuse existing per-value acknowledgment.
+  - **C2:** Silent error for operations = scored miss with **no specific** item-naming reason (P-059/P-075 missing-item reasons, cooking/conflict reasons, scan/low-confidence reasons count as specific; the C1 policy reason does **not** count). Counted by a script frozen before T-120 gold; v11 unchanged. Target 0.
+  - **C3:** Zero understated hazards (cooking, fryer, hood, pub, contractor class), whether flagged or not.
+  - **C4:** Operations present ≥ 18/20 and hits ≥ 15/20 under frozen v11 (floor set now, before T-120 gold).
+  - **C5:** All other fields and gates unchanged.
+  - **C6:** T-120 will include ≥12 files with "Cooking operations: None"-type lines, ≥3 with cooking stated, ≥2 with planted cooking conflicts (added to plan).
+  - **C7:** Recorded before any T-120 gold exists (satisfied).
+- Effect: Operations and status automation go to 0 by design. T-027 veto remains until T-120 meets all conditions; this is not a production approval.
+
+## D-135 — P-076 approved (C1: operations is never auto-accepted; flagged and acknowledged before send)
+- Rationale: the user's words in the Claude Code session on 2026-10-27 (pasted, D-032): "C1 proposal: show me its full text. I approve it (record as "approve change P-### — conditional approval typed by @user, conditions met") ONLY if all three hold: (a) it only adds an operations flag and acknowledgment before send, loosening nothing; (b) it reuses the pilot per-value confirm; (c) it touches no frozen file." Recorded as: **approve change P-076 — conditional approval typed by @user, conditions met.** Proposal: `deliverables/ai-engineer/proposal-P-076.md`.
+- Conditions checked by the orchestrator against the proposal text and the code on pilot-integration 6b827a1: (a) the change sets `needs_review` on operations and keeps every existing reason; routing, appetite and every gate unchanged; the only new effect is the acknowledgment before send (stricter only). (b) no new confirm path: the pilot form already shows a per-value confirm for every value (`workbench.py` 1339), and outside the pilot the one acknowledgment list `package.needs_review_ids` / `ack_problem` is reused. (c) touches `ai/prepare.py`, `app/package.py`, `app/workbench.py` and tests only; no frozen scorer, lint, gold or hold-out file.
+- Dissent: none
+- Follow-up tasks: build on a new branch from pilot-integration in the fix worktree; pyright + self code review; tests/pipeline green; request-equality on all 143; Playwright screenshot on a temp copy; @senior-underwriter UI check; @model-risk check (High only, one look-again max, D-129); merge if no High; then freeze and build T-120 (not run).
+- Status: ACCEPTED by @user, 2026-10-27
+- Amends: none. v11 and all published scores stay frozen (D-020). Not a production approval; the T-027 veto stands.
+
+## D-136 — T-120 pre-run rulings: SUB-461/463 conflict marks excluded; C2 counter rules confirmed (2026-10-27)
+- Rationale: the user's words in the Claude Code session on 2026-10-27 (pasted, D-032): "Decisions (typed by @user): exclude the SUB-461/463 cooking-conflict marks from the conflict rate (as D-128); planted-conflict recall is measured on the 7 figure conflicts. C2 counter rules confirmed as written. Record before the run."
+- Decision: (1) SUB-461 and SUB-463 cooking-conflict marks are v11-unmeasurable; reported separately, excluded from the conflict rate (as D-128). Planted-conflict recall is measured on the 7 figure conflicts (SUB-454, 455, 458, 459, 460, 462, 469). (2) `count_ops_gate.py` (sha256 f942010d…9aa1) rules confirmed as written: silent error = v11 operations miss with no non-empty `reason` and no open operations/cooking conflict; `policy_review` never counts; failed calls counted apart, not present and not hit.
+- Dissent: none
+- Status: ACCEPTED by @user, 2026-10-27, before the T-120 run
+- Amends: none. v11 and all published scores stay frozen (D-020). Not a production approval; the T-027 veto stands.
+
+## D-137 — T-120 official run: GO
+- Rationale: the user's words in the Claude Code session on 2026-10-27 (pasted, D-032): "T-120 official run: GO (D-020). Verify every hash in NEXT-SESSION.md first (code fa604b9, PROMPT_VERSION 759b3e6bc9b2, scorer v11, lint, C2/C4 counter, gold manifest 534e65a5…); stop if any differs. smoke_readers first; no cached replies for SUB-450–481; qwen paced 55 s; retries per RUN-RULES; run once, score once with v11 and count_ops_gate.py. Report all gates … Mismatches file and run record. Fix nothing." Then @model-risk writes the T-027 memo.
+- Status: ACCEPTED by @user, 2026-10-27
+- Amends: none.
+
 ## D-138 — P-078: security checks for the demo pipeline (intake agent stages 1, 2, 4)
 - Date / Owner: 2026-10-27 / @user
 - Context: the demo pipeline (`underwriting_pipeline/`) reads files with no type check, lock check, virus scan, macro check, prompt-injection check or ZIP/email unpacking. The main app has these in `src/insureflow/ingestion/intake.py` and `src/insureflow/fraud/genai_defense.py`.
@@ -1388,3 +1510,38 @@ Then continue: P-066 concurrent-write tests, @pm pilot-readiness update, @model-
   - Plus: test the ClamAV path against a real clamd in Docker.
 - Conditions: stricter only (more to a person, never less). Built in the `insureflow-ai-team` worktree. After the build, run the quick set of 15 and report any field drop. No hold-out run, no scorer change. Budget rule 8 is overridden for this task only.
 - Status: ACCEPTED by @user, 2026-10-27; re-approved as P-078 on 2026-10-30. Not a production approval; the T-027 veto stands.
+
+## D-139 — Repo stays public; gitleaks before every push; tool rules for this session
+- Date / Owner: 2026-11-02 / @user
+- Decision (the user's words, pasted, D-032): "Repo stays public for now (my decision). Before every push: gitleaks over the pushed commits must be clean; otherwise stop." "Tools: drafting and docs — no plugins. Code changes — pyright-lsp and code-review before any @model-risk review; playwright only if the UI changes; commit-commands for commits. No superpowers. Subagents only for the @model-risk reviews."
+- Status: ACCEPTED by @user, 2026-11-02. Replaces NEXT-SESSION pending decision 1.
+
+## D-140 — P-077 to be drafted (not built)
+- Date / Owner: 2026-11-02 / @user
+- Decision (the user's words): "@ai-engineer-assistant drafts P-077 for me to read (do not build): a second location is detected by EITHER rules (number words + place nouns like "two stores", "both locations", "second shop", "other branch"; a different street address in any document) OR a model-reported location count with citation; count >1 or uncertain → whole file to manual intake. Stricter only. State the PROMPT_VERSION change. Include in-scope near-misses ("two floors", "two entrances", "2nd floor")."
+- Draft: `deliverables/ai-engineer/proposal-P-077.md`. Not approved; needs `approve change P-077`.
+- Status: ACCEPTED by @user, 2026-11-02.
+
+## D-141 — B-491 approved: C2 counter v2 (reason must name the item or evidence)
+- Date / Owner: 2026-11-02 / @user
+- Decision (the user's words): "B-491 approved: build the new C2 counter (a reason counts only if it names the item or evidence); new version, old one frozen; hash and freeze it before any T-121 gold."
+- Built as T-123: `deliverables/senior-test-engineer/count_ops_gate_v2.py`. v1 `count_ops_gate.py` unchanged (sha256 f942010d…9aa1).
+- Frozen 2026-11-02 after @model-risk APPROVE WITH CHANGES (M1 = record the hash): count_ops_gate_v2.py sha256 a57010b0796e7f88ce283375b2a3e6cde338d79c99fd79eab64f49a3ad63085a. Recorded before any T-121 gold.
+- Status: ACCEPTED by @user, 2026-11-02.
+
+## D-142 — B-498 approved: quick-15 refreshed so every file reaches the model (dev files only)
+- Date / Owner: 2026-11-02 / @user
+- Decision (the user's words): "B-498 approved: refresh the quick-15 so every file reaches the model (dev files only)."
+- Built as T-124 in `underwriting_pipeline/ai/regression_dev.py`.
+- Status: ACCEPTED by @user, 2026-11-02.
+
+## D-143 — B-485 approved: pilot mode blocks every file when no scanner is set up
+- Date / Owner: 2026-11-02 / @user
+- Decision (the user's words): "B-485 approved: in pilot mode, block all files if CLAMAV_HOST is unset; optional in dev."
+- Built as T-125 (stricter only).
+- Status: ACCEPTED by @user, 2026-11-02.
+
+## D-144 — Merge pilot-integration into ai-team; push both after gitleaks
+- Date / Owner: 2026-11-02 / @user
+- Decision (the user's words): "Merge pilot-integration into ai-team; push both (gitleaks first)."
+- Status: ACCEPTED by @user, 2026-11-02. `pilot-integration` stays the branch of record.

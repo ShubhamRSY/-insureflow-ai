@@ -1,0 +1,153 @@
+{
+  "schema_version": 1,
+  "id": "small_commercial",
+  "name": "Small commercial",
+  "family": "small_commercial",
+  "states": [
+    "TX"
+  ],
+  "fields": [
+    {
+      "id": "named_insured",
+      "label": "named insured",
+      "plain": "legal name of the insured",
+      "kind": "text",
+      "required": true,
+      "scored": true,
+      "prompt_hint": "named insured, named_insured"
+    },
+    {
+      "id": "premises_address",
+      "label": "premises address",
+      "plain": "premises address",
+      "kind": "address",
+      "required": true,
+      "scored": true,
+      "prompt_hint": "premises address, premises_address"
+    },
+    {
+      "id": "effective_date",
+      "label": "effective date",
+      "plain": "effective date",
+      "kind": "date",
+      "required": true,
+      "scored": true,
+      "prompt_hint": "effective date, effective_date"
+    },
+    {
+      "id": "operations",
+      "label": "description of operations",
+      "plain": "description of operations",
+      "kind": "soft",
+      "required": true,
+      "scored": true,
+      "prompt_hint": "description of operations, operations"
+    },
+    {
+      "id": "sales_or_payroll",
+      "label": "sales or payroll",
+      "plain": "sales or payroll",
+      "kind": "number",
+      "required": true,
+      "scored": true,
+      "prompt_hint": "sales or payroll, annual sales, sales_or_payroll"
+    },
+    {
+      "id": "tiv_building",
+      "label": "building tiv",
+      "plain": "building limit",
+      "kind": "number",
+      "required": true,
+      "scored": true,
+      "prompt_hint": "building tiv, tiv_building"
+    },
+    {
+      "id": "construction",
+      "label": "construction",
+      "plain": "construction type",
+      "kind": "soft",
+      "required": true,
+      "scored": true,
+      "prompt_hint": "construction"
+    },
+    {
+      "id": "year_built",
+      "label": "year built",
+      "plain": "year built",
+      "kind": "number",
+      "required": true,
+      "scored": true,
+      "prompt_hint": "year built, year_built"
+    },
+    {
+      "id": "loss_run_valued_through",
+      "label": "valued through",
+      "plain": "currently valued carrier loss runs (a no-known-loss letter does not count)",
+      "kind": "date",
+      "required": true,
+      "scored": true,
+      "prompt_hint": "valued through, loss_run_valued_through"
+    }
+  ],
+  "prompt": {
+    "system": "You extract commercial insurance fields from the documents.\nReturn one JSON object and nothing else.\nUse only facts copied from the documents. If a fact is not there, value is null and confidence is 0.\nNever guess. A no-known-loss letter is not a loss-run date; leave loss_run_valued_through null.\nSpanish and unlabeled email prose are allowed. Put the English value in value. quote must be copied character for character from one file, with no added words and no added accents.\nFor operations, keep the specific English words from the source and do not shorten them to one class word. Keep every stated detail: business type; alcohol (full liquor license, beer and wine, beer only, no alcohol); seat count; unit count and stories or floor; cooking (kitchen, fryer, grill, open flame, no cooking); hours; live music or entertainment; delivery or catering; 24-hour; on-site processing or repair; patio; security staff; hazardous or flammable materials. Leave out only marketing adjectives. Also read the application's \"Cooking operations\", \"Hood & extinguishing system\" and \"Line of business\" lines, not only the \"Operations\" line: keep every item they state (equipment such as a snack warmer or kilns, \"no gas\", \"None\" as no cooking, hood inspection dates, \"no liquor\"), and quote those lines as extra parts. The quote must contain every detail in the value. If they cook a named food, the value must contain that food word and the word restaurant. If the source is Spanish, translate it and still quote the Spanish line exactly. A bar or night club is a bar and nightclub. mamposteria means masonry, and the construction value is the English word.\nsales_or_payroll is gross annual revenue (sales), returned as a single number copied from the document, with no labels or other figures. Payroll is never part of sales.\nloss_run_valued_through is only the valued-through date copied from the file. Never invent a date. If the file does not show that date, use null even if you think runs exist.\nIf square feet or the premises address differ across files, do not pick a side. Leave that field null and add a conflict whose values include both numbers or both addresses, each with an exact quote.\nquote must be an exact substring of one document. source is that document's file name.\nconfidence is a number from 0 to 1. Use below 0.75 when you are unsure.\nIf two documents disagree, do not pick a side. Leave that field null and add a conflict with both values.\nFields: named_insured, premises_address, effective_date, operations, sales_or_payroll, tiv_building, construction, year_built, loss_run_valued_through.\nSchema: {\"fields\":[{\"field_id\":\"\",\"value\":null,\"source\":\"\",\"quote\":\"\",\"confidence\":0}],\"conflicts\":[{\"field\":\"\",\"values\":[{\"value\":\"\",\"source\":\"\",\"quote\":\"\",\"confidence\":0}]}]}\n",
+    "version": "759b3e6bc9b2"
+  },
+  "extraction": {
+    "min_confidence": 0.75,
+    "scan_floor": 0.5,
+    "number_fields": [
+      "sales_or_payroll",
+      "tiv_building",
+      "year_built",
+      "square_feet"
+    ],
+    "date_fields": [
+      "effective_date",
+      "loss_run_valued_through"
+    ],
+    "text_fields": [
+      "named_insured",
+      "premises_address"
+    ],
+    "soft_fields": [
+      "operations",
+      "construction"
+    ]
+  },
+  "statuses": {
+    "all": [
+      "complete",
+      "complete — review pending",
+      "incomplete",
+      "extraction_failed",
+      "all_values_rejected",
+      "manual_intake"
+    ],
+    "review_pending": "complete — review pending",
+    "refused": [
+      "extraction_failed",
+      "all_values_rejected",
+      "manual_intake"
+    ],
+    "manual_intake": "manual_intake"
+  },
+  "scope": {
+    "version": "scope-v4",
+    "pilot_states": [
+      "TX"
+    ],
+    "min_words": 5,
+    "unsure_ratio": 0.5,
+    "reasons": {
+      "scanned_application": "Manual intake: scanned application",
+      "multiple_locations": "Manual intake: multiple locations",
+      "non_english": "Manual intake: non-English documents (Spanish)",
+      "language_unsure": "Manual intake: document language not clear",
+      "not_identified": "Manual intake: application not identified",
+      "text_layer_unknown": "Manual intake: application text layer not known",
+      "unidentified_scan": "Manual intake: a scanned document could not be identified",
+      "detector_error": "Manual intake: scope check failed (detector error)"
+    }
+  }
+}

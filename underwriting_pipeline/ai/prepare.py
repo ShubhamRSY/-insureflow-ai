@@ -22,6 +22,11 @@ import scope
 import sources
 
 ROOT = Path(__file__).resolve().parents[2]
+_APP = ROOT / "underwriting_pipeline" / "app"
+if str(_APP) not in sys.path:
+    sys.path.insert(0, str(_APP))
+import pilot  # noqa: E402  (after the app path is added)
+
 # G2 (D-029): the send gate reads the last saved run at this path. It never calls process_submission and never trusts a passed-in report.
 EXTRACT_DIR = ROOT / "deliverables" / "data-engineer" / "extractions"
 HASH_ALGORITHM = "sha256"
@@ -71,6 +76,13 @@ PLAIN = {
     "construction": "construction type",
     "year_built": "year built",
     "loss_run_valued_through": "currently valued carrier loss runs (a no-known-loss letter does not count)",
+    # P-070 (D-122): a conflict topic in plain words. The producer and the underwriter read these, not the field name.
+    "square_feet": "square footage",
+    "suite_count": "suite count",
+    "unit_count": "unit count",
+    "apartment_count": "apartment count",
+    "tenant_count": "tenant count",
+    "cooking": "cooking operations",  # P-075 (D-133)
 }
 
 
@@ -162,7 +174,7 @@ def _same_row(a: dict, b: dict) -> bool:
 
 def fuller(rows: list[dict]) -> dict:
     """P-036: of agreeing values keep the fuller one; the other quotes stay on it as also_quoted."""
-    base = dict(max(rows, key=lambda row: len(words(row.get("value") or ""))))
+    base = dict(max(rows, key=lambda row: (not row.get("approximate"), len(words(row.get("value") or "")))))  # P-074 (C): an exact figure beats a hedged one
     also = [{"quote": row["quote"], "source": row.get("source")} for row in rows if row.get("quote") and row.get("quote") != base.get("quote")]
     for item in also:  # each other quote with its file, so the card says which document said what
         if item not in (base.get("also_quoted") or []):
@@ -263,6 +275,18 @@ def drop_premises_without_zip(merged: dict, needs_human: list[str]) -> None:
         needs_human.append(source)
 
 
+POLICY_NOTE = "Operations is always checked by the underwriter (T-027 C1, D-135)"
+
+
+def flag_operations(merged: dict) -> None:
+    """P-076 (D-135, T-027 C1): the LAST step. An operations row with a value is never auto-accepted. Every specific reason is kept;
+    the policy flag is stored apart (policy_review) so a silent-error count (C2) can tell it from a reason that names an item."""
+    row = merged.get("operations")
+    if row and row.get("value"):
+        row["needs_review"] = True
+        row["policy_review"] = True
+
+
 def completeness(rows: list[dict]) -> dict:
     missing = [r["field_id"] for r in rows if not r["value"]]
     if not missing:
@@ -287,7 +311,7 @@ def _request(folder: str, missing: list[str], conflicts: list[str]) -> str:
         parts.append("")
     if conflicts:
         parts.append("These fields disagree across documents. Both values are stored as data, not only in this email:")
-        parts.extend(f"- {item}" for item in conflicts)
+        parts.extend(f"- {PLAIN.get(item, item)}" for item in conflicts)
     return "\n".join(parts).rstrip() + "\n"
 
 
@@ -390,12 +414,7 @@ def _items(value: str) -> list[tuple[str, bool]]:
 
 def _without_name(blob: str, name: str | None, texts: dict) -> str:
     """P-015 T2: remove the named insured (the extracted value and any 'Named insured:' line) before cue words are looked for."""
-    names = {name} if name else set()
-    for text in texts.values():
-        for row in extract_labeled(text, LABELS["named_insured"]):
-            if row.get("value"):
-                names.add(row["value"])
-    for n in sorted(names, key=len, reverse=True):
+    for n in _insured_names(name, texts):
         blob = re.sub(re.escape(n), " ", blob, flags=re.I)
     return blob
 
@@ -689,32 +708,44 @@ def _set_cited(merged: dict, field: str, value: str, source: str, start: int, en
     }
 
 
+# P-070 (D-122): the words a document uses for a floor area. "Square footage" and a "sq_ft" column are the same
+# fact as "square feet"; the old list only knew "square feet", "sqft" and "sf", so an area stated in the other words
+# was never read and two documents that disagreed about it looked the same.
+AREA_WORD = re.compile(r"(?i)\s*(?:square\s+feet|square\s+footage|sq\.?\s*ft\.?|sqft|sf)\b.*$")
+AREA_HEADERS = ("sqft", "sf", "sq_ft", "sq ft", "sq. ft.", "square feet", "square_feet", "square footage")
+
+
+def _area_amount(text: str) -> int | None:
+    """The number of a floor area. "2,800 square footage" and "2,800 sq ft" are the same number."""
+    return amount_value(AREA_WORD.sub("", text))
+
+
 def _square_feet(texts: dict) -> list[tuple[str, str, str]]:
     found = []
     for name, text in texts.items():
-        area = r"(\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?)[ \t]*([kmb])?[ \t]*(?:square[ \t]+feet|sq\.?[ \t]*ft\.?|sqft|sf)\b"
+        area = r"(\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?)[ \t]*([kmb])?[ \t]*(?:square[ \t]+feet|square[ \t]+footage|sq\.?[ \t]*ft\.?|sqft|sf)\b"
         for match in re.finditer(area, text, re.I):
-            amount = amount_value(match.group(0))
+            amount = _area_amount(match.group(0))
             if amount is not None:
                 found.append((str(amount), name, match.group(0)))
-        labeled = r"(?im)^(?:square\s+feet|sq\.?\s*ft\.?|sqft|sf):\s*(\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?)\s*([kmb])?"
+        labeled = r"(?im)^(?:square\s+feet|square\s+footage|sq\.?\s*ft\.?|sqft|sf):\s*(\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?)\s*([kmb])?"
         for match in re.finditer(labeled, text):
             amount = amount_value(match.group(0).split(":", 1)[1])
             if amount is not None:
-                found.append((str(amount), name, match.group(0)))
+                found.append((str(amount), name, match.group(0).strip()))
         headers = None
         for line in text.splitlines():
             cells = [cell.strip() for cell in line.split("\t")]
             low = [cell.lower() for cell in cells]
-            if headers is None and any(cell in {"sqft", "sf"} for cell in low):
+            if headers is None and any(cell in AREA_HEADERS for cell in low):
                 headers = low
                 continue
-            key = "sqft" if headers and "sqft" in headers else "sf" if headers and "sf" in headers else ""
+            key = next((cell for cell in (headers or []) if cell in AREA_HEADERS), "")  # the column name, then the cell under it
             if key and len(cells) == len(headers):
                 raw = cells[headers.index(key)]
                 amount = amount_value(raw)
                 if amount is not None:
-                    found.append((str(amount), name, raw))
+                    found.append((str(amount), name, line.strip()))  # P-070: the cited text is the whole row, so the underwriter sees which row said it
     return found
 
 
@@ -758,7 +789,8 @@ def apply_locations(merged: dict, conflicts: list, texts: dict, scans: dict | No
     if len(locations) < 2:
         return []
     primary = next(row for row in locations if row["primary"])
-    kept = [item for item in conflicts if item.get("field") not in {"premises_address", "premises"}]
+    kept = [item for item in conflicts if item.get("field") not in {"premises_address", "premises"}
+            or any(side.get("unverified") for side in item.get("values") or [])]  # P-074 (check M3): an unverified side is never dropped here
     conflicts[:] = kept
     source_text = texts.get(primary["source"], "")
     at = source_text.find(primary["address"])
@@ -773,6 +805,139 @@ def apply_locations(merged: dict, conflicts: list, texts: dict, scans: dict | No
             scans=scans,  # P-037: a scan's primary address never replaces a typed one
         )
     return locations
+
+
+# P-070 (D-122): two documents that state different sales figures disagree. Before this, only the model's own
+# answer could raise a conflict, and a second document that said a different figure was silently ignored.
+SALES_LABELS = ("sales or payroll:", "annual sales:", "gross sales:", "sales:", "gross revenue:", "annual revenue:", "revenue:", "turnover:")
+SALES_WORD = r"(?:gross\s+|annual\s+|net\s+|estimated\s+)?(?:sales|revenue|turnover)s?"
+AMOUNT_TOKEN = rf"{llm_extract.AMOUNT_PREFIX}(?:\d{{1,3}}(?:,\d{{3}})+|\d+(?:\.\d+)?)(?:\s*{llm_extract.UNITS})?\b"  # P-074 (B, C): "1.42 million", "close to"
+SALES_BEFORE = re.compile(rf"(?P<amount>{AMOUNT_TOKEN})\s*(?:(?:in|of)\s*)?\b{SALES_WORD}\b", re.I)  # one quantifier per run of spaces (ReDoS)
+SALES_AFTER = re.compile(rf"\b{SALES_WORD}\b(?:\s+(?:of|was|were|is|at|totaled|totalled|stood at))?(?:\s*[:\-])?\s*(?P<amount>{AMOUNT_TOKEN})", re.I)
+SALES_MIN = 1000  # a sales figure is a real figure: a year or a percentage is not
+
+
+def _sales_figures(text: str) -> list[tuple[int, str]]:
+    """The sales figures a document states: a labelled sales line, or an amount beside a sales word."""
+    found: list[tuple[int, str]] = []
+
+    def add(token: str, quote: str, tail: str = "") -> None:
+        amount = amount_value(token.strip())
+        if amount is None or amount < SALES_MIN or "%" in tail or 1900 <= amount <= 2100:
+            return
+        if not any(amount == known and quote == known_quote for known, known_quote in found):
+            found.append((amount, quote))
+
+    for line in text.splitlines():
+        stripped = line.lstrip()
+        low = stripped.lower()
+        for label in SALES_LABELS:
+            if not low.startswith(label):
+                continue
+            rest = stripped[len(label) :]
+            token = re.search(AMOUNT_TOKEN, rest, re.I)
+            if token:
+                add(token.group(0), line.strip(), rest[token.end() : token.end() + 1])
+            break
+    for match in SALES_BEFORE.finditer(text):
+        quote = text[max(0, text.rfind("\n", 0, match.start()) + 1) : text.find("\n", match.start()) if text.find("\n", match.start()) >= 0 else len(text)].strip()
+        add(match.group("amount"), quote, text[match.end() : match.end() + 1])
+    for match in SALES_AFTER.finditer(text):
+        start = text.rfind("\n", 0, match.start()) + 1
+        end = text.find("\n", match.start())
+        quote = text[start : end if end >= 0 else len(text)].strip()
+        add(match.group("amount"), quote, text[match.end() : match.end() + 1])
+    return found
+
+
+def apply_sales_conflicts(merged: dict, conflicts: list, texts: dict) -> None:
+    """P-070 (D-122): two documents that state different sales figures are an open conflict.
+
+    The sales value is emptied and both figures are stored as the two sides of the conflict, so the file cannot
+    read as complete with one of the two figures silently kept. The producer is asked which figure stands."""
+    figures: dict[str, list[tuple[int, str]]] = {}
+    for name, text in texts.items():
+        found = _sales_figures(text)
+        if found:
+            figures[name] = found
+    if len(figures) < 2:
+        return
+    sides: list[tuple[int, str, str]] = []
+    for name, found in figures.items():
+        amount, quote = found[0]
+        if not any(amount == side[0] for side in sides):
+            sides.append((amount, name, quote))
+    if len(sides) < 2:
+        return
+    if any(item.get("field") == "sales_or_payroll" for item in conflicts):
+        return  # a conflict on sales is already open: one open conflict, not two
+    conflicts.append(
+        {
+            "field": "sales_or_payroll",
+            "values": [{"value": str(amount), "source": name, "quote": quote} for amount, name, quote in sides],
+            "resolution": "unresolved",
+            "resolved_value": None,
+            "resolved_by": None,
+        }
+    )
+    row = merged.get("sales_or_payroll") or {}
+    if row.get("value") is not None:
+        merged["sales_or_payroll"] = {**row, "value": None, "needs_review": True, "reason": "the documents state different sales figures"}
+
+
+# P-070 (D-122): two documents that state a different number of the same thing (offices, units) disagree.
+# The count is not a scored field, so the operations value stays and the disagreement is an open conflict.
+COUNT_WORDS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10, "eleven": 11, "twelve": 12}
+COUNT_NOUNS = {"suite": "suite_count", "suites": "suite_count", "unit": "unit_count", "units": "unit_count",
+               "apartment": "apartment_count", "apartments": "apartment_count", "tenant": "tenant_count", "tenants": "tenant_count"}
+COUNT_RE = re.compile(r"(?i)\b(\d{1,3}|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s+(?:[a-z]+\s+)?(suites?|units?|apartments?|tenants?)\b")
+
+
+def _count_figures(text: str) -> list[tuple[str, int, str]]:
+    """The unit counts a text states: (topic, count, the cited line)."""
+    found = []
+    for match in COUNT_RE.finditer(text):
+        word = match.group(1).lower()
+        count = int(word) if word.isdigit() else COUNT_WORDS.get(word, 0)
+        if not count:
+            continue
+        start = text.rfind("\n", 0, match.start()) + 1
+        end = text.find("\n", match.start())
+        found.append((COUNT_NOUNS[match.group(2).lower()], count, text[start : end if end >= 0 else len(text)].strip()))
+    return found
+
+
+def apply_count_conflicts(merged: dict, conflicts: list, texts: dict) -> None:
+    """P-070 (D-122): two documents that state a different count of the same thing are an open conflict.
+
+    The count is not a scored field: the operations value stays as the answer and the two counts are stored as
+    the two sides of the conflict, so the file is held for the underwriter instead of reading as complete."""
+    row = merged.get("operations") or {}
+    value, source = row.get("value"), row.get("source")
+    figures: dict[str, list[tuple[int, str, str]]] = {}
+    for topic, count, quote in _count_figures(value or ""):
+        figures.setdefault(topic, []).append((count, str(source or ""), quote))
+    for name, text in texts.items():
+        for topic, count, quote in _count_figures(text):
+            figures.setdefault(topic, []).append((count, name, quote))
+    for topic, items in figures.items():
+        sides: list[tuple[int, str, str]] = []
+        for count, name, quote in items:
+            if not any(count == side[0] for side in sides):
+                sides.append((count, name, quote))
+        if len(sides) < 2:
+            continue
+        if any(item.get("field") == topic for item in conflicts):
+            continue  # a conflict on this count is already open
+        conflicts.append(
+            {
+                "field": topic,
+                "values": [{"value": str(count), "source": name, "quote": quote} for count, name, quote in sides],
+                "resolution": "unresolved",
+                "resolved_value": None,
+                "resolved_by": None,
+            }
+        )
 
 
 def apply_document_rules(merged: dict, conflicts: list, texts: dict, scans: dict | None = None) -> None:
@@ -805,20 +970,20 @@ def apply_document_rules(merged: dict, conflicts: list, texts: dict, scans: dict
     for item in areas:
         if item[0] not in {row[0] for row in distinct}:
             distinct.append(item)
-    if len(distinct) < 2:
-        return
-    blob = json.dumps(conflicts)
-    if all(item[0] in blob for item in distinct):
-        return
-    conflicts.append(
-        {
-            "field": "square_feet",
-            "values": [{"value": item[0], "source": item[1], "quote": item[2]} for item in distinct],
-            "resolution": "unresolved",
-            "resolved_value": None,
-            "resolved_by": None,
-        }
-    )
+    if len(distinct) >= 2:
+        blob = json.dumps(conflicts)
+        if not all(item[0] in blob for item in distinct):
+            conflicts.append(
+                {
+                    "field": "square_feet",
+                    "values": [{"value": item[0], "source": item[1], "quote": item[2]} for item in distinct],
+                    "resolution": "unresolved",
+                    "resolved_value": None,
+                    "resolved_by": None,
+                }
+            )
+    apply_sales_conflicts(merged, conflicts, texts)  # P-070 (D-122): two documents, two sales figures
+    apply_count_conflicts(merged, conflicts, texts)  # P-070 (D-122): two documents, two counts of the same thing
 
 
 # P-047 (b), D-094: the operations gold rule items (deliverables/senior-underwriter/operations-gold-rule.md).
@@ -919,6 +1084,164 @@ def ops_missing_all(value: str, text: str) -> list[str]:
     return ops_missing(value, text) + ops_line_missing(value, text)
 
 
+# P-075 (D-133): copy the application's own "Cooking operations: None" line, cited; a cooking word in any other place opens a conflict.
+# The rule never reads silence as "no cooking": it copies a line that is there, and only after every document was scanned and found nothing.
+# ponytail: a finite word list, not a parser (@model-risk showed no list is complete). The copied line keeps a review note, so a missed word
+# cannot turn a held file into a clean complete. A negation never voids a word; only a clause that is exactly an agreeing phrase is exempt.
+COOKING_LINE = re.compile(r"(?im)^[ \t>*-]*(cooking operations[ \t]*:)(.*)$")
+COOKING_NONE_BODIES = {"none", "no", "nil", "no cooking", "no commercial cooking", "no kitchen"}
+COOKING_TABLE_EXT = (".csv", ".tsv", ".xlsx", ".xls")
+REASON_COOKING_COPIED = "cooking line copied from the application (P-075); check the other documents for cooking"  # never claims absence: the word list is finite (P-075 check H1)
+REASON_COOKING_CONFLICT = "cooking: the documents disagree"
+_CLAUSE = re.compile(r"[^.;,\n!?|]+")
+_COOK_NONE_PHRASES = sorted((b for b in COOKING_NONE_BODIES if b.startswith("no ")), key=len, reverse=True)  # "no cooking", "no kitchen"...
+_COOK_EXEMPT = {f"{lead}{body}" for lead in ("", "cooking operations: ") for body in COOKING_NONE_BODIES} | {
+    "no cooking on the premises", "no commercial cooking on the premises", "no cooking on site", "no kitchen on site", "no food prep", "no food preparation",
+    "no food preparation of any kind", "do not cook", "does not cook", "we do not cook", "the insured does not cook"}
+_COOK_STARTS = (
+    "cook", "fry", "frial", "fries", "fried", "frit", "freid", "frei", "grill", "griddle", "plancha", "parrill", "comal", "stove", "estufa", "hotplate", "hotdog", "burner", "oven", "horno",
+    "horne", "salamander", "smoker", "smoked", "smokehouse", "barbec", "bbq", "barbac", "rotiss", "tandoor", "panini", "toast", "waffle", "pancake", "skillet",
+    "steamer", "sous", "warmer", "warmed", "warming", "reheat", "bak", "boil", "kitchen", "cocin", "coce", "galley", "meal", "cafe", "restaurant", "dinn", "diner",
+    "eatery", "lunch", "brunch", "breakfast", "snack", "soup", "microwav", "microond", "ansul", "greas", "chef", "saut", "simmer", "roast", "brais", "hibachi",
+    "teppan", "tempura", "pizz", "taco", "burger", "quesadilla", "burrito", "bistro", "brasserie", "steak", "sandwich", "pastr", "bagel", "dough", "calzon", "popcorn",
+    "nacho", "induction", "crock", "kettle", "noodle", "omelet", "jerky", "kebab", "gyro", "shawarma", "falafel", "dumpling", "bacon", "sausage", "chicken", "cater",
+    "gastropub", "asam", "asar", "asad", "calent", "calien", "comida", "tortill", "taquer", "hervi", "fogon", "charcoal", "pretzel", "donut", "doughnut", "pasta",
+)
+_COOK_CONTAINS = ("broil", "grill", "griddl")
+_COOK_TOKENS = {"wok", "woks", "hood", "hoods", "sear", "sears", "seared", "searing", "deli", "delis", "delicatessen", "hob", "eggs", "egg", "pub", "pubs", "ul300"}
+_COOK_PHRASES = re.compile(
+    r"(?<!\w)(?:flat top|hot plate|hot (?:food|foods|dog|dogs|breakfast|lunch|meal|meals|soup|soups|plate|plates)|wood fire|wood fired|wood burning|open flame|open fire|"
+    r"steam (?:table|kettle|jacket|oven)|heat lamps?|heating lamps?|heat(?:s|ed|ing)? (?:up|food|soup|meals?|water)|heated (?:display|case|cabinet|food|tray|trays|counter|shelf|drawer)|"
+    r"food (?:prep\w*|service|truck|trucks|served|court|and drink|and beverage|handling)|serv(?:e|es|ed|ing) (?:hot )?food|we serve|prepared (?:on site|food|meals|in house)|"
+    r"ul ?300|nfpa 96|class k|wet chem(?:ical)?|coffee shop|smoke house|slow cooker|tilt skillet|warming (?:cabinet|oven|drawer))(?!\w)")
+_COOK_RANGE_SKIP = re.compile(r"(?<!\w)(?:price range|age range|range of|within range|wide range|full range)(?!\w)")
+
+
+def _cook_norm(text: str) -> str:
+    """Lower case, accents off, hyphens and punctuation to one space (the colon stays). Linear in the length."""
+    text = "".join(ch for ch in unicodedata.normalize("NFKD", text.lower()) if not unicodedata.combining(ch))
+    return " ".join(re.sub(r"[^\w:]+", " ", text.replace("-", " ")).split())
+
+
+def cooking_word(clause: str) -> str | None:
+    """The first cooking word or phrase in one clause, or None. A clause that is exactly an agreeing phrase is not read; anything else in it is."""
+    norm = _cook_norm(clause)
+    if not norm or norm in _COOK_EXEMPT:
+        return None
+    norm = _COOK_RANGE_SKIP.sub(" ", norm)
+    phrase = _COOK_PHRASES.search(norm)
+    if phrase:
+        return phrase.group(0)
+    for token in re.findall(r"[^\W\d_]+", norm):
+        if token in ("range", "ranges"):
+            return token
+        if token in _COOK_TOKENS or token.startswith(_COOK_STARTS) or any(part in token for part in _COOK_CONTAINS):
+            return token
+    return None
+
+
+def cooking_none_line(texts: dict, scans: dict | None = None) -> dict | None:
+    """P-075 (A): the typed application's "Cooking operations:" line whose whole body is a none-shape. None for a scan, N/A, blank or extra words."""
+    for name, text in texts.items():
+        if not name.lower().startswith("application") or name in (scans or {}):
+            continue
+        for match in COOKING_LINE.finditer(text):
+            body = " ".join(match.group(2).split()).casefold().rstrip(".").strip()
+            if body in COOKING_NONE_BODIES:
+                end = match.start(2) + len(match.group(2).rstrip())
+                return {"source": name, "start": match.start(1), "end": end, "quote": text[match.start(1) : end]}
+    return None
+
+
+def _insured_names(name: str | None, texts: dict) -> list[str]:
+    names = {name} if name else set()
+    for text in texts.values():
+        for row in extract_labeled(text, LABELS["named_insured"]):
+            if row.get("value"):
+                names.add(row["value"])
+    return sorted(names, key=len, reverse=True)
+
+
+def cooking_hits(texts: dict, skip: dict | None = None) -> list[dict]:
+    """P-075 (B): every document that states a cooking word, one hit per document (UI check H1), documents other than the application first. Not read: the matched none-line (skip) only. The insured's name IS read
+    (code review: "Main Street Pizza & Grill LLC" holds; a false hold at worst). Schedule files: the "cooking" column (a header alone is not read), every other cell is."""
+    hits = []
+    for doc, text in texts.items():
+        scan = text
+        table = doc.lower().endswith(COOKING_TABLE_EXT)
+        column, first_row = None, 0
+        if table:  # the header is within the first lines (an xlsx text starts with "sheet: Name"); its "cooking" cell is not a cooking word
+            offset = 0
+            for line in scan.split("\n")[:5]:
+                cells = line.split("\t")  # sources._csv_text already parsed the CSV (quotes); a comma inside a cell is not a separator
+                at = next((i for i, c in enumerate(cells) if c.strip().casefold() == "cooking"), None)
+                if at is not None:
+                    column, first_row = at, offset + len(line) + 1
+                    mark = re.search(r"(?i)(?<![\w])cooking(?![\w])", line)
+                    if mark:
+                        scan = scan[: offset + mark.start()] + " " * (mark.end() - mark.start()) + scan[offset + mark.end() :]
+                    break
+                offset += len(line) + 1
+        if skip and skip.get("source") == doc:
+            scan = scan[: skip["start"]] + " " * (skip["end"] - skip["start"]) + scan[skip["end"] :]
+        if column is not None:
+            offset = first_row
+            for line in text[first_row:].split("\n"):
+                cells = line.split("\t")
+                value = cells[column].strip().casefold() if column < len(cells) else ""
+                if value not in {"", "no", "none", "n/a", "na", "0", "false"}:
+                    hits.append({"source": doc, "start": offset, "end": offset + len(line), "quote": line.strip(), "word": value})
+                    break
+                offset += len(line) + 1
+            if hits and hits[-1]["source"] == doc:
+                continue
+        for clause in _CLAUSE.finditer(scan):
+            word = cooking_word(clause.group(0))
+            if not word:
+                continue
+            ls = text.rfind("\n", 0, clause.start()) + 1
+            le = text.find("\n", clause.end())
+            le = len(text) if le < 0 else le
+            start, end = max(ls, clause.start() - 120), min(le, clause.end() + 120)
+            hits.append({"source": doc, "start": start, "end": end, "quote": text[start:end].strip(), "word": word})
+            break
+    return sorted(hits, key=lambda h: h["source"].lower().startswith("application"))  # stable: the email or schedule sentence comes before the application's own other lines
+
+
+COOKING_OPS_NONE = re.compile(r"(?i)(?<!\w)(?:%s|cooking operations: ?(?:%s))(?!\w)" % ("|".join(map(re.escape, _COOK_NONE_PHRASES)), "|".join(map(re.escape, sorted(COOKING_NONE_BODIES, key=len, reverse=True)))))  # one list: COOKING_NONE_BODIES
+
+
+def apply_cooking_rule(merged: dict, conflicts: list, texts: dict, scans: dict | None = None) -> None:
+    """P-075 (D-133), before check_operations. B: the application line (or the operations answer) says none, and any document states cooking
+    -> an open `cooking` conflict, the file is held, nothing is copied. A: otherwise the line is copied as written, cited, with a review note.
+    The words "no cooking" are never written by this rule, and the confidence is not raised (D-124)."""
+    row = merged.get("operations") or {}
+    line = cooking_none_line(texts, scans)
+    ops_none = bool(COOKING_OPS_NONE.search(row.get("value") or ""))
+    if not line and not ops_none:
+        return
+    hits = cooking_hits(texts, line)
+    if hits:
+        if any(item.get("field") == "cooking" for item in conflicts):
+            return
+        first = {"value": line["quote"], "source": line["source"], "quote": line["quote"], "start": line["start"], "end": line["end"]} if line else {
+            "value": row["value"], "source": row.get("source"), "quote": row.get("quote") or row["value"]}
+        conflicts.append(_conflict("cooking", [first] + [{"value": h["quote"], "source": h["source"], "quote": h["quote"], "start": h["start"], "end": h["end"]} for h in hits]))
+        if row.get("value"):
+            row["reason"] = f"{row['reason']}; {REASON_COOKING_CONFLICT}" if row.get("reason") else REASON_COOKING_CONFLICT
+            row["needs_review"] = True
+            row["confidence"] = min(row.get("confidence") or 0.0, llm_extract.MIN_CONFIDENCE - 0.01)
+        return
+    if not line or not row.get("value") or ops_missing_all(row["value"], line["quote"]) == []:
+        return  # nothing to copy: no operations answer, or the answer already carries the line
+    row["value"] = f"{row['value']}; {line['quote']}"
+    row["also_quoted"] = (row.get("also_quoted") or []) + [{"quote": line["quote"], "source": line["source"], "start": line["start"], "end": line["end"]}]
+    row["rule_copied"] = True
+    row["needs_review"] = True  # the copied line never makes a file read complete (D-133 answer 1)
+    row["reason"] = f"{row['reason']}; {REASON_COOKING_COPIED}" if row.get("reason") else REASON_COOKING_COPIED
+    row["confidence"] = min(row.get("confidence") or 0.0, llm_extract.MIN_CONFIDENCE - 0.01)  # not raised (the withdrawn P-070 set 0.95)
+
+
 def check_operations(merged: dict, texts: dict) -> None:
     """P-047 (b), P-056 (f): the cited document names a rule item anywhere that the answer lacks -> needs review, below the confidence
     line, with the items. The labeled lines (context) are still what carrier match reads."""
@@ -931,6 +1254,10 @@ def check_operations(merged: dict, texts: dict) -> None:
     if context:
         row["context"] = context  # P-047 (c): carrier match and the D-079 referral read it too
     missing = ops_missing_all(row["value"], text)  # P-059 adds the labeled-line items; P-056 (f): the whole cited document, not only the cited line and labeled lines
+    for other, other_text in texts.items():  # P-075 (C): the application's stated cooking line is read whichever document operations is cited from
+        if other != row.get("source") and other.lower().startswith("application"):
+            for match in COOKING_LINE.finditer(other_text):
+                missing += [m for m in ops_missing_all(row["value"], match.group(1) + match.group(2)) if m not in missing]
     if missing:
         reason = OPS_MISSING.format(", ".join(missing))
         row["reason"] = f"{row['reason']}; {reason}" if row.get("reason") else reason
@@ -977,6 +1304,12 @@ def unread_rows(docs: list[dict], not_sent: list[str]) -> list[dict]:
 
 def _carry_flag(cur: dict, other: dict) -> None:
     """P-024: two agreeing values merge into one; the saved row is needs_review if either side was, and keeps the reason and quote."""
+    if other.get("approximate") and not cur.get("approximate"):  # P-074 (C): the exact side wins; the hedged quote stays as also_quoted
+        note = f"approximate figure: {' '.join((other.get('quote') or '').split())[:160]}"  # rebuilt as accept_field wrote it; only this exact string is removed (recheck H1)
+        rest = re.sub(r"(?:; )+", "; ", (other.get("reason") or "").replace(note, "")).strip("; ")
+        if not rest:
+            return
+        other = {**other, "reason": rest}  # check M1: any other review reason (per-location, scan, date order) is carried as before P-074
     if other.get("needs_review") and not cur.get("needs_review"):
         cur["needs_review"] = True
         for k in ("reason", "quote", "source", "start", "end"):
@@ -1090,12 +1423,13 @@ def process_submission(folder: Path) -> dict:
     for item in extracted["conflicts"]:
         field_id = item.get("field")
         kept = [{**side, "field_id": field_id} for side in item.get("values") or [] if side.get("value")]
-        first = _typed_first(field_id, kept, scans) if field_id in merged and merged[field_id]["value"] is None else None
+        unverified = any(side.get("unverified") for side in kept)  # P-074 (A): an unverified side keeps the conflict open; nothing merges or outranks it
+        first = _typed_first(field_id, kept, scans) if field_id in merged and merged[field_id]["value"] is None and not unverified else None
         if first:  # P-037: the typed sides agree; a scan side never makes this an open conflict
             merged[field_id] = {**merged[field_id], **first, "confidence": first.get("confidence") or 0.0}
             continue
         sides = [side.get("value") or "" for side in item.get("values") or [] if side.get("value")]
-        if len(sides) >= 2 and all(agrees(item.get("field"), a, b) for i, a in enumerate(sides) for b in sides[i + 1 :]):  # H3: every pair
+        if not unverified and len(sides) >= 2 and all(agrees(item.get("field"), a, b) for i, a in enumerate(sides) for b in sides[i + 1 :]):  # H3: every pair
             field_id = item.get("field")
             if field_id in merged and merged[field_id]["value"] is None:
                 kept = [side for side in item["values"] if side.get("value")]
@@ -1114,6 +1448,7 @@ def process_submission(folder: Path) -> dict:
         conflicts.append(item)
     _apply_reply(conflicts, texts.get("reply.md", ""))
     apply_document_rules(merged, conflicts, texts, scans)
+    apply_cooking_rule(merged, conflicts, texts, scans)  # P-075 (D-133): copy the application's cooking none-line, or hold on a cooking word elsewhere
     check_operations(merged, texts)  # P-047 (b), after every rule that can set operations
     gate_loss_run(merged, texts, scans)  # P-040/P-044/P-045/B-343, after every rule that can set the date
     locations = apply_locations(merged, conflicts, texts, scans)
@@ -1125,6 +1460,11 @@ def process_submission(folder: Path) -> dict:
         ]
     blob = _without_name("\n".join(texts.values()), merged["named_insured"].get("value"), texts).lower()  # P-015 T2: the insured's name never starts an ask
     cooking = cooking_facts(texts)
+    open_cook = next((c for c in conflicts if c.get("field") == "cooking" and c.get("resolution") != "resolved"), None)
+    if open_cook:  # P-075 (code review): while another document states cooking, the application's "None" is never read as no cooking; no points until the call
+        side = open_cook["values"][1]  # the strongest hit (UI check H1)
+        cooking["equipment"] = {"state": "needs_review", "terms": [], "negated": [], "source": side.get("source"), "start": side.get("start"), "end": side.get("end"),
+                                "quote": side.get("quote"), "reason": REASON_COOKING_CONFLICT}
     extra = []
     if any(word in blob for word in ("restaurant", "fryer", "kitchen")):  # P-015 T2: cuisine words ("taco") are not cues
         for label, cues in (
@@ -1142,6 +1482,7 @@ def process_submission(folder: Path) -> dict:
     drop_premises_without_zip(merged, needs_human)
     if merged["premises_address"].get("value"):
         flag_invalid_address(merged["premises_address"])
+    flag_operations(merged)  # P-076 (D-135): last step, after every rule, merge and conflict
     open_conflicts = [c for c in conflicts if c.get("resolution") != "resolved"]
     rows = [merged[field] for field in FIELDS]
     report = completeness(rows)
@@ -1330,6 +1671,8 @@ def _saved_payload(report: dict) -> dict:
                 "end": row.get("end"),
                 "quote": row.get("quote"),  # P-016 Q1: the exact cited text. The app shows it
                 **({"also_quoted": row["also_quoted"]} if row.get("also_quoted") else {}),  # P-036: the agreeing values' other quotes
+                **({"policy_review": True} if row.get("policy_review") else {}),  # P-076 (D-135): operations is always checked; not a specific reason
+                **({"rule_copied": True} if row.get("rule_copied") else {}),  # P-075: the row carries a line the rule copied, not model text
                 **({"context": row["context"]} if row.get("context") else {}),  # P-047 H1: operations rule lines outside the cited text
                 "reason": row.get("reason"),  # P-016 R1: why the row is flagged or has no value
             }
@@ -1360,6 +1703,7 @@ def write_drafts(inbox: Path, draft_dir: Path, conflict_dir: Path) -> list[dict]
     """Drafts go to pending-approval. Conflicts go to a data file. Never to-producer."""
     if draft_dir.name == "to-producer":
         raise RuntimeError("drafts are not sent to the producer")
+    pilot.guard("draft")
     draft_dir.mkdir(parents=True, exist_ok=True)
     conflict_dir.mkdir(parents=True, exist_ok=True)
     extract_dir = conflict_dir.parent / "extractions"
@@ -1373,7 +1717,10 @@ def write_drafts(inbox: Path, draft_dir: Path, conflict_dir: Path) -> list[dict]
         dest = draft_dir / f"{folder.name}.md"
         side = conflict_dir / f"{folder.name}.json"
         if report["request"] and not refused:  # P-055: a manual-intake file gets no automated missing-info draft
-            dest.write_text(report["request"])
+            if pilot.active():  # C2: no draft leaves the tool, even when the reply has a missing-info request
+                dest.unlink(missing_ok=True)
+            else:
+                dest.write_text(report["request"])
         elif refused and dest.exists():
             # D1: a failed call or an all-rejected answer removes the old draft. Nothing is sent to the producer.
             dest.unlink()
@@ -1420,6 +1767,7 @@ def approve(
         sys.path.insert(0, str(app))
     from package import agency_problem
 
+    pilot.guard("producer-request", draft.stem)
     current = read_saved_run(draft.stem)  # G2: the file's current status, read and hash-checked here
     status = current.get("status")
     if status in REFUSED_STATUSES:
@@ -2318,7 +2666,22 @@ if __name__ == "__main__":
 
     on_run = {"loss_run_valued_through": {"source": "loss-runs.md"}}
     clean = run_case(on_run, {"loss-runs.md": run_107})
-    assert clean["status"] == "complete" and clean["complete"] and ready_to_route(clean) and clean["request"] is None, clean["status"]
+    assert clean["status"] == REVIEW_PENDING and not clean["complete"] and ready_to_route(clean) and clean["request"] is None, clean["status"]  # P-076: operations is always flagged, so never plain complete
+    # P-076 (D-135, T-027 C1): no path leaves an operations value unflagged; specific reasons are kept; an empty row is left alone.
+    ops76 = next(r for r in clean["fields"] if r["field_id"] == "operations")
+    assert ops76["needs_review"] and ops76["policy_review"] and ops76["reason"] is None, ("model-carried path", ops76)
+    assert "operations" in [r["field_id"] for r in clean["fields"] if r["needs_review"] and r["value"]] and POLICY_NOTE.startswith("Operations is always checked")
+    held76 = run_case({"operations": {"needs_review": True, "reason": "operations may be missing: fryer"}}, {})
+    assert next(r for r in held76["fields"] if r["field_id"] == "operations")["reason"] == "operations may be missing: fryer", "a specific reason is never replaced"
+    merged76 = run_case({"operations": {"also_quoted": [{"quote": "accounting office", "source": "email.md"}]}}, {"email.md": "accounting office\n"})  # agreeing merge (P-024)
+    assert next(r for r in merged76["fields"] if r["field_id"] == "operations")["needs_review"], "merge path"
+    for row76 in ({"value": "Office", "needs_review": False, "rule_copied": True}, {"value": "Office", "needs_review": False, "source": "scan.pdf", "confidence": 0.99}):  # rule-copied P-075 and scan P-037 shapes
+        box76 = {"operations": dict(row76)}
+        flag_operations(box76)
+        assert box76["operations"]["needs_review"] and box76["operations"]["policy_review"], row76
+    empty76 = {"operations": {"value": None, "needs_review": False}}
+    flag_operations(empty76)
+    assert not empty76["operations"]["needs_review"] and not empty76["operations"].get("policy_review"), "an empty operations row is left as it is"
     # P-067 (D-117): a value the model read but the gate rejected carries its reason to the card; a plain null stays silent.
     rejected = run_case({"tiv_building": {"value": None, "needs_review": True, "reason": "value not inside the cited text"}}, {})
     row = {r["field_id"]: r for r in rejected["fields"]}["tiv_building"]
@@ -2333,7 +2696,7 @@ if __name__ == "__main__":
     # P-046 (D-093): each loss-run document is judged; plain complete only when every one is accepted.
     a_run = {"loss_run_valued_through": {"source": "loss-runs-a.md", "value": "2026-09-30", "quote": "2026-09-30"}}
     alone = run_case(a_run, {"loss-runs-a.md": run_107})
-    assert alone["status"] == "complete", "one accepted typed carrier run: plain complete"
+    assert alone["status"] == REVIEW_PENDING, "one accepted typed carrier run: loss run accepted; P-076 keeps operations under review"
     b_run = run_110.replace("kitchen fire", "roof leak")  # no restaurant cue: the only gap is the loss run under test
     b_undated = b_run.replace("Valuation date: 2026-09-30\n", "")
     for extra, why in (({"loss-runs-b.md": b_undated}, RUN_NO_DATE.format("loss-runs-b.md")),
@@ -2382,7 +2745,7 @@ if __name__ == "__main__":
     app_with_history = "Effective date: 2027-03-01\nYear built: 1998\nPrior carrier: Carrier B, policy term 2024-03-01 to 2025-03-01, no claims.\n"
     assert _run_doc_reason("application.md", app_with_history, (None, None, None), "unclear", False) is None, "an application's loss-history answers are not a loss-run document"
     with_letter = run_case(a_run, {"loss-runs-a.md": run_107, "loss-runs-letter.md": letters[2]})
-    assert with_letter["status"] == "complete", "P-040: a no-known-loss letter beside an accepted run is not a loss-run document"
+    assert with_letter["status"] == REVIEW_PENDING, "P-040 (P-076: operations review): a no-known-loss letter beside an accepted run is not a loss-run document"
     undated = run_case({"loss_run_valued_through": {"source": "loss-runs.md", "value": "2026-01-01", "quote": "2026-01-01"}},
                        {"loss-runs.md": run_110.replace("Valuation date: 2026-09-30\n", "")})
     assert undated["status"] == "incomplete" and "loss_run_valued_through" in undated["missing"], "@model-risk H1: undated carrier layout stays incomplete end to end"
@@ -2490,4 +2853,238 @@ if __name__ == "__main__":
             assert process_submission(inbox55 / "SUB-603")["status"] == "extraction_failed"
         finally:
             llm_extract.llm_extract = real_llm
+        # P-070 (D-122): the document_conflicts dev set. Two documents that disagree are an open conflict;
+        # the same figure in other words is not a conflict. P-072 (D-124): no "no cooking" is ever added to operations.
+        dev_root = ROOT / "simulation" / "inbox-dev" / "document_conflicts"
+
+        def dev_file(sid: str) -> tuple[dict, dict]:
+            docs = sources.read_folder(dev_root / sid)
+            texts = {doc["name"]: doc["text"] for doc in docs}
+            merged = {
+                field: {"field_id": field, "value": None, "source": None, "start": None, "end": None, "confidence": 0.0, "needs_review": False, "reason": None, "quote": None}
+                for field in FIELDS
+            }
+            app = texts["application.md"]
+            for field, label in (("operations", LABELS["operations"]), ("sales_or_payroll", LABELS["sales_or_payroll"])):
+                row = extract_labeled(app, label)[0]
+                if row["value"] is None:
+                    continue
+                merged[field] = {"field_id": field, "value": _canonical(field, row["value"]), "source": "application.md",
+                                 "start": row["start"], "end": row["end"], "confidence": 0.9, "needs_review": False, "reason": None,
+                                 "quote": app[row["start"] : row["end"]], "spans": [(row["start"], row["end"])]}
+            return texts, merged
+
+        dev_cases = (
+            ("SUB-290", {"square_feet": {"2800", "3150"}}),
+            ("SUB-291", {"suite_count": {"2", "3"}}),
+            ("SUB-292", {"sales_or_payroll": {"412000", "540000"}}),
+            ("SUB-293", {}),
+            ("SUB-294", {}),
+            ("SUB-295", {}),
+            ("SUB-296", {}),
+            ("SUB-297", {}),  # P-074: the email has no sales word, so only the model's conflict (stubbed below) raises it
+            ("SUB-298", {"sales_or_payroll": {"1150000", "1200000"}}),  # P-074: "Sales ~$1.2m" is read by the P-070 rule
+        )
+        for sid, expect in dev_cases:
+            texts, merged = dev_file(sid)
+            dev_conflicts: list = []
+            apply_document_rules(merged, dev_conflicts, texts)
+            check_operations(merged, texts)
+            got = {item["field"]: {side["value"] for side in item["values"]} for item in dev_conflicts}
+            assert got == expect, (sid, got, expect)
+            if sid in ("SUB-293", "SUB-296"):  # P-072 (D-124): "Cooking operations: None" is never added; the flag stays for the underwriter
+                assert "no cooking" not in merged["operations"]["value"], (sid, merged["operations"]["value"])
+                assert merged["operations"]["needs_review"], (sid, "the flag stays for the underwriter")
+            if sid == "SUB-291":  # the count is not a scored field: the operations value stays
+                assert merged["operations"]["value"] and merged["operations"]["value"].startswith("Lessor"), merged["operations"]
+            if sid == "SUB-292":  # the sales value is emptied and the reason is on the row
+                assert merged["sales_or_payroll"]["value"] is None and merged["sales_or_payroll"]["needs_review"], merged["sales_or_payroll"]
+                assert "different sales figures" in merged["sales_or_payroll"]["reason"], merged["sales_or_payroll"]
+        # P-072 (D-124), the @model-risk T-118 H1 case end to end: SUB-296 (published Carrier A run, so it does not hold on
+        # the loss run) with each email below, the @model-risk re-check sentences among them. "no cooking" is never added and
+        # the operations flag stays, so no version of the file is complete.
+        # The stub answers with the labelled lines, and llm_extract.accept_field grounds each answer as a real reply is grounded.
+        def stub296(docs):
+            rows, by_name = [], {doc["name"]: doc["text"] for doc in docs}
+            for doc in docs:
+                labels = {"loss_run_valued_through": ("valued as of:",)} if doc["name"] == "loss-runs.md" else LABELS if doc["name"] == "application.md" else {}
+                for field, label in labels.items():
+                    row = extract_labeled(doc["text"], label)[0]
+                    if row["value"] is not None:
+                        item = {"field_id": field, "value": row["value"], "source": doc["name"], "quote": doc["text"][row["start"] : row["end"]], "confidence": 0.95}
+                        rows.append(llm_extract.accept_field(item, by_name))
+            return {"fields": rows, "conflicts": [], "not_sent": []}
+
+        import shutil
+
+        emails = ("Since the application the tenant added a flat-top griddle and a wok station for staff lunches.",  # SUB-296 as built
+                  "Nothing to add; the loss run from Carrier A is attached.",  # neutral: no cooking word at all
+                  "We started cooking hot breakfast for staff on a stove in the back.", "The lobby now has a cafe serving hot food.",
+                  "Staff use a hot plate and a panini press.", "On Fridays there is a barbecue and a rotisserie out back.",
+                  "We fry chicken wings for the Friday lunch.", "We put in a range and a commercial hood.")
+        llm_extract.llm_extract = stub296
+        try:
+            for n, email in enumerate(emails):
+                case = tmp_path / "p072" / f"case{n}" / "SUB-296"
+                shutil.copytree(dev_root / "SUB-296", case)
+                (case / "email.md").write_text(f"Subject: Harborview Insurance Agency LLC\n\nHi,\n{email}\nThanks\n")
+                rep296 = process_submission(case)
+                ops296 = next(r for r in rep296["fields"] if r["field_id"] == "operations")
+                assert rep296["status"] != "complete" and "no cooking" not in (ops296["value"] or "") and ops296["needs_review"], (email, rep296["status"], ops296)
+        finally:
+            llm_extract.llm_extract = real_llm
+        # P-074 (D-132): SUB-297/298 and the merge-vs-conflict cases, end to end through the real conflict loop. Only the model host is stubbed
+        # (the SUB-345 stored reply shape: conflict values as numbers, the sales field empty); a temp cache; no model call.
+        def stubbed(folder: Path, sides: list, *, field: dict | None = None) -> dict:
+            docs74 = sources.read_folder(folder)
+            rows74 = []
+            for doc in docs74:
+                labels = {"loss_run_valued_through": ("valued as of:",)} if doc["name"] == "loss-runs.md" else LABELS if doc["name"] == "application.md" else {}
+                for fid, label in labels.items():
+                    row = extract_labeled(doc["text"], label)[0]
+                    if row["value"] is not None and fid != "sales_or_payroll":
+                        rows74.append({"field_id": fid, "value": row["value"], "source": doc["name"], "quote": doc["text"][row["start"] : row["end"]], "confidence": 0.95})
+            reply74 = {"fields": rows74 + ([field] if field else []), "conflicts": [{"field": "sales_or_payroll", "values": sides}] if sides else []}
+            real_post, real_cache, real_env = llm_extract._post, llm_extract.CACHE, (os.environ.get("LLM_BASE_URL"), os.environ.get("LLM_MODEL"))
+            os.environ["LLM_BASE_URL"], os.environ["LLM_MODEL"] = "http://localhost:11434/v1", "p074-stub"
+            llm_extract.CACHE = tmp_path / f"p074-cache-{len(list(tmp_path.glob('p074-cache-*')))}"
+            llm_extract._post = lambda settings, payload: {"choices": [{"message": {"content": json.dumps(reply74)}}], "usage": {"total_tokens": 1}}
+            try:
+                return process_submission(folder)
+            finally:
+                llm_extract._post, llm_extract.CACHE = real_post, real_cache
+                for name, old in zip(("LLM_BASE_URL", "LLM_MODEL"), real_env):
+                    os.environ.pop(name, None) if old is None else os.environ.__setitem__(name, old)
+
+        def sales_of(rep: dict) -> dict:
+            return next(r for r in rep["fields"] if r["field_id"] == "sales_or_payroll")
+
+        def copy74(sid: str, tag: str, email: str | None = None, app_sales: str | None = None) -> Path:
+            case = tmp_path / "p074" / tag / sid
+            shutil.copytree(dev_root / sid, case)
+            if email is not None:
+                (case / "email.md").write_text(f"Subject: x\n\nHi,\n{email}\nThanks\n")
+            if app_sales:
+                (case / "application.md").write_text(re.sub(r"Annual sales: \$[\d,]+", f"Annual sales: ${app_sales}", (case / "application.md").read_text()))
+            return case
+
+        app297 = {"value": 1180000, "source": "application.md", "quote": "Annual sales: $1180000", "confidence": 1.0}
+        mail297 = {"value": 1350000, "source": "email.md", "quote": "Last year we did about $1.35 million", "confidence": 1.0}
+        rep = stubbed(dev_root / "SUB-297", [app297, mail297])  # SUB-345 shape: both sides verify, the email side is approximate
+        assert [c["field"] for c in rep["conflicts"]] == ["sales_or_payroll"] and not sales_of(rep)["value"], rep["conflicts"]
+        assert rep["status"] != "complete" and not rep["complete"] and not ready_to_route(rep), rep["status"]
+        assert [(v["value"], bool(v.get("approximate"))) for v in rep["conflicts"][0]["values"]] == [("1180000", False), ("1350000", True)]
+        rep = stubbed(dev_root / "SUB-297", [app297, {**mail297, "quote": "we made 1.35 million"}])  # D1: the email side is not in the document
+        assert rep["conflicts"] and rep["status"] != "complete" and not sales_of(rep)["value"] and not ready_to_route(rep), rep["status"]
+        assert [bool(v.get("unverified")) for v in rep["conflicts"][0]["values"]] == [False, True] and "quote not found" in rep["conflicts"][0]["values"][1]["reason"], rep["conflicts"]
+        rep = stubbed(dev_root / "SUB-298", [{**app297, "value": 1150000, "quote": "Sales 1.15 million"}, {**mail297, "value": 1200000, "quote": "we did 1.2 million"}])  # SUB-298, D2
+        assert [bool(v.get("unverified")) for v in rep["conflicts"][0]["values"]] == [True, True] and rep["status"] != "complete" and not ready_to_route(rep), rep["conflicts"]
+        assert rep["status"] != "all_values_rejected", "a reply whose only content is that conflict is an answer with an open conflict"
+        # merge: the same amount in other words is one number; the exact side wins and the hedged quote stays as also_quoted
+        same = copy74("SUB-297", "merge", "We did about $1.18 million.")
+        rep = stubbed(same, [app297, {"value": "$1.18 million", "source": "email.md", "quote": "about $1.18 million", "confidence": 1.0}])
+        assert rep["conflicts"] == [] and sales_of(rep)["value"] == "1180000" and sales_of(rep)["quote"] == "Annual sales: $1180000", sales_of(rep)
+        assert not sales_of(rep)["needs_review"] and any("about $1.18 million" in a["quote"] for a in sales_of(rep).get("also_quoted") or []), sales_of(rep)
+        # conflict: a different number is a conflict, held
+        diff = copy74("SUB-297", "differ", "We did about $1.2 million.")
+        rep = stubbed(diff, [app297, {"value": "$1.2 million", "source": "email.md", "quote": "about $1.2 million", "confidence": 1.0}])
+        assert [c["field"] for c in rep["conflicts"]] == ["sales_or_payroll"] and not ready_to_route(rep), rep["conflicts"]
+        # an approximate quote on a number field with no conflict: kept, flagged, never dropped, never exact
+        solo = copy74("SUB-297", "solo", "We did about $1.35 million.")
+        rep = stubbed(solo, [], field={"field_id": "sales_or_payroll", "value": 1350000, "source": "email.md", "quote": "We did about $1.35 million.", "confidence": 1.0})
+        row = sales_of(rep)
+        assert row["value"] == "1350000" and row["needs_review"] and row["approximate"] and row["reason"].startswith("approximate figure:"), row
+        assert rep["status"] == REVIEW_PENDING, rep["status"]
+        for word in ("nearly", "almost", "close to", "circa", "roughly", "approximately", "around", "~"):  # each hedge word, end to end
+            rep = stubbed(copy74("SUB-297", f"w-{word.strip('~') or 'tilde'}", f"We did {word} $1.35 million."), [],
+                          field={"field_id": "sales_or_payroll", "value": 1350000, "source": "email.md", "quote": f"We did {word} $1.35 million.", "confidence": 1.0})
+            assert sales_of(rep)["needs_review"] and sales_of(rep).get("approximate"), (word, sales_of(rep))
+        exact = copy74("SUB-297", "exact", "We did $1.35 million.")  # no hedge: exact, no review note
+        rep = stubbed(exact, [], field={"field_id": "sales_or_payroll", "value": 1350000, "source": "email.md", "quote": "We did $1.35 million.", "confidence": 1.0})
+        assert sales_of(rep)["value"] == "1350000" and not sales_of(rep)["needs_review"] and not sales_of(rep).get("approximate"), sales_of(rep)
+        # check M2: a hedge across a currency code, a colon or both never verifies an exact figure
+        for quote in ("about US$1.2 million", "about USD 1.2 million", "about: $1.2m", "Approximately: $1,200,000", "roughly C$1.2 million", "around: US$ 1.2 million"):
+            assert llm_extract.is_approximate("1200000", quote), quote
+        assert not llm_extract.is_approximate("1200000", "Annual sales: US$1.2 million")
+        assert _sales_figures("Sales about USD 1.2 million") == [(1200000, "Sales about USD 1.2 million")]
+        # check M1: the exact side wins, but a review reason that is not the approximate note is still carried
+        clean = {"value": "1", "needs_review": False, "reason": None, "quote": "q"}
+        _carry_flag(clean, {"value": "1", "approximate": True, "needs_review": True, "quote": "about 1",
+                            "reason": "values differ by location: loc 1 x; approximate figure: about 1"})
+        assert clean["needs_review"] and clean["reason"] == "values differ by location: loc 1 x", clean
+        clean = {"value": "1", "needs_review": False, "reason": None}
+        _carry_flag(clean, {"value": "1", "approximate": True, "needs_review": True, "quote": "about 1", "reason": "approximate figure: about 1"})
+        assert not clean["needs_review"], "an approximate note alone is not carried onto the exact side"
+        clean = {"value": "1", "needs_review": False, "reason": None}  # recheck H1: the order llm_extract writes on the per-location path
+        _carry_flag(clean, {"value": "1", "approximate": True, "needs_review": True, "quote": "about $1.2 million",
+                            "reason": "approximate figure: about $1.2 million; values differ by location: loc 1 x; loc 2 y"})
+        assert clean["needs_review"] and clean["reason"] == "values differ by location: loc 1 x; loc 2 y", clean
+        # check M3: a premises conflict with an unverified side survives labelled locations
+        keep74 = [{"field": "premises_address", "values": [{"value": "a", "unverified": True}, {"value": "b"}]}, {"field": "premises_address", "values": [{"value": "a"}, {"value": "b"}]}]
+        apply_locations({"premises_address": {"value": None}}, keep74, {"application.md": "Main premises 1 A St, Houston TX 77001. Second premises 2 B St, Houston TX 77002."})
+        assert len(keep74) == 1 and any(s.get("unverified") for s in keep74[0]["values"]), keep74  # recheck L8: fails on []
+        # P-070 backstop reads the units too: "$1.2 million in sales" beside a sales word
+        assert [amount for amount, _ in _sales_figures("Our sales were $1.2 million last year.")] == [1200000]
+        assert [amount for amount, _ in _sales_figures("Annual sales: 250 thousand")] == [250000]
+        # P-075 (D-133): the cooking none-line is copied as written, or a cooking word anywhere holds the file. Only the model host is stubbed.
+        def ops_of(rep: dict) -> dict:
+            return next(r for r in rep["fields"] if r["field_id"] == "operations")
+
+        def stub75(sid: str) -> dict:  # the application's own sales line, as the model would return it (stubbed() leaves sales out)
+            sales = re.search(r"Annual sales: \$(\d+)", (dev_root / sid / "application.md").read_text())
+            assert sales, sid
+            return stubbed(dev_root / sid, [], field={"field_id": "sales_or_payroll", "value": int(sales.group(1)), "source": "application.md", "quote": sales.group(0), "confidence": 1.0})
+
+        LINE = "Cooking operations: None"
+        rep = stub75("SUB-299")  # SUB-348 shape: another line of the application and the email
+        assert [c["field"] for c in rep["conflicts"]] == ["cooking"] and not ready_to_route(rep) and rep["status"] != "complete" and not rep["complete"], rep["status"]
+        assert [v["source"] for v in rep["conflicts"][0]["values"]] == ["application.md", "application.md"] or rep["conflicts"][0]["values"][1]["source"] in ("application.md", "email.md"), rep["conflicts"]
+        assert LINE not in ops_of(rep)["value"] and not ops_of(rep).get("rule_copied") and ops_of(rep)["needs_review"] and REASON_COOKING_CONFLICT in ops_of(rep)["reason"], ops_of(rep)
+        assert rep["conflicts"][0]["values"][0]["quote"] == LINE, rep["conflicts"]
+        assert rep["cooking"]["equipment"]["state"] == "needs_review" and rep["cooking"]["equipment"]["reason"] == REASON_COOKING_CONFLICT, rep["cooking"]  # code review 3
+        assert [v["source"] for v in rep["conflicts"][0]["values"]] == ["application.md", "email.md", "application.md"], rep["conflicts"]  # UI check H1: the email first, the application's own line last
+        assert "stove top" in rep["conflicts"][0]["values"][1]["quote"], rep["conflicts"]
+        rep = stub75("SUB-300")  # SUB-349 shape: the schedule cooking column says Yes
+        assert [c["field"] for c in rep["conflicts"]] == ["cooking"] and rep["status"] != "complete" and not ready_to_route(rep), rep["conflicts"]
+        assert {"schedule.csv", "email.md"} <= {v["source"] for v in rep["conflicts"][0]["values"]}, rep["conflicts"]  # UI check H1: every document that states cooking
+        rep = stub75("SUB-301")  # T-119 shape: clean; the stub drops the line
+        row = ops_of(rep)
+        assert rep["conflicts"] == [] and row["value"].endswith("; " + LINE) and row["rule_copied"] and row["needs_review"] and REASON_COOKING_COPIED in row["reason"], row
+        assert "no other document" not in row["reason"].lower() and "check the other documents" in row["reason"], row["reason"]  # P-075 check H1: never a claim of absence
+        assert row["also_quoted"][0]["quote"] == LINE and row["also_quoted"][0]["source"] == "application.md" and "no cooking" not in row["value"].lower(), row
+        assert (row["confidence"] or 0) < llm_extract.MIN_CONFIDENCE and rep["status"] == REVIEW_PENDING, (row["confidence"], rep["status"], rep.get("missing"), rep.get("status_reason"))
+        app301 = (dev_root / "SUB-301" / "application.md").read_text()
+        assert app301[row["also_quoted"][0]["start"] : row["also_quoted"][0]["end"]] == LINE
+        rep = stub75("SUB-302")  # negations
+        assert [c["field"] for c in rep["conflicts"]] == ["cooking"] and not ready_to_route(rep), rep["conflicts"]
+        for sentence in ("No fryer on site.", "Fryer removed last year.", "No beer, we fry wings.", "Wings fried daily and beer none.", "No cooking, but we fry wings."):
+            assert cooking_hits({"email.md": sentence}), sentence
+        for sentence in ("No cooking.", "No kitchen.", "We do not cook.", "Cooking operations: None", "The office is in a quiet neighborhood near Coventry Park."):
+            assert not cooking_hits({"email.md": sentence}), sentence
+        rep = stub75("SUB-303")  # SUB-350 shape: the model carried the line itself
+        assert rep["conflicts"] == [] and ops_of(rep)["value"] == "Plumbing supplies, no cooking" and not ops_of(rep).get("rule_copied"), ops_of(rep)
+        for sid in ("SUB-294", "SUB-295"):  # the older none-line files: line copied, status unchanged
+            rep = stub75(sid)
+            assert rep["conflicts"] == [] and ops_of(rep)["value"].endswith("; " + LINE) and rep["status"] == REVIEW_PENDING, (sid, rep["status"])
+        rep = stub75("SUB-293")  # "no kitchen or any cooking on site" is not an exact agreeing phrase: a false hold by design
+        assert [c["field"] for c in rep["conflicts"]] == ["cooking"], rep["conflicts"]
+        # none-shapes: only a whole-body none line is copied; N/A, blank, or extra words keep the P-059 flag
+        for body, shape in (("None", True), ("No.", True), ("nil", True), ("No commercial cooking", True), ("No kitchen", True), ("N/A", False), ("", False), ("None; microwave", False), ("Electric ranges only", False)):
+            assert bool(cooking_none_line({"application.md": f"Cooking operations: {body}\n"})) is shape, body
+        assert cooking_none_line({"application.md": "Cooking operations: None\n"}, {"application.md": [["Cooking", 0.9]]}) is None  # a scan is never copied from
+        # C: operations cited from the email; the application's stated cooking line is read
+        merged_c = {"operations": {"value": "Insurance office", "source": "email.md", "start": 0, "end": 16, "confidence": 0.9, "needs_review": False, "reason": None}}
+        check_operations(merged_c, {"email.md": "Insurance office, 40 seats", "application.md": "Cooking operations: Electric ranges only\n"})
+        assert merged_c["operations"]["needs_review"] and "electric" in merged_c["operations"]["reason"] and "ranges" in merged_c["operations"]["reason"], merged_c["operations"]
+        # the schedule: header only is not read; a Yes is; the insured's name is not read
+        assert not cooking_hits({"schedule.csv": "location\tsq_ft\tcooking\nMain\t3700\tNo\n"}) and cooking_hits({"schedule.csv": "location\tcooking\nMain\tYes\n"})
+        assert not cooking_hits({"schedule.xlsx": "sheet: Schedule\nloc\tsq_ft\tcooking\n1\t900\tnone\n"}) and cooking_hits({"schedule.xlsx": "sheet: Schedule\nloc\tcooking\n1\tYes\n"})
+        assert cooking_hits({"email.md": "Grill Masters LLC is the insured."}) and cooking_hits({"email.md": "Grill Masters LLC is next door."})  # the name is read (code review 2)
+        assert cooking_hits({"schedule.csv": "address\tno\tcooking\n12 Main St, Unit 2\tNo\tYes\n"}) and not cooking_hits({"schedule.csv": "address\tcooking\n12 Main St, Unit 2\tNo\n"})  # code review 1: the cell is not split on its comma
+        pizza = {"application.md": "Named insured: Main Street Pizza & Grill LLC\nOperations: Office\nCooking operations: None\n"}
+        merged_p, conf_p = {"operations": {"value": "Office", "source": "application.md", "needs_review": False, "confidence": 0.9}, "named_insured": {"value": "Main Street Pizza & Grill LLC"}}, []
+        apply_cooking_rule(merged_p, conf_p, pizza)
+        assert [c["field"] for c in conf_p] == ["cooking"] and not merged_p["operations"].get("rule_copied"), conf_p  # code review 2: held, not copied
+        request = _request("SUB-290", [], ["square_feet", "suite_count"])
+        assert "- square footage" in request and "- suite count" in request, request
     print("prepare ok")

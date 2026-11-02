@@ -42,7 +42,7 @@ class LOBModelRegistry:
         return cls()
 
     def get(self, model_type: ModelType, insurance_line: str | None) -> BaseMLModel | None:
-        """Return LOB-scoped model when trained; else global champion; else None."""
+        """Return a gate-passing LOB model, else a gate-passing global champion, else an untrained instance for the heuristic."""
         global_registry = get_ml_registry()
         if not insurance_line:
             model = global_registry.get(model_type)
@@ -55,12 +55,15 @@ class LOBModelRegistry:
             self._cache[key] = inst
 
         lob_model = self._cache[key]
-        if isinstance(lob_model, BaseMLModel) and lob_model.is_trained:
+        if isinstance(lob_model, BaseMLModel) and lob_model.is_trained and lob_model.gate_passed is True:
             return lob_model
 
         global_model = global_registry.get(model_type)
         if isinstance(global_model, BaseMLModel) and global_model.is_trained and global_model.gate_passed is True:
             return global_model
+        # A fitted model that failed the gate must not block the heuristic.
+        if isinstance(lob_model, BaseMLModel) and lob_model.is_trained and lob_model.gate_passed is not True:
+            return self._create(model_type)
         return lob_model if isinstance(lob_model, BaseMLModel) else global_model if isinstance(global_model, BaseMLModel) else None
 
     def train_and_save(

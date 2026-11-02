@@ -170,7 +170,7 @@ class BaseMLModel(ABC):
 
     def explain(self, fv: FeatureVector) -> dict[str, Any]:
         """Generate prediction explanation (feature contributions)."""
-        if self.model is None:
+        if self.model is None or self.gate_passed is False:
             return {"method": "fallback", "top_factors": []}
 
         features = self._extract_features(fv).reshape(1, -1)

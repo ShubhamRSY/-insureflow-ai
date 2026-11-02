@@ -1,0 +1,3 @@
+source,loc,address,city,zip,bldg_tiv,construction,year_built,sq_ft,sprinklers,cooking
+application,1,2001 Rivercrest Dr,Georgetown,78628,$180000,Masonry,1994,3000,No,No
+email,2,"Press room, 1415 Sam Bass Rd",Round Rock,78681,$40000,Metal,2008,1200,No,No

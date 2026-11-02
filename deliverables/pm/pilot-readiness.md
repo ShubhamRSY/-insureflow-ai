@@ -1,55 +1,58 @@
 # Pilot readiness — assist-only pilot (T-109d, D-116)
 
-- Owner: @pm. Date: 2026-10-19; updated 2026-10-20 (P-066/B-191). No build, no code change, no run by @pm.
-- Source of conditions: `deliverables/model-risk/T-027-assist-mode-pilot.md` (C1–C8, @model-risk).
-- Evidence read: that memo; `deliverables/ai-engineer/p-063-p-064-as-built.md`; `team/BACKLOG.md` B-190/B-191; `team/TASKS.md` T-109a–d; `team/DECISIONS.md` D-117/D-118; `deliverables/model-risk/check-P-066-P-067-P-068.md`; a grep of `underwriting_pipeline/app` and `underwriting_pipeline/ai` for assist-only, pilot and correction-log terms (no hits).
-- Not a production approval. The T-027 veto stands. Synthetic data only.
+- Owner: @pm. Created 2026-10-19; updated 2026-10-21; **updated 2026-11-02 to the state of `pilot-integration`**. No model call.
+- Source of conditions: `deliverables/model-risk/T-027-assist-mode-pilot.md` (C1–C8, @model-risk). Open decisions: `deliverables/pm/pilot/decisions-for-user.md` (c1–c9).
+- Not a production approval. The T-027 production veto stands (KEEP after T-120). Synthetic data only. "Built" means built and tested on `pilot-integration`. It does not mean independently approved.
+- Note: these pilot conditions C1–C8 are different from the T-027 operations gate C1–C7 (D-134). That gate was met in T-120.
 
-## Summary
+## Summary (2026-11-02)
 
-- C1–C8: 0 Met, 4 Partly met, 3 Not met, 0 Not started, 1 Not verified. (C5 moved Not met → Partly met; C8 still Not started but folded into C5/C7 wording, see rows.)
-- Hard blockers: **B-190 before any real data** (Open) and **B-191 before a pilot** (now **Partly done** — see below). The B-191 cross-process lock and tests are built (P-066, commits `39b2a46`, `e9e5683`); the failed-write-is-never-silent requirement is not yet shown (@model-risk M/L).
-- Nothing in the code knows "assist-only" or "pilot". No pilot submission guard exists in `package.py`, `prepare.py` or `workbench.py`.
-- New since 2026-10-19: P-068 (scorer v10) was built as dev work and **blocked by @model-risk** (`check-P-066-P-067-P-068.md` re-check, 2026-10-20): wrong operations answers still score as hits, and the synonym list is overfit to T-108. v10 is dev-only; no hold-out may use it. This does not change C1–C8, but it means the pilot's value-warning text (C6) must be written against an approved scorer.
+- **Everything is on one branch.** `sso-b190` (B-190) and `pilot-conditions` (C1–C6, B-191 item 2) were merged into `pilot-integration` on 2026-10-21. That branch is now the branch of record (D-144).
+- **Built, not independently checked:** C1, C2, C3, C4, C5 and the C6 mechanism; B-190 sign-in; B-191 item 2. The @model-risk check of C1–C6 and B-191 item 2 (c7) and the @senior-underwriter UI check (c8) have not been done.
+- **Not met:** C7 (freeze not started) and C8 (no pilot task, no threshold).
+- **New since 2026-10-21:**
+  - T-122 (P-078): every file goes through type, lock, virus, macro and injection checks.
+  - T-125 (B-485, D-143): in pilot mode, if no virus scanner is set up, no file is opened. Built 2026-11-02; @model-risk check pending.
+  - P-076: operations is always acknowledged before send.
+- **No pilot can start** until c7 and c8 are done, C8 is registered, and the user's company answers c5 and c9 (IT) and c1–c4 (manager).
 
 ## C1–C8 checklist
 
-| # | Condition (short) | Status | Evidence | What closes it |
-|---|---|---|---|---|
-| C1 | Send path never enabled for pilot files; `send_to_carrier`/`build_package` refuse pilot ids | Partly met | P-063 send-time scope re-check refuses out-of-scope files (`p-063-p-064-as-built.md`). No pilot-id refusal exists. | Pilot-id refusal with "assist-only pilot: send disabled" in `package.py`; self-check (@software-engineer). |
-| C2 | No draft leaves the tool for pilot files; `write_drafts` never runs on them | Not met | `write_drafts` is live (T-027 memo H-A1). No pilot guard. | Refuse pilot ids in `prepare.write_drafts`; self-check that `pending-approval/` gets no pilot id (@software-engineer). |
-| C3 | Route and status shown only as proposals; scope verdict always shown | Partly met | Scope reason shown only on a refused send or approve (P-063). Always-on verdict and "suggestion only" labels not found. | Always-on scope verdict and suggestion labels on pilot cards; @senior-underwriter UI check (@software-engineer, @senior-underwriter). |
-| C4 | Only authenticated pilot users see output; no AI output copied to deliverables | Not met | B-190 Open (`team/BACKLOG.md` line 210). B-185 prototype limit. | B-190 (see below). |
-| C5 | Everything logged: display, underwriter corrections, `extraction_failed` counted apart | Partly met | Decision log exists and every entry now takes its sequence number under a **cross-process file lock** (`fcntl.flock`, `workbench.py` `_append`, P-066); 8-thread and 2-process tests pass. B-191 Partly done. No correction log found in code. | Correction log (field, suggested, final, reason); show a failed log write as a plain-language refusal (the lock failure is still swallowed, @model-risk M/L); display log with run hash; `extraction_failed` counted apart (@software-engineer; metric by @model-risk). |
-| C6 | Every value labelled a proposal, with citation, confidence, and T-108 warnings (ops 9/20, loss runs 5/20) | Not verified | Citation/confidence (P-016) not re-checked in this pass. Warning text not found by grep. The warning numbers depend on the scorer: v10 is blocked (2026-10-20), so the operations figure is still the v9 one. | Warning on operations and loss-run values against an **approved** scorer; @senior-underwriter UI check (High only). |
-| C7 | Frozen build: code SHA, prompt version and model recorded before the first real file; no change to `underwriting_pipeline/` during pilot | Partly met | T-108 froze `457f1bf` and prompt `759b3e6bc9b2`. P-063/P-064 changed code after it; P-066/P-067 changed it again (2026-10-20). No pilot freeze note yet. | Freeze note with new SHA after C1–C6 land; `git diff` empty over the pilot (@senior-test-engineer records). |
-| C8 | Time-boxed pilot registered in TASKS.md; correction threshold per field; stop rules | Not started | No pilot task in `team/TASKS.md`. No threshold set. | @pm registers task after B-190/B-191; @head-of-underwriting sets threshold. |
+| # | Condition | State 2026-11-02 | What is left |
+|---|---|---|---|
+| C1 | Send path never enabled for pilot files | Built on `pilot-integration`. `PILOT_MODE=assist-only` refuses send, package and approve with a plain reason. | @model-risk code check (c7). |
+| C2 | No draft leaves the tool | Built. `write_drafts` and producer-request approval refuse; the outbox stays empty (tests). | @model-risk code check (c7). |
+| C3 | Route and status shown only as proposals; scope verdict always shown | Built. Pilot banner, scope verdict on every card, "Suggestion only — not a decision". | @senior-underwriter UI check, High only (c8). |
+| C4 | Only signed-in pilot users see output | Built: B-190 merged on `pilot-integration` (OIDC sign-in, signed session, CSRF, audit row per view, decision and send). | @model-risk check; IdP and tenant from IT (c5); identity → underwriter id mapping (c9). |
+| C5 | Everything logged; failed calls counted apart | Built. Correction and event logs under `flock`+`fsync`, mode 0600; the monitor shows edits per field. Views carry the signed-in user once B-190 runs with a real IdP. | c7 check; @model-risk reviews the export at pilot end. |
+| C6 | Every value labelled a proposal, with measured warnings | Mechanism built. The warning still names T-108 (9/20, 5/20) and T-117 (13/20, 16/20). The newer T-120 hold-out is not shown. | @model-risk decides which numbers the warning shows (c1) and the reporting run (c2). |
+| C7 | Frozen build: code SHA, prompt version, model recorded; no pipeline change during the pilot | Note written (`deliverables/pm/pilot/freeze-note.md`, prompt `759b3e6bc9b2`). Freeze not started. If P-077 part B is approved, the prompt version changes and the note must be updated. | Record the SHA at pilot start; no change to `underwriting_pipeline/` during the pilot. |
+| C8 | Time-boxed pilot registered; per-field correction threshold; stop rules | **Not met.** Stop rules are written (`deliverables/pm/pilot/underwriter-guide.md`, `incident-rollback.md`). No task, no threshold. | @pm registers the task (c4); @head-of-underwriting sets the threshold (c3); @user decides go/no-go. |
 
-## B-190 — SSO and audit log (HARD BLOCKER before any real data)
+## Hard blockers
 
-- Risk: any caller can type an underwriter id; decisions and sends are unattributable (B-185, B-100 rise to High once the send gate reads the log).
-- Build plan:
-  1. Choose sign-in method (SSO or local login) with @compliance on data handling. Owner: @compliance (decision), @head-of-underwriting (scope).
-  2. Add sign-in to the workbench; every decision, send and view needs a signed-in user. Owner: @software-engineer.
-  3. Write an audit row (user, action, submission, time) for every view, decision and send. Owner: @software-engineer.
-  4. Remove the typed actor field; B-185 and B-196 close with it. Owner: @software-engineer.
-  5. Independent check of the sign-in and audit path. Owner: @model-risk (High only), @senior-test-engineer (run).
-- Test that proves it: unauthenticated `/send`, `/decision` and `/approve-draft` are refused with a plain reason; a signed-in decision writes one audit row naming that user; a typed actor cannot be used.
+- **B-190 — sign-in and audit log (before any real data).** Built and merged into `pilot-integration` (`e9edeba` via `f608d2c`). Open: an independent check, the real IdP/tenant (IT, c5), and how a sign-in identity becomes an underwriter id in `underwriters.json` (c9).
+- **B-191 — concurrent decision-log writes (before a pilot).** Items 1, 3 and 4: done, @model-risk APPROVE. Item 2 (a failed write is never silent; "Decision refused: disk full"): built and tested, merged into `pilot-integration`. Its independent re-check is part of c7.
+- **B-485 — virus scanner required in pilot mode.** Built 2026-11-02 (T-125); @model-risk check pending. In the pilot, `CLAMAV_HOST` must point at a running clamd. Otherwise every file is blocked by design.
 
-## B-191 — concurrent decision-log writes (HARD BLOCKER before a pilot)
+## Needs the user's company (outside the team)
 
-- Risk: two workbench processes can issue the same sequence number or lose a write (eight-thread stub test errors; B-184 per-process lock). Assist logging (C5) writes to this log.
-- Status 2026-10-20 (**Partly done**, P-066, commits `39b2a46` + `e9e5683`): item 1 built, item 3 built and passing, item 4 checked with no High; item 2 not shown.
-- Build plan:
-  1. Replace the per-process `_LOG_LOCK` with a cross-process file lock, or an atomic append that takes the next seq under the lock. **Done** — `workbench.py` `_append` takes `fcntl.flock(LOCK_EX)` on `<log>.lock` and computes `seq = max(existing) + 1` under it.
-  2. Make a failed write visible in the UI as a plain-language refusal, never silent. **Not shown** — the `flock` failure is still swallowed (`except Exception: pass`, `workbench.py:592`); a forced failure has no proven refusal reason. @model-risk M/L finding; owned by @software-engineer.
-  3. Re-run the stubbed eight-thread test and a two-process test. **Done** — `pytest tests/test_concurrent_writes.py tests/test_concurrent_writes_mp.py` passes (2 passed); no duplicate seq, no lost row. Note: `tests/test_concurrent_writes_proc.py` is an empty stub (unknown origin, not committed) — the two-process coverage lives in `_mp.py`.
-  4. Independent check of the log code. **Done (High only)** — @model-risk checked the P-066 restore and lock path: APPROVE, no High; M1 (no "What's new"/screenshot, now added `ba22ce1`) and L1–L4 to backlog, incl. "flock failure swallowed".
-- Test that proves it: eight-thread test and two-process test both pass with no duplicate seq and no lost row (✅); a forced write failure shows the refusal reason in the workbench (❌ — item 2).
+- **IT:**
+  - sign-in tenant and issuer, OIDC client, accounts for pilot users (c5);
+  - how a sign-in becomes an underwriter id (c9);
+  - where pilot logs are stored, how long, and who can read them (c5);
+  - a host for clamd (B-485).
+- **Manager:**
+  - which accuracy numbers the pilot shows (c1);
+  - which run the correction rate is reported against (c2);
+  - the per-field threshold that pauses the pilot (c3);
+  - file count, underwriters and dates (c4);
+  - go/no-go.
+- **Compliance:** model host and data handling for real applicant documents (c5).
 
 ## Next
 
-- @software-engineer: item 2 of B-191 (failed write → plain refusal + screenshot); B-190 (SSO + audit log); C1–C3 self-checks.
-- @ai-engineer-assistant / @model-risk: fix P-068 (v10) to @model-risk's BLOCK list (spanned-match negation/look-again, counts as one token, synonym list into `operations-gold-rule.md`), re-request the check; C6 warning numbers await an approved scorer.
-- @pm: register the pilot as a task once B-190 and B-191 both pass; no pilot runs before then.
-- @user: decides whether and when the pilot runs (D-057, T-027 memo).
+1. @model-risk: c7 (C1–C6 and B-191 item 2 on `pilot-integration`) and the c1/c2 warning source.
+2. @senior-underwriter: c8 UI check, High only.
+3. @pm / @head-of-underwriting: register the pilot task with a threshold (C8).
+4. The user takes c1–c5 and c9 to the manager and IT.

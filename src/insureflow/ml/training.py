@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import csv
 import logging
+import math
 from pathlib import Path
 from typing import Any
 
@@ -31,13 +32,23 @@ DEFAULT_DATA_ROOT = Path("ml_data")
 # Minimum production thresholds. Models trained on real data that fail these stay
 # on their deterministic fallbacks instead of serving weak predictions.
 QUALITY_GATES: dict[ModelType, dict[str, float]] = {
-    ModelType.LOSS_PREDICTION: {"val_r2": 0.10, "min_samples": 50.0},
+    ModelType.LOSS_PREDICTION: {"val_r2": 0.10, "max_r2": 0.995, "min_samples": 50.0},
     ModelType.FRAUD_DETECTION: {"val_roc_auc": 0.70, "max_roc_auc": 0.995, "min_samples": 50.0},
-    ModelType.PREMIUM_OPTIMIZER: {"val_r2": 0.10, "min_samples": 50.0},
+    ModelType.PREMIUM_OPTIMIZER: {"val_r2": 0.10, "max_r2": 0.995, "min_samples": 50.0},
     ModelType.CHURN_PREDICTION: {"val_roc_auc": 0.70, "max_roc_auc": 0.995, "min_samples": 50.0},
     ModelType.MORTGAGE_DEFAULT_RISK: {"val_roc_auc": 0.70, "max_roc_auc": 0.995, "min_samples": 50.0},
     ModelType.LENDING_DEFAULT_RISK: {"val_roc_auc": 0.70, "max_roc_auc": 0.995, "min_samples": 50.0},
 }
+
+
+def _finite_metric(metrics: dict[str, float], key: str, default: float) -> float | None:
+    try:
+        value = float(metrics.get(key, default))
+    except (TypeError, ValueError):
+        return None
+    if not math.isfinite(value):
+        return None
+    return value
 
 
 def passes_quality_gate(model_type: ModelType, metrics: dict[str, float], n_samples: int) -> tuple[bool, str]:
@@ -50,12 +61,23 @@ def passes_quality_gate(model_type: ModelType, metrics: dict[str, float], n_samp
         return True, "no gate configured"
     if n_samples < gate.get("min_samples", 0.0):
         return False, f"insufficient samples ({n_samples} < {gate.get('min_samples', 0.0):.0f})"
-    if "val_roc_auc" in gate and metrics.get("val_roc_auc", 0.0) < gate["val_roc_auc"]:
-        return False, f"val_roc_auc {metrics.get('val_roc_auc', 0.0):.3f} < {gate['val_roc_auc']:.2f}"
-    if "max_roc_auc" in gate and metrics.get("val_roc_auc", 0.0) > gate["max_roc_auc"]:
-        return False, f"val_roc_auc {metrics.get('val_roc_auc', 0.0):.3f} > {gate['max_roc_auc']:.3f} (possible label leakage)"
-    if "val_r2" in gate and metrics.get("val_r2", -1.0) <= gate["val_r2"]:
-        return False, f"val_r2 {metrics.get('val_r2', -1.0):.3f} <= {gate['val_r2']:.2f}"
+    if "val_roc_auc" in gate:
+        auc = _finite_metric(metrics, "val_roc_auc", 0.0)
+        if auc is None:
+            return False, "val_roc_auc is not finite"
+        if auc < gate["val_roc_auc"]:
+            return False, f"val_roc_auc {auc:.3f} < {gate['val_roc_auc']:.2f}"
+        if "max_roc_auc" in gate and auc > gate["max_roc_auc"]:
+            return False, f"val_roc_auc {auc:.3f} > {gate['max_roc_auc']:.3f} (possible label leakage)"
+    if "val_r2" in gate:
+        r2 = _finite_metric(metrics, "val_r2", -1.0)
+        if r2 is None:
+            return False, "val_r2 is not finite"
+        if r2 <= gate["val_r2"]:
+            return False, f"val_r2 {r2:.3f} <= {gate['val_r2']:.2f}"
+        ceiling = gate.get("max_r2", 0.995)
+        if r2 > ceiling:
+            return False, f"val_r2 {r2:.3f} > {ceiling:.3f} (possible label leakage)"
     return True, "passed"
 
 
@@ -95,7 +117,10 @@ def load_training_csv(
         wanted = feature_columns or DEFAULT_FEATURE_NAMES
         rows: list[list[float]] = []
         targets: list[float] = []
+        label_source = ""
         for row in reader:
+            if not label_source and row.get("label_source"):
+                label_source = str(row["label_source"])
             vec = []
             for name in wanted:
                 raw = row.get(name, "")
@@ -119,6 +144,7 @@ def load_training_csv(
         "feature_columns": wanted,
         "target_column": target_column,
         "source": "csv",
+        "label_source": label_source,
     }
     return np.asarray(rows, dtype=np.float64), np.asarray(targets, dtype=np.float64), meta
 

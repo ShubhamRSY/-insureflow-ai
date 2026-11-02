@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
@@ -198,6 +199,33 @@ class QuoteResult:
     ineligibility_reasons: list[str] = field(default_factory=list)
     policy_admin_reference: str = ""
     metadata: dict[str, Any] = field(default_factory=dict)
+
+
+# ponytail: $1B premium ceiling. A real schedule above this needs an explicit override, not a float that ran away.
+MAX_BINDABLE_PREMIUM = 1_000_000_000.0
+_NON_FINITE_REASON = "Exposure is not a finite insurable amount"
+
+
+def _finite_money(value: Any) -> bool:
+    try:
+        return math.isfinite(float(value))
+    except (TypeError, ValueError):
+        return False
+
+
+def refuse_non_finite_premium(result: QuoteResult) -> QuoteResult:
+    """Decline a quote whose premium is NaN, infinite, negative, or past the ceiling."""
+    premium = result.adjusted_premium
+    base = result.base_premium
+    if _finite_money(premium) and _finite_money(base) and 0.0 <= float(premium) <= MAX_BINDABLE_PREMIUM:
+        return result
+    result.eligible = False
+    result.adjusted_premium = 0.0
+    result.base_premium = 0.0
+    result.rate_per_100_tiv = 0.0
+    if _NON_FINITE_REASON not in result.ineligibility_reasons:
+        result.ineligibility_reasons.append(_NON_FINITE_REASON)
+    return result
 
 
 class RatingAdapter(ABC):

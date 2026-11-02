@@ -1,0 +1,15 @@
+## T-117 gold (SUB-238-269)
+INFO  SUB-241/loss-runs.md: declared undated in the plan; no valued date found, as declared
+INFO  SUB-242/loss-runs.md: declared undated in the plan; no valued date found, as declared
+INFO  SUB-254/loss-runs.md: declared undated in the plan; no valued date found, as declared
+PASS: 0 failure(s), 3 info, 32 files, run date 2026-10-21
+cooking stage: 8 real card(s) with a bare 'no cooking' item, 13 wrong + 8 plain-words variants + omission each; 42 synthetic cases
+PASS (v12 cooking stage): 0 failure(s)
+## commercial_property dev (SUB-280-289)
+PASS: 0 failure(s), 0 info, 10 files, run date 2026-10-21
+cooking stage: 5 real card(s) with a bare 'no cooking' item, 13 wrong + 8 plain-words variants + omission each; 42 synthetic cases
+PASS (v12 cooking stage): 0 failure(s)
+## commercial_package dev (SUB-270-279)
+PASS: 0 failure(s), 0 info, 10 files, run date 2026-10-21
+cooking stage: 5 real card(s) with a bare 'no cooking' item, 13 wrong + 8 plain-words variants + omission each; 42 synthetic cases
+PASS (v12 cooking stage): 0 failure(s)

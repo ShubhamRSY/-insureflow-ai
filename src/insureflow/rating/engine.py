@@ -673,6 +673,9 @@ class InsuranceRatingEngine:
         Every quote carries provenance metadata so consumers know whether
         the premium came from a real filed rate book or built-in representative values.
         """
+        from insureflow.rating.models import refuse_non_finite_premium
+
+        result = refuse_non_finite_premium(result)
         from insureflow.billing.plan import current_plan, is_customer_rate_book
         from insureflow.rating.calibration import is_rate_curves_synthetic, rate_curves_provenance
         from insureflow.rating.iso_forms import attach_iso_forms

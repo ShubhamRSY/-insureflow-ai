@@ -64,7 +64,7 @@ Author: @senior-underwriter. Source of truth for the slot-based operations score
 - **Clause**: the span between two semicolons (or the line's ends). Slots are compared only within one clause; a negation never reaches across a clause boundary.
 - **Void / flip (negation)**: within a clause, a negation word before the slot's trigger words — `no`, `not`, `none`, `without`, `never`, `sin`, `no hay`, `nada de` — flips the trigger to the slot's absent value (`none` / `no`). If gold expects presence and the answer negates, that is a miss.
 - **Absence is a value, never a drop**: a phrase that itself states the absence ("no alcohol", "sin cocina") sets the absent value. It is a slot fact, not nothing.
-- **Comparison rule (all slots)**: two answers match on a slot only if they hold the same value after normalization. Integer slots require the exact integer (a different count is a miss). Presence vs absence is a miss. A slot gold states and the answer omits is a miss. Different enumerated values are a miss (beer & wine vs full bar is a miss, not a partial).
+- **Comparison rule (all slots)**: two answers match on a slot only if they hold the same value after normalization. Integer slots require the exact integer (a different count is a miss). Presence vs absence is a miss. A slot gold states and the answer omits is a miss. This includes cooking: when gold says `no cooking` and the answer leaves cooking out, scorer v11 counts a miss (conservative; D-127, 2026-10-23: P-073/v12 dropped, the H1 scorer fix is in the backlog). Different enumerated values are a miss (beer & wine vs full bar is a miss, not a partial).
 - **Marketing words, menu items, merchandise lists, prices, history**: never slots (NOT required list above).
 
 ### The table

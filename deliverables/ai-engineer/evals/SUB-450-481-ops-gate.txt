@@ -1,0 +1,24 @@
+file     v11 ops             present  specific reason                         silent
+SUB-450  hit                 yes      cooking line copied from the applicati  no
+SUB-451  hit                 yes      value is not in the cited text (transl  no
+SUB-452  hit                 yes      none                                    no
+SUB-453  hit                 yes      cooking line copied from the applicati  no
+SUB-454  hit                 yes      none                                    no
+SUB-455  hit                 yes      none                                    no
+SUB-456  hit                 yes      cooking line copied from the applicati  no
+SUB-457  hit                 yes      value is not in the cited text (transl  no
+SUB-458  miss                no       value is not in the cited text (transl  no
+SUB-459  hit                 yes      cooking line copied from the applicati  no
+SUB-460  hit                 yes      value is not in the cited text (transl  no
+SUB-461  hit                 yes      cooking: the documents disagree         no
+SUB-462  hit                 yes      value is not in the cited text (transl  no
+SUB-463  hit                 yes      value is not in the cited text (transl  no
+SUB-464  hit                 yes      operations may be missing: liquor       no
+SUB-465  hit                 yes      value is not in the cited text (transl  no
+SUB-466  hit                 yes      value is not in the cited text (transl  no
+SUB-467  hit                 yes      none                                    no
+SUB-468  hit                 yes      none                                    no
+SUB-469  hit                 yes      cooking line copied from the applicati  no
+in-scope files 20; silent 0; present 19; hits 19
+C2 (silent errors == 0): PASS
+C4 (present >= 18/20 and hits >= 15/20): PASS

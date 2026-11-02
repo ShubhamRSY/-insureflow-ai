@@ -98,6 +98,9 @@ def validate_registration(
     min_password_length: int = 8,
 ) -> ValidationResult:
     all_errors: list[str] = []
+    seen: set[str] = set()
+    # validate_company_email runs validate_email first, so a bad email would
+    # otherwise be reported twice. Dedupe while keeping the first occurrence.
     for result in [
         validate_username(username),
         validate_email(email),
@@ -105,5 +108,8 @@ def validate_registration(
         validate_password(password, min_length=min_password_length),
         validate_company_name(company_name),
     ]:
-        all_errors.extend(result.errors)
+        for error in result.errors:
+            if error not in seen:
+                seen.add(error)
+                all_errors.append(error)
     return ValidationResult(valid=len(all_errors) == 0, errors=all_errors)

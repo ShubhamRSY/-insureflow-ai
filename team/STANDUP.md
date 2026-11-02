@@ -2074,7 +2074,54 @@ Blocked: No.
 - Doing next: property pack tests once the pack exists.
 - Blocked by / need from: engine step 2 and @model-risk review.
 
+### 2026-10-21 (30) — @software-engineer (written in OpenCode, not independently reviewed)
+- Done: on `pilot-conditions` (from `ai-team` `fd12f9c`), built T-027 C1–C6 code: `PILOT_MODE=assist-only` guards in `package.py`/`prepare.py`, per-value confirmation instead of approve, always-on scope/suggestion/weak-field labels, correction and event logs with a pilot monitor, and B-191 item 2 (no silent `flock`/`fsync` failure). Tests 52 passed; `workbench ok`; no model calls; docs under `deliverables/pm/pilot/`.
+- Doing next: push `pilot-conditions`; no merge of `sso-b190` here.
+- Blocked by / need from: @model-risk independent check + C6 warning source; @senior-underwriter UI check; merge/review of B-190 `sso-b190`; @pm/@head-of-underwriting C8 task and threshold. No real data.
+
+### 2026-10-21 (31) — @software-engineer (written in OpenCode, not independently reviewed)
+### 2026-10-21 (31) — @software-engineer (written in OpenCode, not independently reviewed)
+- Done: three-way integration on throwaway branch `pilot-integration` (from `ai-team` `fd12f9c`): merged `lob-engine-step1` (`a9ce607`), `sso-b190` (`f608d2c`) and `pilot-conditions` (`5a8063f`); 12 conflict hunks in 3 files resolved keeping both sides' intent; added the C5 display-log view row to the SSO GET handler so views carry the signed-in user; new `tests/pipeline/test_pilot_signin_combined.py` (sign-in, per-value confirm, send gate). `tests/pipeline` 82 passed; `workbench ok`; no model calls; all writes to a temp sandbox.
+- Doing next: nothing on this branch; it is a throwaway for the conflict report.
+- Blocked by / need from: @model-risk review of C1–C6 and B-191 item 2 (c7); @senior-underwriter UI check (c8); the identity mapping gap in `underwriters.json` (c9) before any real sign-in.
+
+### 2026-10-21 (32) — @pm (written in OpenCode, not independently reviewed)
+- Done: wrote `deliverables/pm/pilot/decisions-for-user.md`: c1–c8 from `c-open-questions.md` plus new c9 (identity mapping), each with the question, 2–3 options, a recommendation with a reason, the parties outside the team who must agree (IT, compliance, manager) and what it blocks. Nothing decided; the answers are the user's.
+- Doing next: record the user's answers as `D-###` in `team/DECISIONS.md`; send the items owned by @model-risk, @head-of-underwriting and @compliance to them as proposals.
+- Blocked by / need from: the user's answers to c1–c9; @pm does not decide c1/c2/c3/c5/c6/c7/c8 on the user's behalf.
+
+### 2026-10-21 (33) — @software-engineer (written in OpenCode, not independently reviewed)
+- Done: on `pilot-conditions`, every per-value confirmation is now one row in the pilot correction log (`kind` "confirm"), edited or not: the AI's proposal in "AI said", the value the underwriter stands behind (logged edits applied) in "Final", with the actor, the reason and the run hash. The pilot monitor shows confirmations per field and the correction rate per field (confirmed values the underwriter corrected ÷ confirmed values, never above 100%); every pilot field is listed, a field nobody confirmed reads "no confirmations yet". The card's read-only Corrections table gained a "Kind" column and a note saying what "AI said" and "Final" mean. Tests 54 passed (`tests/pipeline`), `workbench ok`, no model calls. D-065: workbench updated, "What's new" line added, screenshot `deliverables/software-engineer/screenshots/PILOT-C5-confirmation-rate.png`, @senior-underwriter UI review done (verdict APPROVE WITH CHANGES; both High findings fixed: the AI-said/Final note and the "no confirmations yet" line).
+- Doing next: the `test_workbench_auth.py` live-fixture restore of `pilot.CORRECTIONS`/`pilot.EVENTS` is applied on `pilot-integration`, where that file and `pilot.py` meet; `pilot-conditions` has no auth layer.
+- Blocked by / need from: nothing for this change; the pilot C8 correction-rate threshold is still owed from @head-of-underwriting, so the rate is shown, not judged. No real data.
+
+### 2026-10-21 (34) — @software-engineer (written in OpenCode, not independently reviewed)
+- Done: re-merged `pilot-conditions` (`926a2e5`, PILOT C5) into `pilot-integration`; 2 conflict hunks resolved keeping both sides (the "What's new" list keeps B-190 and PILOT C5; the standup keeps entries 31–33). Fixed the live-fixture leak in `tests/pipeline/test_workbench_auth.py`: the fixture now restores `pilot.CORRECTIONS` and `pilot.EVENTS` in its `finally`, because `workbench.sandbox()` points the pilot logs at the box; a module-scoped guard test fails if the pilot paths are left pointing at a deleted temp folder. `tests/pipeline` 84 passed; request equality `total=143 identical=143 different=0 failed=0`; `workbench ok`; no model calls; all writes to a temp sandbox. D-065: screenshot `deliverables/software-engineer/screenshots/PILOT-C5-signin-monitor.png` (signed-in pilot card with the new monitor).
+- Doing next: the same fix must come with the file when `sso-b190` is ever merged forward; `sso-b190` still carries the unfixed fixture, and `pilot-conditions` has no auth layer at all.
+- Blocked by / need from: @model-risk review of C1–C6 and B-191 item 2 (c7); the identity mapping gap in `underwriters.json` (c9) before any real sign-in; the user's answers to c1–c9. No real data.
+
+### 2026-10-23 (35) — orchestrator (written by orchestrator, Claude Code session)
+- Done: CI plan as approved by the user on 2026-10-22 (`4e8978d`): a separate pipeline CI job, the multi-process append test fixed (the worker lived in /tmp outside the repo; not a race), OCR in the test job, B-460. T-119 hold-out planned in `team/TASKS.md` (SUB-340–371; not built). On `fix-t117`: D-123, P-071 built (dev SUB-296), and the stale `.git/refs/remotes/origin/HEAD.lock` removed.
+- T-118 (on `fix-t117`, not merged): P-070 build written in OpenCode, not independently reviewed, until the @model-risk checks; P-071 built in Claude Code. @model-risk re-check: BLOCK, H1 still open for plain cooking words ("cook", "stove", "fry", "hot food"), `deliverables/model-risk/T-118-recheck.md`.
+- Doing next: the H1 follow-up as a new P-### (the user decides between masking every cooking or food stem and dropping the add altogether); `fix-t117` is merged into `pilot-integration` only after @model-risk shows no High.
+- Blocked by / need from: the user's approval of the next P-###; GitHub Actions billing (CI not running, user parked it); B-448 for the SUB-252-style case in T-119.
+
 ### 2026-10-21 (33) — @pm (written in OpenCode, not independently reviewed)
 - Done: wrote `deliverables/pm/pilot/decisions-for-user.md` (first on `pilot-integration`, copied here to `ai-team` as its own commit `e20500e`): c1–c8 from `deliverables/pm/pilot/c-open-questions.md` plus new c9 (identity mapping), each with the question, 2–3 options, a recommendation with a reason, the parties outside the team who must agree (IT, compliance, manager) and what it blocks. C6 warning number (c1) and the C8 task and threshold (c3, c4) are covered in full.
 - Doing next: record the user's answers as `D-###` in `team/DECISIONS.md`; send the items owned by @model-risk, @head-of-underwriting and @compliance to them as proposals. No decision is recorded in the user's name until the user answers in chat.
 - Blocked by / need from: the user's answers to c1–c9.
+
+### 2026-10-21 (34) — @ai-engineer-assistant (written in OpenCode, not independently reviewed)
+- Done: cause write-up for T-117 H1 and H2 in `deliverables/ai-engineer/analysis/T-117-H1-H2-cause.md`, and proposal P-070 in `deliverables/ai-engineer/proposal-P-070.md`. H1: the model drops `Cooking operations: None` on SUB-248/250/254/257 although the prompt asks for that line (`llm_extract.py:40`), and the pipeline only flags it (`check_operations`, `prepare.py:922-938`) and never completes the value. H2: the model's replies carry `conflicts: []`; the three planted disagreements are missed for three separate reasons — `_square_feet` (`prepare.py:692-718`) does not know the words the documents use ("Square footage", a `sq_ft` column), nothing compares a count across documents, and nothing reads a rating figure out of a second document. Branch `fix-t117` created from `ai-team` (53a7252).
+- Doing next: on the user's `approve change P-070`, build it here — the cooking completion, the square-feet vocabulary, the sales and suite-count conflict rules, the dev set `simulation/inbox-dev/document_conflicts/`, the workbench (D-065), the tests. No prompt, no model, no scorer: the model request stays byte-identical (zero changed requests).
+- Blocked by / need from: the user's `approve change P-070` (D-017) before any change under `underwriting_pipeline/ai/`.
+
+### 2026-10-23 — @senior-underwriter
+- Done: T-118 P-072 UI check (APPROVE, no High); D-125 written into carrier-match.md (W1, note 2, R2); dev gold scanned, no change needed.
+- Doing next: T-119 hold-out gold including a SUB-252-style R2 case, when assigned.
+- Blocked by / need from: nothing. Medium notes M1-M3 for @software-engineer/@frontend-engineer backlog.
+
+### 2026-10-23 — @senior-test-engineer
+- Done: P-073 scorer v12 built (cooking slot only), lint wrapper PASS, dev re-score (0 calls), self-checks ok, tests/pipeline 86 passed. `deliverables/senior-test-engineer/P-073-v12-as-built.md`.
+- Doing next: fix anything @model-risk finds; freeze v12 only after their check (D-126).
+- Blocked by / need from: @model-risk check; a decision on gold for other_class cards (@senior-underwriter); 30 dev files have no saved reply.
