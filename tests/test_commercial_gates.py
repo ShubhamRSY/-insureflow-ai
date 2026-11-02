@@ -131,7 +131,7 @@ def test_configured_pas_url_is_treated_as_live(monkeypatch: pytest.MonkeyPatch) 
     monkeypatch.setenv("BRITECORE_API_KEY", "")
     monkeypatch.delenv("OPERATING_MODE", raising=False)
     monkeypatch.delenv("PILOT_SHADOW_MODE", raising=False)
-    assert is_shadow_mode() is False
+    assert is_shadow_mode() is True  # PAS credentials alone never turn shadow mode off
     # With a configured API key + URL, PAS is treated as live (no more gateway_synthetic distinction)
     gw = GuidewireAdapter(
         api_key="live-key-not-dev-placeholder-xxxxxx",

@@ -191,7 +191,7 @@ def operating_mode() -> str:
     Resolution order:
     1. ``OPERATING_MODE`` = ready|live|production → ready; shadow|pilot → shadow
     2. Explicit ``PILOT_SHADOW_MODE`` true/false
-    3. Default **ready** (bind enabled when PAS credentials are present)
+    3. Default **shadow**: bind stays blocked until someone opts in
     """
     raw = (os.getenv("OPERATING_MODE") or "").strip().lower()
     if raw in {"ready", "live", "production"}:
@@ -205,7 +205,7 @@ def operating_mode() -> str:
     if explicit in {"0", "false", "no"}:
         return "ready"
 
-    return "ready"
+    return "shadow"
 
 
 def is_shadow_mode() -> bool:

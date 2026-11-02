@@ -49,6 +49,9 @@ def test_ready_mode_defaults_and_bind_gate(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setenv("GUIDEWIRE_API_URL", "")
     monkeypatch.setenv("BRITECORE_API_KEY", "")
     monkeypatch.setenv("BRITECORE_API_URL", "")
+    assert operating_mode() == "shadow"  # unset = shadow: bind needs an explicit opt-in
+
+    monkeypatch.setenv("OPERATING_MODE", "ready")
     assert operating_mode() == "ready"
     assert is_ready_mode() is True
     assert is_shadow_mode() is False

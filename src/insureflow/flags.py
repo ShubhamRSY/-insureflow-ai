@@ -18,11 +18,13 @@ def _bool(name: str, default: bool = False) -> bool:
 
 
 def current_flags() -> dict[str, Any]:
+    from insureflow.pilot.sandbox_readiness import operating_mode
+
     return {
         "BANK_MODE": _bool("BANK_MODE"),
         "SSO_ENABLED": _bool("SSO_ENABLED"),
         "SSO_REQUIRED": _bool("SSO_REQUIRED"),
-        "OPERATING_MODE": (os.getenv("OPERATING_MODE") or "shadow").strip() or "shadow",
+        "OPERATING_MODE": operating_mode(),
         "PILOT_SHADOW_MODE": _bool("PILOT_SHADOW_MODE"),
         "ALLOW_OPEN_REGISTRATION": _bool("ALLOW_OPEN_REGISTRATION"),
         "ALLOW_AUTH_RESET": _bool("ALLOW_AUTH_RESET"),
