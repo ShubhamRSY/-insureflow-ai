@@ -1510,3 +1510,38 @@ Then continue: P-066 concurrent-write tests, @pm pilot-readiness update, @model-
   - Plus: test the ClamAV path against a real clamd in Docker.
 - Conditions: stricter only (more to a person, never less). Built in the `insureflow-ai-team` worktree. After the build, run the quick set of 15 and report any field drop. No hold-out run, no scorer change. Budget rule 8 is overridden for this task only.
 - Status: ACCEPTED by @user, 2026-10-27; re-approved as P-078 on 2026-10-30. Not a production approval; the T-027 veto stands.
+
+## D-139 — Repo stays public; gitleaks before every push; tool rules for this session
+- Date / Owner: 2026-11-02 / @user
+- Decision (the user's words, pasted, D-032): "Repo stays public for now (my decision). Before every push: gitleaks over the pushed commits must be clean; otherwise stop." "Tools: drafting and docs — no plugins. Code changes — pyright-lsp and code-review before any @model-risk review; playwright only if the UI changes; commit-commands for commits. No superpowers. Subagents only for the @model-risk reviews."
+- Status: ACCEPTED by @user, 2026-11-02. Replaces NEXT-SESSION pending decision 1.
+
+## D-140 — P-077 to be drafted (not built)
+- Date / Owner: 2026-11-02 / @user
+- Decision (the user's words): "@ai-engineer-assistant drafts P-077 for me to read (do not build): a second location is detected by EITHER rules (number words + place nouns like "two stores", "both locations", "second shop", "other branch"; a different street address in any document) OR a model-reported location count with citation; count >1 or uncertain → whole file to manual intake. Stricter only. State the PROMPT_VERSION change. Include in-scope near-misses ("two floors", "two entrances", "2nd floor")."
+- Draft: `deliverables/ai-engineer/proposal-P-077.md`. Not approved; needs `approve change P-077`.
+- Status: ACCEPTED by @user, 2026-11-02.
+
+## D-141 — B-491 approved: C2 counter v2 (reason must name the item or evidence)
+- Date / Owner: 2026-11-02 / @user
+- Decision (the user's words): "B-491 approved: build the new C2 counter (a reason counts only if it names the item or evidence); new version, old one frozen; hash and freeze it before any T-121 gold."
+- Built as T-123: `deliverables/senior-test-engineer/count_ops_gate_v2.py`. v1 `count_ops_gate.py` unchanged (sha256 f942010d…9aa1).
+- Frozen 2026-11-02 after @model-risk APPROVE WITH CHANGES (M1 = record the hash): count_ops_gate_v2.py sha256 a57010b0796e7f88ce283375b2a3e6cde338d79c99fd79eab64f49a3ad63085a. Recorded before any T-121 gold.
+- Status: ACCEPTED by @user, 2026-11-02.
+
+## D-142 — B-498 approved: quick-15 refreshed so every file reaches the model (dev files only)
+- Date / Owner: 2026-11-02 / @user
+- Decision (the user's words): "B-498 approved: refresh the quick-15 so every file reaches the model (dev files only)."
+- Built as T-124 in `underwriting_pipeline/ai/regression_dev.py`.
+- Status: ACCEPTED by @user, 2026-11-02.
+
+## D-143 — B-485 approved: pilot mode blocks every file when no scanner is set up
+- Date / Owner: 2026-11-02 / @user
+- Decision (the user's words): "B-485 approved: in pilot mode, block all files if CLAMAV_HOST is unset; optional in dev."
+- Built as T-125 (stricter only).
+- Status: ACCEPTED by @user, 2026-11-02.
+
+## D-144 — Merge pilot-integration into ai-team; push both after gitleaks
+- Date / Owner: 2026-11-02 / @user
+- Decision (the user's words): "Merge pilot-integration into ai-team; push both (gitleaks first)."
+- Status: ACCEPTED by @user, 2026-11-02. `pilot-integration` stays the branch of record.

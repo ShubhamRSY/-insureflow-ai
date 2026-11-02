@@ -14,6 +14,7 @@ import pilot
 import prepare
 import pytest
 import quotes
+import sources  # pyright: ignore[reportMissingImports]
 import workbench
 
 
@@ -40,6 +41,7 @@ def run_payload(submission: str = "SUB-990", status: str = "complete") -> dict:
 def box(tmp_path: Path, monkeypatch):
     """A pilot-mode sandbox with one in-scope saved run, restored after the test."""
     monkeypatch.setenv("PILOT_MODE", pilot.ASSIST_ONLY)
+    monkeypatch.setattr(sources, "malware_scanning_enabled", lambda: True)  # B-485: the pilot needs a scanner; the files here are plain text
     names = ("PAGE", "LOG", "INBOX", "PENDING", "TO_PRODUCER", "TO_CARRIER", "BANNER")
     before = {name: getattr(workbench, name) for name in names}
     before_other = (package.DECISIONS_LOG, package.SENDS_LOG, package.INBOX, quotes.CLOSURES,
@@ -116,6 +118,21 @@ def test_c3_c6_labels_scope_and_warning_are_on_the_card(box):
     form = card[card.index('action="/decision"'):card.index("</form>", card.index('action="/decision"'))]
     for field in ("named_insured", "premises_address", "effective_date", "operations", "construction", "sales_or_payroll"):
         assert f'value="{field}"' in form, field
+
+
+def test_b485_pilot_without_scanner_opens_nothing(box, monkeypatch):
+    monkeypatch.setattr(sources, "malware_scanning_enabled", lambda: False)
+    report = prepare.process_submission(workbench.INBOX / "SUB-990")
+    assert report["status"] == prepare.MANUAL_INTAKE and not report["complete"], report["status"]
+    assert [row["reason"] for row in report["unread"]] == [sources.SCAN_OFF], report["unread"]
+    report["hash_algorithm"] = prepare.HASH_ALGORITHM
+    report["saved_hash"] = prepare.hash_payload(report)
+    (prepare.EXTRACT_DIR / "SUB-990.json").write_text(json.dumps(report))
+    card = workbench.render(workbench.load_queue(), None)
+    card = card[card.index('<article id="SUB-990">'):]
+    assert "application.md, whole file: Blocked: pilot mode needs the antivirus scanner" in card, "D-065: the block is shown in plain words on the card"
+    why = card[card.index("a person reads this whole file. Why:"):]
+    assert why.index("pilot mode needs the antivirus scanner") < why.index("</ul>"), "the headline names the missing scanner first"
 
 
 def test_c5_edit_is_logged_and_shown_read_only(box):

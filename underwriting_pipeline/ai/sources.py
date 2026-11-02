@@ -16,10 +16,21 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))  # T-122 (D-138): this worktree's main-app checks, not another install
 from insureflow.fraud.genai_defense import assess_document  # noqa: E402
 from insureflow.fraud.models import GenAiDocument  # noqa: E402
-from insureflow.ingestion.intake import BLOCKED_TEXT, INFECTED_ENGINE, prepare, scan_for_malware  # noqa: E402
+from insureflow.ingestion.intake import BLOCKED_TEXT, INFECTED_ENGINE, malware_scanning_enabled, prepare, scan_for_malware  # noqa: E402
 
 # T-122: prepare() reports a scanner that could not run as "infected"; the card must say which it was.
 SCAN_DOWN = "Blocked: the antivirus scanner could not be reached, so this file was not opened. Start the scanner (CLAMAV_HOST) and run the file again"
+# B-485 (D-143): in the assist-only pilot no file is opened unscanned. Dev keeps scanning optional.
+SCAN_OFF = "Blocked: pilot mode needs the antivirus scanner and none is set up (CLAMAV_HOST), so this file was not opened. Set up the scanner and run the file again"
+
+
+def _pilot_without_scanner() -> bool:
+    app = str(Path(__file__).resolve().parents[1] / "app")
+    if app not in sys.path:
+        sys.path.insert(0, app)
+    import pilot  # pyright: ignore[reportMissingImports]
+
+    return pilot.active() and not malware_scanning_enabled()  # an unknown PILOT_MODE raises: fail closed
 
 IMAGE = {".png", ".jpg", ".jpeg", ".tif", ".tiff"}
 # Part of the extraction cache key. Change this line whenever the OCR steps below change.
@@ -260,6 +271,9 @@ def injection_flag(name: str, text: str) -> str | None:
 def read_folder(folder: Path) -> list[dict]:
     """Every file in the folder, as text. D-138 C: a .zip or .eml is unpacked into a temp copy first (the inbox is never written);
     each inner file is read like any other and shown as "pack.zip/loss-runs.pdf". A folder with no container is read as it is."""
+    if _pilot_without_scanner():  # B-485: checked before any file, zip or email is opened or unpacked
+        return [{"name": p.name, "text": "", "needs_human": True, "sha256": hashlib.sha256(p.read_bytes()).hexdigest(), "unread": SCAN_OFF}
+                for p in sorted(folder.iterdir()) if p.is_file() and not p.name.startswith(".")]
     if not any(p.is_file() and p.suffix.lower() in {".zip", ".eml", ".msg"} and not p.name.startswith(".") for p in folder.iterdir()):
         return _read_files(folder)
     sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "app"))
@@ -477,6 +491,19 @@ if __name__ == "__main__":
             del os.environ["CLAMAV_HOST"], os.environ["CLAMAV_PORT"]
         assert all("antivirus" in d["unread"] and d["text"] == "" for n, d in down.items() if n != "locked.pdf"), "scan unavailable: nothing is opened"
         assert all("could not be reached" in d["unread"] for n, d in down.items() if n != "locked.pdf"), "scanner down says so, not 'flagged'"
+        import zipfile
+
+        with zipfile.ZipFile(folder / "pack.zip", "w") as z:
+            z.writestr("inner.md", "Named insured: Example LLC")
+        os.environ["PILOT_MODE"] = "assist-only"  # B-485: pilot with no scanner set up opens nothing, not even a clean file
+        try:
+            off = read_folder(folder)
+        finally:
+            del os.environ["PILOT_MODE"]
+        assert off and all(d["unread"] == SCAN_OFF and d["text"] == "" and d["needs_human"] for d in off), "pilot without a scanner: every file blocked"
+        assert "pack.zip" in {d["name"] for d in off} and not any("/" in d["name"] for d in off), "a zip is not unpacked either"
+        (folder / "pack.zip").unlink()
+        assert all(d.get("unread") != SCAN_OFF for d in read_folder(folder)), "dev (pilot off): scanning stays optional"
     # T-122 look-again H1: a zip and an email are unpacked into a temp copy; inner files go through A and B and keep their own names.
     import io
     import zipfile

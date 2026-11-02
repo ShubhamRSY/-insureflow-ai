@@ -3535,3 +3535,9 @@ Message: Renumbered P-070/T-121/D-130 to P-078/T-122/D-138; P-077 kept for the s
 [2026-10-31 | orchestrator -> @user] TYPE: STATUS
 Re: T-122 (P-078, D-138) quick-15
 Message: ai-team code, with vs without P-078 (real ClamAV on the with side): 0 field or status differences over 15 files; 0 failed calls; 0 model calls (5 cached, 10 manual intake by scope-v4). Quick-15 criterion met on both branches; the set reaching the model on only 5 files is B-498.
+
+---
+[2026-11-02 | @model-risk -> orchestrator] TYPE: REVIEW (T-123, T-124, T-125; relayed by the orchestrator as written)
+Verdict: T-123 APPROVE WITH CHANGES; T-124 APPROVE; T-125 APPROVE. No High, no veto. Not a production approval; not an approval of any T-121 gate result.
+M1 (T-123, required before any T-121 gold): record v2 sha256 a57010b0…3085a in DECISIONS/TASKS and commit; any later edit voids it for T-121. (Done by the orchestrator 2026-11-02.)
+M2–M4 and L1–L5: see deliverables/model-risk/check-T-123-T-125.md; M2–M4 in BACKLOG B-506–B-508.

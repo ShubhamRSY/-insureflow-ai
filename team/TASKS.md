@@ -1850,3 +1850,25 @@ D-004 (user, 2026-10-09): Sanger & Altgelt agency pipeline. Eight steps. No auto
 - Status 2026-10-27 (@software-engineer): built. Files: ai/sources.py (read_folder: prepare(), injection_flag), ai/prepare.py (unread_rows reason, needs_human + report["security_flags"]; display only), app/intake.py (unpack, unpack_folder), app/workbench.py (security_html, What's new). Self-checks pass: sources.py, intake.py, workbench.py, prepare.py. Screenshot: deliverables/software-engineer/screenshots/T-122-security-checks.png (temp copy). 0 flags across all 273 inbox submissions read (no false positives). Quick-15 (read-only, temp cache copy, live calls blocked): 5 of 15 had a cached result, all fields hit, key unchanged; the other 10 need live model calls, NOT run: stopped for the orchestrator. Pyright: no new findings in changed code except none (baseline 44 errors, unchanged).
 - 2026-10-27 orchestrator: @senior-underwriter APPROVE (UI, after one look-again); @senior-test-engineer APPROVE (after one look-again). ClamAV tested against a real clamd (clamav/clamav-debian; EICAR blocked, clamd down → blocked). Open: quick-15 has 5/15 from cache, 10 need live calls — waiting on @user (H2). Not committed.
 - 2026-10-30 orchestrator: renumbered from P-070/T-121/D-130 (all already used); @user re-approved as P-078 (D-138). docker-compose.yml now `clamav/clamav-debian:stable` (runs natively on arm64; healthy on the user's Mac). Real clamd at 127.0.0.1:3310: EICAR blocked (alone and inside a zip); clamd down → every file blocked; the reason now says "the antivirus scanner could not be reached" instead of "flagged" (sources.py, display only; self-check added). CLAMAV_HOST unset → no scan (B-485); demo guide updated. Ported to pilot-integration on branch `p078-security` (one workbench.py conflict resolved); tests/pipeline 93 passed; pyright 39 → 39 (no new). Quick-15 on pilot-integration with vs without P-078: 0 differences in any field or status over 15 files; the 5 that reach the model hit the same cache keys (model input unchanged). The other 10 go to manual intake before any model call (scope-v4, B-498).
+
+### T-123 — C2 counter v2: a reason counts only if it names the item or evidence (B-491, D-141)
+- Owner: @senior-test-engineer · Status: DONE (frozen) · Reviewer: @model-risk (High only)
+- Acceptance criteria:
+  - [x] New file `deliverables/senior-test-engineer/count_ops_gate_v2.py`, stdlib only; v1 `count_ops_gate.py` unchanged (sha256 f942010d…9aa1).
+  - [x] A reason counts as specific only if it names the item or its evidence ("operations may be missing: <item>", a cooking reason, an open operations/cooking conflict). Generic text ("value is not in the cited text (translated or reworded)", the policy note, unknown text) does not count; unknown text fails closed and is shown in the report.
+  - [x] C4 unchanged. Self-check covers every shape above.
+  - [x] @model-risk check 2026-11-02: APPROVE WITH CHANGES, no High (deliverables/model-risk/check-T-123-T-125.md). **Frozen 2026-11-02: sha256 a57010b0796e7f88ce283375b2a3e6cde338d79c99fd79eab64f49a3ad63085a.** Any edit voids it for T-121.
+
+### T-124 — Quick-15 refreshed: every file reaches the model (B-498, D-142)
+- Owner: @ai-engineer-assistant · Status: DONE except first live run (@model-risk APPROVE 2026-11-02) · Reviewer: @model-risk (High only)
+- Acceptance criteria:
+  - [x] `QUICK` in `underwriting_pipeline/ai/regression_dev.py` lists 15 dev files (SUB-017–076 only) that are in scope under scope-v4.
+  - [x] `regression_dev.py --self-check` fails if any quick-set file would go to manual intake.
+  - [ ] First live quick-15 run on the new set is the new baseline (needs model calls; not run yet).
+
+### T-125 — Pilot mode blocks every file when no virus scanner is set up (B-485, D-143)
+- Owner: @software-engineer · Status: DONE (@model-risk APPROVE 2026-11-02; M4 to backlog B-508) · Reviewer: @model-risk (High only)
+- Acceptance criteria:
+  - [x] `PILOT_MODE=assist-only` and `CLAMAV_HOST` unset → `read_folder` opens no file (zip and email are not unpacked either); each file is `unread` with "Blocked: pilot mode needs the antivirus scanner …"; the file goes to manual intake. Dev (pilot off) unchanged.
+  - [x] Workbench (D-065): the manual-intake card names the missing scanner first and lists every not-read file with its reason; "What's new" line (2026-11-02, B-485, D-143); screenshot `deliverables/software-engineer/screenshots/B-485-pilot-no-scanner-card.png` (temp copy).
+  - [x] Self-check in `sources.py`; `tests/pipeline/test_pilot.py::test_b485_pilot_without_scanner_opens_nothing`; tests/pipeline 94 passed.

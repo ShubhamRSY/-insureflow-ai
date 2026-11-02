@@ -44,6 +44,7 @@ BANNER = ""  # set by serve(); the sandbox screenshots label the page with it
 MESSAGES: dict[str, tuple[bool, str]] = {}  # submission -> (ok, plain-words result of the last action); shown once
 # D-065 item 5: one line per user-visible feature: date, task or proposal, decision number, what an underwriter sees.
 WHATS_NEW = (
+    ("2026-11-02", "B-485", "D-143", "In assist-only pilot mode with no antivirus scanner set up, no file is opened: each one shows \"Blocked: pilot mode needs the antivirus scanner\" and the file goes to manual intake. A manual-intake card now lists every file that was not opened or not read, with its reason."),
     ("2026-10-27", "T-122", "D-138", "Security checks on every file: a locked or virus-flagged file is not opened and says why; a file with macros or scripts, or text that tries to steer the model, shows a \"Not opened\" or \"Read but flagged\" note naming the file and goes to a person; zips and emails are unpacked, unsafe ones refused."),
     ("2026-10-27", "P-076", "D-135", "Operations is always checked by the underwriter before send."),
     ("2026-10-26", "P-075", "D-133", "When the application says \"Cooking operations: None\" and the operations answer leaves it out, the line is copied as written, with its quote, and marked \"copied by a rule, not read by the model\"; "
@@ -1022,6 +1023,8 @@ def manual_intake_html(report: dict) -> str:
     if report.get("status") != prepare.MANUAL_INTAKE:
         return ""
     reasons = prepare.scope.reasons_text(report.get("scope")) or ["Manual intake: outside the pilot scope"]
+    blocked = sorted({str(u.get("reason")) for u in report.get("unread") or [] if str(u.get("reason") or "").startswith("Blocked:")})
+    reasons = blocked + reasons  # B-485: a file that was never opened says so first; the scope reasons that follow come from that
     return (
         '<div class="msg bad" role="alert"><b>Manual intake</b> — a person reads this whole file. Why:<ul>'
         + "".join(f"<li>{html.escape(r)}</li>" for r in reasons)
@@ -1303,7 +1306,8 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
             extraction = f"ok for the files that were read; {len(unread_files)} not read (see Not read)"
         failed = report.get("status") == "extraction_failed"
         none_ = NOT_READ if failed else MI_NOT_READ if manual else "none"  # D-080 (B-297): a failed card never says "none"; nor does a manual-intake card (T-104a UI H1)
-        unread_html = f"<p>Not read: {none_}</p>" if not unread or manual else "<p>Not read:</p><ul>" + "".join(
+        # B-485: a manual-intake card also lists every file not opened or not read, with its reason (virus, lock, macros, no scanner)
+        unread_html = f"<p>Not read: {none_}</p>" if not unread else "<p>Not read:</p><ul>" + "".join(
             "<li>{}, {}: {}</li>".format(
                 html.escape(u["file"]),
                 "whole file" if u.get("page") is None else f"page {u['page']}",

@@ -51,22 +51,23 @@ BANDS = (
 )
 
 # P-007. Fifteen development files for the check after each change. The full 60 run only at milestones.
+# B-498 (2026-11-02): every file reaches the model under scope-v4; Excel, scans and Spanish go to manual intake before any call.
 QUICK = (
+    "SUB-017",  # text PDF plus email
+    "SUB-018",  # scanned PDF plus email
+    "SUB-022",  # text PDF plus email
+    "SUB-023",  # scanned PDF plus email
     "SUB-027",  # text PDF
-    "SUB-029",  # Excel, no loss runs
-    "SUB-038",  # scanned page
+    "SUB-037",  # application PDF only
     "SUB-042",  # text PDF plus email, premises conflict
-    "SUB-044",  # Excel plus email, square-feet conflict
-    "SUB-050",  # email body, no loss runs
-    "SUB-051",  # Spanish
-    "SUB-053",  # scanned page, no loss runs
+    "SUB-046",  # application PDF only
     "SUB-056",  # carrier loss run and a no-known-loss letter
-    "SUB-067",  # handwritten tilted scan
-    "SUB-070",  # multiple locations in Excel
+    "SUB-059",  # two-page loss run
+    "SUB-061",  # application plus attachment
+    "SUB-063",  # resubmission
+    "SUB-069",  # two-page loss run
     "SUB-071",  # blank ACORD plus attachment
     "SUB-073",  # resubmission, sales conflict
-    "SUB-074",  # handwritten Spanish scan
-    "SUB-076",  # two loss-run dates
 )
 
 
@@ -212,6 +213,11 @@ def _self_check() -> None:
         PACE, _started[:] = 0, []
     real = Path("deliverables/x.json")
     assert kept(real) == (real if WRITE else _SCRATCH[0] / "x.json") and (WRITE or not str(kept(real)).startswith(str(ROOT))), "D-096 item 4"
+    import scope
+    import sources
+
+    out = [sid for sid in QUICK if not scope.detect(sources.read_folder(prepare.INBOX_DIR / sid))["in_scope"]]
+    assert len(QUICK) == 15 and not out, f"B-498: quick-set files that never reach the model: {out}"
     print("regression_dev self-check ok")
 
 
