@@ -1864,6 +1864,7 @@ D-004 (user, 2026-10-09): Sanger & Altgelt agency pipeline. Eight steps. No auto
 - Acceptance criteria:
   - [x] `QUICK` in `underwriting_pipeline/ai/regression_dev.py` lists 15 dev files (SUB-017–076 only) that are in scope under scope-v4.
   - [x] `regression_dev.py --self-check` fails if any quick-set file would go to manual intake.
+  - [x] 2026-11-02 (@user): SUB-210 and SUB-221 (T-108 dev data, D-115; application + Excel schedule, scored by frozen v7) added so the xlsx reader is covered; 17 files; self-check fails without an xlsx file or with any out-of-scope file.
   - [ ] First live quick-15 run on the new set is the new baseline (needs model calls; not run yet).
 
 ### T-125 — Pilot mode blocks every file when no virus scanner is set up (B-485, D-143)

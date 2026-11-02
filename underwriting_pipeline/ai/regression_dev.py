@@ -51,7 +51,8 @@ BANDS = (
 )
 
 # P-007. Fifteen development files for the check after each change. The full 60 run only at milestones.
-# B-498 (2026-11-02): every file reaches the model under scope-v4; Excel, scans and Spanish go to manual intake before any call.
+# B-498 (2026-11-02): every file reaches the model under scope-v4; scans and Spanish go to manual intake before any call.
+# 2026-11-02 (@user): two in-scope files with an Excel schedule added, so 17 files; the band keeps its name "quick-15".
 QUICK = (
     "SUB-017",  # text PDF plus email
     "SUB-018",  # scanned PDF plus email
@@ -68,10 +69,15 @@ QUICK = (
     "SUB-069",  # two-page loss run
     "SUB-071",  # blank ACORD plus attachment
     "SUB-073",  # resubmission, sales conflict
+    "SUB-210",  # application plus Excel schedule (xlsx reader); T-108 dev data (D-115)
+    "SUB-221",  # application PDF plus Excel schedule (xlsx reader); T-108 dev data (D-115)
 )
+QUICK_SCORER = {"SUB-210": "eval_holdout_v7", "SUB-221": "eval_holdout_v7"}  # the frozen scorer T-108 was scored with; its gold is in that format
 
 
 def scorer_for(sid: str):
+    if sid in QUICK_SCORER:
+        return __import__(QUICK_SCORER[sid])
     number = int(sid[4:])
     for band, module_name in BANDS:
         low, high = (int(part) for part in band.split("-"))
@@ -216,8 +222,11 @@ def _self_check() -> None:
     import scope
     import sources
 
-    out = [sid for sid in QUICK if not scope.detect(sources.read_folder(prepare.INBOX_DIR / sid))["in_scope"]]
-    assert len(QUICK) == 15 and not out, f"B-498: quick-set files that never reach the model: {out}"
+    read = {sid: sources.read_folder(prepare.INBOX_DIR / sid) for sid in QUICK}
+    out = [sid for sid, docs in read.items() if not scope.detect(docs)["in_scope"]]
+    assert not out, f"B-498: quick-set files that never reach the model: {out}"
+    assert any(d["name"].endswith(".xlsx") and d["text"].strip() for docs in read.values() for d in docs), "the quick set covers the xlsx reader"
+    assert all(scorer_for(sid) for sid in QUICK)
     print("regression_dev self-check ok")
 
 
