@@ -1863,7 +1863,7 @@ D-004 (user, 2026-10-09): Sanger & Altgelt agency pipeline. Eight steps. No auto
 - B-465 check 2026-11-03: gold vs documents on all 20 in-scope cards (insured, premises, effective date, sales, TIV, construction, year built, valued-as-of, claim count and paid): 0 mismatches; each of the 8 conflict lines names a field that differs in the builder source. Faithful-answer probe (application operations, Line of business and cooking lines into v11 `ops_items_hit`): 20/20 hit.
 
 ### T-129 — P-079, P-080, P-081: Part B accepts one found premises address; A3 per sentence; resolved files read review pending (D-155–D-157)
-- Owner: @ai-engineer-assistant / @software-engineer (built in the main session, D-139) · Status: IN_REVIEW (@model-risk, one look-again max) · As built: deliverables/ai-engineer/P-079-P-081-as-built.md
+- Owner: @ai-engineer-assistant / @software-engineer (built in the main session, D-139) · Status: STOPPED 2026-11-03 — @model-risk REJECT (H1–H3; D-155 c and D-157 fail as built); waiting for @user; not merged, not pushed · As built: deliverables/ai-engineer/P-079-P-081-as-built.md
 - Acceptance criteria: the user's conditions in D-155 (a)–(f), D-156 (stricter only), D-157; dev re-check incl. the T-121 shapes; quick set before/after; self-checks, tests/pipeline, pyright, code review; D-065 card text and screenshots.
 
 ### T-128 — Hold-out SUB-550–581 (20 in-scope + 12 out-of-scope) after P-079/P-080/P-081; plan only, not built
