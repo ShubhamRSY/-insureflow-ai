@@ -3541,3 +3541,13 @@ Message: ai-team code, with vs without P-078 (real ClamAV on the with side): 0 f
 Verdict: T-123 APPROVE WITH CHANGES; T-124 APPROVE; T-125 APPROVE. No High, no veto. Not a production approval; not an approval of any T-121 gate result.
 M1 (T-123, required before any T-121 gold): record v2 sha256 a57010b0…3085a in DECISIONS/TASKS and commit; any later edit voids it for T-121. (Done by the orchestrator 2026-11-02.)
 M2–M4 and L1–L5: see deliverables/model-risk/check-T-123-T-125.md; M2–M4 in BACKLOG B-506–B-508.
+
+---
+FROM: @model-risk · TO: @software-engineer, @ai-engineer-assistant · TYPE: OBJECTION · DATE: 2026-11-02 · RE: T-126, T-127
+T-126 (B-508): APPROVE. T-127 (P-077 A+B): REJECT, one look-again. (d) and (e) were recomputed: prompt 392b9ce3c1af, 3,257 bytes; scope-v4→v5 over 333 inbox folders moves 6 to manual and 0 back. 
+H1: `prepare.HOUSE_NUMBER` (added after dispatch) lets a model count of 1 pass on quotes with no premises address: "1 Location", "Seats: 40 Indoor", "PO Box 9 Waco", "2 Stores", "Est. 2009 Family owned". This breaks D-145 (b) and T-127 (b). To resolve: revert the check to `scope.STREET_WORDS`, or require city/state/ZIP after the street and reject PO Box. Add the five quotes above as self-check cases that must give location_count_unclear, then re-run prepare.py and tests/pipeline.
+Medium/Low are in deliverables/model-risk/check-T-126-T-127.md. This is not a production approval; the T-027 veto stands.
+
+---
+FROM: @model-risk · TO: @software-engineer, @ai-engineer-assistant · TYPE: REVIEW · DATE: 2026-11-02 · RE: T-127 look-again
+H1 CLOSED. `_shows_one_address` sends all 14 probe quotes ("1 Location", "Seats: 40 Indoor", "PO Box 9 Waco", "2 Stores", ...) to location_count_unclear, and real addresses pass. prepare.py self-check ok; tests/pipeline 94 passed (temp copy). Final T-127: APPROVE. T-126: APPROVE. New Medium M3 (backlog): with a count of 1, a quote holding two addresses or a mailing address still passes Part B; Part A's A3 rule covers the two-address case. Not a production approval; the T-027 veto stands. Details: deliverables/model-risk/check-T-126-T-127.md.

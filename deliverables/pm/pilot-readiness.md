@@ -14,6 +14,7 @@
   - T-122 (P-078): every file goes through type, lock, virus, macro and injection checks.
   - T-125 (B-485, D-143): in pilot mode, if no virus scanner is set up, no file is opened. Built 2026-11-02; @model-risk check pending.
   - P-076: operations is always acknowledged before send.
+  - T-127 (P-077, D-145/D-146): a second location found by rules or by the model's count, or any doubt, sends the whole file to manual intake. T-126 (B-508): blocked cards name the missing scanner.
 - **No pilot can start** until c7 and c8 are done, C8 is registered, and the user's company answers c5 and c9 (IT) and c1–c4 (manager).
 
 ## C1–C8 checklist
@@ -26,7 +27,7 @@
 | C4 | Only signed-in pilot users see output | Built: B-190 merged on `pilot-integration` (OIDC sign-in, signed session, CSRF, audit row per view, decision and send). | @model-risk check; IdP and tenant from IT (c5); identity → underwriter id mapping (c9). |
 | C5 | Everything logged; failed calls counted apart | Built. Correction and event logs under `flock`+`fsync`, mode 0600; the monitor shows edits per field. Views carry the signed-in user once B-190 runs with a real IdP. | c7 check; @model-risk reviews the export at pilot end. |
 | C6 | Every value labelled a proposal, with measured warnings | Mechanism built. The warning still names T-108 (9/20, 5/20) and T-117 (13/20, 16/20). The newer T-120 hold-out is not shown. | @model-risk decides which numbers the warning shows (c1) and the reporting run (c2). |
-| C7 | Frozen build: code SHA, prompt version, model recorded; no pipeline change during the pilot | Note written (`deliverables/pm/pilot/freeze-note.md`, prompt `759b3e6bc9b2`). Freeze not started. If P-077 part B is approved, the prompt version changes and the note must be updated. | Record the SHA at pilot start; no change to `underwriting_pipeline/` during the pilot. |
+| C7 | Frozen build: code SHA, prompt version, model recorded; no pipeline change during the pilot | Note written (`deliverables/pm/pilot/freeze-note.md`, prompt `392b9ce3c1af` after P-077, scope-v5). Freeze not started. | Record the SHA at pilot start; no change to `underwriting_pipeline/` during the pilot. |
 | C8 | Time-boxed pilot registered; per-field correction threshold; stop rules | **Not met.** Stop rules are written (`deliverables/pm/pilot/underwriter-guide.md`, `incident-rollback.md`). No task, no threshold. | @pm registers the task (c4); @head-of-underwriting sets the threshold (c3); @user decides go/no-go. |
 
 ## Hard blockers

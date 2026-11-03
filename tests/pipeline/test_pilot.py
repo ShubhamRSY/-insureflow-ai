@@ -133,6 +133,10 @@ def test_b485_pilot_without_scanner_opens_nothing(box, monkeypatch):
     assert "application.md, whole file: Blocked: pilot mode needs the antivirus scanner" in card, "D-065: the block is shown in plain words on the card"
     why = card[card.index("a person reads this whole file. Why:"):]
     assert why.index("pilot mode needs the antivirus scanner") < why.index("</ul>"), "the headline names the missing scanner first"
+    # B-508: the send-refusal and the scope line lead with the scanner, not the scope side effects
+    assert prepare.status_refusal(report).startswith("manual intake (pilot mode needs the antivirus scanner"), prepare.status_refusal(report)
+    assert "Scope check:</b> manual intake — out of pilot scope at send time (pilot mode needs the antivirus scanner" in card
+    assert "send is refused: manual intake (pilot mode needs the antivirus scanner" in card
 
 
 def test_c5_edit_is_logged_and_shown_read_only(box):

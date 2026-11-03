@@ -1,6 +1,6 @@
 # P-077 — A second location is detected by rules or by a model count; any doubt sends the whole file to manual intake
 
-- Author: @ai-engineer-assistant, drafted 2026-11-02 at @user's request (D-140). **Draft for @user to read. Not approved, not built.** Development data only. Not a production approval; the T-027 veto stands.
+- Author: @ai-engineer-assistant, drafted 2026-11-02 at @user's request (D-140). **Approved by @user 2026-11-02 (D-145, parts A and B, on conditions a–e); D-146: a sold or closed second place goes to manual intake (replaces decision 2 below). Built as T-127.** Development data only. Not a production approval; the T-027 veto stands.
 - Source: @model-risk memo `deliverables/model-risk/T-027-memo-T-120.md`, H1 and remediation steps 1–3. Cause: SUB-475 (out of scope, a second store stated only in prose) went through as in-scope.
 - Direction: **stricter only.** The change can only move a file from in-scope to manual intake, never the other way. No rule is loosened, no gate is relaxed.
 - Approval: the user types `approve change P-077` (D-017). Parts A and B can be approved together or A alone (see "Decision for @user").

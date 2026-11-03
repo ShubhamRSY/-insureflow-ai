@@ -72,6 +72,9 @@ QUICK = (
     "SUB-210",  # application plus Excel schedule (xlsx reader); T-108 dev data (D-115)
     "SUB-221",  # application PDF plus Excel schedule (xlsx reader); T-108 dev data (D-115)
 )
+# P-077 part A (scope-v5, D-145): these two give a different premises address in the email, so they now go to manual intake before any call.
+# Kept so the run compares with the 2026-11-02 baseline; replacing them is a decision for @user.
+QUICK_MANUAL = ("SUB-022", "SUB-042")
 QUICK_SCORER = {"SUB-210": "eval_holdout_v7", "SUB-221": "eval_holdout_v7"}  # the frozen scorer T-108 was scored with; its gold is in that format
 
 
@@ -224,7 +227,8 @@ def _self_check() -> None:
 
     read = {sid: sources.read_folder(prepare.INBOX_DIR / sid) for sid in QUICK}
     out = [sid for sid, docs in read.items() if not scope.detect(docs)["in_scope"]]
-    assert not out, f"B-498: quick-set files that never reach the model: {out}"
+    assert out == list(QUICK_MANUAL), f"B-498: quick-set files that never reach the model: {out} (expected only {QUICK_MANUAL})"
+    assert all([r["code"] for r in scope.detect(read[sid])["reasons"]] == ["multiple_locations"] for sid in QUICK_MANUAL), "P-077: they go only for the second address"
     assert any(d["name"].endswith(".xlsx") and d["text"].strip() for docs in read.values() for d in docs), "the quick set covers the xlsx reader"
     assert all(scorer_for(sid) for sid in QUICK)
     print("regression_dev self-check ok")

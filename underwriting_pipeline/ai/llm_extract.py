@@ -1006,7 +1006,8 @@ def llm_extract(docs: list[dict]) -> dict:
             continue
         elif len(kept) >= 2 and len({side["value"] for side in kept}) > 1:
             conflicts.append(_open_conflict(field_id, [_side(side) for side in kept]))  # P-024: each side keeps its flag, reason and quote so an agreeing merge cannot lose them
-    return {"fields": fields, "conflicts": conflicts, "not_sent": not_sent, "schedule": schedule}
+    return {"fields": fields, "conflicts": conflicts, "not_sent": not_sent, "schedule": schedule,
+            "location_count": parsed.get("location_count")}  # P-077 part B: as the model gave it; prepare._location_problem checks it
 
 
 if __name__ == "__main__":
