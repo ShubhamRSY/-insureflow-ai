@@ -1838,6 +1838,26 @@ D-004 (user, 2026-10-09): Sanger & Altgelt agency pipeline. Eight steps. No auto
 - Open before the build (the user decides): whether T-120 also uses the operations gate @model-risk set out in `deliverables/model-risk/T-027-operations-gate-answer.md` (C1–C7); if yes, it must be recorded in DECISIONS.md before any T-120 gold exists (C7), C1 needs its own P-###, and C6 adds file counts (at least 12 none-line, 3 cooking, 2 planted cooking conflicts).
 
 
+### T-121 — Hold-out SUB-510–541 (20 in-scope + 12 out-of-scope) after P-077; build, gold first, do not run
+- Owner: @producer (files, mix), @senior-underwriter (gold), @senior-test-engineer (plan JSON, lint), @model-risk (build check, one look-again) · Status: PLANNED 2026-11-03 (build on the user's word, 2026-11-03) · Planned by: orchestrator, Claude Code session, from the user's list (D-149).
+- Numbers: SUB-510 to SUB-541 (free; SUB-500, 601+ and 777+ appear in self-checks).
+- Code under test: the freeze in team/NEXT-SESSION.md (2026-11-03): code `8baa00a`, PROMPT_VERSION `392b9ce3c1af`, scope-v5, scorer v11, lint, C2 counter v2. Any byte change reopens it.
+- **Scope rule for the gold (P-077, D-145, D-146, D-149):** a different street address for the premises in any document, or a second store, branch or location stated in words (incl. one sold or closed), is OUT of scope → manual intake (P-055 criterion 2). In-scope near-misses stay IN: "two floors", "2nd floor", "two entrances", "Suite 200"/"Unit 2", "second shift", role-labelled addresses (mailing, billing, producer) that are not a second premises.
+- Acceptance criteria (for the build):
+  - [ ] 32 new files under `simulation/inbox/`, nothing reused from any hold-out or dev set: 20 in-scope and 12 out-of-scope over proposal-P-055 criteria 1–4, at least two per criterion.
+  - [ ] Criterion 2 (multi-location): at least 6 out-of-scope files, at least 4 of them words-only (no second street address anywhere; e.g. "both stores", "our other branch", "second shop", "closed our second store"); the rest give a different street address in another document.
+  - [ ] In-scope near-misses: at least 3 in-scope files that use "two floors", "2nd floor" or "two entrances" (one each), single premises address in every document; gold in scope.
+  - [ ] Planted conflicts: at least 5 measurable ones (B-473) on a scored or rating figure (sales, floor area, unit/suite count, TIV), both sides plain figures in two documents, in the gold as an open conflict with both sides; at least one worded amount ("$1.42 million") and one approximate ("about", "roughly", "~") against an exact figure (P-074). No planted conflict on the premises address (that is now out of scope, D-149).
+  - [ ] Cooking stated and cooking conflicts (C6): at least 12 files with a "Cooking operations: None"-type line and no cooking word elsewhere, at least 3 with cooking stated, at least 2 with a planted cooking conflict (application none, another document states cooking). Cooking-conflict marks that are not measurable under v11 are noted here before the gold freeze (D-128).
+  - [ ] Direct Carrier A: at least 3 in-scope files that route straight to Carrier A (R14/R17: allow-list words only, no W1/W2 word, TIV ≤ $5M, clean typed loss run).
+  - [ ] Loss runs: typed, in the published carrier formats (`CARRIER_RUN_FORMATS`), at least 2 Carrier C and 1 Carrier B; every typed run passes `carrier_run_check`; valued before the run date; no `| None reported |` rows.
+  - [ ] Build rules as T-119/T-120: at least two held W1 files, two office-lessor and two deli-style files.
+  - [ ] `deliverables/producer/T-121-mix.md` before the gold; `deliverables/senior-test-engineer/T-121-plan.json`.
+  - [ ] Operations gate as T-120 (D-134, C1–C7); C2 counted with the frozen v2 counter (D-141).
+  - [ ] Gold first, by hand from the documents and written rules only; every conflict line names a field in conflict in the builder source (B-465, hand check); lint PASS with v11 (unmeasurable marks noted before the freeze, D-128); gold manifest sha256 recorded here and in NEXT-SESSION.md.
+  - [ ] @model-risk build check (gold vs builder source, scope incl. P-077 near-misses, slots, valued-as-of, routes vs written rules), High only, one look-again (D-129).
+  - [ ] Not run and not scored until the user says so (D-020); scored once, no code change after the gold exists. Gates: every T-120 gate, detection recall 100% (incl. criterion 2), planted-conflict recall 100%, 0 leaks.
+
 ### T-122 — P-078: security checks for the demo pipeline (D-138)
 - Owner: @software-engineer · Status: IN_REVIEW (A-D built; ClamAV tested 2026-10-30; quick-15 see 2026-10-30 note) · Reviewers: @senior-underwriter (UI, High only), @senior-test-engineer (build check)
 - Acceptance criteria:
