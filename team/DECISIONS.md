@@ -1597,3 +1597,33 @@ Then continue: P-066 concurrent-write tests, @pm pilot-readiness update, @model-
 - Date / Owner: 2026-11-03 / @user
 - Decision (the user's words): "T-121 official run GO (D-020)". Run once against the 2026-11-03 freeze, scored once with v11 and count_ops_gate_v2.py; fix nothing. Then the @model-risk T-027 memo.
 - Status: ACCEPTED by @user, 2026-11-03.
+
+## D-155 — P-079 approved on conditions (memo T-121 H1, B-518)
+- Date / Owner: 2026-11-03 / @user
+- Decision (the user's words, pasted, D-032): "approve change P-079 — conditional approval typed by @user, valid ONLY if all hold: (a) a count of 1 is accepted only when the count quote or the premises quote parses as one street/highway/route address found in the documents; (b) the rule-based checks still run and any hit wins; (c) any second address in any document still → manual intake; (d) dev re-check: SUB-475 and SUB-533–537 shapes still go to manual intake; (e) "two floors", "2nd floor", "two entrances" stay in scope; (f) SUB-510/513/527/529 shapes now stay in scope. If any fails, STOP and show me."
+- Status: ACCEPTED by @user, 2026-11-03, conditional. Not a production approval; the T-027 veto stands.
+
+## D-156 — P-080 approved (memo T-121 H2, B-519), stricter only
+- Date / Owner: 2026-11-03 / @user
+- Decision (the user's words): "P-080 (H2): stricter only — a second address on a line mentioning "Carrier" or under "Mailing address" is still caught. approve change P-080."
+- Status: ACCEPTED by @user, 2026-11-03.
+
+## D-157 — P-081 approved on conditions (B-522)
+- Date / Owner: 2026-11-03 / @user
+- Decision (the user's words): "approve change P-081 — conditional approval typed by @user, valid ONLY if: a file becomes routable only when every conflict is resolved by a logged underwriter action bound to the run hash, nothing is missing, every acknowledgment (incl. the operations C1 ack) is done, it is in scope, and the senior confirm is done where required; never automatic; the "Missing: operations" card text matches the true state. If any fails, STOP."
+- Status: ACCEPTED by @user, 2026-11-03, conditional.
+
+## D-158 — M1: manual-intake files are scope misses, not C2 silent errors
+- Date / Owner: 2026-11-03 / @user
+- Decision (the user's words): "M1 agreed." "Write the M1 rule (manual-intake files = scope misses, not C2 silent errors) into the counter notes and the next hold-out plan before any gold." The frozen counter v2 is not edited; T-121 is not re-scored.
+- Status: ACCEPTED by @user, 2026-11-03.
+
+## D-159 — T-129: fix H1–H3, one look-again; pilot-integration stays local
+- Date / Owner: 2026-11-03 / @user
+- Decision (the user's words, pasted, D-032): "T-129 = (a) fix H1–H3 per check-T-129.md, one look-again; pilot-integration stays local until the look-again passes." Backup branch t129-wip pushed (gitleaks clean); if any High remains after the look-again, STOP with 2–3 options.
+- Status: ACCEPTED by @user, 2026-11-03.
+
+## D-160 — SUB-219 is a known gold difference under D-149
+- Date / Owner: 2026-11-03 / @user
+- Decision (the user's words): "SUB-219 recorded as a known gold difference under D-149, no re-score." The published T-108 gold (in scope) predates D-149; its application (2701 Memorial Blvd) and schedule (4810 Twin City Hwy) give different addresses, so scope-v6 sends it to manual intake. Published scores unchanged (D-020).
+- Status: ACCEPTED by @user, 2026-11-03.

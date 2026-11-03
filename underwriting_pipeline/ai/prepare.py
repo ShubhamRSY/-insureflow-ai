@@ -1539,12 +1539,33 @@ def process_submission(folder: Path) -> dict:
 
 # P-077 part B: a count of 1 must quote a premises address: a street with a suffix ("2801 E 42nd St"), or a number, name, city, state and ZIP
 # ("500 Broadway, San Antonio, TX 78205"). Not a PO Box, and not a quote that itself names more than one place ("2 Stores"). @model-risk H1.
-CITY_STATE_ZIP = re.compile(r"\b\d{1,6} +(?:[NSEW]\.? +)?[A-Z0-9][A-Za-z0-9.'-]*(?: +[A-Z][A-Za-z.'-]*)*, *[A-Z][A-Za-z .'-]+, *[A-Z]{2} +\d{5}\b")
+CITY_STATE_ZIP = re.compile(r"\b\d{1,6} +(?:[NSEW]\.? +)?[A-Z0-9][A-Za-z0-9.'-]*(?: +[A-Z][A-Za-z.'-]*)*, *[A-Z][A-Za-z .'-]+,? *[A-Z]{2} +\d{5}\b")  # P-079: "Brenham TX 77833" too
 PO_BOX = re.compile(r"(?i)\bp\.?\s*o\.?\s*box\b")
 
 
+def _address_count(quote: str) -> int:
+    """P-079: how many addresses a quote holds (street, highway/route, or number-city-state-ZIP); overlapping matches are one address."""
+    spans = sorted(m.span() for p in (scope.STREET_WORDS, scope.HIGHWAY, CITY_STATE_ZIP) for m in p.finditer(quote))
+    count, end = 0, -1
+    for start, stop in spans:
+        if start >= end:
+            count += 1
+        end = max(end, stop)
+    return count
+
+
 def _shows_one_address(quote: str) -> bool:
-    return bool(scope.STREET_WORDS.search(quote) or CITY_STATE_ZIP.search(quote)) and not PO_BOX.search(quote) and not scope.COUNT_PHRASE.search(quote)
+    """P-077 part B, P-079: exactly one address, not a PO Box, and no count phrase ("2 Stores")."""
+    return _address_count(quote) == 1 and not PO_BOX.search(quote) and not scope.COUNT_PHRASE.search(quote)
+
+
+def _premises_shows_one(extracted: dict, texts: dict) -> bool:
+    """P-079 (D-155 a): the model's premises quote, found in its cited file, holds exactly one address. Every premises row must agree."""
+    rows = [r for r in extracted.get("fields") or [] if r.get("field_id") == "premises_address" and r.get("value")]
+    if not rows or any(not llm_extract.same_address(rows[0]["value"], r["value"]) for r in rows[1:]):
+        return False
+    return all(isinstance(r.get("quote"), str) and isinstance(r.get("source"), str) and r["source"] in texts
+               and bool(llm_extract.find_quote(texts[r["source"]] or "", r["quote"])) and _shows_one_address(r["quote"]) for r in rows)
 
 
 def _location_problem(extracted: dict, texts: dict) -> dict | None:
@@ -1562,8 +1583,8 @@ def _location_problem(extracted: dict, texts: dict) -> dict | None:
         code, detail = "location_count_unclear", f"model count {value}, its quote is not in the cited document"
     elif value > 1:
         code, detail = "multiple_locations", f'model count {value}: "{quote}"'
-    elif value == 1 and _shows_one_address(str(quote)):
-        return None
+    elif value == 1 and not scope.COUNT_PHRASE.search(str(quote)) and (_shows_one_address(str(quote)) or _premises_shows_one(extracted, texts)):
+        return None  # P-079 (D-155): the count quote or the found premises quote shows one address; Part A (scope.detect) ran first and any hit won
     else:
         code, detail = "location_count_unclear", f'model count {value}: "{quote}" shows no premises address'
     return {"version": scope.VERSION, "in_scope": False, "reasons": [{"code": code, "text": f"{scope.REASONS[code]} ({detail})"}],
@@ -1729,6 +1750,7 @@ def _saved_payload(report: dict) -> dict:
         "complete": bool(report.get("complete")),
         "conflicts": report.get("conflicts") or [],
         "needs_human": report.get("needs_human") or [],
+        "extra": report.get("extra"),  # P-081 (D-157): items still asked of the producer; an older run has none, so it can never be promoted after a resolve
         "unread": report.get("unread") or [],  # P-016 (c): file and page not read, with the reason
         "sprinklers": report.get("sprinklers"),
         "class_lines": report.get("class_lines"),  # P-061 (D-112): Line of business and Cooking operations lines for carrier match; an older run has none
@@ -3184,8 +3206,32 @@ if __name__ == "__main__":
                   "We have 2 stores at 100 Main St"):
             assert not _shows_one_address(q), q
         for q in ("Premises address: 500 Broadway, San Antonio, TX 78205", "FICTIONAL\t1\t2801 E 42nd St\tOdessa", "Premises: 1200 N St Marys St, San Antonio, TX 78215",
-                  "Premises address: 2110 E Southeast Loop 323, Tyler, TX 75701", PREM):
+                  "Premises address: 2110 E Southeast Loop 323, Tyler, TX 75701", PREM,
+                  "Premises address: 1906 Hwy 290 W Ste 104, Brenham TX 77833", "100 US-59, Livingston TX", "4400 FM 1960 W, Houston", "800 I-35, Temple TX 76501",
+                  "Premises address: 806 Marble Falls Ave Ste 2, Granite Shoals TX 78654"):  # P-079 (D-155): highway/route, ZIP with no comma
             assert _shows_one_address(q), q
+        for q in ("12 Main St and 40 Oak Ave", "1906 Hwy 290 W and 400 FM 1960", "100 Main St, Austin, TX 78701; 9 Oak Ave, Waco, TX 76701"):  # P-079: exactly one
+            assert not _shows_one_address(q), q
+        # P-079 (D-155 a, f): a count of 1 whose quote is a sentence passes only when the model's premises quote, found in its file, shows one address
+        (case77 / "email.md").write_text("Subject: quote\n\nOne address, one building. Same single building. Please quote this for the business.")
+
+        def prem77(count_quote, prem_quote=PREM, prem_value="100 Main St, Austin, TX 78701", extra_rows=()):
+            row = {"field_id": "premises_address", "value": prem_value, "source": "application.md", "quote": prem_quote, "confidence": 0.95}
+            reply = {"fields": [{"field_id": "named_insured", "value": "Example Roofing LLC", "source": "application.md", "quote": "Named insured: Example Roofing LLC", "confidence": 0.95},
+                                row, *extra_rows], "conflicts": [], "location_count": {"value": 1, "quote": count_quote, "source": "email.md"}}
+            return run77(None, post=lambda settings, payload: {"choices": [{"message": {"content": json.dumps(reply)}}], "usage": {"total_tokens": 1}})
+
+        for q in ("One address, one building.", "Same single building."):  # SUB-527/529 shapes
+            assert prem77(q)["status"] != MANUAL_INTAKE, q
+        for label, got in (("premises quote not in the file", prem77("One address, one building.", prem_quote="Premises address: 9 Oak Ave, Waco, TX 76701")),
+                           ("premises quote with no address", prem77("One address, one building.", prem_quote="Named insured: Example Roofing LLC")),
+                           ("count quote not in the file", prem77("We have one store."))):
+            assert got["status"] == MANUAL_INTAKE and [r["code"] for r in got["scope"]["reasons"]] == ["location_count_unclear"], (label, got.get("scope"))
+        (case77 / "email.md").write_text("Subject: quote\n\nPlease quote this for the business and send it to the producer.")
+        two_rows = {"fields": [{"field_id": "premises_address", "value": "100 Main St, Austin, TX 78701", "source": "application.md", "quote": PREM},
+                               {"field_id": "premises_address", "value": "9 Oak Ave, Waco, TX 76701", "source": "application.md", "quote": PREM}]}
+        assert not _premises_shows_one(two_rows, {"application.md": APP55}), "premises rows that disagree never pass"
+        assert _premises_shows_one({"fields": two_rows["fields"][:1]}, {"application.md": APP55})
         real_max = llm_extract.MAX_CHARS  # code review: a file past the size limit stays listed as not sent on a model-count manual intake
         llm_extract.MAX_CHARS = len(APP55) + 10
         try:

@@ -1,0 +1,12 @@
+DEV-01-hwy | incomplete | [] | 
+DEV-02-suite-sentence | incomplete | [] | 
+DEV-03-two-floors | incomplete | [] | 
+DEV-04-two-entrances | incomplete | [] | 
+DEV-05-2nd-floor | incomplete | [] | 
+DEV-06-475-two-stores | manual_intake | ['Manual intake: multiple locations — "two stores" (application.md)'] | 
+DEV-07-533-warehouse | manual_intake | ['Manual intake: multiple locations — "418 Industrial Blvd" (email.md)'] | 
+DEV-08-both-stores | manual_intake | ['Manual intake: multiple locations — "both stores" (email.md)'] | 
+DEV-09-other-branch | manual_intake | ['Manual intake: multiple locations — "other branch" (email.md)'] | 
+DEV-10-second-shop | manual_intake | ['Manual intake: multiple locations — "second shop" (email.md)'] | 
+DEV-11-closed-second | manual_intake | ['Manual intake: multiple locations — "second store" (email.md)'] | 
+DEV-12-hwy-second | manual_intake | ['Manual intake: multiple locations — "300 FM 2222" (email.md)'] | 

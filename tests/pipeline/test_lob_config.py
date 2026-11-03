@@ -16,7 +16,7 @@ import prepare
 import sources
 
 ROOT = Path(__file__).resolve().parents[2]
-BASELINE_FINGERPRINT = "4fc19fd74d82043a5320e8adb34004d1ac030b5e18959275e440cab7b09fdb9d"
+BASELINE_FINGERPRINT = "332ee23bfe7fc77806fa444efbaeee51a29fdd75fe324eda27d7845824546870"  # scope-v6 (P-080, D-156)
 
 
 def test_load_baseline_and_raw_equality():
