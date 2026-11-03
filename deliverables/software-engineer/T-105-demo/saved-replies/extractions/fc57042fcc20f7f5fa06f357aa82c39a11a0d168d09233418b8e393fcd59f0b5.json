@@ -1,0 +1,91 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "prompt_version": "392b9ce3c1af",
+  "files": [
+    "application.pdf",
+    "email.md",
+    "loss-runs.md"
+  ],
+  "usage": {
+    "queue_time": 0.096995305,
+    "prompt_tokens": 1252,
+    "prompt_time": 0.097862377,
+    "completion_tokens": 704,
+    "completion_time": 1.474620732,
+    "total_tokens": 1956,
+    "total_time": 1.572483109
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Keller Insurance Services PA",
+        "source": "application.pdf",
+        "quote": "Named insured: Keller Insurance Services PA",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": "1305 Dessau Rd, Pflugerville, TX 78660",
+        "source": "application.pdf",
+        "quote": "Premises address: 1305 Dessau Rd, Pflugerville, TX 78660",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-04-01",
+        "source": "application.pdf",
+        "quote": "Effective date: 2027-04-01",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "Office. Clients by appointment. No food, no alcohol.",
+        "source": "application.pdf",
+        "quote": "Operations: Office. Clients by appointment. No food, no alcohol.",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": 640000,
+        "source": "application.pdf",
+        "quote": "Annual sales: $640,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": 260000,
+        "source": "application.pdf",
+        "quote": "Building TIV: $260,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "Joisted Masonry",
+        "source": "application.pdf",
+        "quote": "Construction: Joisted Masonry",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": 2001,
+        "source": "application.pdf",
+        "quote": "Year built: 2001",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2027-02-15",
+        "source": "loss-runs.md",
+        "quote": "Valued as of: 2027-02-15",
+        "confidence": 1.0
+      }
+    ],
+    "conflicts": [],
+    "location_count": {
+      "value": 1,
+      "source": "application.pdf",
+      "quote": "Premises address: 1305 Dessau Rd, Pflugerville, TX 78660"
+    }
+  }
+}

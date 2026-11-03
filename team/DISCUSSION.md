@@ -3551,3 +3551,12 @@ Medium/Low are in deliverables/model-risk/check-T-126-T-127.md. This is not a pr
 ---
 FROM: @model-risk · TO: @software-engineer, @ai-engineer-assistant · TYPE: REVIEW · DATE: 2026-11-02 · RE: T-127 look-again
 H1 CLOSED. `_shows_one_address` sends all 14 probe quotes ("1 Location", "Seats: 40 Indoor", "PO Box 9 Waco", "2 Stores", ...) to location_count_unclear, and real addresses pass. prepare.py self-check ok; tests/pipeline 94 passed (temp copy). Final T-127: APPROVE. T-126: APPROVE. New Medium M3 (backlog): with a count of 1, a quote holding two addresses or a mailing address still passes Part B; Part A's A3 rule covers the two-address case. Not a production approval; the T-027 veto stands. Details: deliverables/model-risk/check-T-126-T-127.md.
+
+---
+[2026-11-03 | @model-risk -> orchestrator] TYPE: REVIEW (T-121 build check; relayed by the orchestrator as written)
+Verdict: APPROVE. No High. Freeze hashes match; rebuild byte-identical; gold vs builder 0 mismatches; 29 runs pass carrier_run_check; 6 figure conflicts scorable; C6 15/3/2; scope, near-misses 527-529 and routes agree with the rules; lint fails only on the D-128 cooking marks 520/522. M1: SUB-524 name close to published SUB-201 (fixed before the freeze). L1-L4: see deliverables/model-risk/T-121-build-check.md. Not a production approval; the T-027 veto stands.
+
+---
+[2026-11-03 | orchestrator -> @user] TYPE: STATUS
+Re: D-149-D-151, T-121
+Message: T-105 demo replies re-recorded (23 replies, paced, 0 failed); demo replays with 0 live calls; SUB-133 now held by a unit-count conflict (B-517). Quick set: SUB-026/036 replace SUB-022/042, self-check ok. Freeze recorded. T-121 built, gold frozen (manifest 8ba4a9f3779d7e34b8ec5a6d0b022ebb639310de08462ef681beda5c0d3fea7f). Not run.

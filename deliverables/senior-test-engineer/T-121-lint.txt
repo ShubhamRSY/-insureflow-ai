@@ -1,0 +1,3 @@
+FAIL  SUB-520/scorer: the perfect answer is marked miss on conflict (gold line not scorable as written)
+FAIL  SUB-522/scorer: the perfect answer is marked miss on conflict (gold line not scorable as written)
+FAIL: 2 failure(s), 0 info, 32 files, run date 2026-11-03

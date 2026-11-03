@@ -1,0 +1,92 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "prompt_version": "392b9ce3c1af",
+  "files": [
+    "application.md",
+    "email.md",
+    "loss-runs.md",
+    "schedule.csv"
+  ],
+  "usage": {
+    "queue_time": 0.097241377,
+    "prompt_tokens": 1358,
+    "prompt_time": 0.113879414,
+    "completion_tokens": 731,
+    "completion_time": 1.4548169309999999,
+    "total_tokens": 2089,
+    "total_time": 1.568696345
+  },
+  "parsed": {
+    "fields": [
+      {
+        "field_id": "named_insured",
+        "value": "Pinecrest Tax & Accounting PLLC",
+        "source": "application.md",
+        "quote": "Named insured: Pinecrest Tax & Accounting PLLC",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "premises_address",
+        "value": "711 S Broadway Ave, Tyler, TX 75701",
+        "source": "application.md",
+        "quote": "Premises address: 711 S Broadway Ave, Tyler, TX 75701",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "effective_date",
+        "value": "2027-01-01",
+        "source": "application.md",
+        "quote": "Effective date: 2027-01-01",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "operations",
+        "value": "Office. Clients by appointment. No food, no alcohol.",
+        "source": "application.md",
+        "quote": "Operations: Office. Clients by appointment. No food, no alcohol.",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "sales_or_payroll",
+        "value": 1250000,
+        "source": "application.md",
+        "quote": "Annual sales: $1,250,000 (fees)",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "tiv_building",
+        "value": 210000,
+        "source": "application.md",
+        "quote": "Building TIV: $210,000",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "construction",
+        "value": "Joisted Masonry",
+        "source": "application.md",
+        "quote": "Construction: Joisted Masonry",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "year_built",
+        "value": 1960,
+        "source": "application.md",
+        "quote": "Year built: 1960",
+        "confidence": 1.0
+      },
+      {
+        "field_id": "loss_run_valued_through",
+        "value": "2026-11-17",
+        "source": "loss-runs.md",
+        "quote": "Valued as of: 2026-11-17",
+        "confidence": 1.0
+      }
+    ],
+    "conflicts": [],
+    "location_count": {
+      "value": 1,
+      "source": "schedule.csv",
+      "quote": "FICTIONAL\t1\t711 S Broadway Ave\tTyler\t75701\t210000\tJoisted Masonry\t1960\t3400\tYes"
+    }
+  }
+}
