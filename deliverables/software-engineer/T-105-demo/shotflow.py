@@ -49,10 +49,13 @@ shot(sub,4,"draft-approve-refused",act(sub,"/approve-draft",{"reason":"x"}))
 sub="SUB-133"
 shot(sub,1,"card")
 shot(sub,2,"send-refused-before-approve",act(sub,"/send",{"user_line":"send to carrier SUB-133"}))
-shot(sub,3,"senior-confirm",act(sub,"/confirm-market",{"underwriter_id":"UW-001","carrier":"carrier_c","reason":"habitational, 12 units; Carrier C habitational appetite","_hash":True}))
-shot(sub,4,"send-refused-not-approved",act(sub,"/send",{"user_line":"send to carrier SUB-133"}))
-shot(sub,5,"approve-scan-value-ticked",act(sub,"/decision",APPR("UW-002")))
-shot(sub,6,"send-sent",am(sub))
-quote(sub,"C",11800,2500,"habitational 12 units, per file.")
-shot(sub,7,"quote")
+# D-152: the email says "12 or 14 unit complex", the signed application 12 units; the underwriter resolves both conflict rows to 12
+act(sub,"/decision",{"underwriter_id":"UW-002","action":"resolve","conflict_field":"operations","chosen_value":"12 units","reason":"signed application says 12 units; the email says 12 or 14","_hash":True})
+shot(sub,3,"resolve-unit-count-12",act(sub,"/decision",{"underwriter_id":"UW-002","action":"resolve","conflict_field":"unit_count","chosen_value":"12","reason":"signed application says 12 units; the email says 12 or 14","_hash":True}))
+shot(sub,4,"senior-confirm",act(sub,"/confirm-market",{"underwriter_id":"UW-001","carrier":"carrier_c","reason":"habitational, 12 units; Carrier C habitational appetite","_hash":True}))
+shot(sub,5,"send-refused-not-approved",act(sub,"/send",{"user_line":"send to carrier SUB-133"}))
+shot(sub,6,"approve-scan-value-ticked",act(sub,"/decision",APPR("UW-002")))
+# After the resolve the saved status is still "incomplete" (operations was held by the conflict), so the account-manager check
+# refuses: "the file is not complete". The demo ends here for SUB-133; no carrier reply is staged for a file that was not sent (D-152).
+shot(sub,7,"account-manager-refused-incomplete",am(sub))
 print("PAGE_EXISTS_IN_BOX", w.PAGE.exists(), str(w.PAGE))

@@ -1,5 +1,11 @@
 # Next session
 
+## 2026-11-03 (second part): T-121 run and memo — read this first
+- T-121 run once (`20261103T151602-99173`), scored once with v11 and count_ops_gate_v2 (D-154). Met: 0 leaks, recall 12/12 (words-only 534–537 4/4), 0 false completes, 0 unsafe routes, conflicts 6/6, C3 0, silent error rate 0. Failed, all from SUB-510/513/527/529 (P-077 Part B "number of locations not clear"): false manual intake 4/20, near-misses kept 1/3, route 16/20, fields 16/20, C2 v2 4 counted, C4 present 16. Results `deliverables/ai-engineer/evals/SUB-510-541-results.md`.
+- @model-risk T-027 memo: **KEEP** (`deliverables/model-risk/T-027-memo-T-121.md`). H1 B-518 (Part B; loosening, needs a P-### from @user), H2 B-519 (A3 misses SUB-533; stricter-only P-###). Lift needs both fixed, a check with no High, and a fresh 20+12 hold-out (>= 2 SUB-533-shaped, >= 2 highway addresses, a C2/C4 rule for manual-intake files set before gold).
+- Demo (D-152): SUB-133 resolve step added; the file still ends at "the file is not complete" (B-522). Replay 0 live calls; screenshots retaken. Guide Demo A rewritten.
+- Next free: P-079, T-128, D-155, B-523.
+
 ## Freeze 2026-11-03 for the T-121 hold-out (read this first)
 
 Recorded by the orchestrator in the Claude Code session, 2026-11-03, before any T-121 file or gold exists. Any byte change below reopens the freeze.

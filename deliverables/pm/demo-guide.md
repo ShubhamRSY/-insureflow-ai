@@ -22,11 +22,11 @@ Run the demo on a temporary copy, never on the real workbench or the real logs. 
 
 ```
 cd "/Users/disastershubz/INSURANCE FLOW AI/insureflow-ai-team"
-deliverables/software-engineer/T-105-demo/run-demo.sh /tmp/t105-demo-$(date +%s)
+SNAP_PY=/opt/homebrew/opt/python@3.14/bin/python3.14 deliverables/software-engineer/T-105-demo/run-demo.sh /tmp/t105-demo-$(date +%s)
 ```
 
 - The shell must have `LLM_BASE_URL` and `LLM_MODEL` set to the Groq host and `qwen/qwen3.8-27b`, so the saved replies match. No live model call is made; the scripts block them. The script prints each demo file's quote line and then "Pages: <temp>/shots". If playwright is not in .venv it prints "PNGs skipped"; open the pages in a browser instead, or use the saved screenshots.
-- The opening best-case file (SUB-184) needs its saved reply copied into the temp folder too. That step is part of the @software-engineer retake (T-107e); the script is not changed by this guide.
+- Saved replies were re-recorded on 2026-11-03 for prompt 392b9ce3c1af (D-150); the replay makes 0 live calls, SUB-184 included. From another worktree with no .venv, set `PY=<path to a .venv python>`; `SNAP_PY` is a python with playwright for the PNGs.
 - The scripts and saved replies are in `deliverables/software-engineer/T-105-demo/`. They are demo tooling only, not pipeline code.
 - The steps are a replay of recorded actions, not a live click-through. Show the rendered pages from the temp folder's `shots/`, or the committed screenshots below (safest for the meeting).
 - The demo files are dev data (SUB-127 to SUB-184). None comes from the hold-out.
@@ -45,7 +45,7 @@ Screenshots: the opening best-case steps are in `deliverables/software-engineer/
 |---|---|---|---|
 | 0:00–1:00 | **Opening: best case** (SUB-184, backup SUB-179) | A clean office file goes from inbox to a sent package with no senior step | see O1–O4 |
 | 1:00–1:30 | Opening | The tool reads a submission and prepares it for a person. It never decides, never binds, never sends by itself. | `T-105-SUB-127-00-queue-all-three.png` |
-| 1:30–4:30 | **Demo A: messy in-scope file to a carrier quote** (SUB-133) | Inbox to quote, with one value a person must check | see A1–A6 |
+| 1:30–4:30 | **Demo A: messy in-scope file the tool will not send** (SUB-133) | The documents disagree; the underwriter resolves it, and the send gate still holds | see A1–A7 |
 | 4:30–6:00 | **Demo B: out-of-scope file to manual intake** (SUB-129) | The tool stops and says why | see B1–B3 |
 | 6:00–8:00 | **Demo C: senior referral confirmed by a senior** (SUB-127) | A senior confirms the carrier, then the file moves on | see C1–C5 |
 | 8:00–9:30 | Numbers: T-108 scores, cost, time saved | Honest scores; estimates clearly marked | none (table below) |
@@ -60,18 +60,19 @@ What it is: Keller Insurance Services, a one-location office in Pflugerville, TX
 3. **O3 (0:15)** Approve, then send. The account-manager check passes, and the file is written to the to-carrier folder, "not bound". [`T-107e-SUB-184-03-account-manager-send.png`]
 4. **O4 (0:15)** Say: this is the only clean route to a carrier on the dev files. Most files still go to a senior first (Demo A and C).
 
-### Demo A: SUB-133, messy in-scope file to a quote (3 min)
+### Demo A: SUB-133, messy in-scope file the tool will not send (3 min)
 
-What it is: a 12-unit apartment building. The file has a typed application, a schedule, an email, and a rotated photo of a Carrier C loss run (a loss run is the insurer's list of past claims).
+What it is: a 12-unit apartment building. The file has a typed application, a schedule, an email, and a rotated photo of a Carrier C loss run (a loss run is the insurer's list of past claims). Updated 2026-11-03 (D-152): the email says "a 12 or 14 unit complex" while the signed application says 12 units, and the tool now holds that as an open conflict.
 
-Important, say it out loud: most files go to a senior first. This file reaches a quote through senior referral. The suggested carrier is Carrier C, and a senior confirms it.
+Important, say it out loud: the tool does not pick between two documents. A person chooses, and even then the file only moves when every gate is met.
 
-1. **A1 (0:30)** Open the card. Status is "complete, review pending". The loss-run date was read from a scan, so a person must check it. Route: senior referral, suggested Carrier C. [`T-105-SUB-133-01-card.png`]
-2. **A2 (0:20)** Try to send before anyone approves. The tool refuses: "a senior referral needs a senior underwriter to confirm the market first". This is the safety stop working. [`T-105-SUB-133-02-send-refused-before-approve.png`]
-3. **A3 (0:40)** The senior, Dana Reyes, confirms Carrier C and gives a reason. The record shows who, when, why, and which file version. [`T-105-SUB-133-03-senior-confirm.png`]
-4. **A4 (0:40)** The underwriter approves and ticks the scan value as checked. The history shows it. [`T-105-SUB-133-05-approve-scan-value-ticked.png`]
-5. **A5 (0:30)** Send. The account-manager check passes because the senior's confirm is logged. No typed override is used. The package is written to the to-carrier folder and is "not bound". [`T-105-SUB-133-06-send-sent.png`] (retaken 2026-10-19)
-6. **A6 (0:30)** Quote back: Carrier C, quoted, premium 11,800, deductible 2,500, not bound. The reply is simulated and the figures are fictional. [`T-105-SUB-133-07-quote.png`]
+1. **A1 (0:30)** Open the card. Status is "incomplete". The two documents disagree on the unit count (12 vs "12 or 14"); the loss-run date was read from a scan, so a person must check it. [`T-105-SUB-133-01-card.png`]
+2. **A2 (0:20)** Try to send. Refused: "no logged decision by a listed underwriter for this file". [`T-105-SUB-133-02-send-refused-before-approve.png`]
+3. **A3 (0:40)** The underwriter resolves the unit count to 12 from the signed application and writes why. The card shows both conflicts "RESOLVED by UW-002: 12". [`T-105-SUB-133-03-resolve-unit-count-12.png`]
+4. **A4 (0:30)** The senior, Dana Reyes, confirms Carrier C with a reason. [`T-105-SUB-133-04-senior-confirm.png`]
+5. **A5 (0:30)** The underwriter approves and ticks the scan value as checked. [`T-105-SUB-133-06-approve-scan-value-ticked.png`]
+6. **A6 (0:30)** Send. The account-manager check refuses: "the file is not complete". The operations description was held by the conflict, so the file still lists it as missing; nothing goes to the carrier. [`T-105-SUB-133-07-account-manager-refused-incomplete.png`]
+7. **A7 (0:20)** Say it plainly: on this file the tool stops short of a carrier. For a file that goes all the way to a quote, use the opening file SUB-184 or Demo C (SUB-127).
 
 ### Demo B: SUB-129, out-of-scope file to manual intake (1.5 min)
 
