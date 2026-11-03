@@ -21,7 +21,7 @@ Scope rule used (P-077, D-146, D-149): a different premises street address in an
 | 521 | Station Street Deli LLC | Deli, counter service sandwiches and soups | app.md, email, loss-runs.md | B, slip claim, valued 2026-08-19 | deli; cooking stated; CONFLICT sales, approx (email around $610,000 / app $575,000) |
 | 522 | Seawall Deli Co LLC | Deli, counter sandwiches | app.md, email, loss-runs.md | C, no claims, valued 2026-09-02 | deli; COOKING CONFLICT (app None; email fryer daily) |
 | 523 | Rusty Spur Tavern LLC | Tavern, full bar, pool tables | app.md, email, loss-runs.md | C, fight claim C-61207, valued 2026-08-28 | HELD W1 |
-| 524 | Velvet Room Nightclub LLC | Nightclub, dance floor, DJ, full bar | app.md, email, loss-runs.md | A, no claims, valued 2026-09-10 | HELD W1 |
+| 524 | Midnight Mesa Nightclub LLC | Nightclub, dance floor, DJ, full bar | app.md, email, loss-runs.md | A, no claims, valued 2026-09-10 | HELD W1 |
 | 525 | Sunrise Skillet LLC | Breakfast and lunch restaurant, 54 seats | app.pdf (typed), email, loss-runs.md | C, grease fire C-61344, valued 2026-09-24 | cooking stated |
 | 526 | Golden Crust Bakery LLC | Bakery cafe, counter service | app.md, email, loss-runs.md | B, no claims, valued 2026-10-13 | cooking stated (oven) |
 | 527 | Cottonwood Tax & Accounting LLC | Tax and accounting office | app.md, email, loss-runs.md | A, no claims, valued 2026-09-21 | NEAR-MISS "two floors" (in scope) |
@@ -80,3 +80,4 @@ Cooking conflicts: 520 application "Cooking operations: None" vs email "fry empa
 - PDF text layers (pdftotext): typed 709–823 characters; 531 = 0 (image only, by design); 538 Spanish 525.
 - Collisions: 44 insured names and addresses (incl. schedule rows) vs 941 other text files in simulation/inbox and simulation/inbox-dev: 0 hits. Scans and PDFs not text-searched.
 - v11 vocabulary traps from the T-120 check avoided: no "kitchen" beside a bar word, no plural "ovens", no "office" in a contractor line, no wholesale + second class, every listed loss date inside its term.
+- Correction 2026-11-03 (@model-risk M1, before the gold freeze): the collision check compared full names only; SUB-524 "Velvet Room Nightclub LLC" was close to published SUB-201 "Velvet Room Lounge LLC". Renamed to "Midnight Mesa Nightclub LLC" in the builder and the gold; no other change.

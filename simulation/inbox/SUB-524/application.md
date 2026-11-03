@@ -3,7 +3,7 @@
 # Application (ACORD 125/140 style)
 
 Submission: SUB-524
-Named insured: Velvet Room Nightclub LLC
+Named insured: Midnight Mesa Nightclub LLC
 Mailing address: same as premises
 Premises address: 5025 N Mesa St, El Paso TX 79912
 Effective date: 2026-12-26

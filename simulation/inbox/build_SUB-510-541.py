@@ -320,17 +320,17 @@ def build():
 
     # 524 nightclub, prohibited class (W1, held). Carrier A, no claims.
     d = folder(524)
-    email(d, "Velvet Room Nightclub - El Paso",
+    email(d, "Midnight Mesa Nightclub - El Paso",
           "Nightclub on Mesa St in El Paso, dance floor and DJs Friday and Saturday, full bar. "
           "Carrier A has us, no claims, loss run attached.")
-    app_md(d, 524, app(named="Velvet Room Nightclub LLC", mail="same as premises",
+    app_md(d, 524, app(named="Midnight Mesa Nightclub LLC", mail="same as premises",
                        prem="5025 N Mesa St, El Paso TX 79912", eff="2026-12-26", yrs="3",
                        entity="LLC", lob="Liquor liability, general liability",
                        ops="Nightclub, dance floor, DJ, full bar", emp="12",
                        sales="$780,000", tiv="$350,000", bpp="$120,000", sqft="4,600",
                        constr="Masonry", yb="1979", stories="1", spk="Partial", cook="None",
                        carrier="Carrier A", claims="None", bk="No"))
-    loss_md(d, A.lr_carrier_a("Velvet Room Nightclub LLC", ["2025-12-26 to 2026-12-26"],
+    loss_md(d, A.lr_carrier_a("Midnight Mesa Nightclub LLC", ["2025-12-26 to 2026-12-26"],
                               "2026-09-10", []))
 
     # 525 breakfast restaurant, cooking stated (griddle, two fryers, hood with suppression). Carrier C grease fire.

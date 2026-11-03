@@ -15,7 +15,7 @@ Recorded by the orchestrator in the Claude Code session, 2026-11-03, before any 
 | Scorer v11 sha256 | `7ddcfb50521b7af17f00c0e148891ca40008d019ce257b9b5d121c7fa6d3fcbb` |
 | Lint sha256 | `01147a7532bdd7f1ec00861200d1d5e6bbf87f12612389416ff58b78844ea653` |
 | C2 counter v2 sha256 | `a57010b0796e7f88ce283375b2a3e6cde338d79c99fd79eab64f49a3ad63085a` (D-141) |
-| T-121 gold manifest sha256 | _recorded after the gold freeze_ |
+| T-121 gold manifest sha256 | `8ba4a9f3779d7e34b8ec5a6d0b022ebb639310de08462ef681beda5c0d3fea7f` (gold frozen 2026-11-03; T-121 not run) |
 
 Written 2026-10-30 by the orchestrator at wrap-up. Wrap-up commits: `ai-team` `0b9c019`, `pilot-integration` `74c4e85` (fast-forward of branch `p078-security`, worktree `insureflow-p078`). **Not pushed: GitHub reports the repo as PUBLIC** (`gh repo view`: visibility PUBLIC). Push only after @user decides (decision 1).
 
