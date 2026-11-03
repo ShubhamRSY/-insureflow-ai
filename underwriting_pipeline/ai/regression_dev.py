@@ -56,11 +56,11 @@ BANDS = (
 QUICK = (
     "SUB-017",  # text PDF plus email
     "SUB-018",  # scanned PDF plus email
-    "SUB-022",  # text PDF plus email
+    "SUB-026",  # text PDF plus email (replaces SUB-022, B-511, 2026-11-03 @user)
     "SUB-023",  # scanned PDF plus email
     "SUB-027",  # text PDF
     "SUB-037",  # application PDF only
-    "SUB-042",  # text PDF plus email, premises conflict
+    "SUB-036",  # text PDF plus email (replaces SUB-042, B-511, 2026-11-03 @user)
     "SUB-046",  # application PDF only
     "SUB-056",  # carrier loss run and a no-known-loss letter
     "SUB-059",  # two-page loss run
@@ -72,9 +72,8 @@ QUICK = (
     "SUB-210",  # application plus Excel schedule (xlsx reader); T-108 dev data (D-115)
     "SUB-221",  # application PDF plus Excel schedule (xlsx reader); T-108 dev data (D-115)
 )
-# P-077 part A (scope-v5, D-145): these two give a different premises address in the email, so they now go to manual intake before any call.
-# Kept so the run compares with the 2026-11-02 baseline; replacing them is a decision for @user.
-QUICK_MANUAL = ("SUB-022", "SUB-042")
+# P-077 part A (scope-v5) sent SUB-022 and SUB-042 to manual intake (second address in the email); @user replaced them 2026-11-03 (B-511).
+QUICK_MANUAL: tuple[str, ...] = ()
 QUICK_SCORER = {"SUB-210": "eval_holdout_v7", "SUB-221": "eval_holdout_v7"}  # the frozen scorer T-108 was scored with; its gold is in that format
 
 

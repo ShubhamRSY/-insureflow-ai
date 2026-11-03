@@ -1567,3 +1567,18 @@ Then continue: P-066 concurrent-write tests, @pm pilot-readiness update, @model-
 - Date / Owner: 2026-11-02 / @user
 - Decision (the user's words): "B-508: fix the card text so send-refusal and scope lines name the missing scanner (fast lane); playwright screenshot."
 - Status: ACCEPTED by @user, 2026-11-02.
+
+## D-149 — Address mismatch keeps the file in manual intake
+- Date / Owner: 2026-11-03 / @user
+- Decision (the user's words, pasted, D-032): "keep address-mismatch → manual intake". A different street address in any document stays a manual-intake reason (P-077 part A, scope-v5); no loosening.
+- Status: ACCEPTED by @user, 2026-11-03.
+
+## D-150 — Re-record the T-105 demo replies for prompt 392b9ce3c1af (B-510)
+- Date / Owner: 2026-11-03 / @user
+- Decision (the user's words): "re-record T-105 demo replies". Paced live calls on a temp copy; the demo must then run with 0 live calls.
+- Status: ACCEPTED by @user, 2026-11-03.
+
+## D-151 — Replace SUB-022 and SUB-042 in the quick set (B-511)
+- Date / Owner: 2026-11-03 / @user
+- Decision (the user's words): "replace SUB-022/042 in the quick set" with two in-scope dev files (text PDF + email, same address). Done with SUB-026 and SUB-036, the only two dev-band files that qualify under scope-v5.
+- Status: ACCEPTED by @user, 2026-11-03.
