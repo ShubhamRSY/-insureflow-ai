@@ -1,5 +1,22 @@
 # Next session
 
+## Freeze 2026-11-03 for the T-121 hold-out (read this first)
+
+Recorded by the orchestrator in the Claude Code session, 2026-11-03, before any T-121 file or gold exists. Any byte change below reopens the freeze.
+
+| Item | Value |
+|---|---|
+| Branch / worktree | `pilot-integration` / `insureflow-integration` |
+| Code commit | `8baa00a43abcc77ea76f511de99c8e3b6ab33ab7` (pipeline code identical to `f1a5cf6`, P-077 A+B; only the dev quick set changed) |
+| `PROMPT_VERSION` | `392b9ce3c1af` (3,257 bytes) |
+| `llm_extract.py` sha256 | `90ed677226c174b05c2f94f9293637a1604c18f70b63cb584cad761a8ce2eaa4` |
+| Scope detector | scope-v5; `scope.py` sha256 `79f4f7f70c6b0eaba93b8ffe9348a3a1c773f4677656a80d02c37b9da9694c68` |
+| `prepare.py` sha256 (Part B) | `c7afd3549e20a8d0b73e5b8b3874d6db7e503415e99d8e2e5576209a50e25d63` |
+| Scorer v11 sha256 | `7ddcfb50521b7af17f00c0e148891ca40008d019ce257b9b5d121c7fa6d3fcbb` |
+| Lint sha256 | `01147a7532bdd7f1ec00861200d1d5e6bbf87f12612389416ff58b78844ea653` |
+| C2 counter v2 sha256 | `a57010b0796e7f88ce283375b2a3e6cde338d79c99fd79eab64f49a3ad63085a` (D-141) |
+| T-121 gold manifest sha256 | _recorded after the gold freeze_ |
+
 Written 2026-10-30 by the orchestrator at wrap-up. Wrap-up commits: `ai-team` `0b9c019`, `pilot-integration` `74c4e85` (fast-forward of branch `p078-security`, worktree `insureflow-p078`). **Not pushed: GitHub reports the repo as PUBLIC** (`gh repo view`: visibility PUBLIC). Push only after @user decides (decision 1).
 
 - Standing rules: budget rule 8 (demo blockers only), D-065, D-069, D-097 plugins, D-129 fast lane. One AI session on this repo. `frontend/` and `.claude/settings*.json` are the user's; never staged.
