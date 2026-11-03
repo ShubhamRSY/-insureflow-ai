@@ -1,0 +1,24 @@
+file     ops mark            present  specific reason (v2)                    silent  not counted
+SUB-510  miss                no       none                                    YES     
+SUB-511  hit                 yes      cooking line copied from the applicati  no      check the other documents for cooking
+SUB-512  hit                 yes      cooking line copied from the applicati  no      check the other documents for cooking
+SUB-513  miss                no       none                                    YES     
+SUB-514  hit                 yes      none                                    no      
+SUB-515  hit                 yes      none                                    no      
+SUB-516  hit                 yes      cooking line copied from the applicati  no      check the other documents for cooking
+SUB-517  hit                 yes      cooking line copied from the applicati  no      value is not in the cited text (translated or reworded); che
+SUB-518  hit                 yes      cooking line copied from the applicati  no      check the other documents for cooking
+SUB-519  hit                 yes      cooking line copied from the applicati  no      check the other documents for cooking
+SUB-520  hit                 yes      cooking: the documents disagree         no      value is not in the cited text (translated or reworded)
+SUB-521  hit                 yes      none                                    no      
+SUB-522  hit                 yes      cooking: the documents disagree         no      value is not in the cited text (translated or reworded)
+SUB-523  hit                 yes      cooking line copied from the applicati  no      check the other documents for cooking
+SUB-524  hit                 yes      cooking line copied from the applicati  no      check the other documents for cooking
+SUB-525  hit                 yes      none                                    no      
+SUB-526  hit                 yes      none                                    no      value is not in the cited text (translated or reworded)
+SUB-527  miss                no       none                                    YES     
+SUB-528  hit                 yes      cooking line copied from the applicati  no      check the other documents for cooking
+SUB-529  miss                no       none                                    YES     
+in-scope files 20; silent 4; present 16; hits 16
+C2 v2 (silent errors == 0, reason must name the item): FAIL
+C4 (present >= 18/20 and hits >= 15/20): FAIL
