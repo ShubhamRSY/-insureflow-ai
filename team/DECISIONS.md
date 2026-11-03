@@ -1617,3 +1617,13 @@ Then continue: P-066 concurrent-write tests, @pm pilot-readiness update, @model-
 - Date / Owner: 2026-11-03 / @user
 - Decision (the user's words): "M1 agreed." "Write the M1 rule (manual-intake files = scope misses, not C2 silent errors) into the counter notes and the next hold-out plan before any gold." The frozen counter v2 is not edited; T-121 is not re-scored.
 - Status: ACCEPTED by @user, 2026-11-03.
+
+## D-159 — T-129: fix H1–H3, one look-again; pilot-integration stays local
+- Date / Owner: 2026-11-03 / @user
+- Decision (the user's words, pasted, D-032): "T-129 = (a) fix H1–H3 per check-T-129.md, one look-again; pilot-integration stays local until the look-again passes." Backup branch t129-wip pushed (gitleaks clean); if any High remains after the look-again, STOP with 2–3 options.
+- Status: ACCEPTED by @user, 2026-11-03.
+
+## D-160 — SUB-219 is a known gold difference under D-149
+- Date / Owner: 2026-11-03 / @user
+- Decision (the user's words): "SUB-219 recorded as a known gold difference under D-149, no re-score." The published T-108 gold (in scope) predates D-149; its application (2701 Memorial Blvd) and schedule (4810 Twin City Hwy) give different addresses, so scope-v6 sends it to manual intake. Published scores unchanged (D-020).
+- Status: ACCEPTED by @user, 2026-11-03.
