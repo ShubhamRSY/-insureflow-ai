@@ -1582,3 +1582,18 @@ Then continue: P-066 concurrent-write tests, @pm pilot-readiness update, @model-
 - Date / Owner: 2026-11-03 / @user
 - Decision (the user's words): "replace SUB-022/042 in the quick set" with two in-scope dev files (text PDF + email, same address). Done with SUB-026 and SUB-036, the only two dev-band files that qualify under scope-v5.
 - Status: ACCEPTED by @user, 2026-11-03.
+
+## D-152 — T-105 demo: SUB-133 gets a resolve step (B-517)
+- Date / Owner: 2026-11-03 / @user
+- Decision (the user's words, pasted, D-032): "1 = (a) demo step: underwriter resolves the unit count to 12 from the signed application, then approves". Done after the T-121 memo only.
+- Status: ACCEPTED by @user, 2026-11-03.
+
+## D-153 — T-121 pre-run ruling: SUB-520/522 cooking marks excluded
+- Date / Owner: 2026-11-03 / @user
+- Decision (the user's words): "SUB-520/522 cooking-conflict marks reported separately and excluded from the conflict rate (as D-128); planted-conflict recall on the 6 figure conflicts" (514, 515, 517, 518, 519, 521).
+- Status: ACCEPTED by @user, 2026-11-03, before the run.
+
+## D-154 — T-121 official run GO (D-020)
+- Date / Owner: 2026-11-03 / @user
+- Decision (the user's words): "T-121 official run GO (D-020)". Run once against the 2026-11-03 freeze, scored once with v11 and count_ops_gate_v2.py; fix nothing. Then the @model-risk T-027 memo.
+- Status: ACCEPTED by @user, 2026-11-03.
