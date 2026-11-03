@@ -1,5 +1,12 @@
 # Next session
 
+## 2026-11-03 (third part): T-129 merged — read this first
+- P-079 (D-155), P-080 (D-156), P-081 (D-157) built as T-129; @model-risk REJECT (H1–H3) → fixed (D-159) → look-again APPROVE WITH CHANGES, no High. Merged into ai-team; pilot-integration pushed. Scope detector **scope-v6**; PROMPT_VERSION unchanged `392b9ce3c1af`.
+- Dev re-check 12 files: SUB-510/513/527/529 shapes stay in scope; SUB-475, 533–537 shapes and a highway second address go to manual intake. scope-v5 → v6 over 365 folders: 0 loosened; SUB-533 and SUB-219 (D-160, known gold difference) stricter. Quick-17: 0 differences.
+- Demo SUB-133: resolve → confirm → approve (operations acknowledged) → sent → quote, 0 live calls; guide Demo A restored.
+- Next: T-128 hold-out (SUB-550–581) is planned only; before building, freeze code/prompt/scope-v6/scorer/lint/counter in this file. M1 rule (D-158) in count_ops_gate_v2-notes.md. Backlog B-523, B-524.
+- Next free: P-082, T-130, D-161, B-525.
+
 ## 2026-11-03 (second part): T-121 run and memo — read this first
 - T-121 run once (`20261103T151602-99173`), scored once with v11 and count_ops_gate_v2 (D-154). Met: 0 leaks, recall 12/12 (words-only 534–537 4/4), 0 false completes, 0 unsafe routes, conflicts 6/6, C3 0, silent error rate 0. Failed, all from SUB-510/513/527/529 (P-077 Part B "number of locations not clear"): false manual intake 4/20, near-misses kept 1/3, route 16/20, fields 16/20, C2 v2 4 counted, C4 present 16. Results `deliverables/ai-engineer/evals/SUB-510-541-results.md`.
 - @model-risk T-027 memo: **KEEP** (`deliverables/model-risk/T-027-memo-T-121.md`). H1 B-518 (Part B; loosening, needs a P-### from @user), H2 B-519 (A3 misses SUB-533; stricter-only P-###). Lift needs both fixed, a check with no High, and a fresh 20+12 hold-out (>= 2 SUB-533-shaped, >= 2 highway addresses, a C2/C4 rule for manual-intake files set before gold).

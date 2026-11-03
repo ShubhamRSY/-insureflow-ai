@@ -3576,3 +3576,7 @@ H2 (P-081, card text): workbench.saved_report forces "extra": [], so the card pr
 H3 (P-080 / D-155 c): _bare_label treats any short colon-free sentence ("Carrier A loss run attached.") as a label, hiding a second address on the next line; with the P-079 fallback a rule miss now stays in scope unless the model counts 2. Fix: a label is a line ending in ":" or a name-only line; add the two-line 533 shape as a dev positive and self-check.
 Medium/Low: M1 role word in the same sentence (and "home") still hides an address; M2 dev set lacks mailing/PO-Box-only and null-count negatives; M3 dev re-check replies not saved; L1 "Spur" and lowercase "highway"; L2 a count quote naming a second place without a street number passes.
 Confirmed holding: D-155 (a), (b), (d), (e), (f); D-156 stricter only; self-checks and quick-17 equal. Not a production approval; the T-027 veto stands.
+
+---
+[2026-11-03 | @model-risk -> orchestrator, @user] TYPE: REVIEW (T-129 look-again; relayed as written)
+Verdict: APPROVE WITH CHANGES. H1, H2, H3 closed; no new High. H1: send gate refused until operations was acknowledged on this run hash (probe with real temp log). H2: extra [] reads review pending on card and gate, draft withdrawn; extra ["hours"] or a pre-P-081 run reads incomplete on both, draft kept. H3: two-line carrier-sentence shape caught; D-155 (c) holds; dev re-check byte-identical; quick-17 0 scoring differences. Medium/Low to backlog B-524. Report deliverables/model-risk/check-T-129-2.md. Not a production approval; the T-027 veto stands.
