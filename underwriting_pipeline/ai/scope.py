@@ -255,7 +255,15 @@ def _place_words(docs: list[dict]) -> tuple[str, str] | None:
 def _bare_label(line: str) -> bool:
     """P-080: a short line that is only a label ("Mailing address:") or a name with no label ("ABC Insurance Agency"), not "label: value"."""
     text = line.strip()
-    return bool(text) and len(text) <= 60 and (text.endswith(":") or ":" not in text)
+    if not text or len(text) > 60:
+        return False
+    if text.endswith(":"):
+        return True
+    # check-T-129 H3: a name-only line ("ABC Insurance Agency"): no colon, no sentence punctuation, every word capitalised; a sentence never hides the next line
+    return ":" not in text and not re.search(r"[.!?;,]", text) and all(w[0].isupper() or w[0].isdigit() or w.lower() in NAME_JOINERS for w in text.split())
+
+
+NAME_JOINERS = frozenset({"of", "and", "&", "the", "de", "y"})
 
 
 def _language(text: str, names: list[str] | tuple = ()) -> str:
@@ -536,8 +544,15 @@ if __name__ == "__main__":
     # P-080 (D-156, memo T-121 H2): a role word skips only its own sentence; only a bare label line above marks the next line; highway addresses count
     for phrase in ("We also keep stock at our warehouse, 2215 Leonard Rd, Bryan, which is not on the app. Carrier A loss run attached.",  # SUB-533 shape
                    "Carrier A has us. Please also cover 9 Oak Ave, Waco, TX 76701.", "We also store pipe at 400 FM 1960, Humble TX.",
-                   "Our yard is at 1906 Hwy 290 W, Brenham.", "The other stock is at 800 I-35, Temple."):
+                   "Our yard is at 1906 Hwy 290 W, Brenham.", "The other stock is at 800 I-35, Temple.",
+                   # check-T-129 H3: a sentence on the line above is never a label; the next line's address counts
+                   "Carrier A loss run attached.\nWe also keep stock at 2215 Leonard Rd, Bryan.", "Our agent sent the app\nWe also keep stock at 2215 Leonard Rd, Bryan.",
+                   "Prior carrier was B.\n2215 Leonard Rd, Bryan is our warehouse.", "Loss run attached\n2215 Leonard Rd, Bryan"):
         assert words(phrase), phrase
+    for line in ("Carrier A loss run attached.", "Our agent sent the app", "Loss run attached", "Mailing address: same as premises"):
+        assert not _bare_label(line), line
+    for line in ("Mailing address:", "ABC Insurance Agency", "Smith & Jones Agency", "Bank of Texas"):
+        assert _bare_label(line), line
     m533 = detect([doc("application.md", APP.replace("Premises address:", "Mailing address: same as premises\nPremises address:")),
                    doc("email.md", EMAIL + "\nWe also keep the vans at 2215 Leonard Rd, Bryan. Carrier A loss run attached.")])
     assert [r["code"] for r in m533["reasons"]] == ["multiple_locations"], m533

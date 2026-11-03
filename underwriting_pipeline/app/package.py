@@ -428,7 +428,10 @@ def is_review_row(row: dict) -> bool:
 
 
 def needs_review_ids(report: dict) -> list[str]:
-    """Field ids of the rows the underwriter must acknowledge at approve (D-039, D-068): needs_review with a value. The one list."""
+    """Field ids of the rows the underwriter must acknowledge at approve (D-039, D-068): needs_review with a value. The one list.
+    P-081 (check-T-129 H1): read after the logged resolutions on this run, so a value entered by a resolve (operations, C1) is acknowledged
+    at approve and checked at send, the same list in both places."""
+    report = with_resolutions(report)
     ids = [r["field_id"] for r in report.get("fields") or [] if is_review_row(r)]
     if ((report.get("cooking") or {}).get("equipment") or {}).get("state") == "needs_review":  # P-029 (D-072)
         ids.append("cooking_equipment")
@@ -1085,6 +1088,19 @@ if __name__ == "__main__":
         globals()["resolutions"] = lambda submission, run_hash: {"operations": both["operations"]}
         half = with_resolutions(base81)
         assert half["status"] == "incomplete" and half["missing"] == [] and conflict_problem(half), "one conflict left: stays incomplete"
+        # check-T-129 H1: the operations value entered by a resolve is a C1 review row at approve and at send, read from the saved run
+        globals()["resolutions"] = lambda submission, run_hash: both if run_hash == "h81" else {}
+        assert "operations" in needs_review_ids(base81), "the approve list reads the resolved run"
+        real_decisions = globals()["decisions"]
+        try:
+            for acked, want in (([], "operations"), (["loss_run_valued_through"], "operations"), (["operations"], "")):
+                globals()["decisions"] = lambda submission, log, a=acked: [{"action": "approve", "run_hash": "h81", "acknowledged": a}]
+                got = ack_problem("SUB-881", base81)
+                assert (want in got) if want else got == "", (acked, got)
+            globals()["decisions"] = lambda submission, log: [{"action": "approve", "run_hash": "another", "acknowledged": ["operations"]}]
+            assert "operations" in ack_problem("SUB-881", base81), "another run's acknowledgment does not count"
+        finally:
+            globals()["decisions"] = real_decisions
     finally:
         globals()["resolutions"] = real_resolutions
     print("package ok")

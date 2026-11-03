@@ -394,7 +394,7 @@ def saved_report(name: str) -> tuple[dict | None, str]:
         "fields": fields,
         "conflicts": saved.get("conflicts") or [],
         "missing": [r["field_id"] for r in fields if not r.get("value")],
-        "extra": [],  # not stored in the saved run
+        "extra": saved.get("extra"),  # P-081 (check-T-129 H2): items still asked of the producer, as saved; None in a run saved before P-081
         "locations": None,  # not stored in the saved run
         "status_reason": prepare.REJECT_REASON if saved.get("status") == "all_values_rejected" else None,
     }, ""
@@ -1373,7 +1373,7 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
             quotes.html_for(item["id"], user),
         ]
         if not refused:
-            missing = report["missing"] + report.get("extra", [])
+            missing = report["missing"] + (report.get("extra") or [])
             lines += ["<h3>Missing</h3>", f"<p>{html.escape(', '.join(missing) or 'none')}</p>"]
             if unread_files and not manual:
                 lines.append(f"<p>{len(unread_files)} file{'s' if len(unread_files) != 1 else ''} unread — these may hold the missing items. No missing-info request is drafted until they are read.</p>")
@@ -2495,4 +2495,33 @@ if __name__ == "__main__":
             plain_row = {"field_id": "operations", "value": "Insurance agency office, 48 seats", "quote": "Operations: Insurance agency office, 48 seats"}
             copied_row = {**plain_row, "value": f"{plain_row['value']}; {line_}", "rule_copied": True, "also_quoted": [{"quote": line_, "source": "application.md"}]}
             assert _ops({"fields": [copied_row]}) == _ops({"fields": [plain_row]}) and _unlisted(_ops({"fields": [copied_row]})) == _unlisted(_ops({"fields": [plain_row]})), body
+        # check-T-129 H2 (P-081): the card reads the saved "items still owed"; card status and the send gate agree; the draft stays until nothing is owed
+        with tempfile.TemporaryDirectory() as tmp81:
+            ext81, log81 = Path(tmp81) / "extractions", Path(tmp81) / "decisions.jsonl"
+            ext81.mkdir()
+            old81 = (prepare.EXTRACT_DIR, package.DECISIONS_LOG)
+            uw = sorted(package.underwriters())[0]
+            try:
+                prepare.EXTRACT_DIR, package.DECISIONS_LOG = ext81, log81
+                for seq, (sub, extra) in enumerate((("SUB-981", ["hours"]), ("SUB-982", None), ("SUB-983", [])), start=1):
+                    payload = {"submission": sub, "status": "incomplete", "error": None, "complete": False, "needs_human": [], "unread": [], "sprinklers": "no",
+                               "scope": {"version": "self", "in_scope": True, "reasons": []}, "hash_algorithm": prepare.HASH_ALGORITHM,
+                               "conflicts": [{"field": "operations", "resolution": "unresolved", "values": [{"value": "Office"}, {"value": "Office and storage"}]}],
+                               "fields": [{"field_id": f, "value": None if f == "operations" else "x", "needs_review": f == "operations"} for f in prepare.FIELDS]}
+                    if extra is not None:
+                        payload["extra"] = extra
+                    payload["saved_hash"] = prepare.hash_payload(payload)
+                    (ext81 / f"{sub}.json").write_text(json.dumps(payload))
+                    with log81.open("a") as fh:
+                        fh.write(json.dumps({"seq": seq, "submission": sub, "action": "resolve", "underwriter_id": uw, "reason": "signed application",
+                                             "conflict_field": "operations", "new_value": "Office", "run_hash": payload["saved_hash"]}) + "\n")
+                    shown = saved_report(sub)[0]
+                    assert shown is not None, sub
+                    card81 = package.with_resolutions(shown, sub)
+                    gate = package.with_resolutions(prepare.read_saved_run(sub), sub)
+                    assert card81["status"] == gate["status"] and card81.get("status_reason") == gate.get("status_reason"), (sub, card81["status"], gate["status"])
+                    assert (card81["status"] == prepare.REVIEW_PENDING) == (extra == []), (sub, extra, card81["status"])
+                    assert "operations" in package.needs_review_ids(prepare.read_saved_run(sub)), "check-T-129 H1: the resolved value is acknowledged"
+            finally:
+                prepare.EXTRACT_DIR, package.DECISIONS_LOG = old81
         print("workbench ok")
