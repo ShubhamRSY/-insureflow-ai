@@ -16,7 +16,7 @@ import prepare
 import sources
 
 ROOT = Path(__file__).resolve().parents[2]
-BASELINE_FINGERPRINT = "7833137958df1e3761aabfc25b16fa80722c54dc5d9f0662cbde590a0f78a14b"
+BASELINE_FINGERPRINT = "4fc19fd74d82043a5320e8adb34004d1ac030b5e18959275e440cab7b09fdb9d"
 
 
 def test_load_baseline_and_raw_equality():
@@ -24,7 +24,7 @@ def test_load_baseline_and_raw_equality():
     assert config.id == "small_commercial"
     assert config.raw == lob_config_snapshot.snapshot()
     assert config.prompt_system == lob_config_snapshot.snapshot()["prompt"]["system"]
-    assert config.prompt["version"] == "759b3e6bc9b2"
+    assert config.prompt["version"] == "392b9ce3c1af"  # P-077 part B (D-145); was 759b3e6bc9b2
     assert [field["id"] for field in config.fields] == list(prepare.FIELDS)
 
 
@@ -104,6 +104,9 @@ def test_no_call_replay_on_and_off_are_identical(monkeypatch, tmp_path):
             key = llm_extract.key_for(docs)
             assert key
             parsed = replies[folder.name]
+            if "location_count" not in parsed:  # P-077 part B: replies recorded before the count; give each a count of 1 quoting its own address
+                name, m = next((d["name"], m) for d in docs for m in [prepare.scope.STREET_WORDS.search(d.get("text") or "")] if m)
+                parsed = {**parsed, "location_count": {"value": 1, "quote": m.group(0), "source": name}}
             saved = {"model": os.environ["LLM_MODEL"], "prompt_version": llm_extract.PROMPT_VERSION, "files": [doc["name"] for doc in docs], "usage": {}, "parsed": parsed}
             (cache / "extractions" / f"{key}.json").write_text(json.dumps(saved, indent=2) + "\n", encoding="utf-8")
             keys.add(key)
@@ -111,7 +114,7 @@ def test_no_call_replay_on_and_off_are_identical(monkeypatch, tmp_path):
     monkeypatch.setattr(llm_extract, "CACHE", cache)
     monkeypatch.setattr(llm_extract, "_post", lambda *args, **kwargs: pytest.fail("model call during replay"))
 
-    compared = 0
+    compared = extracted = 0
     for folder in folders:
         key = llm_extract.key_for(sources.read_folder(folder))
         if key not in keys:
@@ -122,4 +125,6 @@ def test_no_call_replay_on_and_off_are_identical(monkeypatch, tmp_path):
         on = _normalise(prepare.process_submission(folder))
         assert on == off, folder.name
         compared += 1
+        extracted += off["status"] != prepare.MANUAL_INTAKE
     assert compared, "no saved run matched a cached reply"
+    assert extracted, "code review 2026-11-02: the replay must compare extracted runs, not only manual-intake reports"

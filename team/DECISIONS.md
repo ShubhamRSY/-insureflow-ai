@@ -1545,3 +1545,25 @@ Then continue: P-066 concurrent-write tests, @pm pilot-readiness update, @model-
 - Date / Owner: 2026-11-02 / @user
 - Decision (the user's words): "Merge pilot-integration into ai-team; push both (gitleaks first)."
 - Status: ACCEPTED by @user, 2026-11-02. `pilot-integration` stays the branch of record.
+
+## D-145 — P-077 parts A and B approved, on conditions
+- Date / Owner: 2026-11-02 / @user
+- Decision (the user's words, pasted, D-032): "approve change P-077 parts A and B — conditional approval typed by @user, valid ONLY if all hold: (a) either signal (rule hit or model location count) sends the whole file to manual intake; (b) missing, unreadable or uncertain location count → manual intake (fail-closed); (c) "two floors", "two entrances", "2nd floor" stay in scope; (d) the PROMPT_VERSION change is stated and all requests change; (e) stricter only. If any fails or is unclear, STOP and show me."
+- Build order: quick set baseline first (D-147), then build, dev near-miss checks, quick set again, @model-risk check (one look-again max). If no High: merge, gitleaks, push ai-team and pilot-integration.
+- Status: ACCEPTED by @user, 2026-11-02, conditional. Not a production approval; the T-027 veto stands.
+
+## D-146 — A sold or closed second store goes to manual intake
+- Date / Owner: 2026-11-02 / @user
+- Decision (the user's words): "A sold or closed second store → manual intake, not in scope (wording like "closed on our second store" is ambiguous; fail closed). Add to P-077 and its near-miss tests."
+- Replaces P-077 draft decision 2 (the draft recommended "stay in scope").
+- Status: ACCEPTED by @user, 2026-11-02.
+
+## D-147 — Live 17-file quick set as the baseline before P-077
+- Date / Owner: 2026-11-02 / @user
+- Decision (the user's words): "Run the 17-file quick set live first (paced) as the baseline, before building P-077; record results."
+- Status: ACCEPTED by @user, 2026-11-02.
+
+## D-148 — B-508: card text names the missing scanner (fast lane)
+- Date / Owner: 2026-11-02 / @user
+- Decision (the user's words): "B-508: fix the card text so send-refusal and scope lines name the missing scanner (fast lane); playwright screenshot."
+- Status: ACCEPTED by @user, 2026-11-02.

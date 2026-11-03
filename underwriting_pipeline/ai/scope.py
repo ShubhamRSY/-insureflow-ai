@@ -9,7 +9,7 @@ import re
 
 import llm_extract
 
-VERSION = "scope-v4"  # model-inventory.md; bump with every rule change
+VERSION = "scope-v5"  # model-inventory.md; bump with every rule change. v5: P-077 part A (D-145, D-146)
 IMAGE = {".png", ".jpg", ".jpeg", ".tif", ".tiff"}
 REASONS = {
     "scanned_application": "Manual intake: scanned application",
@@ -20,6 +20,7 @@ REASONS = {
     "text_layer_unknown": "Manual intake: application text layer not known",
     "unidentified_scan": "Manual intake: a scanned document could not be identified",
     "detector_error": "Manual intake: scope check failed (detector error)",
+    "location_count_unclear": "Manual intake: number of locations not clear",  # P-077 part B: set after the model call, never by detect()
 }
 MIN_WORDS = 5  # fewer common English + Spanish words than this: the language count is unsure
 UNSURE_RATIO = 0.5  # Spanish words above this share of the English words (but not more than them): unsure
@@ -59,6 +60,28 @@ NUMBERED = re.compile(r"(?i)^\s*(?:(?:[-*\u2022]|\d{1,2}[.)])\s+)?" + _LABEL)
 # "Number of buildings: 2" and "2 of 3 buildings" style counts are not labels.
 NUMBERED_ANY = re.compile(r"(?i)(?<!\bof\s)\b" + _LABEL)
 NOT_A_LOCATION = re.compile(r"(?i)\b(?:mail(?:ing)?\s+(?:address|to)|(?:prior|former|previous)\s+(?:address|location|premises))\b")  # the label, not a substring: "email" and "former bank" are not it
+# P-077 part A (D-145): a second place stated in words, read in every document (application, email, attachments, letters, loss runs).
+# A1: a count, ordinal or quantifier next to a place noun ("two stores", "both locations", "another store"). Parts of one building
+# ("two floors", "2nd floor", "two entrances", "Suite 200") and counts of other things ("two fryers", "second shift") have no place noun.
+# D-146: a sold or closed place counts too ("sold our second store", "closed on our second store"); a person reads the file.
+_QTY = r"(?:two|three|four|five|six|seven|eight|nine|ten|[2-9]|10|both|multiple|several|second|2nd|third|3rd|other|another|additional|each\s+of\s+our)"
+PART_LABEL = re.compile(r"(?i)(?:suite|ste|unit|apt|apartment|bldg|building|space|room|rm|floor|fl|level|no|number|#)\.?\s*#?\s*$")  # "Ste. 2 shop", "Bldg 2 store"
+_PLACE = r"(?:stores?|shops?|locations?|sites?|branch(?:es)?|outlets?|premises|restaurants?|storefronts?)"
+_NOT_BETWEEN = (r"(?:floors?|levels?|stor(?:y|ies|eys?)|suites?|units?|entrances?|shifts?|of|the|a|an|in|at|on|for|to|and|or"
+                r"|hand|job|jobs|work|construction|client|clients|customer|customers|electrical|power)")  # "second hand store", "several job sites"
+COUNT_PHRASE = re.compile(rf"(?i)\b{_QTY}(?:\s+of\s+(?:our|the|their|its))?\s+(?:(?!{_NOT_BETWEEN}\b)[a-z'-]+\s+)?{_PLACE}\b")
+# A2: one line gives two figures, each labelled with a different place name: "Square footage: 3,000 (Corpus), 1,800 (Rockport)".
+PLACE_VALUE = re.compile(r"\d[\d,.]*\s*(?:sq\.?\s*ft\.?|sf|square feet)?\s*\(\s*([A-Z][A-Za-z.' -]{1,30}?)\s*\)")
+NOT_PLACE_NAME = frozenset("approx approximately est estimated actual annual gross net total building buildings contents bpp tiv owned leased rented "
+                           "sales payroll new old current prior projected monthly yearly usd retail warehouse office storage kitchen dining patio "
+                           "mezzanine basement floor first second ground main interior exterior heated unheated each general per aggregate occurrence "
+                           "products completed personal medical online owner owners staff employee employees officer officers clerical full part "
+                           "seasonal deductible limit limits premium property liability auto umbrella".split())
+# A3: a street address on a line that names a role other than the premises is not a second place.
+ROLE_LINE = re.compile(r"(?i)\b(?:mail(?:ing)?|billing|prior|former|previous|home|residence|residential|owner'?s|agency|agent|producer|broker(?:age)?"
+                       r"|carrier|insurer|insurance\s+(?:company|co)|underwriter|supplier|vendor|landlord)\b")
+STREET_WORDS = re.compile(r"\b\d{1,6}\s+(?:[NSEW]\.?\s+)?(?:[A-Z0-9][A-Za-z0-9.'-]*\s+){1,4}"
+                          r"(?:St|Street|Rd|Road|Ave|Avenue|Blvd|Dr|Drive|Ln|Lane|Hwy|Highway|Way|Pkwy|Parkway|Ct|Court|Pl|Place|Fwy|Trl|Loop|Cir)\b\.?")
 STREET = re.compile(r"\b\d{1,6}\s+[A-Za-z0-9 .]+?\s(?:st|street|rd|road|ave|avenue|blvd|dr|drive|ln|lane|hwy|way|pkwy|ct|court|pl|place|fwy|trl)\b\.?", re.I)
 
 
@@ -191,6 +214,36 @@ def _multi_in_application(app: dict) -> bool:
     return len(places) >= 2
 
 
+def _place_words(docs: list[dict]) -> tuple[str, str] | None:
+    """P-077 part A: (quoted words, file name) for the first second-place signal in any document, or None. A1, then A2, then A3."""
+    for d in docs:
+        text = d.get("text") or ""
+        for m in COUNT_PHRASE.finditer(text):
+            if m.group(0)[0].isdigit() and PART_LABEL.search(text[max(0, m.start() - 12) : m.start()]):
+                continue  # "Suite 2 shop", "Bldg 2 store": a part of one place
+            return m.group(0), d["name"]
+    for d in docs:
+        for line in (d.get("text") or "").splitlines():
+            names = {n.lower() for n in PLACE_VALUE.findall(line) if n.split()[0].lower().rstrip(".") not in NOT_PLACE_NAME}
+            if len(names) >= 2:
+                return line.strip()[:120], d["name"]
+    places: list[str] = []
+    for d in docs:
+        prev = ""
+        for line in (d.get("text") or "").splitlines():
+            label_above = len(prev.strip()) <= 60 and (ROLE_LINE.search(prev) or NOT_A_LOCATION.search(prev))  # a short "Mailing address:" or "ABC Insurance Agency" line above
+            prev = line if line.strip() else prev
+            if ROLE_LINE.search(line) or NOT_A_LOCATION.search(line) or label_above:
+                continue
+            for m in (m for cell in line.split("\t") for m in STREET_WORDS.finditer(cell)):  # one schedule cell at a time: "1<tab>12 Main St" is not an address
+                address = UNIT.sub("", m.group(0).strip())
+                if not any(llm_extract.same_address(address, o) for o in places):
+                    places.append(address)
+                    if len(places) >= 2:
+                        return m.group(0).strip(), d["name"]
+    return None
+
+
 def _language(text: str, names: list[str] | tuple = ()) -> str:
     """english, spanish or unsure. Names and addresses do not count: the value of a name or address line is left out, and the
     insured's name is left out wherever it recurs. Field labels count in their own language."""
@@ -206,11 +259,16 @@ def _language(text: str, names: list[str] | tuple = ()) -> str:
 
 def detect(docs: list[dict]) -> dict:
     """{"version", "in_scope", "reasons": [{"code", "text"}]}: every matched reason. Never raises: an error is manual intake."""
+    evidence: dict[str, str] = {}
     try:
         codes = _codes(docs)
+        words = _place_words(docs)  # P-077 part A: stricter only, it can only add a reason
+        if words and "multiple_locations" not in codes:  # the quote is shown only when these words alone sent the file
+            evidence["multiple_locations"] = f' — "{words[0]}" ({words[1]})'
+            codes.append("multiple_locations")
     except Exception:  # fail closed: whatever went wrong, a person reads this file
         codes = ["detector_error"]
-    return {"version": VERSION, "in_scope": not codes, "reasons": [{"code": c, "text": REASONS[c]} for c in codes]}
+    return {"version": VERSION, "in_scope": not codes, "reasons": [{"code": c, "text": REASONS[c] + evidence.get(c, "")} for c in codes]}
 
 
 def _codes(docs: list[dict]) -> list[str]:
@@ -433,4 +491,32 @@ if __name__ == "__main__":
         sheet = f"Loc,{head},Premises address\n1,PO Box 9 Waco TX 76701,100 Main St Waco TX 76701\n2,PO Box 9 Waco TX 76701,200 Elm St Waco TX 76702\n"
         got = [r["code"] for r in detect([{"name": "schedule.csv", "text": sheet}])["reasons"]]
         assert "multiple_locations" in got, (head, got)
+    # P-077 part A (D-145, D-146): a second place in words, in any document; the card quotes the words and the file
+    def words(text, name="email.md"):
+        got = detect([doc("application.md", APP), doc(name, EMAIL + "\n" + text)])
+        return [r["text"] for r in got["reasons"]]
+
+    for phrase in ("We run two stores.", "Cover both locations.", "Our second shop opens in May.", "The other branch is in Waco.", "our 2 sites",
+                   "another store in Rockport", "each of our locations", "both of our stores", "three retail outlets",
+                   "Square footage: 3,000 (Corpus), 1,800 (Rockport)", "Please also cover 9 Oak Ave, Waco, TX 76701.",
+                   "We sold our second store in 2019.", "We closed on our second store last year.", "We closed the other shop.",  # D-146: fail closed
+                   "No other locations."):  # a negation is not read; a person reads it (fail closed)
+        got = words(phrase)
+        assert got and got[0].startswith("Manual intake: multiple locations — \"") and got[0].endswith("(email.md)"), (phrase, got)
+    assert 'multiple locations — "two stores" (application.md)' in detect([doc("application.md", APP + "We run two stores in Corpus.\n")])["reasons"][0]["text"]
+    assert words("We run two stores.", "loss-runs.md") and words("We run two stores.", "reply.md"), "every document is read"
+    for phrase in ("The shop has two floors.", "The office is on the 2nd floor.", "Second floor storage.", "The store has two entrances.",
+                   "two buildings at one address", "Suite 200", "Unit 2 storefront", "Ste 2 shop", "We have two fryers.", "A second shift runs at night.",
+                   "Both owners work in the store.", "two employees", "Mailing address: 9 Oak Ave, Waco, TX", "Billing address: 9 Oak Ave, Waco, TX",
+                   "Prior address: 9 Oak Ave, Waco, TX", "Owner's home: 9 Oak Ave, Waco, TX", "ABC Insurance Agency, 55 Elm St, Austin TX",
+                   "Producer: Jane Roe, 55 Elm St, Austin", "Landlord: Oak Holdings, 9 Oak Ave, Waco", "Square footage: 3,000 (Building), 500 (Contents)",
+                   "Sales: 500,000 (2025), 450,000 (2024)", "The premises at 100 Main St, Austin, TX 78701 is our only store.", "Building 2 is the one we want covered.",
+                   # code review 2026-11-02: one-place wordings that must not fire
+                   "We are a second hand store.", "The roofer works 2-3 job sites a day.", "several job sites", "Ste. 2 shop", "Bldg 2 store", "Space 3 storefront",
+                   "Suite  2 shop", "Limits: 1,000,000 (Each Occurrence), 2,000,000 (General Aggregate)", "Sales: 500,000 (Retail), 200,000 (Online)",
+                   "Payroll: 80,000 (Owner), 40,000 (Staff)", "ABC Insurance Agency\n55 Elm St, Austin TX", "Mailing address:\n9 Oak Ave, Waco, TX",
+                   "We run 2 delivery drivers all the way to Waco.", "Dr. Smith signed it."):
+        assert not words(phrase), (phrase, words(phrase))
+    numbered_too = detect([doc("application.md", APP), doc("schedule.csv", "loc\tname\nLocation 2\tYard"), doc("email.md", EMAIL + "\nanother store")])
+    assert [r["text"] for r in numbered_too["reasons"]] == ["Manual intake: multiple locations"], "no quote when other rules sent the file"
     print("scope ok", VERSION)

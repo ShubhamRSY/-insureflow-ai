@@ -44,6 +44,8 @@ BANNER = ""  # set by serve(); the sandbox screenshots label the page with it
 MESSAGES: dict[str, tuple[bool, str]] = {}  # submission -> (ok, plain-words result of the last action); shown once
 # D-065 item 5: one line per user-visible feature: date, task or proposal, decision number, what an underwriter sees.
 WHATS_NEW = (
+    ("2026-11-02", "P-077", "D-145", "A file goes to manual intake as a whole when it names a second place in words (\"two stores\", \"our other shop\", a sold or closed second store, a second street address in any document) or when the model's own count of premises is above one, missing, or not found in the documents. The card quotes the words or the count that sent it."),
+    ("2026-11-02", "B-508", "D-148", "On a file blocked because no antivirus scanner is set up, the send refusal and the Scope check line now name the missing scanner first, before any scope reason."),
     ("2026-11-02", "B-485", "D-143", "In assist-only pilot mode with no antivirus scanner set up, no file is opened: each one shows \"Blocked: pilot mode needs the antivirus scanner\" and the file goes to manual intake. A manual-intake card now lists every file that was not opened or not read, with its reason."),
     ("2026-10-27", "T-122", "D-138", "Security checks on every file: a locked or virus-flagged file is not opened and says why; a file with macros or scripts, or text that tries to steer the model, shows a \"Not opened\" or \"Read but flagged\" note naming the file and goes to a person; zips and emails are unpacked, unsafe ones refused."),
     ("2026-10-27", "P-076", "D-135", "Operations is always checked by the underwriter before send."),
@@ -1023,7 +1025,7 @@ def manual_intake_html(report: dict) -> str:
     if report.get("status") != prepare.MANUAL_INTAKE:
         return ""
     reasons = prepare.scope.reasons_text(report.get("scope")) or ["Manual intake: outside the pilot scope"]
-    blocked = sorted({str(u.get("reason")) for u in report.get("unread") or [] if str(u.get("reason") or "").startswith("Blocked:")})
+    blocked = ["Blocked: " + r for r in prepare.blocked_reasons(report.get("unread"))]
     reasons = blocked + reasons  # B-485: a file that was never opened says so first; the scope reasons that follow come from that
     return (
         '<div class="msg bad" role="alert"><b>Manual intake</b> — a person reads this whole file. Why:<ul>'
@@ -1868,8 +1870,8 @@ if __name__ == "__main__":
         mi = card(prepare.MANUAL_INTAKE)
         mi["report"].update(scope=prepare.scope.detect([{"name": "application.jpg", "text": "", "needs_human": True}, {"name": "schedule.csv", "text": "loc,address\n1,1 A St\n2,2 B St"}]),
                             fields=[{"field_id": "operations", "value": None}], sprinklers=None)
-        want_reasons = ["Manual intake: scanned application", "Manual intake: multiple locations"]
-        assert all(t in [r["text"] for r in mi["report"]["scope"]["reasons"]] for t in want_reasons)
+        want_reasons = ["Manual intake: scanned application", "Manual intake: multiple locations"]  # P-077 A quotes words only when they alone sent the file
+        assert all(t in [r["text"] for r in mi["report"]["scope"]["reasons"]] for t in want_reasons), mi["report"]["scope"]["reasons"]
         m = match(mi["report"])
         assert m["route"] == "manual_intake" and "provisional" not in m and m["suggested"] == "" and "hold" not in m["route"], m
         mi.update(route=m["route"], note=m["note"], suggested=m["suggested"], score=points.score_run(mi["report"]))
@@ -1883,13 +1885,13 @@ if __name__ == "__main__":
             shutil.rmtree(tmp_pending)
         for label in ("Not read", "Not read by extraction", "Needs human read"):  # T-104a UI H1: never "none" under the manual-intake banner
             assert f"<p>{label}: {MI_NOT_READ}</p>" in mi_page and f"<p>{label}: none</p>" not in mi_page, label
-        assert "Manual intake</b>" in mi_page and all(f"<li>{t}</li>" in mi_page for t in want_reasons), mi_page[:900]
+        assert "Manual intake</b>" in mi_page and all(f"<li>{html.escape(t)}</li>" in mi_page for t in want_reasons), mi_page[:900]
         assert "<option>edit</option>" not in mi_page and "<th>Cited text</th>" not in mi_page and "Nothing filled in: a person reads the file." in mi_page
         assert "<option>approve</option>" not in mi_page and "Carrier match:" not in mi_page and "Provisional route" not in mi_page and "Suggested market" not in mi_page
         assert "Missing-info draft" not in mi_page and "approve-draft" not in mi_page and "<h3>Missing</h3>" not in mi_page
         assert html.escape(f"No send: this file's status is {prepare.status_refusal(mi['report'])}; it cannot be sent.") in mi_page and "scanned application; multiple locations" in mi_page, mi_page[-1500:]
         assert "Cooking: not read (manual intake)" in mi_page and "no cooking equipment stated" not in mi_page and "Hood and suppression: not stated" not in mi_page
-        assert "MANUAL INTAKE" in mi_page and prepare.status_refusal(mi["report"]) in mi_page
+        assert "MANUAL INTAKE" in mi_page and html.escape(prepare.status_refusal(mi["report"])) in mi_page
         # P-041 (D-088): review pending says what is pending, keeps approve with the tick, and routes as complete did.
         rp = card(prepare.REVIEW_PENDING, fields=[{"field_id": "operations", "value": "accounting office"},
                                                   {"field_id": "sales_or_payroll", "value": "2100000", "needs_review": True, "reason": "check against the email"}])
@@ -2192,9 +2194,9 @@ if __name__ == "__main__":
                 # P-063 (B-432): a SUB-233-shaped file saved complete is refused at send time and its card says why, whatever the status
                 stored("SUB-933", "complete", good, app=APP_OK.replace("100 Main St, Austin, TX 78701", "Loc 1: 3412 S Georgia St, Amarillo, TX 79109; Loc #2: 6901 Bell St, Amarillo, TX 79106"))
                 msg933 = act("/send", {"submission": "SUB-933", "user_line": "send to carrier SUB-933"})[2]
-                assert msg933.startswith("Send refused: out of pilot scope at send time (multiple locations, " + prepare.scope.VERSION), msg933
+                assert msg933.startswith("Send refused: " + "out of pilot scope at send time (multiple locations, " + prepare.scope.VERSION), msg933
                 card933 = render(load_queue("SUB-933"), None)
-                assert html.escape("No send: out of pilot scope at send time (multiple locations, " + prepare.scope.VERSION) in card933 and 'action="/send"' not in card933, card933[-2000:]
+                assert html.escape("No send: " + "out of pilot scope at send time (multiple locations, " + prepare.scope.VERSION) in card933 and 'action="/send"' not in card933, card933[-2000:]
                 (PENDING / "SUB-933.md").parent.mkdir(parents=True, exist_ok=True)
                 (PENDING / "SUB-933.md").write_text("Nothing has been declined")
                 card933 = render(load_queue("SUB-933"), None)

@@ -1873,3 +1873,20 @@ D-004 (user, 2026-10-09): Sanger & Altgelt agency pipeline. Eight steps. No auto
   - [x] `PILOT_MODE=assist-only` and `CLAMAV_HOST` unset → `read_folder` opens no file (zip and email are not unpacked either); each file is `unread` with "Blocked: pilot mode needs the antivirus scanner …"; the file goes to manual intake. Dev (pilot off) unchanged.
   - [x] Workbench (D-065): the manual-intake card names the missing scanner first and lists every not-read file with its reason; "What's new" line (2026-11-02, B-485, D-143); screenshot `deliverables/software-engineer/screenshots/B-485-pilot-no-scanner-card.png` (temp copy).
   - [x] Self-check in `sources.py`; `tests/pipeline/test_pilot.py::test_b485_pilot_without_scanner_opens_nothing`; tests/pipeline 94 passed.
+
+### T-126 — B-508: card text names the missing scanner (D-148)
+- Owner: @software-engineer · Status: DONE 2026-11-02 (fast lane; @model-risk APPROVE) · Reviewer: @model-risk (with T-127)
+- Acceptance criteria:
+  - [x] The send refusal (`prepare.status_refusal`) and the send-time scope line (`prepare.scope_problem`) lead with the "Blocked:" scanner reason; one helper `prepare.blocked_reasons`, also used by the manual-intake card.
+  - [x] Test `test_b485_pilot_without_scanner_opens_nothing` extended (fails on the old code); What's new line; screenshot `deliverables/software-engineer/screenshots/B-508-scanner-named-in-send-and-scope.png` (temp copy).
+
+### T-127 — P-077 parts A and B: a second location by rules or by the model's count; any doubt → manual intake (D-145, D-146)
+- Owner: @software-engineer · Status: DONE (@model-risk REJECT H1 → fixed → APPROVE on look-again, 2026-11-02; M1–M3, L1–L2 to backlog B-511–B-514) · Reviewer: @model-risk (High only, one look-again)
+- Acceptance criteria (the user's conditions a–e):
+  - [x] (a) Either signal sends the whole file to manual intake: Part A in `scope.py` (scope-v5: count phrase, place-labelled values, a second street address in any document) before any call; Part B in `prepare._location_problem` after the call.
+  - [x] (b) Fail closed: count missing, null, not an integer, 0, a blank quote, a quote with no street address or not in the cited file → manual intake "number of locations not clear". A failed call stays extraction_failed (D-021).
+  - [x] (c) "two floors", "two entrances", "2nd floor", "Suite 200", "Unit 2", "Ste. 2 shop", "second shift", "two fryers", role-labelled addresses stay in scope (scope.py self-check). D-146: sold/closed second store → manual intake.
+  - [x] (d) PROMPT_VERSION 759b3e6bc9b2 → 392b9ce3c1af (3,257 bytes); all 143 requests change and only by the prompt (old prompt patched back = 143/143 old hashes); fixture re-recorded.
+  - [x] (e) Stricter only: over 273 dev submissions no file moves from manual intake to in scope.
+  - [x] Card quotes the words that fired; What's new line; screenshot `deliverables/software-engineer/screenshots/P-077-second-place-manual-intake.png` (temp copy).
+  - [x] tests/pipeline 94 passed; scope, prepare, sources, regression_dev, workbench self-checks pass; pyright 77 → 77; code review findings fixed.

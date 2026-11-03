@@ -9,7 +9,7 @@
 |---|---|
 | Branch and commit | _to be recorded_ (the merged commit of `pilot-conditions`, plus `sso-b190` if merged) |
 | Code SHA | _to be recorded_ (`git rev-parse HEAD`) |
-| Prompt version | `759b3e6bc9b2` (2,787 bytes) — unchanged by this branch |
+| Prompt version | `392b9ce3c1af` (3,257 bytes) — P-077 part B (D-145, 2026-11-02); was `759b3e6bc9b2`. Scope detector scope-v5. |
 | Model | `qwen/qwen3.8-27b` through `LLM_MODEL` (Groq free tier) |
 | Scorer | frozen v11 sha256 `7ddcfb50521b7af17f00c0e148891ca40008d019ce257b9b5d121c7fa6d3fcbb` |
 | Lint | sha256 `01147a7532bdd7f1ec00861200d1d5e6bbf87f12612389416ff58b78844ea653` |
