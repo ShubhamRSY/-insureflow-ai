@@ -44,6 +44,7 @@ BANNER = ""  # set by serve(); the sandbox screenshots label the page with it
 MESSAGES: dict[str, tuple[bool, str]] = {}  # submission -> (ok, plain-words result of the last action); shown once
 # D-065 item 5: one line per user-visible feature: date, task or proposal, decision number, what an underwriter sees.
 WHATS_NEW = (
+    ("2026-11-03", "P-079/P-080/P-081 (T-129)", "D-155–D-157", "A single-location file whose address is a highway or route (\"1906 Hwy 290 W\") or whose model count quotes a sentence now stays in scope when the premises line shows one address. A second address on a line that also names a carrier, or under a filled-in \"Mailing address:\" line, still sends the file to manual intake. When an underwriter resolves every conflict on a file that was incomplete only because of them, the card reads \"complete — review pending\" with the reason, the Missing line shows the resolved values, and the producer draft is withdrawn; approve, acknowledgments, senior confirm and send checks still apply."),
     ("2026-11-02", "P-077", "D-145", "A file goes to manual intake as a whole when it names a second place in words (\"two stores\", \"our other shop\", a sold or closed second store, a second street address in any document) or when the model's own count of premises is above one, missing, or not found in the documents. The card quotes the words or the count that sent it."),
     ("2026-11-02", "B-508", "D-148", "On a file blocked because no antivirus scanner is set up, the send refusal and the Scope check line now name the missing scanner first, before any scope reason."),
     ("2026-11-02", "B-485", "D-143", "In assist-only pilot mode with no antivirus scanner set up, no file is opened: each one shows \"Blocked: pilot mode needs the antivirus scanner\" and the file goes to manual intake. A manual-intake card now lists every file that was not opened or not read, with its reason."),
@@ -784,6 +785,9 @@ def act(path: str, payload: dict) -> tuple[str, bool, str]:
         if path == "/send":  # item 1: the same gate as every send; the actor is the user, the line is typed on the card
             dest = package.send_to_carrier(sub, payload.get("underwriter_id") or "user", TO_CARRIER, user_line=payload.get("user_line", ""), resend_reason=payload.get("resend_reason", ""))
             return done(f"Sent: package {dest.name} written to to-carrier. Not bound.")
+        resolved, _ = saved_report(sub)
+        if resolved is not None and package.with_resolutions(resolved, sub).get("status_reason") == package.RESOLVED_REASON:  # P-081 (D-157)
+            raise ValueError("the draft is withdrawn: every conflict on this file was resolved by an underwriter on this run")
         dest = prepare.approve(PENDING / f"{sub}.md", payload.get("underwriter_id") or "user", TO_PRODUCER, payload.get("reason", ""))  # item 13: D-050, user override
         return done(f"Approved: request {dest.name} written to to-producer. It lists only missing items and declines nothing.")
     except (ValueError, OSError) as exc:
@@ -1322,7 +1326,9 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
             f"<h2>{html.escape(item['id'])}</h2>",
             _msg_for(messages, user, item["id"]),
             (f'<p class="msg bad" role="alert">{package.STALE}. Approve and tick each needs-review value again.</p>' + stale_changes(item["id"], report) if package._decision_problem(item["id"], report.get("saved_hash") or "") == package.STALE else ""),
-            f"<p>Saved run: status {html.escape(str(report.get('status')))} · hash check: ok · manifest check: "
+            f"<p>Saved run: status {html.escape(str(report.get('status')))}"
+            + (f" ({html.escape(package.RESOLVED_REASON)})" if report.get("status_reason") == package.RESOLVED_REASON else "")
+            + " · hash check: ok · manifest check: "
             + (f'<span class="bad">FAILED — {html.escape(manifest)}. A send will be refused.</span>' if manifest else "ok")
             + "</p>",
             (f'<p class="msg bad" role="alert"><b>{len(unread_files)} file{"s" if len(unread_files) != 1 else ""} not read</b> ({html.escape(", ".join(unread_files))}). '
@@ -1407,7 +1413,9 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
         )
         sid = html.escape(item["id"])
         draft = PENDING / f"{item['id']}.md"
-        if draft.is_file() and not manual:  # P-055: a manual-intake file has no automated missing-info draft
+        if draft.is_file() and not manual and report.get("status_reason") == package.RESOLVED_REASON:  # P-081 (D-157): the draft named the resolved conflicts
+            lines.append("<h3>Missing-info draft for the producer</h3><p>Withdrawn: every conflict on this file was resolved by an underwriter on this run, so nothing is asked of the producer.</p>")
+        elif draft.is_file() and not manual:  # P-055: a manual-intake file has no automated missing-info draft
             lines.append(
                 f"<h3>Missing-info draft for the producer (not sent)</h3><pre>{html.escape(draft.read_text())}</pre>"
                 + (f'<p class="bad">No send to producer: {html.escape(item["scope_now"])}.</p>' if item.get("scope_now") else  # P-063

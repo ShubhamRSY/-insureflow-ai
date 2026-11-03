@@ -1862,6 +1862,10 @@ D-004 (user, 2026-10-09): Sanger & Altgelt agency pipeline. Eight steps. No auto
 - Noted 2026-11-03, before the gold freeze and before any run (orchestrator, per this plan and D-128): lint v11 fails only on the SUB-520 and SUB-522 cooking-conflict marks (no figure; `deliverables/senior-test-engineer/T-121-lint.txt`). They are reported separately and excluded from the conflict rate, as D-128 did for SUB-348/349 and T-120 for SUB-461/463. Planted-conflict recall is measured on the 6 figure conflicts (514, 515, 517, 518, 519, 521). For @user to confirm.
 - B-465 check 2026-11-03: gold vs documents on all 20 in-scope cards (insured, premises, effective date, sales, TIV, construction, year built, valued-as-of, claim count and paid): 0 mismatches; each of the 8 conflict lines names a field that differs in the builder source. Faithful-answer probe (application operations, Line of business and cooking lines into v11 `ops_items_hit`): 20/20 hit.
 
+### T-129 — P-079, P-080, P-081: Part B accepts one found premises address; A3 per sentence; resolved files read review pending (D-155–D-157)
+- Owner: @ai-engineer-assistant / @software-engineer (built in the main session, D-139) · Status: IN_REVIEW (@model-risk, one look-again max) · As built: deliverables/ai-engineer/P-079-P-081-as-built.md
+- Acceptance criteria: the user's conditions in D-155 (a)–(f), D-156 (stricter only), D-157; dev re-check incl. the T-121 shapes; quick set before/after; self-checks, tests/pipeline, pyright, code review; D-065 card text and screenshots.
+
 ### T-122 — P-078: security checks for the demo pipeline (D-138)
 - Owner: @software-engineer · Status: IN_REVIEW (A-D built; ClamAV tested 2026-10-30; quick-15 see 2026-10-30 note) · Reviewers: @senior-underwriter (UI, High only), @senior-test-engineer (build check)
 - Acceptance criteria:

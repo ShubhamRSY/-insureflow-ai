@@ -1,0 +1,12 @@
+DEV-01-hwy | manual_intake | ['Manual intake: number of locations not clear (model count 1: "Premises address: 2604 Hwy 71 W Ste 5, Bastrop T'] | 
+DEV-02-suite-sentence | manual_intake | ['Manual intake: number of locations not clear (model count 1: "We lease one office suite on Lakeview Ave" shows'] | 
+DEV-03-two-floors | manual_intake | ['Manual intake: number of locations not clear (model count 1: "One address, one building." shows no premises ad'] | 
+DEV-04-two-entrances | manual_intake | ['Manual intake: number of locations not clear (model count 1: "Same single building" shows no premises address)'] | 
+DEV-05-2nd-floor | incomplete | [] | 
+DEV-06-475-two-stores | manual_intake | ['Manual intake: multiple locations — "two stores" (application.md)'] | 
+DEV-07-533-warehouse | manual_intake | ['Manual intake: multiple locations (model count 2: "We also keep the vans and stock at our warehouse, 418 Indus'] | 
+DEV-08-both-stores | manual_intake | ['Manual intake: multiple locations — "both stores" (email.md)'] | 
+DEV-09-other-branch | manual_intake | ['Manual intake: multiple locations — "other branch" (email.md)'] | 
+DEV-10-second-shop | manual_intake | ['Manual intake: multiple locations — "second shop" (email.md)'] | 
+DEV-11-closed-second | manual_intake | ['Manual intake: multiple locations — "second store" (email.md)'] | 
+DEV-12-hwy-second | manual_intake | ['Manual intake: multiple locations (model count 2: "We also keep equipment at 300 FM 2222, Lamesa.")'] | 

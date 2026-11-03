@@ -9,7 +9,7 @@ import re
 
 import llm_extract
 
-VERSION = "scope-v5"  # model-inventory.md; bump with every rule change. v5: P-077 part A (D-145, D-146)
+VERSION = "scope-v6"  # model-inventory.md; bump with every rule change. v5: P-077 part A (D-145, D-146). v6: P-080 (D-156) A3 per sentence, bare label only, highway addresses
 IMAGE = {".png", ".jpg", ".jpeg", ".tif", ".tiff"}
 REASONS = {
     "scanned_application": "Manual intake: scanned application",
@@ -82,6 +82,10 @@ ROLE_LINE = re.compile(r"(?i)\b(?:mail(?:ing)?|billing|prior|former|previous|hom
                        r"|carrier|insurer|insurance\s+(?:company|co)|underwriter|supplier|vendor|landlord)\b")
 STREET_WORDS = re.compile(r"\b\d{1,6}\s+(?:[NSEW]\.?\s+)?(?:[A-Z0-9][A-Za-z0-9.'-]*\s+){1,4}"
                           r"(?:St|Street|Rd|Road|Ave|Avenue|Blvd|Dr|Drive|Ln|Lane|Hwy|Highway|Way|Pkwy|Parkway|Ct|Court|Pl|Place|Fwy|Trl|Loop|Cir)\b\.?")
+# P-079/P-080 (D-155, D-156): a highway or route address, "1906 Hwy 290 W", "100 US-59", "4400 FM 1960", "12 State Route 9", "800 I-35".
+HIGHWAY = re.compile(r"\b\d{1,6} +(?:[NSEW]\.? +)?(?:(?:Hwy|Highway|U\.?S\.?|SH|State +(?:Hwy|Highway|Route)|FM|RM|RR|CR|County +Road|Route|Rte|Interstate)[ -]?\d{1,4}|I-\d{1,4})\b")
+# P-080: sentence breaks inside one line ("…2215 Leonard Rd, Bryan. Carrier A loss run attached.")
+SENTENCE = re.compile(r"(?<=[.!?;])\s+(?=[A-Z])")
 STREET = re.compile(r"\b\d{1,6}\s+[A-Za-z0-9 .]+?\s(?:st|street|rd|road|ave|avenue|blvd|dr|drive|ln|lane|hwy|way|pkwy|ct|court|pl|place|fwy|trl)\b\.?", re.I)
 
 
@@ -231,17 +235,27 @@ def _place_words(docs: list[dict]) -> tuple[str, str] | None:
     for d in docs:
         prev = ""
         for line in (d.get("text") or "").splitlines():
-            label_above = len(prev.strip()) <= 60 and (ROLE_LINE.search(prev) or NOT_A_LOCATION.search(prev))  # a short "Mailing address:" or "ABC Insurance Agency" line above
+            # P-080 (D-156): only a bare label line above ("Mailing address:", "ABC Insurance Agency") marks this line; "Mailing address: same as premises" does not
+            label_above = _bare_label(prev) and bool(ROLE_LINE.search(prev) or NOT_A_LOCATION.search(prev))
             prev = line if line.strip() else prev
-            if ROLE_LINE.search(line) or NOT_A_LOCATION.search(line) or label_above:
+            if label_above:
                 continue
-            for m in (m for cell in line.split("\t") for m in STREET_WORDS.finditer(cell)):  # one schedule cell at a time: "1<tab>12 Main St" is not an address
-                address = UNIT.sub("", m.group(0).strip())
-                if not any(llm_extract.same_address(address, o) for o in places):
-                    places.append(address)
-                    if len(places) >= 2:
-                        return m.group(0).strip(), d["name"]
+            for part in SENTENCE.split(line):  # P-080: a role word skips only its own sentence, not a whole email line
+                if ROLE_LINE.search(part) or NOT_A_LOCATION.search(part):
+                    continue
+                for m in (m for cell in part.split("\t") for pat in (STREET_WORDS, HIGHWAY) for m in pat.finditer(cell)):  # one schedule cell at a time
+                    address = UNIT.sub("", m.group(0).strip())
+                    if not any(llm_extract.same_address(address, o) for o in places):
+                        places.append(address)
+                        if len(places) >= 2:
+                            return m.group(0).strip(), d["name"]
     return None
+
+
+def _bare_label(line: str) -> bool:
+    """P-080: a short line that is only a label ("Mailing address:") or a name with no label ("ABC Insurance Agency"), not "label: value"."""
+    text = line.strip()
+    return bool(text) and len(text) <= 60 and (text.endswith(":") or ":" not in text)
 
 
 def _language(text: str, names: list[str] | tuple = ()) -> str:
@@ -519,4 +533,18 @@ if __name__ == "__main__":
         assert not words(phrase), (phrase, words(phrase))
     numbered_too = detect([doc("application.md", APP), doc("schedule.csv", "loc\tname\nLocation 2\tYard"), doc("email.md", EMAIL + "\nanother store")])
     assert [r["text"] for r in numbered_too["reasons"]] == ["Manual intake: multiple locations"], "no quote when other rules sent the file"
+    # P-080 (D-156, memo T-121 H2): a role word skips only its own sentence; only a bare label line above marks the next line; highway addresses count
+    for phrase in ("We also keep stock at our warehouse, 2215 Leonard Rd, Bryan, which is not on the app. Carrier A loss run attached.",  # SUB-533 shape
+                   "Carrier A has us. Please also cover 9 Oak Ave, Waco, TX 76701.", "We also store pipe at 400 FM 1960, Humble TX.",
+                   "Our yard is at 1906 Hwy 290 W, Brenham.", "The other stock is at 800 I-35, Temple."):
+        assert words(phrase), phrase
+    m533 = detect([doc("application.md", APP.replace("Premises address:", "Mailing address: same as premises\nPremises address:")),
+                   doc("email.md", EMAIL + "\nWe also keep the vans at 2215 Leonard Rd, Bryan. Carrier A loss run attached.")])
+    assert [r["code"] for r in m533["reasons"]] == ["multiple_locations"], m533
+    for phrase in ("Carrier A has us at 100 Main St, Austin, TX 78701.", "Our agent, Smith Agency, is at 55 Elm St, Austin TX.",
+                   "Mailing address: PO Box 9, Waco TX 76701", "Carrier B, 55 Elm St, Austin TX, wrote it last year.", "Mailing address:\n9 Oak Ave, Waco, TX",
+                   "Dr. Smith signed it. Carrier A run attached.", "We are on the 2nd floor. Carrier A loss run attached."):
+        assert not words(phrase), (phrase, words(phrase))
+    hwy = APP.replace("100 Main St, Austin, TX 78701", "1906 Hwy 290 W, Brenham, TX 77833")
+    assert detect([doc("application.md", hwy), doc("email.md", EMAIL + "\nWe are at 1906 Hwy 290 W, Brenham. One building.")])["in_scope"], "the same highway address twice is one place"
     print("scope ok", VERSION)
