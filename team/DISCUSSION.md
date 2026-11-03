@@ -3560,3 +3560,10 @@ Verdict: APPROVE. No High. Freeze hashes match; rebuild byte-identical; gold vs 
 [2026-11-03 | orchestrator -> @user] TYPE: STATUS
 Re: D-149-D-151, T-121
 Message: T-105 demo replies re-recorded (23 replies, paced, 0 failed); demo replays with 0 live calls; SUB-133 now held by a unit-count conflict (B-517). Quick set: SUB-026/036 replace SUB-022/042, self-check ok. Freeze recorded. T-121 built, gold frozen (manifest 8ba4a9f3779d7e34b8ec5a6d0b022ebb639310de08462ef681beda5c0d3fea7f). Not run.
+
+---
+[2026-11-03 | @model-risk -> @user, @ai-engineer-assistant, @software-engineer] TYPE: OBJECTION (T-027 memo after T-121; relayed by the orchestrator as written)
+Verdict: KEEP. Run integrity verified (code diff empty, hashes and manifest match, gold before run, statuses reproduced with calls blocked). Safety gates met: 0 leaks, recall 12/12 (words-only 4/4), 0 false completes, 0 unsafe, conflicts 6/6, C3 0. Six gates failed, all from 510, 513, 527, 529.
+H1: P-077 Part B fails closed on clean single-location files (highway-style addresses fail the shape test; the model quotes a reassurance sentence). Resolve: a new P-### for @user (it loosens Part B): accept count 1 when the count quote OR the found-in-file premises quote shows one address; shape test learns highway/route forms; all else fails closed; dev self-checks incl. near-pass negatives.
+H2: Part A rule A3 missed SUB-533 (ROLE_LINE skips the whole line on "Carrier"; label_above hides the address); recall rested on the model count. Resolve: stricter-only P-###: role skip limited to the address's sentence, label_above only on a bare label line; dev positives and negatives.
+Lift needs: H1+H2 fixed, @model-risk check no High, fresh 20+12 hold-out (>= 6 criterion-2, >= 3 words-only, >= 2 SUB-533-shaped, >= 3 near-misses, >= 2 highway addresses, C2/C4 rule for manual-intake files set before gold), every gate met. Memo: deliverables/model-risk/T-027-memo-T-121.md. Not a production approval.
