@@ -1866,6 +1866,27 @@ D-004 (user, 2026-10-09): Sanger & Altgelt agency pipeline. Eight steps. No auto
 - Owner: @ai-engineer-assistant / @software-engineer (built in the main session, D-139) · Status: IN_REVIEW (@model-risk, one look-again max) · As built: deliverables/ai-engineer/P-079-P-081-as-built.md
 - Acceptance criteria: the user's conditions in D-155 (a)–(f), D-156 (stricter only), D-157; dev re-check incl. the T-121 shapes; quick set before/after; self-checks, tests/pipeline, pyright, code review; D-065 card text and screenshots.
 
+### T-128 — Hold-out SUB-550–581 (20 in-scope + 12 out-of-scope) after P-079/P-080/P-081; plan only, not built
+- Owner: @producer (files, mix), @senior-underwriter (gold), @senior-test-engineer (plan JSON, lint), @model-risk (build check, one look-again) · Status: PLANNED 2026-11-03 (plan only; build only on the user's word) · Planned by: orchestrator, from the user's list (D-158 and the T-121 memo lift conditions).
+- Numbers: SUB-550 to SUB-581 (free).
+- Code under test: pilot-integration after T-129 (P-079, P-080, P-081) is merged; code commit, PROMPT_VERSION, scope version, llm_extract/scope/prepare/package sha256, scorer v11, lint and C2 counter v2 frozen in team/NEXT-SESSION.md before any file is built.
+- Scope rule for the gold (P-077, D-146, D-149, P-080): a different premises street, highway or route address in any document, or a second store/branch/shop in words (incl. sold or closed), is OUT of scope (criterion 2). Near-misses stay IN.
+- **M1 rule (D-158), set before any gold:** an in-scope file sent to manual intake is a scope miss (false manual intake), not a C2 operations silent error; C2 counts only files that reached another status; C4 unchanged (`deliverables/senior-test-engineer/count_ops_gate_v2-notes.md`).
+- Acceptance criteria (for the build):
+  - [ ] 32 new files, nothing reused: 20 in-scope, 12 out-of-scope over P-055 criteria 1–4, at least two per criterion.
+  - [ ] Criterion 2: at least 6 out-of-scope files; at least 4 words-only (no second address anywhere); at least 2 SUB-533-shaped (the second address on a line or sentence that also names a carrier/agent, or below a filled "Mailing address: same as premises" line); the rest a different address in another document.
+  - [ ] Highway addresses: at least 2 in-scope files whose premises is a highway/route address ("Hwy", "FM", "US-", "State Route"), one address in every document; at least 1 out-of-scope file whose second address is a highway/route address.
+  - [ ] Near-misses in scope: at least 3 ("two floors", "2nd floor", "two entrances"), plus at least 1 file whose email says only "one address, one building" style words.
+  - [ ] Planted conflicts: at least 5 measurable (sales, floor area, unit/suite count, TIV), both sides plain figures in two documents, open in the gold; at least 1 worded amount and 1 approximate vs exact (fresh figures). At least 1 planted conflict whose resolution would make the file routable under P-081 is still scored as gold "incomplete" (the pipeline is scored before any underwriter action).
+  - [ ] C6: at least 12 "Cooking operations: None" files with no cooking word elsewhere, at least 3 cooking stated, at least 2 cooking conflicts (unmeasurable marks noted before the freeze, D-128/D-153).
+  - [ ] Direct Carrier A: at least 3 in-scope files (R14/R17 allow-list words only, no W1/W2, TIV <= $5M, clean typed Carrier A run).
+  - [ ] Loss runs typed in the published formats, at least 2 Carrier C and 1 Carrier B; every run passes carrier_run_check; valued before the run date; loss dates inside their term.
+  - [ ] At least two held W1, two office-lessor and two deli-style files.
+  - [ ] Mix file and plan JSON before the gold; collision check on name stems, not only full names (B-515).
+  - [ ] Gold first, by hand from the documents and written rules; B-465 check; faithful-answer probe under v11; lint PASS with v11 (unmeasurable marks noted before the freeze); gold manifest sha256 recorded.
+  - [ ] @model-risk build check, High only, one look-again.
+  - [ ] Not run until the user says so (D-020); scored once with v11 and count_ops_gate_v2 plus the M1 rule. Gates: every T-121 gate (leakage 0, recall 100% per criterion, near-misses kept, false manual intake <= 2, false completes 0, route 0 unsafe and >= 18/20, fields >= 18/20, C2 0, C3 0, C4, planted-conflict recall 100%).
+
 ### T-122 — P-078: security checks for the demo pipeline (D-138)
 - Owner: @software-engineer · Status: IN_REVIEW (A-D built; ClamAV tested 2026-10-30; quick-15 see 2026-10-30 note) · Reviewers: @senior-underwriter (UI, High only), @senior-test-engineer (build check)
 - Acceptance criteria:
