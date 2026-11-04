@@ -9,7 +9,7 @@ import re
 
 import llm_extract
 
-VERSION = "scope-v6"  # model-inventory.md; bump with every rule change. v5: P-077 part A (D-145, D-146). v6: P-080 (D-156) A3 per sentence, bare label only, highway addresses
+VERSION = "scope-v7"  # model-inventory.md; bump with every rule change. v5: P-077 part A (D-145, D-146). v6: P-080 (D-156) A3 per sentence, bare label only, highway addresses. v7: P-082 (D-161) role word hides only a labelled address, no name-line labels, "home" never hides, Spur
 IMAGE = {".png", ".jpg", ".jpeg", ".tif", ".tiff"}
 REASONS = {
     "scanned_application": "Manual intake: scanned application",
@@ -84,6 +84,9 @@ STREET_WORDS = re.compile(r"\b\d{1,6}\s+(?:[NSEW]\.?\s+)?(?:[A-Z0-9][A-Za-z0-9.'
                           r"(?:St|Street|Rd|Road|Ave|Avenue|Blvd|Dr|Drive|Ln|Lane|Hwy|Highway|Way|Pkwy|Parkway|Ct|Court|Pl|Place|Fwy|Trl|Loop|Cir)\b\.?")
 # P-079/P-080 (D-155, D-156): a highway or route address, "1906 Hwy 290 W", "100 US-59", "4400 FM 1960", "12 State Route 9", "800 I-35".
 HIGHWAY = re.compile(r"\b\d{1,6} +(?:[NSEW]\.? +)?(?:(?:Hwy|Highway|U\.?S\.?|SH|State +(?:Hwy|Highway|Route)|FM|RM|RR|CR|County +Road|Route|Rte|Interstate)[ -]?\d{1,4}|I-\d{1,4})\b")
+# P-082 (D-161): "Spur 191" counts as a highway in the second-address check only (prepare's one-address check keeps HIGHWAY: no loosening)
+SPUR = re.compile(r"(?i)\b\d{1,6} +(?:[NSEW]\.? +)?Spur[ -]?\d{1,4}\b")
+HOME = re.compile(r"(?i)\bhome\b")
 # P-080: sentence breaks inside one line ("…2215 Leonard Rd, Bryan. Carrier A loss run attached.")
 SENTENCE = re.compile(r"(?<=[.!?;])\s+(?=[A-Z])")
 STREET = re.compile(r"\b\d{1,6}\s+[A-Za-z0-9 .]+?\s(?:st|street|rd|road|ave|avenue|blvd|dr|drive|ln|lane|hwy|way|pkwy|ct|court|pl|place|fwy|trl)\b\.?", re.I)
@@ -235,35 +238,40 @@ def _place_words(docs: list[dict]) -> tuple[str, str] | None:
     for d in docs:
         prev = ""
         for line in (d.get("text") or "").splitlines():
-            # P-080 (D-156): only a bare label line above ("Mailing address:", "ABC Insurance Agency") marks this line; "Mailing address: same as premises" does not
-            label_above = _bare_label(prev) and bool(ROLE_LINE.search(prev) or NOT_A_LOCATION.search(prev))
+            # P-080/P-082 (D-156, D-161): a "Role address:" line above hides only an address that starts the next line
+            above = _bare_label(prev) and _role_label(prev)
             prev = line if line.strip() else prev
-            if label_above:
-                continue
-            for part in SENTENCE.split(line):  # P-080: a role word skips only its own sentence, not a whole email line
-                if ROLE_LINE.search(part) or NOT_A_LOCATION.search(part):
-                    continue
-                for m in (m for cell in part.split("\t") for pat in (STREET_WORDS, HIGHWAY) for m in pat.finditer(cell)):  # one schedule cell at a time
-                    address = UNIT.sub("", m.group(0).strip())
+            for n, part in enumerate(SENTENCE.split(line)):  # P-080: a role word skips only its own sentence, not a whole email line
+                # every match counts, as in v6 (check-T-130 H1: keeping one match per offset loosened "4400 FM 1960 Rd"); one schedule cell at a time
+                found = [(cell.start() + m.start(), m.group()) for cell in re.finditer(r"[^\t]+", part)
+                         for pat in (STREET_WORDS, HIGHWAY, SPUR) for m in pat.finditer(cell.group())]
+                # P-082 (check-T-129 M1): a role word hides only the address right after its own short label ("Producer: Jane Roe, 55 Elm St",
+                # a schedule "Mailing address<tab>" cell); in prose it hides nothing
+                label = re.match(r"\s*([^:\t]{1,30})[:\t]((?:\s*+(?:P\.?\s*O\.?\s*Box\s+\d++|[A-Z&][\w&.'-]*+),?+)*+)\s*(?=\d)", part)
+                hidden = {label.end()} if label and _role_label(label.group(1)) and len(re.sub(r"\([^)]*\)", "", label.group(1)).split()) <= 4 else set()
+                if above and n == 0:
+                    hidden.add(len(part) - len(part.lstrip()))
+                for start, text in found:  # a hidden offset hides every match there (v6 hid the whole sentence)
+                    if start in hidden:
+                        continue
+                    address = UNIT.sub("", text.strip())
                     if not any(llm_extract.same_address(address, o) for o in places):
                         places.append(address)
                         if len(places) >= 2:
-                            return m.group(0).strip(), d["name"]
+                            return text.strip(), d["name"]
     return None
 
 
 def _bare_label(line: str) -> bool:
-    """P-080: a short line that is only a label ("Mailing address:") or a name with no label ("ABC Insurance Agency"), not "label: value"."""
+    """P-080: a short line that is only a label ("Mailing address:"), not "label: value". P-082 (D-161, check-T-129-2 M4): a name-only or
+    Title Case line ("ABC Insurance Agency", "Carrier A Loss Run Attached") is never a label."""
     text = line.strip()
-    if not text or len(text) > 60:
-        return False
-    if text.endswith(":"):
-        return True
-    # check-T-129 H3: a name-only line ("ABC Insurance Agency"): no colon, no sentence punctuation, every word capitalised; a sentence never hides the next line
-    return ":" not in text and not re.search(r"[.!?;,]", text) and all(w[0].isupper() or w[0].isdigit() or w.lower() in NAME_JOINERS for w in text.split())
+    return bool(text) and len(text) <= 60 and text.endswith(":")
 
 
-NAME_JOINERS = frozenset({"of", "and", "&", "the", "de", "y"})
+def _role_label(text: str) -> bool:
+    """P-082 (D-161): label text that names a role other than the premises; a label with "home" never counts."""
+    return bool(ROLE_LINE.search(text) or NOT_A_LOCATION.search(text)) and not HOME.search(text)
 
 
 def _language(text: str, names: list[str] | tuple = ()) -> str:
@@ -530,13 +538,13 @@ if __name__ == "__main__":
     for phrase in ("The shop has two floors.", "The office is on the 2nd floor.", "Second floor storage.", "The store has two entrances.",
                    "two buildings at one address", "Suite 200", "Unit 2 storefront", "Ste 2 shop", "We have two fryers.", "A second shift runs at night.",
                    "Both owners work in the store.", "two employees", "Mailing address: 9 Oak Ave, Waco, TX", "Billing address: 9 Oak Ave, Waco, TX",
-                   "Prior address: 9 Oak Ave, Waco, TX", "Owner's home: 9 Oak Ave, Waco, TX", "ABC Insurance Agency, 55 Elm St, Austin TX",
+                   "Prior address: 9 Oak Ave, Waco, TX",
                    "Producer: Jane Roe, 55 Elm St, Austin", "Landlord: Oak Holdings, 9 Oak Ave, Waco", "Square footage: 3,000 (Building), 500 (Contents)",
                    "Sales: 500,000 (2025), 450,000 (2024)", "The premises at 100 Main St, Austin, TX 78701 is our only store.", "Building 2 is the one we want covered.",
                    # code review 2026-11-02: one-place wordings that must not fire
                    "We are a second hand store.", "The roofer works 2-3 job sites a day.", "several job sites", "Ste. 2 shop", "Bldg 2 store", "Space 3 storefront",
                    "Suite  2 shop", "Limits: 1,000,000 (Each Occurrence), 2,000,000 (General Aggregate)", "Sales: 500,000 (Retail), 200,000 (Online)",
-                   "Payroll: 80,000 (Owner), 40,000 (Staff)", "ABC Insurance Agency\n55 Elm St, Austin TX", "Mailing address:\n9 Oak Ave, Waco, TX",
+                   "Payroll: 80,000 (Owner), 40,000 (Staff)", "Mailing address:\n9 Oak Ave, Waco, TX",
                    "We run 2 delivery drivers all the way to Waco.", "Dr. Smith signed it."):
         assert not words(phrase), (phrase, words(phrase))
     numbered_too = detect([doc("application.md", APP), doc("schedule.csv", "loc\tname\nLocation 2\tYard"), doc("email.md", EMAIL + "\nanother store")])
@@ -551,13 +559,35 @@ if __name__ == "__main__":
         assert words(phrase), phrase
     for line in ("Carrier A loss run attached.", "Our agent sent the app", "Loss run attached", "Mailing address: same as premises"):
         assert not _bare_label(line), line
-    for line in ("Mailing address:", "ABC Insurance Agency", "Smith & Jones Agency", "Bank of Texas"):
+    for line in ("Mailing address:", "Agent address:"):
         assert _bare_label(line), line
+    # P-082 (D-161; check-T-129 M1, check-T-129-2 M4, L1): a name or Title Case line is never a label; a role word in prose or "home" hides nothing;
+    # a label hides only its first address; Spur is a highway
+    for line in ("ABC Insurance Agency", "Smith & Jones Agency", "Bank of Texas", "Carrier A Loss Run Attached"):
+        assert not _bare_label(line), line
+    for phrase in ("Owner's home: 9 Oak Ave, Waco, TX", "ABC Insurance Agency, 55 Elm St, Austin TX", "ABC Insurance Agency\n55 Elm St, Austin TX",
+                   "Our agent, Smith Agency, is at 55 Elm St, Austin TX.", "Carrier B, 55 Elm St, Austin TX, wrote it last year.",
+                   "Carrier A Loss Run Attached\nWe also keep stock at 2215 Leonard Rd, Bryan.", "ABC Insurance Agency\nWe also keep stock at 2215 Leonard Rd, Bryan.",
+                   "Carrier A loss run attached and we also keep stock at 2215 Leonard Rd, Bryan.", "We store tools at the owner's home at 9 Oak Ave, Waco.",
+                   "Home address:\n9 Oak Ave, Waco, TX", "Mailing address:\nWe also keep stock at 2215 Leonard Rd, Bryan.",
+                   "Mailing address: 9 Oak Ave, Waco, and stock at 2215 Leonard Rd, Bryan.", "We also store at 100 Spur 191, Kerrville TX 78028."):
+        assert words(phrase), phrase
+    for phrase in ("Mailing address:\n77001 Houston TX. We also keep stock at 2215 Leonard Rd, Bryan.", "We keep stock near our agent's office: 2215 Leonard Rd, Bryan.",
+                   "Note to agent: we moved stock to 2215 Leonard Rd, Bryan.", "Former premises (we still use it for storage): 2215 Leonard Rd, Bryan.",
+                   "Mailing address:\n12 units at 2215 Leonard Rd, Bryan", "Our second yard: 100 SPUR 191, Kerrville"):  # code review 2026-11-04
+        assert words(phrase), phrase
+    # check-T-130 H1: v7 fires wherever v6 fires; these single addresses read as two places under v6 and must stay manual intake under P-082
+    for premises in ("4400 FM 1960 Rd", "12 State Highway 6", "77 County Road 12", "800 I-35 Frontage Rd"):
+        files = [doc("application.md", APP.replace("100 Main St", premises)), doc("email.md", EMAIL)]
+        old = _place_words(files)
+        assert old is not None and not detect(files)["in_scope"], (premises, old)
+    for phrase in ("Mailing address: 1906 Hwy 290 W, Brenham", "Producer: Jane Roe, 55 Elm St, Austin", "Prior address (last 3 years): 401 Franklin Ave, Waco, TX", "Mailing address\t9 Oak Ave, Waco, TX", "Agent address:\n55 Elm St, Austin TX"):
+        assert not words(phrase), (phrase, words(phrase))
     m533 = detect([doc("application.md", APP.replace("Premises address:", "Mailing address: same as premises\nPremises address:")),
                    doc("email.md", EMAIL + "\nWe also keep the vans at 2215 Leonard Rd, Bryan. Carrier A loss run attached.")])
     assert [r["code"] for r in m533["reasons"]] == ["multiple_locations"], m533
-    for phrase in ("Carrier A has us at 100 Main St, Austin, TX 78701.", "Our agent, Smith Agency, is at 55 Elm St, Austin TX.",
-                   "Mailing address: PO Box 9, Waco TX 76701", "Carrier B, 55 Elm St, Austin TX, wrote it last year.", "Mailing address:\n9 Oak Ave, Waco, TX",
+    for phrase in ("Carrier A has us at 100 Main St, Austin, TX 78701.",
+                   "Mailing address: PO Box 9, Waco TX 76701", "Mailing address:\n9 Oak Ave, Waco, TX",
                    "Dr. Smith signed it. Carrier A run attached.", "We are on the 2nd floor. Carrier A loss run attached."):
         assert not words(phrase), (phrase, words(phrase))
     hwy = APP.replace("100 Main St, Austin, TX 78701", "1906 Hwy 290 W, Brenham, TX 77833")

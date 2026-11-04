@@ -1627,3 +1627,18 @@ Then continue: P-066 concurrent-write tests, @pm pilot-readiness update, @model-
 - Date / Owner: 2026-11-03 / @user
 - Decision (the user's words): "SUB-219 recorded as a known gold difference under D-149, no re-score." The published T-108 gold (in scope) predates D-149; its application (2701 Memorial Blvd) and schedule (4810 Twin City Hwy) give different addresses, so scope-v6 sends it to manual intake. Published scores unchanged (D-020).
 - Status: ACCEPTED by @user, 2026-11-03.
+
+## D-161 — Fix B-523/B-524 before T-128; P-082 approved (stricter only)
+- Date / Owner: 2026-11-04 / @user
+- Decision (the user's words, pasted, D-032): "fix B-523/B-524 before T-128". "approve change P-082 (stricter only): Title Case lines without punctuation ("Carrier A Loss Run Attached") and role words or "home" in the same sentence never hide an address on that or the next line; "Spur" recognised as a highway; approve records include the value entered on resolve. Dev re-check (12 files + 365-folder scope sweep: 0 newly in scope), quick set, tests/pipeline, @model-risk check, one look-again max. If no High: merge, push."
+- Status: ACCEPTED by @user, 2026-11-04. Not a production approval; the T-027 veto stands.
+
+## D-162 — Freeze before T-128; build T-128
+- Date / Owner: 2026-11-04 / @user
+- Decision (the user's words): "Freeze in NEXT-SESSION.md before any T-128 file exists: code commit, PROMPT_VERSION, scope version, scorer v11, lint, C2 counter v2 + M1 notes, all sha256." "Build T-128 (SUB-550–581) per the plan ... @model-risk build check, one look-again max. Freeze the gold, record the manifest sha256."
+- Status: ACCEPTED by @user, 2026-11-04.
+
+## D-163 — T-128 official run GO, conditional (D-020)
+- Date / Owner: 2026-11-04 / @user
+- Decision (the user's words): "T-128 run GO, conditional" — "valid only if step 3 ends with no High: run T-128 once (all hashes verified, smoke_readers, no cache, qwen paced 55 s), score once with v11 and count_ops_gate_v2.py ... Fix nothing. Then the @model-risk T-027 memo." "If any step hits a High after its one look-again: STOP and give me options."
+- Status: ACCEPTED by @user, 2026-11-04, conditional.
