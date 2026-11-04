@@ -44,6 +44,7 @@ BANNER = ""  # set by serve(); the sandbox screenshots label the page with it
 MESSAGES: dict[str, tuple[bool, str]] = {}  # submission -> (ok, plain-words result of the last action); shown once
 # D-065 item 5: one line per user-visible feature: date, task or proposal, decision number, what an underwriter sees.
 WHATS_NEW = (
+    ("2026-11-04", "P-082 (B-523/B-524)", "D-161", "An address next to a carrier, agent or other role word in a sentence, under a name line (\"ABC Insurance Agency\"), or near the word \"home\" now sends the file to manual intake; only a short label such as \"Mailing address:\" sets an address aside. \"Spur\" roads count as highway addresses. The approve and confirm records keep the values entered on resolve."),
     ("2026-11-03", "P-079/P-080/P-081 (T-129)", "D-155–D-157", "A single-location file whose address is a highway or route (\"1906 Hwy 290 W\") or whose model count quotes a sentence now stays in scope when the premises line shows one address. A second address on a line that also names a carrier, or under a filled-in \"Mailing address:\" line, still sends the file to manual intake. When an underwriter resolves every conflict on a file that was incomplete only because of them, the card reads \"complete — review pending\" with the reason, the Missing line shows the resolved values, and the producer draft is withdrawn; approve, acknowledgments, senior confirm and send checks still apply."),
     ("2026-11-02", "P-077", "D-145", "A file goes to manual intake as a whole when it names a second place in words (\"two stores\", \"our other shop\", a sold or closed second store, a second street address in any document) or when the model's own count of premises is above one, missing, or not found in the documents. The card quotes the words or the count that sent it."),
     ("2026-11-02", "B-508", "D-148", "On a file blocked because no antivirus scanner is set up, the send refusal and the Scope check line now name the missing scanner first, before any scope reason."),
@@ -608,7 +609,7 @@ def record_decision(payload: dict, log_path: Path) -> dict:
             raise ValueError(f"confirm every value before recording: {', '.join(unacked)}")
         if not listed:
             raise ValueError("there is no value to confirm on this run")
-        payload = {**payload, "acknowledged": listed, "confirmed_values": field_values(saved), "run_hash": saved["saved_hash"]}
+        payload = {**payload, "acknowledged": listed, "confirmed_values": field_values(package.with_resolutions(saved)), "run_hash": saved["saved_hash"]}
     if action == "approve":
         submission = (payload.get("submission") or "").strip()
         # T-071: read the file's status from the last saved run itself. An approve is refused on either
@@ -625,7 +626,7 @@ def record_decision(payload: dict, log_path: Path) -> dict:
         unacked = [f for f in listed if f not in (payload.get("ack") or [])]
         if unacked:
             raise ValueError(f"acknowledge every needs-review value before approving: {', '.join(unacked)}")
-        payload = {**payload, "acknowledged": listed, "run_hash": saved["saved_hash"], "approved_values": field_values(saved)}  # B-266: what was approved
+        payload = {**payload, "acknowledged": listed, "run_hash": saved["saved_hash"], "approved_values": field_values(package.with_resolutions(saved))}  # B-266: what was approved; P-082 (L4): incl. values entered on resolve
     with _LOG_LOCK:
         if action == "approve" and not reason:
             # D-053: an approve after a decline needs a written reason; refused here, not only at the send.

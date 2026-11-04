@@ -1939,3 +1939,15 @@ D-004 (user, 2026-10-09): Sanger & Altgelt agency pipeline. Eight steps. No auto
   - [x] (e) Stricter only: over 273 dev submissions no file moves from manual intake to in scope.
   - [x] Card quotes the words that fired; What's new line; screenshot `deliverables/software-engineer/screenshots/P-077-second-place-manual-intake.png` (temp copy).
   - [x] tests/pipeline 94 passed; scope, prepare, sources, regression_dev, workbench self-checks pass; pyright 77 → 77; code review findings fixed.
+
+### T-130 — P-082 (D-161): role words and name lines never hide an address; Spur; approve records resolved values (B-523, B-524)
+- Owner: @software-engineer (built by the orchestrator per D-161 fast lane) · Status: IN_REVIEW 2026-11-04 · Reviewer: @model-risk (High only, one look-again)
+- Acceptance criteria:
+  - [x] Title Case lines without punctuation and role words or "home" in the same sentence never hide an address on that or the next line (scope-v7).
+  - [x] "Spur" recognised as a highway (second-address check only).
+  - [x] Approve records include the value entered on resolve.
+  - [x] Dev re-check 12 files unchanged; 381-folder scope sweep: 0 newly in scope.
+  - [ ] Quick set: 0 differences.
+  - [x] tests/pipeline 94 passed; self-checks ok; pyright 31 → 31; code review findings fixed.
+  - [ ] @model-risk check, no High (one look-again max).
+- As built: deliverables/ai-engineer/P-082-as-built.md
