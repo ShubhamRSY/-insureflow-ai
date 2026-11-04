@@ -16,3 +16,4 @@ Stricter only. Scope detector scope-v6 → **scope-v7**. PROMPT_VERSION unchange
 - tests/pipeline 94 passed (LOB config scope version and fingerprint re-pinned for scope-v7, as P-077/P-079 did). pyright 31 → 31.
 - Code review (plugin) 2026-11-04: 3 loosening shapes in the first draft (label above hiding a later sentence, prose before a colon as a label, prose next line starting with a number) and SPUR case fixed, each with a self-check; confirm record aligned; What's new added.
 - Residual (Low): `with_resolutions` reads `package.DECISIONS_LOG`, not the `log_path` given to `record_decision` (same as `needs_review_ids` and the send gate); resolutions read outside `_LOG_LOCK`.
+- Security review (plugin) 2026-11-04: label regex made possessive (ReDoS); sweep re-run identical.

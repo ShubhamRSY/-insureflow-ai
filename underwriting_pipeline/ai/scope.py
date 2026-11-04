@@ -249,7 +249,7 @@ def _place_words(docs: list[dict]) -> tuple[str, str] | None:
                             found[cell.start() + m.start()] = m.group()
                 # P-082 (check-T-129 M1): a role word hides only the address right after its own short label ("Producer: Jane Roe, 55 Elm St",
                 # a schedule "Mailing address<tab>" cell); in prose it hides nothing
-                label = re.match(r"\s*([^:\t]{1,30})[:\t]((?:\s*(?:P\.?\s*O\.?\s*Box\s+\d+|[A-Z&][\w&.'-]*),?)*)\s*(?=\d)", part)
+                label = re.match(r"\s*([^:\t]{1,30})[:\t]((?:\s*+(?:P\.?\s*O\.?\s*Box\s+\d++|[A-Z&][\w&.'-]*+),?+)*+)\s*(?=\d)", part)
                 hidden = {label.end()} if label and _role_label(label.group(1)) and len(re.sub(r"\([^)]*\)", "", label.group(1)).split()) <= 4 else set()
                 if above and n == 0:
                     hidden.add(len(part) - len(part.lstrip()))
