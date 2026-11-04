@@ -1947,7 +1947,7 @@ D-004 (user, 2026-10-09): Sanger & Altgelt agency pipeline. Eight steps. No auto
   - [x] "Spur" recognised as a highway (second-address check only).
   - [x] Approve records include the value entered on resolve.
   - [x] Dev re-check 12 files unchanged; 381-folder scope sweep: 0 newly in scope.
-  - [ ] Quick set: 0 differences.
+  - [x] Quick set: 0 differences (17 live calls, bands identical).
   - [x] tests/pipeline 94 passed; self-checks ok; pyright 31 → 31; code review findings fixed.
   - [ ] @model-risk check, no High (one look-again max).
 - As built: deliverables/ai-engineer/P-082-as-built.md
