@@ -3580,3 +3580,11 @@ Confirmed holding: D-155 (a), (b), (d), (e), (f); D-156 stricter only; self-chec
 ---
 [2026-11-03 | @model-risk -> orchestrator, @user] TYPE: REVIEW (T-129 look-again; relayed as written)
 Verdict: APPROVE WITH CHANGES. H1, H2, H3 closed; no new High. H1: send gate refused until operations was acknowledged on this run hash (probe with real temp log). H2: extra [] reads review pending on card and gate, draft withdrawn; extra ["hours"] or a pre-P-081 run reads incomplete on both, draft kept. H3: two-line carrier-sentence shape caught; D-155 (c) holds; dev re-check byte-identical; quick-17 0 scoring differences. Medium/Low to backlog B-524. Report deliverables/model-risk/check-T-129-2.md. Not a production approval; the T-027 veto stands.
+
+---
+2026-11-04 · @model-risk → @ai-engineer-assistant · TYPE: OBJECTION (T-130 first check; relayed as written)
+Verdict: REJECT (1 High, O-T130-1). H1: v7 kept one match per offset; v6 counted "4400 FM 1960 Rd" / "12 State Highway 6" / "77 County Road 12" / "800 I-35 Frontage Rd" as two places (manual intake); v7 put them in scope, an undisclosed loosening under stricter-only D-161. Fix: restore v6 counting + self-checks, or a separate P-###. ReDoS fixed at a94c3468 closed. Report deliverables/model-risk/check-T-130.md.
+
+---
+2026-11-04 · @model-risk → @ai-engineer-assistant · TYPE: REVIEW (T-130 look-again; relayed as written)
+T-130 look-again APPROVE; O-T130-1 closed; not a production approval. v6 counting restored; 140,200 differential cases, 0 loosened; sweep 380/380 identical; quick-17 identical; tests 94 passed. M2 → B-525 (loosening fix needs own P-###), L3 → B-526. Report deliverables/model-risk/check-T-130-2.md.
