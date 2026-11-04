@@ -18,3 +18,8 @@ Stricter only. Scope detector scope-v6 → **scope-v7**. PROMPT_VERSION unchange
 - Residual (Low): `with_resolutions` reads `package.DECISIONS_LOG`, not the `log_path` given to `record_decision` (same as `needs_review_ids` and the send gate); resolutions read outside `_LOG_LOCK`.
 - Security review (plugin) 2026-11-04: label regex made possessive (ReDoS); sweep re-run identical.
 - Quick-17 (temp copy, 17 paced live calls, 0 failed, run 20261104T155036-25797): bands identical to T-129 `quick17-after-fixes.json` (0 differences); silent 26/138 = 0.188, automation 0.565 (`evals/T-130/quick17-p082.json`).
+
+## Fix for check-T-130 H1 (2026-11-04, the one look-again)
+- `_place_words` counts every address match as v6 did; a hidden offset (label or line above) hides every match at that offset. Self-check: "4400 FM 1960 Rd", "12 State Highway 6", "77 County Road 12", "800 I-35 Frontage Rd" premises stay manual intake (v6 behaviour; the false positive is kept, not fixed, under stricter-only; a fix would be its own P-### for @user).
+- @model-risk differential `evals/T-130/model-risk-diff.py`: 60,200 cases, v6 fires and v7 not: **0** (`model-risk-diff-after-fix.txt`).
+- Sweep (L1: `__pycache__` excluded): 380 folders, 380 identical, 0 newly in scope, 0 newly manual intake. tests/pipeline 94 passed; pyright 31 → 31. L2 comment fixed. Quick-17 (above) was run at a94c3468; this fix changes only scope, and the sweep shows every quick file's scope result unchanged.

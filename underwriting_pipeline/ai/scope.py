@@ -242,18 +242,16 @@ def _place_words(docs: list[dict]) -> tuple[str, str] | None:
             above = _bare_label(prev) and _role_label(prev)
             prev = line if line.strip() else prev
             for n, part in enumerate(SENTENCE.split(line)):  # P-080: a role word skips only its own sentence, not a whole email line
-                found = {}  # start offset -> longest address there, one schedule cell at a time
-                for cell in re.finditer(r"[^\t]+", part):
-                    for m in (m for pat in (STREET_WORDS, HIGHWAY, SPUR) for m in pat.finditer(cell.group())):
-                        if len(m.group()) > len(found.get(cell.start() + m.start(), "")):
-                            found[cell.start() + m.start()] = m.group()
+                # every match counts, as in v6 (check-T-130 H1: keeping one match per offset loosened "4400 FM 1960 Rd"); one schedule cell at a time
+                found = [(cell.start() + m.start(), m.group()) for cell in re.finditer(r"[^\t]+", part)
+                         for pat in (STREET_WORDS, HIGHWAY, SPUR) for m in pat.finditer(cell.group())]
                 # P-082 (check-T-129 M1): a role word hides only the address right after its own short label ("Producer: Jane Roe, 55 Elm St",
                 # a schedule "Mailing address<tab>" cell); in prose it hides nothing
                 label = re.match(r"\s*([^:\t]{1,30})[:\t]((?:\s*+(?:P\.?\s*O\.?\s*Box\s+\d++|[A-Z&][\w&.'-]*+),?+)*+)\s*(?=\d)", part)
                 hidden = {label.end()} if label and _role_label(label.group(1)) and len(re.sub(r"\([^)]*\)", "", label.group(1)).split()) <= 4 else set()
                 if above and n == 0:
                     hidden.add(len(part) - len(part.lstrip()))
-                for start, text in sorted(found.items()):
+                for start, text in found:  # a hidden offset hides every match there (v6 hid the whole sentence)
                     if start in hidden:
                         continue
                     address = UNIT.sub("", text.strip())
@@ -578,6 +576,11 @@ if __name__ == "__main__":
                    "Note to agent: we moved stock to 2215 Leonard Rd, Bryan.", "Former premises (we still use it for storage): 2215 Leonard Rd, Bryan.",
                    "Mailing address:\n12 units at 2215 Leonard Rd, Bryan", "Our second yard: 100 SPUR 191, Kerrville"):  # code review 2026-11-04
         assert words(phrase), phrase
+    # check-T-130 H1: v7 fires wherever v6 fires; these single addresses read as two places under v6 and must stay manual intake under P-082
+    for premises in ("4400 FM 1960 Rd", "12 State Highway 6", "77 County Road 12", "800 I-35 Frontage Rd"):
+        files = [doc("application.md", APP.replace("100 Main St", premises)), doc("email.md", EMAIL)]
+        old = _place_words(files)
+        assert old is not None and not detect(files)["in_scope"], (premises, old)
     for phrase in ("Mailing address: 1906 Hwy 290 W, Brenham", "Producer: Jane Roe, 55 Elm St, Austin", "Prior address (last 3 years): 401 Franklin Ave, Waco, TX", "Mailing address\t9 Oak Ave, Waco, TX", "Agent address:\n55 Elm St, Austin TX"):
         assert not words(phrase), (phrase, words(phrase))
     m533 = detect([doc("application.md", APP.replace("Premises address:", "Mailing address: same as premises\nPremises address:")),
