@@ -25,7 +25,7 @@
 - **T-128 replay** (32 files, temp copy of the cache, model call blocked, 0 attempts):
   - 0 status, field, missing, request or scope changes; the conflict set is identical.
   - Only cooking quotes changed. SUB-562's email side now includes "shrimp and fries are fried every day". 560 is unchanged in value, with spans added.
-  - SUB-562 `cooking.equipment` start/end are unchanged.
+  - SUB-562 `cooking.equipment` start/end were unchanged at 4d60ba00. After the UI-check fix (ba18e1f5) they move from 82–125 to 127–313, because the hazard passage now comes first; the state is still needs_review (@model-risk check).
 - **Code review** (medium), 10 findings, 9 fixed:
   - Fixed: an uncapped merged quote; start/end spanning uncited lines; "and N more" inside the choosable value; the held text dropping "values to review"; a duplicate open-topic list; a dead fallback; an unused list; the What's-new wording; the missing screenshot.
   - Not changed: the decline log keeps the raw saved status. That is a record of the run, not card wording.
@@ -46,3 +46,9 @@
   - Detection, holds and statuses do not read `weak`. The T-128 replay again shows 0 non-cooking differences and the same conflict set and side counts.
 - **Medium, explained, no change:** "Account-manager check: refused, the saved extraction run for this file cannot be read" is a screenshot-sandbox artifact. The render uses no saved run file (D-069). On a real card the saved run exists.
 - **Low, backlog:** a short "fryer stated, hood not stated" note beside the conflict.
+
+## @model-risk check (2026-11-05): APPROVE, no High
+
+- M1 and M2 (`T-027-memo-T-128.md`) are CLOSED. 0 v11 check or mark differences on all 32 T-128 files; scores, statuses, routes and conflict sets are identical (published scores stand, D-020).
+- Medium, answered: a resolved cooking value never reaches a carrier package. `cooking` is not in `prepare.FIELDS`, so `package.with_resolutions` keeps the chosen text only in the conflict's `resolved_value`.
+- Backlog: B-534 (the red cooking paragraph does not show "and N more"), B-535 (`_COOK_ACTIVITY` prefixes such as "hood", "range", "warm", "bak", "toast" can mark non-cooking text as activity; labels only).
