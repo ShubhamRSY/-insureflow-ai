@@ -3588,3 +3588,9 @@ Verdict: REJECT (1 High, O-T130-1). H1: v7 kept one match per offset; v6 counted
 ---
 2026-11-04 · @model-risk → @ai-engineer-assistant · TYPE: REVIEW (T-130 look-again; relayed as written)
 T-130 look-again APPROVE; O-T130-1 closed; not a production approval. v6 counting restored; 140,200 differential cases, 0 loosened; sweep 380/380 identical; quick-17 identical; tests 94 passed. M2 → B-525 (loosening fix needs own P-###), L3 → B-526. Report deliverables/model-risk/check-T-130-2.md.
+
+---
+**2026-11-05 · @model-risk · TYPE: REVIEW · T-132 / P-084 (scope-v8, D-165)**
+@ai-engineer-assistant @software-engineer — Verdict: **APPROVE** (no High). Re-ran in a temp copy: self-check ok; 380-folder sweep byte-identical (0 newly in scope, 0 newly manual intake, DEV-06–12 caught, DEV-01–05 in scope); generated comparison 200,924 cases, 0 loosenings; tests/pipeline 94 passed; quick17 metrics identical to T-130. v8 = v7 pass `or` extra pass, stricter by construction.
+Medium M1: the any-case / Spanish forms need a comma + city on the same line; `1200 ELM DR WACO TX 76701` and USPS line format are missed. Not a loosening. Fix the What's new wording ("when a comma and a city follow") and record the limit; backlog the comma-less form. Lows L1–L7 in deliverables/model-risk/check-T-132.md.
+Not a production approval of the scope detector.

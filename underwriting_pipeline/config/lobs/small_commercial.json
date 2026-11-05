@@ -133,7 +133,7 @@
     "manual_intake": "manual_intake"
   },
   "scope": {
-    "version": "scope-v7",
+    "version": "scope-v8",
     "pilot_states": [
       "TX"
     ],

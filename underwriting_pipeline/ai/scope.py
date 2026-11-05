@@ -9,7 +9,7 @@ import re
 
 import llm_extract
 
-VERSION = "scope-v7"  # model-inventory.md; bump with every rule change. v5: P-077 part A (D-145, D-146). v6: P-080 (D-156) A3 per sentence, bare label only, highway addresses. v7: P-082 (D-161) role word hides only a labelled address, no name-line labels, "home" never hides, Spur
+VERSION = "scope-v8"  # model-inventory.md; bump with every rule change. v5: P-077 part A (D-145, D-146). v6: P-080 (D-156) A3 per sentence, bare label only, highway addresses. v7: P-082 (D-161) role word hides only a labelled address, no name-line labels, "home" never hides, Spur. v8: P-084 (D-165) any letter case, Texas route codes, PMB / General Delivery, Spanish-format addresses (second pass, stricter only)
 IMAGE = {".png", ".jpg", ".jpeg", ".tif", ".tiff"}
 REASONS = {
     "scanned_application": "Manual intake: scanned application",
@@ -87,6 +87,36 @@ HIGHWAY = re.compile(r"\b\d{1,6} +(?:[NSEW]\.? +)?(?:(?:Hwy|Highway|U\.?S\.?|SH|
 # P-082 (D-161): "Spur 191" counts as a highway in the second-address check only (prepare's one-address check keeps HIGHWAY: no loosening)
 SPUR = re.compile(r"(?i)\b\d{1,6} +(?:[NSEW]\.? +)?Spur[ -]?\d{1,4}\b")
 HOME = re.compile(r"(?i)\bhome\b")
+# P-084 (D-165): more address forms for the A3 second-address check only (prepare keeps STREET_WORDS / HIGHWAY: no loosening there).
+_NOT_STREET_WORD = (r"(?!(?:the|a|an|all|of|to|in|on|at|our|my|your|their|and|or|per|each|every|for|by|with|from|this|that|its|is|are|was|we|it|who|near|along|off"
+                    r"|lane|lanes|hour|hours|mile|miles|minute|minutes|wheel|block|blocks|small|sheet|day|days|week|weeks|year|years|foot|feet|ft|car|cars|truck"
+                    r"|trucks|van|vans|door|doors|space|spaces|spot|spots|stop|stops|staff|seat|seats|unit|units|room|rooms|story|stories|ext|four|two)\b)")
+_SUFFIX = "St|Street|Rd|Road|Ave|Avenue|Blvd|Dr|Drive|Ln|Lane|Hwy|Highway|Way|Pkwy|Parkway|Ct|Court|Pl|Place|Fwy|Trl|Loop|Cir"
+# all capitals ("1200 ELM DR, WACO") or all lower case ("9 oak way, Waco"), Title Case is STREET_WORDS; a comma and a city must follow, so prose is not an address
+STREET_ANY_CASE = re.compile(r"\b\d{1,6}\s+(?:[NSEW]\.?\s+)?(?:" + _NOT_STREET_WORD + r"[A-Z0-9][A-Z0-9.'-]*\s+){1,3}(?:" + _SUFFIX.upper() + r")\b\.?(?=\s*,\s*[A-Za-z])"
+                             r"|\b\d{1,6}\s+(?:[nsew]\.?\s+)?(?:" + _NOT_STREET_WORD + r"[a-z0-9][a-z0-9.'-]*\s+){1,3}(?:" + _SUFFIX.lower() + r")\b\.?(?=\s*,\s*[A-Za-z])")
+# Texas route codes as written on mail ("12 IH 35", "1604 SL 1604", "12 TX-71", "400 RM 620"), upper case; not after a date or claim number ("03/15/2022 TX 2,500");
+# a following "Frontage Rd" is part of the same address
+ROUTE_ANY = re.compile(r"(?<![/\d-])\b\d{1,6} +(?:[NSEW]\.? +)?(?:(?:IH|SL|FM|RM|RR|CR|SH|US|LOOP|Loop|SPUR|HWY)[ -]?\d{1,4}|TX-\d{1,4}|I-\d{1,4})\b"
+                       r"(?:(?: +(?:FRONTAGE|Frontage|SERVICE|Service|ACCESS|Access))? +(?:RD|Rd|ROAD|Road)\b)?")
+MAILBOX = re.compile(r"\bPMB\s*#?\s*\d+|\b(?:General Delivery|GENERAL DELIVERY)(?=\s*,\s*[A-Za-z][A-Za-z .]*,?\s+(?:TX|Texas|TEXAS)\b)")
+# Spanish format, the number after the street name ("Calle Roble 12, Laredo", "Av. 16 de Septiembre 1234, Laredo"); a comma and a city must follow
+_NOT_NAME = r"(?!(?:Room|Suite|Cafe|Café|Burger|Grill|Bar|Restaurant|Equipment|Rental|Tacos|Menu)\b)"
+SPANISH_ADDRESS = re.compile(r"(?<!\bEl )(?<!\bLa )\b(?:Calle|CALLE|Avenida|AVENIDA|Av\.|AV\.|Carretera|CARRETERA|Camino|CAMINO|Privada|Callej[oó]n|Prolongaci[oó]n)\s+"
+                             r"(?:" + _NOT_NAME + r"(?:[A-ZÁÉÍÓÚÑ0-9][\wáéíóúñ.'-]*|de|del|la|las|los|el|y)\s+){1,5}(?:#\s*)?\d{1,6}(?=\s*,\s*[A-ZÁÉÍÓÚÑ])")
+# second pass only: "Av. Juarez" is not a sentence end; road aliases are one road ("IH 35" = "I-35", "TX-71" = "SH 71", "SL 1604" = "Loop 1604", "Avenida" = "Av.")
+SENTENCE_EXTRA = re.compile(r"(?<!\bAv\.)(?<!\bAV\.)(?<=[.!?;])\s+(?=[A-Z])")
+_ALIASES = ((r"(?i)\bIH[ -]?(\d)|\bI[ -](\d)", r"I-\1\2"), (r"(?i)\b(?:TX|SH|State +(?:Hwy|Highway))[ -]?(\d)", r"SH \1"), (r"(?i)\b(?:SL|Loop)[ -]?(\d)", r"Loop \1"),
+            (r"(?i)\bAvenida\b|\bAv\.", "Av"))
+
+
+def _alias(address: str) -> str:
+    for pat, rep in _ALIASES:
+        address = re.sub(pat, rep, address)
+    return address
+
+
+EXTRA_ADDRESS = (STREET_ANY_CASE, ROUTE_ANY, MAILBOX, SPANISH_ADDRESS)
 # P-080: sentence breaks inside one line ("…2215 Leonard Rd, Bryan. Carrier A loss run attached.")
 SENTENCE = re.compile(r"(?<=[.!?;])\s+(?=[A-Z])")
 STREET = re.compile(r"\b\d{1,6}\s+[A-Za-z0-9 .]+?\s(?:st|street|rd|road|ave|avenue|blvd|dr|drive|ln|lane|hwy|way|pkwy|ct|court|pl|place|fwy|trl)\b\.?", re.I)
@@ -234,6 +264,11 @@ def _place_words(docs: list[dict]) -> tuple[str, str] | None:
             names = {n.lower() for n in PLACE_VALUE.findall(line) if n.split()[0].lower().rstrip(".") not in NOT_PLACE_NAME}
             if len(names) >= 2:
                 return line.strip()[:120], d["name"]
+    return _second_address(docs, ()) or _second_address(docs, EXTRA_ADDRESS)  # P-084: v7 first, so the extra forms can only add a hit
+
+
+def _second_address(docs: list[dict], extra: tuple) -> tuple[str, str] | None:
+    """A3: the first second street address in any document. extra (P-084): more address forms; one that overlaps a v7 match is that match."""
     places: list[str] = []
     for d in docs:
         prev = ""
@@ -241,7 +276,7 @@ def _place_words(docs: list[dict]) -> tuple[str, str] | None:
             # P-080/P-082 (D-156, D-161): a "Role address:" line above hides only an address that starts the next line
             above = _bare_label(prev) and _role_label(prev)
             prev = line if line.strip() else prev
-            for n, part in enumerate(SENTENCE.split(line)):  # P-080: a role word skips only its own sentence, not a whole email line
+            for n, part in enumerate((SENTENCE_EXTRA if extra else SENTENCE).split(line)):  # P-080: a role word skips only its own sentence, not a whole email line
                 # every match counts, as in v6 (check-T-130 H1: keeping one match per offset loosened "4400 FM 1960 Rd"); one schedule cell at a time
                 found = [(cell.start() + m.start(), m.group()) for cell in re.finditer(r"[^\t]+", part)
                          for pat in (STREET_WORDS, HIGHWAY, SPUR) for m in pat.finditer(cell.group())]
@@ -251,10 +286,27 @@ def _place_words(docs: list[dict]) -> tuple[str, str] | None:
                 hidden = {label.end()} if label and _role_label(label.group(1)) and len(re.sub(r"\([^)]*\)", "", label.group(1)).split()) <= 4 else set()
                 if above and n == 0:
                     hidden.add(len(part) - len(part.lstrip()))
+                if extra:  # P-084: an extra form counts only where no other match is (longest first); a role label hides one that starts its value
+                    covered = {i for a, t in found for i in range(a, a + len(t))}
+                    more = []
+                    for a, t in sorted(((cell.start() + m.start(), m.group()) for cell in re.finditer(r"[^\t]+", part) for pat in extra
+                                        for m in pat.finditer(cell.group())), key=lambda x: -len(x[1])):
+                        if not covered.intersection(range(a, a + len(t))):
+                            more.append((a, t))
+                            covered.update(range(a, a + len(t)))
+                    head = re.match(r"\s*([^:\t]{1,30})[:\t]\s*", part)
+                    if head and _role_label(head.group(1)) and len(re.sub(r"\([^)]*\)", "", head.group(1)).split()) <= 4:
+                        last = label.end() if label else head.end()
+                        hidden |= {a for a, t in more if head.end() <= a <= last or t.upper().startswith("PMB")}
+                    if above and n == 0:
+                        hidden |= {a for a, t in more if not part[:a].strip() or t.upper().startswith("PMB")}
+                    found += more
                 for start, text in found:  # a hidden offset hides every match there (v6 hid the whole sentence)
                     if start in hidden:
                         continue
                     address = UNIT.sub("", text.strip())
+                    if extra:
+                        address = _alias(address)
                     if not any(llm_extract.same_address(address, o) for o in places):
                         places.append(address)
                         if len(places) >= 2:
@@ -583,6 +635,39 @@ if __name__ == "__main__":
         assert old is not None and not detect(files)["in_scope"], (premises, old)
     for phrase in ("Mailing address: 1906 Hwy 290 W, Brenham", "Producer: Jane Roe, 55 Elm St, Austin", "Prior address (last 3 years): 401 Franklin Ave, Waco, TX", "Mailing address\t9 Oak Ave, Waco, TX", "Agent address:\n55 Elm St, Austin TX"):
         assert not words(phrase), (phrase, words(phrase))
+    # P-084 (D-165): any letter case, Texas route codes, PMB / General Delivery, Spanish-format second addresses count; under a role label they do not
+    for phrase in ("We also keep stock at 1200 ELM DR, WACO TX 76701.", "Our yard is at 9 oak way, Waco.", "We also keep stock at 1200 elm dr, waco.",
+                   "We also store at 12 IH 35, Waco.", "Second yard 12 IH-35, Waco", "Stock at 1604 SL 1604, San Antonio.", "We also use 12 TX-71, Bastrop.",
+                   "Other shop: 400 RM 620, Austin.", "Calle 5 de Mayo 120, Laredo", "Bodega en AV. JUAREZ 120, Laredo.", "Av. 16 de Septiembre 1234, Laredo",
+                   "Please also send to PMB 123, Waco TX 76701 where we keep stock.", "We also keep stock at General Delivery, Waco TX 76701.",
+                   "Bodega: Calle Roble 12, Laredo.", "La otra tienda está en Av. Juarez 120, Laredo.", "We also keep stock at 12 TX-71, Bastrop.", "Mailing address: 9 Oak Ave, Waco, and stock at 1200 ELM DR, Waco."):
+        assert words(phrase), phrase
+    for phrase in ("Mailing address: PMB 123, Waco TX 76701", "Mailing address: General Delivery, Waco TX 76701", "Mailing address: Calle Roble 12, Laredo",
+                   "Mailing address: 1200 ELM DR, WACO TX", "Mailing address:\n1200 elm dr, waco", "Agent: ABC Agency, 12 IH 35, Waco",
+                   "We have 2 cars in the drive.", "We work 3 jobs per day in the court house.", "Suite 200, Austin TX 78701", "We moved here in 2019 and keep 2 trucks.",
+                   "The store is at 100 Main St, Austin, TX 78701 and we have 2 delivery drivers on the way.",
+                   # code review 2026-11-05 (P-084): one-place prose must stay in scope
+                   "The shop sits on a 2 lane road", "We are on a 4 lane highway", "It is a 2 hour drive from Austin", "We own 2 four wheel drive trucks",
+                   "Our delivery route is a 30 mile loop", "We are 2 blocks off Main Street", "We settled 2 small claims court cases", "Paper stock: 500 sheet ct boxes",
+                   "Operations: general delivery and courier service in Travis County.", "Operations: AV equipment rental for 30 events per year.",
+                   "We rent AV gear to 40 clients.", "El Camino Restaurant has 25 seats.", "We run 2 BUS 12 passenger vans.", "Contents: 3 i7 desktops and a printer",
+                   "We have 12 SR 2 staff.",
+                   # code review 2026-11-05 pass 2 (P-084)
+                   "Mailing address: 5900 Balcones Dr Ste 100 PMB 1234, Austin TX 78731", "Mailing address:\n100 Main St PMB 22, Austin TX",
+                   "CPP1234567 03/15/2022 TX 2,500 0 Closed", "Claim 22-0001 DOL 03/15/2022 TX 1500 Paid", "Policy GL 2024 TX 0012",
+                   "Insured location 100 MAIN ST AUSTIN TX 78701", "We have 20 spaces near Main St, plus street parking.", "Parking: 20 spaces along Elm St, free.",
+                   "We park 3 vans off Elm St, Waco.", "We are 3 doors off Main St, Austin.", "We run a 12 stop loop, daily.", "Contents: AV Equipment 12",
+                   "Services: AV Rental 30, Austin", "Seating: Camino Room 40", "Our menu: Camino Burger 9, Tacos 3", "Room: Privada Suite 2",
+                   "Restaurant: El Camino Real 5, Laredo", "Operations: General Delivery, local", "Services: General Delivery, catering and events, Austin"):
+        assert not words(phrase), (phrase, words(phrase))
+    one = detect([doc("application.md", APP.replace("100 Main St", "4400 LOOP 1604 FRONTAGE RD")), doc("email.md", EMAIL)])
+    assert one["in_scope"], ("two extra readings of one address are one place", one)
+    for prem, other in (("4400 Loop 1604 Frontage Rd", "Insured location 4400 LOOP 1604 FRONTAGE RD SAN ANTONIO TX 78249"), ("800 IH 35 Frontage Rd", "Insured location 800 IH 35 FRONTAGE RD WACO TX 76701"),
+                        ("12 I-35", "We are at 12 IH 35, Austin."), ("12 TX-71 W", "Location: 12 SH 71 W, Austin"), ("12 Loop 1604", "We are at 12 SL 1604, Austin.")):
+        same = detect([doc("application.md", APP.replace("100 Main St", prem)), doc("email.md", EMAIL + "\n" + other)])
+        assert same["in_scope"], ("one road, two names", prem, other, same)
+    assert not detect([doc("application.md", APP), doc("email.md", EMAIL + "\nA quote mentions Av. Maria 3, Laredo.")])["in_scope"]
+    assert '"Av. Maria 3"' in detect([doc("application.md", APP), doc("email.md", EMAIL + "\nA quote mentions Av. Maria 3, Laredo.")])["reasons"][0]["text"]
     m533 = detect([doc("application.md", APP.replace("Premises address:", "Mailing address: same as premises\nPremises address:")),
                    doc("email.md", EMAIL + "\nWe also keep the vans at 2215 Leonard Rd, Bryan. Carrier A loss run attached.")])
     assert [r["code"] for r in m533["reasons"]] == ["multiple_locations"], m533

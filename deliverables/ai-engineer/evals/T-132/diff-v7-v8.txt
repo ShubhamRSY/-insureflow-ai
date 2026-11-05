@@ -1,0 +1,1 @@
+200924 cases; v7 fires and v8 not (place words or detect): 0 ; v8 adds a hit: 37753
