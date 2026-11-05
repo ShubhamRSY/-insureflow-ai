@@ -1,0 +1,5 @@
+FAIL  SUB-560/scorer: the perfect answer is marked miss on conflict (gold line not scorable as written)
+FAIL  SUB-562/scorer: the perfect answer is marked miss on conflict (gold line not scorable as written)
+FAIL: 2 failure(s), 0 info, 32 files, run date 2026-11-05
+
+Record (T-128, 2026-11-05, before the gold freeze): the two FAIL lines are the SUB-560 and SUB-562 cooking-conflict marks, unmeasurable under v11 (as D-128, D-153). Ruled by @user in D-166 (2026-11-05, before the freeze): reported separately, excluded from the conflict rate; planted-conflict recall on the 8 figure conflicts (554, 555, 556, 557, 558, 559, 561, 566). B-465 hand check 0 mismatches over 20 in-scope cards; faithful-answer probe 20/20; similarity gate 0 of 32 >= 0.80 (T-128-similarity.txt).
