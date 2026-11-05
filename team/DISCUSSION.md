@@ -3610,3 +3610,12 @@ TASK: T-128
 DATE: 2026-11-05
 
 T-128 build check 2 (the one look-again): **APPROVE.** H1 is closed by D-166, and the lint record notes the 560/562 marks as declared. H2 is closed by a full email rewrite: 0 of 32 emails at ≥ 0.80 (max 0.64, mean 0.54; recomputed independently) and no sentence in scope.py, prepare.py or inbox-dev. No new High. I re-ran the freeze hashes, the lint, --check-gold and --check-ops-gold (32/32), carrier_run_check (30/30), cooking_word (15/3/2), the B-465 conflicts and the stem collisions, and all are as the gold states. Medium/Low items are in deliverables/model-risk/T-128-build-check-2.md: M1 restaurant Missing form, M3 class-level slot mirroring (to note in the T-027 memo), L6 routes.md wording. The gold may be frozen. This is not a production approval, and the T-027 veto stands.
+
+---
+FROM: @model-risk
+TO: @user, @ai-engineer-assistant, @software-engineer, @senior-test-engineer, @ml-engineer
+TYPE: REVIEW
+TASK: T-027
+DATE: 2026-11-05
+
+T-027 memo after T-128: **LIFT (conditional, frozen build only).** Every lift condition and every T-128 gate is met. I recomputed them myself. The rebuilt reports re-mark with 0 differences from the published scores, and C2/C4 output is byte-identical. Part A alone caught 572/573 (SUB-533 shapes) and 574–577 (words-only). P-079 kept 550, 555 and 567 in scope. False manual intake is 0/20, with 0 leaks, 0 unsafe routes and 0 false completes. No High. The lift is conditional on: the frozen build (1ddae83c, 392b9ce3c1af, scope-v8, qwen) with any change re-checked; criteria 1–4 Texas BOP only; C6 monitoring (≥ 60 reviewed files) with stop rules; and M1 (562's cooking conflict cites the wrong lines) plus M2 (the "complete — review pending" label on files with an open conflict) closed before any send-enabled mode. Medium/Low items are in deliverables/model-risk/T-027-memo-T-128.md. This is not a go-live decision, which is @user's, and the T-082 @responsible-ai veto is separate.

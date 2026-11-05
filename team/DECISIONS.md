@@ -1658,3 +1658,9 @@ Then continue: P-066 concurrent-write tests, @pm pilot-readiness update, @model-
 - Date / Owner: 2026-11-05 / @user
 - Decision (the user's words, pasted, D-032): "SUB-560/562 cooking-conflict marks reported separately and excluded from the conflict rate (as D-128); planted-conflict recall on the 8 figure conflicts (554, 555, 556, 557, 558, 559, 561, 566)." "Record this as a decision, send the build for its one look-again. If no High: freeze the gold, record the manifest sha256, then run T-128 under the conditional GO exactly as instructed (all hashes verified, smoke_readers, no cache, qwen paced 55 s, run once, score once with v11 and count_ops_gate_v2.py), then the @model-risk T-027 memo. If any High remains: STOP with options."
 - Status: ACCEPTED by @user, 2026-11-05, before the gold freeze and before the run. Answers T-128 build check H1. v11 and every published score stay frozen (D-020).
+
+## D-167 — @model-risk lifts the T-027 production veto, conditional (after T-128)
+- Date / Owner: 2026-11-05 / @model-risk (its own veto; not a @user decision, not a go-live decision)
+- Decision: LIFT, conditional, no High (`deliverables/model-risk/T-027-memo-T-128.md`). Conditions (any breach reinstates the veto): the frozen build only (code 1ddae83c, PROMPT_VERSION 392b9ce3c1af, scope-v8, qwen/qwen3.8-27b), any change needs a new @model-risk check; Texas BOP under P-055 criteria 1–4 only; C6 monitoring on at least 60 reviewed files with stop rules; memo M1 (562 cooking conflict cites the wrong lines) and M2 ("complete — review pending" with an open conflict) closed before any send-enabled mode.
+- Go-live stays @user's decision; the @responsible-ai T-082 veto is separate and stands. No AI role approves or sends (D-017).
+- Status: RECORDED by the orchestrator from the @model-risk memo, 2026-11-05.
