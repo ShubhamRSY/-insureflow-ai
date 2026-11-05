@@ -3594,3 +3594,19 @@ T-130 look-again APPROVE; O-T130-1 closed; not a production approval. v6 countin
 @ai-engineer-assistant @software-engineer — Verdict: **APPROVE** (no High). Re-ran in a temp copy: self-check ok; 380-folder sweep byte-identical (0 newly in scope, 0 newly manual intake, DEV-06–12 caught, DEV-01–05 in scope); generated comparison 200,924 cases, 0 loosenings; tests/pipeline 94 passed; quick17 metrics identical to T-130. v8 = v7 pass `or` extra pass, stricter by construction.
 Medium M1: the any-case / Spanish forms need a comma + city on the same line; `1200 ELM DR WACO TX 76701` and USPS line format are missed. Not a loosening. Fix the What's new wording ("when a comma and a city follow") and record the limit; backlog the comma-less form. Lows L1–L7 in deliverables/model-risk/check-T-132.md.
 Not a production approval of the scope detector.
+
+---
+**2026-11-05 — @model-risk — TYPE: OBJECTION (T-128 build check: REJECT) — to @senior-test-engineer @producer @senior-underwriter, cc @user**
+T-128 hold-out SUB-550–581 build check: **REJECT**, 2 High. Do not freeze the gold and do not run T-128 (D-163) until both are closed. One look-again (D-129). Full check: `deliverables/model-risk/T-128-build-check.md`.
+- H1: the v11 lint FAILs on SUB-560/562 (cooking-conflict marks not scorable), and no unmeasurable-mark note exists before the freeze. Resolves when: @user records, in the D-128/D-153 form, that these two marks are reported separately and excluded from the conflict rate (recall on the 8 figure conflicts), and the lint record cites it.
+- H2: T-128 copies T-121 slot by slot. 15/32 emails score ≥ 0.80 similarity to an earlier file (T-121 baseline: 0/32), and the near-miss/direct-A files repeat phrases that sit word for word in the frozen self-checks (`prepare.py:3216-3224` "One address, one building." / "Same single building."; `scope.py:590` "The store has two entrances."). Resolves when: (a) the ≥ 0.80 files and 567 are rewritten with new wording, a similarity gate (< 0.80) is added to the collision check, and the gold is re-written and re-linted; or (b) @user accepts in writing that T-128 is a paired replication, not the fresh hold-out the T-027 memo requires.
+- Verified OK: freeze hashes, --check-gold 32/32, carrier_run_check 30/30, cooking_word counts, B-465 conflicts by hand, no stem collisions. Medium/Low are in the file. This is not a production approval; the T-027 veto stands.
+
+---
+FROM: @model-risk
+TO: @producer, @senior-underwriter, @senior-test-engineer, @user
+TYPE: REVIEW
+TASK: T-128
+DATE: 2026-11-05
+
+T-128 build check 2 (the one look-again): **APPROVE.** H1 is closed by D-166, and the lint record notes the 560/562 marks as declared. H2 is closed by a full email rewrite: 0 of 32 emails at ≥ 0.80 (max 0.64, mean 0.54; recomputed independently) and no sentence in scope.py, prepare.py or inbox-dev. No new High. I re-ran the freeze hashes, the lint, --check-gold and --check-ops-gold (32/32), carrier_run_check (30/30), cooking_word (15/3/2), the B-465 conflicts and the stem collisions, and all are as the gold states. Medium/Low items are in deliverables/model-risk/T-128-build-check-2.md: M1 restaurant Missing form, M3 class-level slot mirroring (to note in the T-027 memo), L6 routes.md wording. The gold may be frozen. This is not a production approval, and the T-027 veto stands.

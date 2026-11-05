@@ -1,0 +1,8 @@
+emails >= 0.80: 0 of 32; mean best match 0.539
+   (0.641, 'SUB-579', 'simulation/inbox/SUB-477/email.md')
+   (0.638, 'SUB-565', 'simulation/inbox/SUB-525/email.md')
+   (0.62, 'SUB-568', 'simulation/inbox/SUB-528/email.md')
+   (0.616, 'SUB-569', 'simulation/inbox/SUB-529/email.md')
+   (0.61, 'SUB-577', 'simulation/inbox/SUB-537/email.md')
+   (0.608, 'SUB-558', 'simulation/inbox/SUB-518/email.md')
+sentences found in scope.py/prepare.py/inbox-dev: none

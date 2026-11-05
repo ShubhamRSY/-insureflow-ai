@@ -20,7 +20,7 @@ First recorded 2026-11-04 (code e1169ddc, scope-v7); re-recorded by the orchestr
 | Lint sha256 | `01147a7532bdd7f1ec00861200d1d5e6bbf87f12612389416ff58b78844ea653` |
 | C2 counter v2 sha256 | `a57010b0796e7f88ce283375b2a3e6cde338d79c99fd79eab64f49a3ad63085a` (D-141) |
 | Counter notes (M1 rule, D-158) sha256 | `3e99ce9e2ff0f791da755ed76c3bbee5fb739e669b5addb1490f90c19e5a2cd1` |
-| T-128 gold manifest sha256 | (not yet: recorded after the gold freeze) |
+| T-128 gold manifest sha256 | `307e6fec738d6132eeca82a91472d1ca6dfaf052dd638fd2931063283db8e0ff` (`deliverables/senior-underwriter/T-128-gold-manifest.sha256`: 32 gold cards + T-128-routes.md; frozen 2026-11-05 after @model-risk look-again APPROVE, T-128-build-check-2.md; D-166) |
 
 ## 2026-11-03 (third part): T-129 merged — read this first
 - P-079 (D-155), P-080 (D-156), P-081 (D-157) built as T-129; @model-risk REJECT (H1–H3) → fixed (D-159) → look-again APPROVE WITH CHANGES, no High. Merged into ai-team; pilot-integration pushed. Scope detector **scope-v6**; PROMPT_VERSION unchanged `392b9ce3c1af`.
