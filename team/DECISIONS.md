@@ -1642,3 +1642,14 @@ Then continue: P-066 concurrent-write tests, @pm pilot-readiness update, @model-
 - Date / Owner: 2026-11-04 / @user
 - Decision (the user's words): "T-128 run GO, conditional" — "valid only if step 3 ends with no High: run T-128 once (all hashes verified, smoke_readers, no cache, qwen paced 55 s), score once with v11 and count_ops_gate_v2.py ... Fix nothing. Then the @model-risk T-027 memo." "If any step hits a High after its one look-again: STOP and give me options."
 - Status: ACCEPTED by @user, 2026-11-04, conditional.
+
+## D-164 — P-083 approved on conditions (B-525)
+- Date / Owner: 2026-11-04 / @user
+- Decision (the user's words, pasted, D-032): "approve change P-083 (B-525) — conditional approval typed by @user, valid ONLY if: (a) a single highway-style premises ("FM 1960 Rd", "State Highway 6", "County Road 12", "I-35 Frontage Rd", "Spur 5" etc.) counts as one place only when it is the only address in all documents; (b) any second address anywhere still → manual intake; (c) the 380-folder sweep shows only the intended files newly in scope, each listed; (d) all multi-location dev shapes (SUB-475, 533–537, two highway addresses) still go to manual intake; (e) the generated-test comparison shows no other loosening. If any fails, STOP." "If it passes: merge, push, re-record the freeze in NEXT-SESSION.md (new code commit, scope version) before any T-128 file exists. Then continue with step 3 (build T-128) and step 4 (conditional GO) as instructed."
+- Status: ACCEPTED by @user, 2026-11-04, conditional. A loosening; built as T-131 (scope-v8). Not a production approval (@model-risk).
+- Superseded 2026-11-05 by D-165: dropped before merge (code review found loosenings the "only address" check could not close); code reverted; B-525 stays open.
+
+## D-165 — Drop P-083; P-084 (stricter only, fast lane)
+- Date / Owner: 2026-11-05 / @user
+- Decision (the user's words, pasted, D-032): "option 1 — drop P-083 for now, revert its changes; B-525 stays open (revisit with pilot data)." "P-084 (stricter only, fast lane): the second-address detector also catches addresses in any letter case ("1200 ELM DR", "9 oak way"), Texas route codes ("IH 35", "SL 1604", "TX-71", "RM", "FM", "SH", "US"), PMB and "General Delivery" mailing addresses, and Spanish-format addresses ("Calle Roble 12", "Av. …"). City-only mentions are left to the model location count. Checks: 380-folder sweep (0 newly in scope; list every newly manual-intake file), generated comparison (0 loosenings), dev multi-location shapes still caught, near-misses still in scope, tests/pipeline, quick set. @model-risk check, one look-again max; if a High remains, STOP with options." "If no High: merge, push both branches, re-record the freeze in NEXT-SESSION.md (code commit, scope version, all hashes) before any T-128 file exists."
+- Status: ACCEPTED by @user, 2026-11-05. Built as T-132 (scope-v8). Not a production approval (@model-risk).

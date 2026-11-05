@@ -1,0 +1,11 @@
+201408 cases; v7 fires, v8 not: 3001 ; of those NOT exactly one highway premises: 0
+ok  ['Note to agent: 100 Spur 5 Rd, Kerrville. Our agent said 100 Spur 5 Rd, Kerrville']
+ok  ['Premises address: Note to agent: 100 Spur 5 Rd, Kerrville. Our agent said 100 Spur 5 Rd, Kerrville', 'Note to agent: 100 Spur 5 Rd, Kerrville. Our agent said 100 Spur 5 Rd, Kerrville']
+ok  ['Home address:\n4400 RM 620 Rd, Austin\nWe also keep stock at Mailing address:\n4400 RM 620 Rd, Austin']
+ok  ['Premises address: Home address:', 'Home address:\n4400 RM 620 Rd, Austin\nWe also keep stock at Mailing address:\n4400 RM 620 Rd, Austin']
+ok  ['Mailing address:\n800 I-35 Service Rd, Temple and ABC Insurance Agency\n800 I-35 Service Rd, Temple']
+ok  ['Premises address: Mailing address:', 'Mailing address:\n800 I-35 Service Rd, Temple and ABC Insurance Agency\n800 I-35 Service Rd, Temple']
+ok  ['Premises address: MAILING ADDRESS: 77 County Road 12, Waco. Note to agent: 77 County Road 12, Waco', 'MAILING ADDRESS: 77 County Road 12, Waco. Note to agent: 77 County Road 12, Waco']
+ok  ['Premises address: Billing: 4400 FM 1960 Rd W, Houston, Agent address:', 'Billing: 4400 FM 1960 Rd W, Houston, Agent address:\n4400 FM 1960 Rd W, Houston']
+ok  ['We also keep stock at 12 State Highway 6, BryanBilling: 12 State Highway 6, Bryan']
+ok  ['Premises address: We also keep stock at 12 State Highway 6, BryanBilling: 12 State Highway 6, Bryan', 'We also keep stock at 12 State Highway 6, BryanBilling: 12 State Highway 6, Bryan']

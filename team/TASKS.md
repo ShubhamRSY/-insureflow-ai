@@ -1940,6 +1940,28 @@ D-004 (user, 2026-10-09): Sanger & Altgelt agency pipeline. Eight steps. No auto
   - [x] Card quotes the words that fired; What's new line; screenshot `deliverables/software-engineer/screenshots/P-077-second-place-manual-intake.png` (temp copy).
   - [x] tests/pipeline 94 passed; scope, prepare, sources, regression_dev, workbench self-checks pass; pyright 77 → 77; code review findings fixed.
 
+### T-132 — P-084 (D-165): second-address detector catches more address forms (stricter only)
+- Owner: @software-engineer (built by the orchestrator per D-165 fast lane) · Status: DONE 2026-11-05 (@model-risk APPROVE, no High, check-T-132.md; M1 text fixed; B-527, B-528 opened) · Reviewer: @model-risk (High only, one look-again)
+- Acceptance criteria (D-165):
+  - [x] The second-address detector also catches addresses in any letter case ("1200 ELM DR", "9 oak way"), Texas route codes ("IH 35", "SL 1604", "TX-71", "RM", "FM", "SH", "US"), PMB and "General Delivery" mailing addresses, and Spanish-format addresses ("Calle Roble 12", "Av. …"). City-only mentions are left to the model location count.
+  - [x] Stricter only: 380-folder sweep 0 newly in scope; every newly manual-intake file listed.
+  - [x] Generated comparison: 0 loosenings.
+  - [x] Dev multi-location shapes still caught; near-misses still in scope.
+  - [x] tests/pipeline pass; quick set run.
+  - [x] pyright-lsp + code-review before @model-risk; What's new line + screenshot (D-065).
+- As built: deliverables/ai-engineer/P-084-as-built.md
+
+### T-131 — P-083 (D-164): one highway premises is one place when it is the only address (B-525)
+- Owner: @software-engineer (built by the orchestrator per D-164) · Status: DROPPED 2026-11-05 (D-165: code review found loosenings; reverted, never merged; B-525 open) · Reviewer: —
+- Acceptance criteria (D-164, the user's conditions):
+  - [ ] (a) A single highway-style premises ("FM 1960 Rd", "State Highway 6", "County Road 12", "I-35 Frontage Rd", "Spur 5" etc.) counts as one place only when it is the only address in all documents.
+  - [ ] (b) Any second address anywhere still → manual intake.
+  - [ ] (c) The 380-folder sweep shows only the intended files newly in scope, each listed.
+  - [ ] (d) All multi-location dev shapes (SUB-475, SUB-533–537, two highway addresses) still go to manual intake.
+  - [ ] (e) The generated-test comparison shows no other loosening.
+  - [ ] pyright-lsp + code-review findings fixed before @model-risk; tests/pipeline pass; What's new line + screenshot (D-065).
+- As built: deliverables/ai-engineer/P-083-as-built.md
+
 ### T-130 — P-082 (D-161): role words and name lines never hide an address; Spur; approve records resolved values (B-523, B-524)
 - Owner: @software-engineer (built by the orchestrator per D-161 fast lane) · Status: DONE 2026-11-04 (@model-risk REJECT H1 → fixed → APPROVE on look-again; B-523, B-524 closed; B-525, B-526 opened) · Reviewer: @model-risk (High only, one look-again)
 - Acceptance criteria:
