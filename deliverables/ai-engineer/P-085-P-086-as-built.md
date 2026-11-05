@@ -35,3 +35,14 @@
 
 - The value an underwriter can choose for the email side is the joined quotes (verbatim pieces joined with " … "), as before P-086 when it was a single ±120-character window.
 - The quote count is per passage, not per line: windows that overlap on one line join, up to 360 characters.
+
+## @senior-underwriter UI check (2026-11-05): APPROVE WITH CHANGES — High fixed
+
+- **P-085 met.** "complete" appears nowhere on the held card.
+- **High (P-086), fixed.** The SUB-562 loss-run and application quotes held only the business name and type ("Mustang Island Deli LLC", "Operations: Deli"), but the card said cooking "is stated" there.
+  - Fix, labels only: `cooking_activity()` (prepare.py) marks a quote that names a cooking activity or equipment. A document whose quotes name none gets `weak: True`.
+  - The card lists those documents as "a business name or description only, no cooking activity stated". The conflict list marks each such side the same way.
+  - Activity passages are quoted first, so SUB-562's email side now starts with the frying sentence and the subject line comes after it (this also covers the Low finding).
+  - Detection, holds and statuses do not read `weak`. The T-128 replay again shows 0 non-cooking differences and the same conflict set and side counts.
+- **Medium, explained, no change:** "Account-manager check: refused, the saved extraction run for this file cannot be read" is a screenshot-sandbox artifact. The render uses no saved run file (D-069). On a real card the saved run exists.
+- **Low, backlog:** a short "fryer stated, hood not stated" note beside the conflict.

@@ -1165,8 +1165,12 @@ def score_html(item: dict, report: dict, user: auth.User | None = None) -> list[
         if conflict.get("field") == "cooking" and conflict.get("resolution") != "resolved":
             sides = conflict.get("values") or [{}, {}]  # code review 5, UI check H1: the conflict's own sides, every document that states cooking
             first = sides[0]
-            others = "; ".join(f'{html.escape(str(v.get("source") or "a document"))}: "{html.escape(str(v.get("quote") or "—"))}"' for v in sides[1:])
-            out.append(f'<p class="bad">Cooking: {html.escape(str(first.get("source") or "a document"))} says "{html.escape(str(first.get("quote") or "—"))}", but cooking is stated in {others}. '
+            def _list(vs):
+                return "; ".join(f'{html.escape(str(v.get("source") or "a document"))}: "{html.escape(str(v.get("quote") or "—"))}"' for v in vs)
+            stated, named = [v for v in sides[1:] if not v.get("weak")], [v for v in sides[1:] if v.get("weak")]  # P-086 (UI check H1)
+            said = (f"but cooking is stated in {_list(stated)}" if stated else "but a food business word appears") + (
+                f"{'; ' if stated else ' in '}a business name or description only, no cooking activity stated, in {_list(named)}" if named else "")
+            out.append(f'<p class="bad">Cooking: {html.escape(str(first.get("source") or "a document"))} says "{html.escape(str(first.get("quote") or "—"))}", {said}. '
                        'The file is held until you choose.</p>')
     if pilot.active():
         out.append(f'<p class="banner">AI proposal — verify against the source. {html.escape(pilot.warning_text())}</p>')
@@ -1305,7 +1309,7 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
                         "<li><b>{}</b> ({}){}{}</li>".format(
                             html.escape(str(v.get("value"))), html.escape(str(v.get("source") or "file not named")),
                             "" if v.get("quote") == v.get("value") else " — cited: " + html.escape(str(v.get("quote") or "—")),  # UI check M: the quote is not repeated when it is the value
-                            (f' <span class="bad">{side_note(v)}</span>' if side_note(v) else "") + (f" (and {int(v['more'])} more in this file)" if v.get("more") else ""),  # P-074 (D-132); P-086
+                            (f' <span class="bad">{side_note(v)}</span>' if side_note(v) else "") + (f" (and {int(v['more'])} more in this file)" if v.get("more") else "") + (" — business name or description only; no cooking activity stated" if v.get("weak") else ""),  # P-074 (D-132); P-086
                         )
                         for v in (item_c["values"] if isinstance(item_c["values"], list) else [])
                     ),
