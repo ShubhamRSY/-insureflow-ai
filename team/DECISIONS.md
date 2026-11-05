@@ -1664,3 +1664,10 @@ Then continue: P-066 concurrent-write tests, @pm pilot-readiness update, @model-
 - Decision: LIFT, conditional, no High (`deliverables/model-risk/T-027-memo-T-128.md`). Conditions (any breach reinstates the veto): the frozen build only (code 1ddae83c, PROMPT_VERSION 392b9ce3c1af, scope-v8, qwen/qwen3.8-27b), any change needs a new @model-risk check; Texas BOP under P-055 criteria 1–4 only; C6 monitoring on at least 60 reviewed files with stop rules; memo M1 (562 cooking conflict cites the wrong lines) and M2 ("complete — review pending" with an open conflict) closed before any send-enabled mode.
 - Go-live stays @user's decision; the @responsible-ai T-082 veto is separate and stands. No AI role approves or sends (D-017).
 - Status: RECORDED by the orchestrator from the @model-risk memo, 2026-11-05.
+
+## D-168 — @user: go-live not yet; draft P-085/P-086; B-525/B-529/B-532 deferred; repo to be made private
+- Date / Owner: 2026-11-05 / @user (typed in this Claude Code session)
+- Decision: (1) Go-live: not yet. (2) Draft B-530 and B-531 as proposals for @user to read, not built: P-085 (B-531, `deliverables/ai-engineer/proposal-P-085.md`) and P-086 (B-530, `deliverables/ai-engineer/proposal-P-086.md`). (3) B-525, B-529 and B-532 are deferred to pilot data. (4) @user will make the GitHub repo private.
+- Also asked: @responsible-ai states the T-082 lift requirements (answer only, verdict unchanged); a plan-only final pilot build and validation (`deliverables/pm/pilot-final-build-plan.md`; the hold-out is T-133 because T-130 is taken); `deliverables/pm/pilot-readiness.md` updated.
+- Not an approval of P-085 or P-086 (each needs `approve change P-###`). No model call, nothing sent.
+- Status: RECORDED by the orchestrator from @user's words, 2026-11-05.
