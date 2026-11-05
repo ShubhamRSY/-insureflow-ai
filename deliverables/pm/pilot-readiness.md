@@ -1,9 +1,56 @@
 # Pilot readiness — assist-only pilot (T-109d, D-116)
 
-- Owner: @pm. Created 2026-10-19; updated 2026-10-21; **updated 2026-11-02 to the state of `pilot-integration`**. No model call.
+- Owner: @pm. Created 2026-10-19; updated 2026-10-21 and 2026-11-02; **updated 2026-11-05 by the orchestrator (D-168)**. No model call.
 - Source of conditions: `deliverables/model-risk/T-027-assist-mode-pilot.md` (C1–C8, @model-risk). Open decisions: `deliverables/pm/pilot/decisions-for-user.md` (c1–c9).
-- Not a production approval. The T-027 production veto stands (KEEP after T-120). Synthetic data only. "Built" means built and tested on `pilot-integration`. It does not mean independently approved.
+- Not a production approval. The T-027 production veto is lifted, conditional (D-167, below); it was KEEP after T-120. Synthetic data only. "Built" means built and tested on `pilot-integration`. It does not mean independently approved.
 - Note: these pilot conditions C1–C8 are different from the T-027 operations gate C1–C7 (D-134). That gate was met in T-120.
+
+## Update 2026-11-05 (D-167, D-168)
+
+- **@model-risk T-027 production veto: LIFTED, conditional (D-167)** after the T-128 hold-out passed every gate.
+  - The lift holds only for the frozen build (1ddae83c, prompt 392b9ce3c1af, scope-v8, qwen/qwen3.8-27b on Groq) and Texas BOP P-055 criteria 1–4.
+  - It also needs C6 monitoring on ≥ 60 reviewed files with stop rules, and B-530/B-531 closed before any send-enabled mode. Any change to the build needs a new @model-risk check.
+- **Go-live: not yet** (@user, D-168).
+- **@responsible-ai T-082 fairness veto: stands.** Its lift requirements are below.
+- **The plan for the final build** is in `deliverables/pm/pilot-final-build-plan.md`: P-085/P-086, the provider switch, then one fresh 20+12 hold-out (T-133), run once.
+- **Deferred to pilot data (D-168):** B-525, B-529, B-532.
+- **The repo will be made private** by @user (D-168).
+
+### What's left before a pilot
+
+1. `approve change P-085` (B-531 label) and `approve change P-086` (B-530 citations). Then build them, and @model-risk checks them.
+2. AI provider with a data agreement. The switch, then a @model-risk check.
+3. Freeze, then T-133 (gold first, run once, every T-128 gate), then a @model-risk memo.
+4. C6 monitoring plan (≥ 60 reviewed files, stop rules), written before the first pilot file.
+5. The older items below (c7, c8, C7 freeze, C8 registration) where still open.
+6. T-082. @responsible-ai lists 7 items; items 1–6 can be done now on synthetic data (no model call):
+   1. EN↔ES class counterfactual test.
+   2. Spanish bar words routed the same as English. This is a rule change and a loosening, so it is your decision.
+   3. B-197 Spanish-variant review.
+   4. Housing proxy-review document.
+   5. Your decision on the housing route.
+   6. Recommendation-mix test by housing class.
+   - Items 1–6 lift the veto for demo/synthetic use only.
+   - Item 7 (language outcome rates against AIR ≥ 0.8) and the protected-group impact in item 6 need real pilot data before a pilot.
+
+### Questions for the manager
+
+- Go / no-go and who signs it. Pilot size (files, underwriters) and dates. C6 needs ≥ 60 reviewed files.
+- Which accuracy numbers the pilot shows (c1), the reporting run (c2), and the per-field threshold that pauses the pilot (c3).
+- The housing route under T-082 (keep never-overridable no_match with a written reason, or an alternative).
+
+### Questions for IT
+
+- **AI provider** with a data agreement: endpoint and region, exact model id and version, how the key is issued, stored and rotated, and rate limits for pilot volume.
+- **Hosting:** which server or cloud account and region, who can reach it, backups, and where logs are kept, for how long, and who can read them.
+- **Sign-in provider:** the OIDC issuer/tenant, a client for the workbench, pilot user accounts, and how a sign-in maps to an underwriter id (c5, c9).
+- A host for the clamd virus scanner (B-485).
+
+### Questions for compliance
+
+- Is the provider agreement acceptable for real applicant documents? It should cover no training on our data, zero or short retention, no abuse-log storage or a bounded one, in-region processing, subprocessors, deletion, and breach notice.
+- Retention period for pilot logs and decisions.
+- The legal standard for the T-082 housing proxy review (Fair Housing Act disparate impact) and who signs it.
 
 ## Summary (2026-11-02)
 

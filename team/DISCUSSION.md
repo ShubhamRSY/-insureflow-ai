@@ -3619,3 +3619,16 @@ TASK: T-027
 DATE: 2026-11-05
 
 T-027 memo after T-128: **LIFT (conditional, frozen build only).** Every lift condition and every T-128 gate is met. I recomputed them myself. The rebuilt reports re-mark with 0 differences from the published scores, and C2/C4 output is byte-identical. Part A alone caught 572/573 (SUB-533 shapes) and 574–577 (words-only). P-079 kept 550, 555 and 567 in scope. False manual intake is 0/20, with 0 leaks, 0 unsafe routes and 0 false completes. No High. The lift is conditional on: the frozen build (1ddae83c, 392b9ce3c1af, scope-v8, qwen) with any change re-checked; criteria 1–4 Texas BOP only; C6 monitoring (≥ 60 reviewed files) with stop rules; and M1 (562's cooking conflict cites the wrong lines) plus M2 (the "complete — review pending" label on files with an open conflict) closed before any send-enabled mode. Medium/Low items are in deliverables/model-risk/T-027-memo-T-128.md. This is not a go-live decision, which is @user's, and the T-082 @responsible-ai veto is separate.
+
+---
+[2026-11-05 | orchestrator → @user, @pm, @head-of-underwriting, @data-scientist] TYPE: HANDOFF
+Re: T-082
+Message: @responsible-ai answered in chat at @user's request (answer only, nothing written, verdict unchanged). Seven lift requirements:
+1. EN↔ES counterfactual on workbench.match(), 0 route/note/suggested/overridable differences (@data-scientist, T-067 extension, synthetic now).
+2. Spanish bar words (cantina, taberna, antro, discoteca + restaurant) get the same route as "bar restaurant" (today R1 no_match vs R2 senior_referral; a loosening, @user decides).
+3. B-197 Spanish-variant one-to-one review (@responsible-ai).
+4. deliverables/responsible-ai/proxy-review.md for student/subsidized housing: neutral reason, loss basis or "none", one less discriminatory alternative, @compliance on the legal standard.
+5. @user decides the housing route (now W1 never-overridable, workbench.py:172).
+6. Recommendation-mix test by housing class with n (@data-scientist).
+7. Language outcome rates (hold/no_match by source language): reportable on synthetic data; the AIR ≥ 0.8 threshold needs pilot data.
+Items 1–6 lift the veto for demo/synthetic only; 7 and the protected-group impact of 6 stay required before pilot. Summary in deliverables/pm/pilot-readiness.md. No verdict given by the orchestrator.
