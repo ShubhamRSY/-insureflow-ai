@@ -1,20 +1,20 @@
 # Next session
 
-## Freeze 2026-11-04 for the T-128 hold-out (D-162) — read this first
+## Freeze for the T-128 hold-out (D-162), re-recorded 2026-11-05 after P-084 (D-165) — read this first
 
-Recorded by the orchestrator in the Claude Code session, 2026-11-04, before any T-128 file or gold exists (no SUB-550–581 in simulation/inbox or gold-set). Any byte change below reopens the freeze.
+First recorded 2026-11-04 (code e1169ddc, scope-v7); re-recorded by the orchestrator on 2026-11-05 after T-132 (P-084) merged, before any T-128 file or gold exists (no SUB-550–581 in simulation/inbox or gold-set). P-083 (D-164) was dropped and never merged. Any byte change below reopens the freeze.
 
 | Item | Value |
 |---|---|
-| Branch / worktree | `pilot-integration` / `insureflow-integration` (merged into `ai-team` 7c7433f2; both pushed) |
-| Code commit | `e1169ddc95c49d8ed300875a88df620640f6b173` (pipeline code identical to `3a637c1c`, T-130 P-082 after @model-risk look-again APPROVE) |
+| Branch / worktree | `pilot-integration` / `insureflow-integration` (merged into `ai-team` 0358eec7; both pushed) |
+| Code commit | `1ddae83c9b3755a6b9c4ffe383347f17251ebb01` (T-132 P-084 after @model-risk APPROVE, check-T-132.md) |
 | `PROMPT_VERSION` | `392b9ce3c1af` (3,257 bytes) |
 | `llm_extract.py` sha256 | `90ed677226c174b05c2f94f9293637a1604c18f70b63cb584cad761a8ce2eaa4` |
-| Scope detector | **scope-v7**; `scope.py` sha256 `cc6d0d3c7ec0a2d2f9cc6fdbde4b0a1f71a78180e6930b88152c08e3607332e4` |
+| Scope detector | **scope-v8** (P-084); `scope.py` sha256 `645ff5e1d3a5d21434f6afdbad7a7a7090867426b1d194733532bb64aea4b111` |
 | `prepare.py` sha256 | `161914cbc56d6c9ed83219179c484b62b40dcc30703b7c560f0adb88edd00196` |
 | `package.py` sha256 | `d9d0edb87817124eda88a900116ed4361ac5ab4c02fafd53ea865f9ae9e41f6f` |
 | `sources.py` sha256 | `3ef093883c1d36d2f6949b137401c939618bde1e927b337800e283d2109d411b` |
-| `workbench.py` sha256 | `34d726c64711c1ceade63df8835f367d705734ac5ddb7de7d92a34394044ebc8` |
+| `workbench.py` sha256 | `5e0b2d88e89f91a870ab85ebafe6a6d4ac3076e8e2718bf2a96b35b4966fe9d1` |
 | `smoke_readers.py` sha256 | `6e83bb523769c9110fc94cd471f9b4743fd663bccc279cecd3280a8e44409b09` |
 | Scorer v11 sha256 | `7ddcfb50521b7af17f00c0e148891ca40008d019ce257b9b5d121c7fa6d3fcbb` |
 | Lint sha256 | `01147a7532bdd7f1ec00861200d1d5e6bbf87f12612389416ff58b78844ea653` |
