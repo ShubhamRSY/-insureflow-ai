@@ -51,26 +51,35 @@ BANDS = (
 )
 
 # P-007. Fifteen development files for the check after each change. The full 60 run only at milestones.
+# B-498 (2026-11-02): every file reaches the model under scope-v4; scans and Spanish go to manual intake before any call.
+# 2026-11-02 (@user): two in-scope files with an Excel schedule added, so 17 files; the band keeps its name "quick-15".
 QUICK = (
+    "SUB-017",  # text PDF plus email
+    "SUB-018",  # scanned PDF plus email
+    "SUB-026",  # text PDF plus email (replaces SUB-022, B-511, 2026-11-03 @user)
+    "SUB-023",  # scanned PDF plus email
     "SUB-027",  # text PDF
-    "SUB-029",  # Excel, no loss runs
-    "SUB-038",  # scanned page
-    "SUB-042",  # text PDF plus email, premises conflict
-    "SUB-044",  # Excel plus email, square-feet conflict
-    "SUB-050",  # email body, no loss runs
-    "SUB-051",  # Spanish
-    "SUB-053",  # scanned page, no loss runs
+    "SUB-037",  # application PDF only
+    "SUB-036",  # text PDF plus email (replaces SUB-042, B-511, 2026-11-03 @user)
+    "SUB-046",  # application PDF only
     "SUB-056",  # carrier loss run and a no-known-loss letter
-    "SUB-067",  # handwritten tilted scan
-    "SUB-070",  # multiple locations in Excel
+    "SUB-059",  # two-page loss run
+    "SUB-061",  # application plus attachment
+    "SUB-063",  # resubmission
+    "SUB-069",  # two-page loss run
     "SUB-071",  # blank ACORD plus attachment
     "SUB-073",  # resubmission, sales conflict
-    "SUB-074",  # handwritten Spanish scan
-    "SUB-076",  # two loss-run dates
+    "SUB-210",  # application plus Excel schedule (xlsx reader); T-108 dev data (D-115)
+    "SUB-221",  # application PDF plus Excel schedule (xlsx reader); T-108 dev data (D-115)
 )
+# P-077 part A (scope-v5) sent SUB-022 and SUB-042 to manual intake (second address in the email); @user replaced them 2026-11-03 (B-511).
+QUICK_MANUAL: tuple[str, ...] = ()
+QUICK_SCORER = {"SUB-210": "eval_holdout_v7", "SUB-221": "eval_holdout_v7"}  # the frozen scorer T-108 was scored with; its gold is in that format
 
 
 def scorer_for(sid: str):
+    if sid in QUICK_SCORER:
+        return __import__(QUICK_SCORER[sid])
     number = int(sid[4:])
     for band, module_name in BANDS:
         low, high = (int(part) for part in band.split("-"))
@@ -212,6 +221,15 @@ def _self_check() -> None:
         PACE, _started[:] = 0, []
     real = Path("deliverables/x.json")
     assert kept(real) == (real if WRITE else _SCRATCH[0] / "x.json") and (WRITE or not str(kept(real)).startswith(str(ROOT))), "D-096 item 4"
+    import scope
+    import sources
+
+    read = {sid: sources.read_folder(prepare.INBOX_DIR / sid) for sid in QUICK}
+    out = [sid for sid, docs in read.items() if not scope.detect(docs)["in_scope"]]
+    assert out == list(QUICK_MANUAL), f"B-498: quick-set files that never reach the model: {out} (expected only {QUICK_MANUAL})"
+    assert all([r["code"] for r in scope.detect(read[sid])["reasons"]] == ["multiple_locations"] for sid in QUICK_MANUAL), "P-077: they go only for the second address"
+    assert any(d["name"].endswith(".xlsx") and d["text"].strip() for docs in read.values() for d in docs), "the quick set covers the xlsx reader"
+    assert all(scorer_for(sid) for sid in QUICK)
     print("regression_dev self-check ok")
 
 

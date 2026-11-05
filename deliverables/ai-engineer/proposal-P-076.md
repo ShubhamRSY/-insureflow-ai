@@ -1,6 +1,6 @@
 # P-076 — Operations is never auto-accepted; always flagged and acknowledged before send (C1 of T-027 gate)
 
-- Author: @ai-engineer-assistant, 2026-10-26. **Draft for @user to read. Not approved, not built.** Development data only. Not a production approval; the T-027 veto stands.
+- Author: @ai-engineer-assistant, 2026-10-26. **Approved by @user 2026-10-27 (D-135, conditional approval, conditions met). Not built yet.** Development data only. Not a production approval; the T-027 veto stands.
 - Raised by @model-risk in `deliverables/model-risk/T-027-operations-gate-answer.md` (D-133) and accepted with conditions by the user (decision 1 = A). This proposal covers **C1 only**. C2–C7 are recorded separately (see below). Per D-017, any code change under `underwriting_pipeline/ai/` needs a numbered proposal and `approve change P-076`.
 
 ## Problem

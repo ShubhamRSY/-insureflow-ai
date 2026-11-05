@@ -1,0 +1,3 @@
+source,loc,address,city,zip,bldg_tiv,construction,year_built,sq_ft,sprinklers,cooking
+application,1,3311 Soncy Rd,Amarillo,79124,$350000,Masonry,1990,4200,No,No
+application,2,5602 Slide Rd,Lubbock,79414,$140000,Masonry,2003,2600,No,No

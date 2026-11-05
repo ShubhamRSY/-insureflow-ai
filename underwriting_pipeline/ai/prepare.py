@@ -275,6 +275,18 @@ def drop_premises_without_zip(merged: dict, needs_human: list[str]) -> None:
         needs_human.append(source)
 
 
+POLICY_NOTE = "Operations is always checked by the underwriter (T-027 C1, D-135)"
+
+
+def flag_operations(merged: dict) -> None:
+    """P-076 (D-135, T-027 C1): the LAST step. An operations row with a value is never auto-accepted. Every specific reason is kept;
+    the policy flag is stored apart (policy_review) so a silent-error count (C2) can tell it from a reason that names an item."""
+    row = merged.get("operations")
+    if row and row.get("value"):
+        row["needs_review"] = True
+        row["policy_review"] = True
+
+
 def completeness(rows: list[dict]) -> dict:
     missing = [r["field_id"] for r in rows if not r["value"]]
     if not missing:
@@ -1285,7 +1297,7 @@ def unread_rows(docs: list[dict], not_sent: list[str]) -> list[dict]:
         if doc.get("unread"):
             rows.append({"file": doc["name"], "page": None, "reason": doc["unread"]})
         elif doc.get("needs_human") and not pages:
-            rows.append({"file": doc["name"], "page": None, "reason": "scan not readable"})
+            rows.append({"file": doc["name"], "page": None, "reason": doc.get("flag") or "scan not readable"})  # T-122 (D-138): a macro file says so
         rows += [{"file": doc["name"], "page": row["page"], "reason": row["reason"]} for row in pages]
     return rows + [{"file": name, "page": None, "reason": f"not sent: text past {llm_extract.MAX_CHARS:,} characters"} for name in not_sent]
 
@@ -1370,6 +1382,9 @@ def process_submission(folder: Path) -> dict:
             extracted = {"fields": [], "conflicts": []}
             error = llm_extract._safe(str(exc))
         else:
+            located = _location_problem(extracted, texts)
+            if located:  # P-077 part B: the whole file goes to a person; no value is kept. The call was made: its key, retries and unsent files stay
+                return {**_manual_intake(folder, docs, located, extracted.get("not_sent") or []), "cache_key": key, "retries": llm_extract.ATTEMPTS[attempts_before:]}
             if not extracted["conflicts"] and not any(row.get("value") for row in extracted["fields"]):
                 # D-024: llm_extract returns only after it has its own usable values, so an all-empty reply is
                 # an answer the gate rejected, not a failed call. A raised call stays extraction_failed above.
@@ -1464,12 +1479,13 @@ def process_submission(folder: Path) -> dict:
         ):
             if not any(re.search(rf"\b{re.escape(cue.strip())}", blob) for cue in cues):
                 extra.append(label)
-    needs_human = [doc["name"] for doc in docs if doc.get("needs_human")]
+    needs_human = [doc["name"] for doc in docs if doc.get("needs_human") or doc.get("flag")]  # T-122 (D-138 B): a flagged file is also for a person
     unread = unread_rows(docs, extracted.get("not_sent") or [])
     needs_human += [row["file"] for row in unread if row["file"] not in needs_human]
     drop_premises_without_zip(merged, needs_human)
     if merged["premises_address"].get("value"):
         flag_invalid_address(merged["premises_address"])
+    flag_operations(merged)  # P-076 (D-135): last step, after every rule, merge and conflict
     open_conflicts = [c for c in conflicts if c.get("resolution") != "resolved"]
     rows = [merged[field] for field in FIELDS]
     report = completeness(rows)
@@ -1486,6 +1502,7 @@ def process_submission(folder: Path) -> dict:
     report["class_lines"] = class_lines(texts)  # P-061 (D-112)
     report["needs_human"] = needs_human
     report["unread"] = unread
+    report["security_flags"] = [{"file": doc["name"], "kind": f["kind"], "reason": f["reason"]} for doc in docs for f in doc.get("flags") or []]  # T-122 (D-138)
     report["locations"] = locations
     report["error"] = error
     report.update(_run_metadata())
@@ -1508,6 +1525,8 @@ def process_submission(folder: Path) -> dict:
     if error or rejected:
         report["complete"] = False
         report["request"] = None
+    elif any(row["page"] is None for row in unread):  # T-122 H2 (D-138): a file nobody read may hold the item; ask the producer for nothing
+        report["request"] = None
     elif report["complete"] or (pending and not open_conflicts):  # P-041: a review is the underwriter's, nothing to ask the producer
         report["request"] = None
     else:
@@ -1518,23 +1537,84 @@ def process_submission(folder: Path) -> dict:
     return report
 
 
-def _manual_intake(folder: Path, docs: list[dict], scope_result: dict) -> dict:
-    """P-055: the report of an out-of-scope file. Every field empty, nothing complete, no request, no model call (the documents are not read for values)."""
+# P-077 part B: a count of 1 must quote a premises address: a street with a suffix ("2801 E 42nd St"), or a number, name, city, state and ZIP
+# ("500 Broadway, San Antonio, TX 78205"). Not a PO Box, and not a quote that itself names more than one place ("2 Stores"). @model-risk H1.
+CITY_STATE_ZIP = re.compile(r"\b\d{1,6} +(?:[NSEW]\.? +)?[A-Z0-9][A-Za-z0-9.'-]*(?: +[A-Z][A-Za-z.'-]*)*, *[A-Z][A-Za-z .'-]+,? *[A-Z]{2} +\d{5}\b")  # P-079: "Brenham TX 77833" too
+PO_BOX = re.compile(r"(?i)\bp\.?\s*o\.?\s*box\b")
+
+
+def _address_count(quote: str) -> int:
+    """P-079: how many addresses a quote holds (street, highway/route, or number-city-state-ZIP); overlapping matches are one address."""
+    spans = sorted(m.span() for p in (scope.STREET_WORDS, scope.HIGHWAY, CITY_STATE_ZIP) for m in p.finditer(quote))
+    count, end = 0, -1
+    for start, stop in spans:
+        if start >= end:
+            count += 1
+        end = max(end, stop)
+    return count
+
+
+def _shows_one_address(quote: str) -> bool:
+    """P-077 part B, P-079: exactly one address, not a PO Box, and no count phrase ("2 Stores")."""
+    return _address_count(quote) == 1 and not PO_BOX.search(quote) and not scope.COUNT_PHRASE.search(quote)
+
+
+def _premises_shows_one(extracted: dict, texts: dict) -> bool:
+    """P-079 (D-155 a): the model's premises quote, found in its cited file, holds exactly one address. Every premises row must agree."""
+    rows = [r for r in extracted.get("fields") or [] if r.get("field_id") == "premises_address" and r.get("value")]
+    if not rows or any(not llm_extract.same_address(rows[0]["value"], r["value"]) for r in rows[1:]):
+        return False
+    return all(isinstance(r.get("quote"), str) and isinstance(r.get("source"), str) and r["source"] in texts
+               and bool(llm_extract.find_quote(texts[r["source"]] or "", r["quote"])) and _shows_one_address(r["quote"]) for r in rows)
+
+
+def _location_problem(extracted: dict, texts: dict) -> dict | None:
+    """P-077 part B (D-145): after a good model call, a scope result that sends the whole file to manual intake, or None.
+    None only for an integer count of 1 whose quote holds a street address and is found in the cited file. Anything else fails closed:
+    a count above 1 is multiple locations; missing, null, not an integer, 0, a blank quote, a quote with no address or not in the file is unclear."""
+    loc = extracted.get("location_count")
+    value, quote, source = (loc.get("value"), loc.get("quote"), loc.get("source")) if isinstance(loc, dict) else (None, None, None)
+    found = isinstance(quote, str) and quote.strip() and isinstance(source, str) and source in texts and llm_extract.find_quote(texts[source] or "", quote)
+    if not isinstance(loc, dict):
+        code, detail = "location_count_unclear", "the reply has no location count"
+    elif isinstance(value, bool) or not isinstance(value, int):
+        code, detail = "location_count_unclear", "the model gave no clear count"
+    elif not found:
+        code, detail = "location_count_unclear", f"model count {value}, its quote is not in the cited document"
+    elif value > 1:
+        code, detail = "multiple_locations", f'model count {value}: "{quote}"'
+    elif value == 1 and not scope.COUNT_PHRASE.search(str(quote)) and (_shows_one_address(str(quote)) or _premises_shows_one(extracted, texts)):
+        return None  # P-079 (D-155): the count quote or the found premises quote shows one address; Part A (scope.detect) ran first and any hit won
+    else:
+        code, detail = "location_count_unclear", f'model count {value}: "{quote}" shows no premises address'
+    return {"version": scope.VERSION, "in_scope": False, "reasons": [{"code": code, "text": f"{scope.REASONS[code]} ({detail})"}],
+            "model_location_count": loc if isinstance(loc, dict) else None}
+
+
+def _manual_intake(folder: Path, docs: list[dict], scope_result: dict, not_sent: list[str] | None = None) -> dict:
+    """P-055: the report of an out-of-scope file. Every field empty, nothing complete, no request. No model call, except P-077 part B,
+    where the call was made and its count sent the file here; no value from it is kept."""
     rows = [{"field_id": f, "value": None, "start": None, "end": None, "source": None, "confidence": 0.0, "needs_review": True} for f in FIELDS]
     report = completeness(rows)
     report.update(
         conflicts=[], extra=[], fields=rows, folder=folder.name, sprinklers=None, cooking=None, locations=[], error=None, cache_key=None, retries=[],
-        needs_human=[d["name"] for d in docs if d.get("needs_human")], unread=unread_rows(docs, []), scope=scope_result,
+        needs_human=[d["name"] for d in docs if d.get("needs_human")], unread=unread_rows(docs, not_sent or []), scope=scope_result,
         status=MANUAL_INTAKE, status_reason="; ".join(scope.reasons_text(scope_result)), complete=False, request=None,
     )
     report.update(_run_metadata())
     return report
 
 
+def blocked_reasons(*rows: list[dict] | None) -> list[str]:
+    """B-508: "Blocked:" reasons (a file never opened, e.g. no virus scanner in pilot mode) from saved unread rows or read_folder docs, prefix dropped."""
+    found = (str(r.get("reason") or r.get("unread") or "") for group in rows for r in group or [])
+    return list(dict.fromkeys(t.removeprefix("Blocked: ") for t in found if t.startswith("Blocked:")))
+
+
 def status_refusal(saved: dict) -> str:
-    """The status as a plain phrase for a refusal message; a manual-intake file names its reasons (P-055)."""
+    """The status as a plain phrase for a refusal message; a manual-intake file names its reasons (P-055), a never-opened file first (B-508)."""
     if saved.get("status") == MANUAL_INTAKE:
-        why = [t.removeprefix("Manual intake: ") for t in scope.reasons_text(saved.get("scope"))]
+        why = blocked_reasons(saved.get("unread")) + [t.removeprefix("Manual intake: ") for t in scope.reasons_text(saved.get("scope"))]
         return "manual intake (" + ("; ".join(why) or "out of pilot scope") + ")"
     return str(saved.get("status"))
 
@@ -1622,14 +1702,16 @@ def scope_problem(submission: str, extract_dir: Path | None = None, inbox: Path 
     Refuses when the saved run recorded the file out of scope, or the current detector, run now on the folder, puts it out of scope.
     Fails closed: no saved run, an unreadable folder or a detector error refuses."""
     try:
-        saved = read_saved_run(submission, extract_dir).get("scope")
+        run = read_saved_run(submission, extract_dir)
     except ValueError as exc:
         return str(exc)
+    saved = run.get("scope")
     try:
-        now = scope.detect(sources.read_folder((Path(inbox) if inbox is not None else INBOX_DIR) / submission))
+        docs = sources.read_folder((Path(inbox) if inbox is not None else INBOX_DIR) / submission)
+        now = scope.detect(docs)
     except Exception:  # read_folder failed; detect itself never raises
         return f"the input folder for {submission} cannot be read for the scope check; refusing"
-    why = [t.removeprefix("Manual intake: ") for s in (saved, now) for t in scope.reasons_text(s)]
+    why = blocked_reasons(docs, run.get("unread")) + [t.removeprefix("Manual intake: ") for s in (saved, now) for t in scope.reasons_text(s)]  # B-508: scanner first
     if (saved or {}).get("in_scope") is False or not now["in_scope"]:
         return f"out of pilot scope at send time ({'; '.join(dict.fromkeys(why)) or 'scope check'}, {now['version']}); a person reads this file"
     return ""
@@ -1655,6 +1737,7 @@ def _saved_payload(report: dict) -> dict:
                 "end": row.get("end"),
                 "quote": row.get("quote"),  # P-016 Q1: the exact cited text. The app shows it
                 **({"also_quoted": row["also_quoted"]} if row.get("also_quoted") else {}),  # P-036: the agreeing values' other quotes
+                **({"policy_review": True} if row.get("policy_review") else {}),  # P-076 (D-135): operations is always checked; not a specific reason
                 **({"rule_copied": True} if row.get("rule_copied") else {}),  # P-075: the row carries a line the rule copied, not model text
                 **({"context": row["context"]} if row.get("context") else {}),  # P-047 H1: operations rule lines outside the cited text
                 "reason": row.get("reason"),  # P-016 R1: why the row is flagged or has no value
@@ -1667,6 +1750,7 @@ def _saved_payload(report: dict) -> dict:
         "complete": bool(report.get("complete")),
         "conflicts": report.get("conflicts") or [],
         "needs_human": report.get("needs_human") or [],
+        "extra": report.get("extra"),  # P-081 (D-157): items still asked of the producer; an older run has none, so it can never be promoted after a resolve
         "unread": report.get("unread") or [],  # P-016 (c): file and page not read, with the reason
         "sprinklers": report.get("sprinklers"),
         "class_lines": report.get("class_lines"),  # P-061 (D-112): Line of business and Cooking operations lines for carrier match; an older run has none
@@ -1835,7 +1919,12 @@ def _save_run(directory: Path, submission: str, status: str, error: str | None =
 
 
 if __name__ == "__main__":
-    real_detect = scope.detect
+    real_detect, real_location = scope.detect, _location_problem
+
+    def one_place(docs: list[dict]) -> dict:
+        """P-077 part B: a model count of 1 quoting the first street address in the stub's documents (passes the real check)."""
+        name, m = next((d["name"], m) for d in docs for m in [scope.STREET_WORDS.search(d.get("text") or "")] if m)
+        return {"value": 1, "quote": m.group(0), "source": name}
     if len(sys.argv) == 5 and sys.argv[1] == "--approve":
         approve(Path(sys.argv[2]), sys.argv[3], Path(sys.argv[4]))
         print("approved", sys.argv[2])
@@ -1852,6 +1941,7 @@ if __name__ == "__main__":
         # The checks below test extraction rules on short stub files. The real detector runs on every one (33 of 57 stay in scope);
         # the 24 stubs with no application file or a terse one are let through. Scope (P-055) is checked at the end.
         scope.detect = lambda docs: real_detect(docs) if real_detect(docs)["in_scope"] else {"version": "test", "in_scope": True, "reasons": []}
+        _location_problem = lambda extracted, texts: None  # noqa: E731  P-077 part B: these stubs predate the location count; the real rule is checked at the end
         text = "\n".join(
             [
                 "named_insured: Example LLC",
@@ -2649,7 +2739,22 @@ if __name__ == "__main__":
 
     on_run = {"loss_run_valued_through": {"source": "loss-runs.md"}}
     clean = run_case(on_run, {"loss-runs.md": run_107})
-    assert clean["status"] == "complete" and clean["complete"] and ready_to_route(clean) and clean["request"] is None, clean["status"]
+    assert clean["status"] == REVIEW_PENDING and not clean["complete"] and ready_to_route(clean) and clean["request"] is None, clean["status"]  # P-076: operations is always flagged, so never plain complete
+    # P-076 (D-135, T-027 C1): no path leaves an operations value unflagged; specific reasons are kept; an empty row is left alone.
+    ops76 = next(r for r in clean["fields"] if r["field_id"] == "operations")
+    assert ops76["needs_review"] and ops76["policy_review"] and ops76["reason"] is None, ("model-carried path", ops76)
+    assert "operations" in [r["field_id"] for r in clean["fields"] if r["needs_review"] and r["value"]] and POLICY_NOTE.startswith("Operations is always checked")
+    held76 = run_case({"operations": {"needs_review": True, "reason": "operations may be missing: fryer"}}, {})
+    assert next(r for r in held76["fields"] if r["field_id"] == "operations")["reason"] == "operations may be missing: fryer", "a specific reason is never replaced"
+    merged76 = run_case({"operations": {"also_quoted": [{"quote": "accounting office", "source": "email.md"}]}}, {"email.md": "accounting office\n"})  # agreeing merge (P-024)
+    assert next(r for r in merged76["fields"] if r["field_id"] == "operations")["needs_review"], "merge path"
+    for row76 in ({"value": "Office", "needs_review": False, "rule_copied": True}, {"value": "Office", "needs_review": False, "source": "scan.pdf", "confidence": 0.99}):  # rule-copied P-075 and scan P-037 shapes
+        box76 = {"operations": dict(row76)}
+        flag_operations(box76)
+        assert box76["operations"]["needs_review"] and box76["operations"]["policy_review"], row76
+    empty76 = {"operations": {"value": None, "needs_review": False}}
+    flag_operations(empty76)
+    assert not empty76["operations"]["needs_review"] and not empty76["operations"].get("policy_review"), "an empty operations row is left as it is"
     # P-067 (D-117): a value the model read but the gate rejected carries its reason to the card; a plain null stays silent.
     rejected = run_case({"tiv_building": {"value": None, "needs_review": True, "reason": "value not inside the cited text"}}, {})
     row = {r["field_id"]: r for r in rejected["fields"]}["tiv_building"]
@@ -2664,7 +2769,7 @@ if __name__ == "__main__":
     # P-046 (D-093): each loss-run document is judged; plain complete only when every one is accepted.
     a_run = {"loss_run_valued_through": {"source": "loss-runs-a.md", "value": "2026-09-30", "quote": "2026-09-30"}}
     alone = run_case(a_run, {"loss-runs-a.md": run_107})
-    assert alone["status"] == "complete", "one accepted typed carrier run: plain complete"
+    assert alone["status"] == REVIEW_PENDING, "one accepted typed carrier run: loss run accepted; P-076 keeps operations under review"
     b_run = run_110.replace("kitchen fire", "roof leak")  # no restaurant cue: the only gap is the loss run under test
     b_undated = b_run.replace("Valuation date: 2026-09-30\n", "")
     for extra, why in (({"loss-runs-b.md": b_undated}, RUN_NO_DATE.format("loss-runs-b.md")),
@@ -2713,7 +2818,7 @@ if __name__ == "__main__":
     app_with_history = "Effective date: 2027-03-01\nYear built: 1998\nPrior carrier: Carrier B, policy term 2024-03-01 to 2025-03-01, no claims.\n"
     assert _run_doc_reason("application.md", app_with_history, (None, None, None), "unclear", False) is None, "an application's loss-history answers are not a loss-run document"
     with_letter = run_case(a_run, {"loss-runs-a.md": run_107, "loss-runs-letter.md": letters[2]})
-    assert with_letter["status"] == "complete", "P-040: a no-known-loss letter beside an accepted run is not a loss-run document"
+    assert with_letter["status"] == REVIEW_PENDING, "P-040 (P-076: operations review): a no-known-loss letter beside an accepted run is not a loss-run document"
     undated = run_case({"loss_run_valued_through": {"source": "loss-runs.md", "value": "2026-01-01", "quote": "2026-01-01"}},
                        {"loss-runs.md": run_110.replace("Valuation date: 2026-09-30\n", "")})
     assert undated["status"] == "incomplete" and "loss_run_valued_through" in undated["missing"], "@model-risk H1: undated carrier layout stays incomplete end to end"
@@ -2733,7 +2838,7 @@ if __name__ == "__main__":
     rep_ = run_case({**on_run, "year_built": {"value": None}}, {"loss-runs.md": run_107})
     assert rep_["status"] == "incomplete", "a missing field is incomplete, not review pending"
     # P-055 (D-105): an out-of-scope file is manual intake as a whole file. Temp dirs only; the model call raises if it is ever made.
-    scope.detect = real_detect
+    scope.detect, _location_problem = real_detect, real_location
     APP55 = ("Named insured: Example Roofing LLC\nPremises address: 100 Main St, Austin, TX 78701\nEffective date: 2027-01-01\nYears in business: 9\n"
              "Operations: General office work for the business, no public visits, and the staff are all on site.\nConstruction: masonry\n")
     with tempfile.TemporaryDirectory() as tmp:
@@ -2752,7 +2857,8 @@ if __name__ == "__main__":
 
         def stub55(docs):
             calls55.append([d["name"] for d in docs])
-            return {"fields": [{"field_id": "named_insured", "value": "Example Roofing LLC", "source": "application.md", "quote": "Example Roofing LLC", "confidence": 0.95, "needs_review": False, "reason": None}], "conflicts": [], "not_sent": []}
+            return {"fields": [{"field_id": "named_insured", "value": "Example Roofing LLC", "source": "application.md", "quote": "Example Roofing LLC", "confidence": 0.95, "needs_review": False, "reason": None}], "conflicts": [], "not_sent": [],
+                    "location_count": one_place(docs)}
 
         llm_extract.llm_extract = stub55
         try:
@@ -2792,7 +2898,7 @@ if __name__ == "__main__":
         assert rep63["status"] not in REFUSED_STATUSES and (pending / "SUB-604.md").exists(), "the leak: an ordinary status and a draft"
         assert not manifest_problem("SUB-604", tmp_path / "extractions", inbox63), "documents unchanged"
         why63 = scope_problem("SUB-604", tmp_path / "extractions", inbox63)
-        assert why63.startswith("out of pilot scope at send time (multiple locations, " + scope.VERSION), why63
+        assert why63.startswith("out of pilot scope at send time (multiple locations") and why63.endswith(f", {scope.VERSION}); a person reads this file"), why63
         assert scope_problem("SUB-999", tmp_path / "extractions", inbox63).startswith("no saved run"), "no saved run fails closed"
         (pending / "SUB-604.md").write_text("Nothing has been declined")
         real_dir, real_inbox = globals()["EXTRACT_DIR"], globals()["INBOX_DIR"]
@@ -2881,7 +2987,7 @@ if __name__ == "__main__":
                     if row["value"] is not None:
                         item = {"field_id": field, "value": row["value"], "source": doc["name"], "quote": doc["text"][row["start"] : row["end"]], "confidence": 0.95}
                         rows.append(llm_extract.accept_field(item, by_name))
-            return {"fields": rows, "conflicts": [], "not_sent": []}
+            return {"fields": rows, "conflicts": [], "not_sent": [], "location_count": one_place(docs)}
 
         import shutil
 
@@ -2912,7 +3018,8 @@ if __name__ == "__main__":
                     row = extract_labeled(doc["text"], label)[0]
                     if row["value"] is not None and fid != "sales_or_payroll":
                         rows74.append({"field_id": fid, "value": row["value"], "source": doc["name"], "quote": doc["text"][row["start"] : row["end"]], "confidence": 0.95})
-            reply74 = {"fields": rows74 + ([field] if field else []), "conflicts": [{"field": "sales_or_payroll", "values": sides}] if sides else []}
+            reply74 = {"fields": rows74 + ([field] if field else []), "conflicts": [{"field": "sales_or_payroll", "values": sides}] if sides else [],
+                       "location_count": one_place(docs74)}  # P-077 part B: the reply shape now has it
             real_post, real_cache, real_env = llm_extract._post, llm_extract.CACHE, (os.environ.get("LLM_BASE_URL"), os.environ.get("LLM_MODEL"))
             os.environ["LLM_BASE_URL"], os.environ["LLM_MODEL"] = "http://localhost:11434/v1", "p074-stub"
             llm_extract.CACHE = tmp_path / f"p074-cache-{len(list(tmp_path.glob('p074-cache-*')))}"
@@ -3055,4 +3162,83 @@ if __name__ == "__main__":
         assert [c["field"] for c in conf_p] == ["cooking"] and not merged_p["operations"].get("rule_copied"), conf_p  # code review 2: held, not copied
         request = _request("SUB-290", [], ["square_feet", "suite_count"])
         assert "- square footage" in request and "- suite count" in request, request
+    # P-077 part B (D-145): the model's location count, through the real reply parser; only the host is stubbed, temp cache, no model call
+    with tempfile.TemporaryDirectory() as tmp77:
+        case77 = Path(tmp77) / "inbox" / "SUB-677"
+        case77.mkdir(parents=True)
+        (case77 / "application.md").write_text(APP55)
+        (case77 / "email.md").write_text("Subject: quote\n\nPlease quote this for the business and send it to the producer.")
+        PREM = "Premises address: 100 Main St, Austin, TX 78701"
+        env77 = (os.environ.get("LLM_BASE_URL"), os.environ.get("LLM_MODEL"))
+
+        def run77(count, post=None, n=[0]):  # noqa: B006 (a fresh cache per case)
+            reply = {"fields": [{"field_id": "named_insured", "value": "Example Roofing LLC", "source": "application.md", "quote": "Named insured: Example Roofing LLC", "confidence": 0.95}],
+                     "conflicts": [], **({} if count == "absent" else {"location_count": count})}
+            n[0] += 1
+            saved = (llm_extract._post, llm_extract.CACHE)
+            os.environ["LLM_BASE_URL"], os.environ["LLM_MODEL"] = "http://localhost:11434/v1", "p077-stub"
+            llm_extract.CACHE = Path(tmp77) / f"cache{n[0]}"
+            llm_extract._post = post or (lambda settings, payload: {"choices": [{"message": {"content": json.dumps(reply)}}], "usage": {"total_tokens": 1}})
+            try:
+                return process_submission(case77)
+            finally:
+                llm_extract._post, llm_extract.CACHE = saved
+                for name, old in zip(("LLM_BASE_URL", "LLM_MODEL"), env77):
+                    os.environ.pop(name, None) if old is None else os.environ.__setitem__(name, old)
+
+        one77 = run77({"value": 1, "quote": PREM, "source": "application.md"})
+        assert one77["status"] != MANUAL_INTAKE and one77["fields"][0]["value"] == "Example Roofing LLC", "a checked count of 1 stays in scope"
+        two77 = run77({"value": 2, "quote": "Named insured: Example Roofing LLC", "source": "application.md"})
+        assert two77["status"] == MANUAL_INTAKE and all(f["value"] is None for f in two77["fields"]) and two77["request"] is None and two77["cache_key"]
+        assert scope.reasons_text(two77["scope"]) == ['Manual intake: multiple locations (model count 2: "Named insured: Example Roofing LLC")'], two77["scope"]
+        for label, count in (("null", {"value": None, "quote": "", "source": ""}), ("absent", "absent"), ("not an object", 1), ("a string", {"value": "1", "quote": PREM, "source": "application.md"}),
+                             ("true", {"value": True, "quote": PREM, "source": "application.md"}), ("zero", {"value": 0, "quote": PREM, "source": "application.md"}),
+                             ("quote not in file", {"value": 1, "quote": "We have one store.", "source": "application.md"}),
+                             ("wrong file", {"value": 1, "quote": PREM, "source": "email.md"}), ("unknown file", {"value": 1, "quote": PREM, "source": "x.md"}), ("no quote", {"value": 1, "source": "application.md"}),
+                             ("blank quote", {"value": 1, "quote": " ", "source": "application.md"}),  # code review: " " is found in any file
+                             ("quote shows no address", {"value": 1, "quote": "Named insured: Example Roofing LLC", "source": "application.md"}),
+                             ("a number with no street", {"value": 1, "quote": "Years in business: 9", "source": "application.md"})):
+            got = run77(count)
+            assert got["status"] == MANUAL_INTAKE and [r["code"] for r in got["scope"]["reasons"]] == ["location_count_unclear"], (label, got["status"], got.get("scope"))
+            assert all(f["value"] is None for f in got["fields"]) and status_refusal(got).startswith("manual intake (number of locations not clear ("), (label, status_refusal(got))
+        # @model-risk H1 (check-T-126-T-127): a count of 1 needs a premises address in its quote
+        for q in ("1 Location", "Seats: 40 Indoor", "Employees: 12 FT", "Est. 2009 Family owned", "PO Box 9 Waco", "2 Stores", "PO Box 9, Waco, TX 76701",
+                  "We have 2 stores at 100 Main St"):
+            assert not _shows_one_address(q), q
+        for q in ("Premises address: 500 Broadway, San Antonio, TX 78205", "FICTIONAL\t1\t2801 E 42nd St\tOdessa", "Premises: 1200 N St Marys St, San Antonio, TX 78215",
+                  "Premises address: 2110 E Southeast Loop 323, Tyler, TX 75701", PREM,
+                  "Premises address: 1906 Hwy 290 W Ste 104, Brenham TX 77833", "100 US-59, Livingston TX", "4400 FM 1960 W, Houston", "800 I-35, Temple TX 76501",
+                  "Premises address: 806 Marble Falls Ave Ste 2, Granite Shoals TX 78654"):  # P-079 (D-155): highway/route, ZIP with no comma
+            assert _shows_one_address(q), q
+        for q in ("12 Main St and 40 Oak Ave", "1906 Hwy 290 W and 400 FM 1960", "100 Main St, Austin, TX 78701; 9 Oak Ave, Waco, TX 76701"):  # P-079: exactly one
+            assert not _shows_one_address(q), q
+        # P-079 (D-155 a, f): a count of 1 whose quote is a sentence passes only when the model's premises quote, found in its file, shows one address
+        (case77 / "email.md").write_text("Subject: quote\n\nOne address, one building. Same single building. Please quote this for the business.")
+
+        def prem77(count_quote, prem_quote=PREM, prem_value="100 Main St, Austin, TX 78701", extra_rows=()):
+            row = {"field_id": "premises_address", "value": prem_value, "source": "application.md", "quote": prem_quote, "confidence": 0.95}
+            reply = {"fields": [{"field_id": "named_insured", "value": "Example Roofing LLC", "source": "application.md", "quote": "Named insured: Example Roofing LLC", "confidence": 0.95},
+                                row, *extra_rows], "conflicts": [], "location_count": {"value": 1, "quote": count_quote, "source": "email.md"}}
+            return run77(None, post=lambda settings, payload: {"choices": [{"message": {"content": json.dumps(reply)}}], "usage": {"total_tokens": 1}})
+
+        for q in ("One address, one building.", "Same single building."):  # SUB-527/529 shapes
+            assert prem77(q)["status"] != MANUAL_INTAKE, q
+        for label, got in (("premises quote not in the file", prem77("One address, one building.", prem_quote="Premises address: 9 Oak Ave, Waco, TX 76701")),
+                           ("premises quote with no address", prem77("One address, one building.", prem_quote="Named insured: Example Roofing LLC")),
+                           ("count quote not in the file", prem77("We have one store."))):
+            assert got["status"] == MANUAL_INTAKE and [r["code"] for r in got["scope"]["reasons"]] == ["location_count_unclear"], (label, got.get("scope"))
+        (case77 / "email.md").write_text("Subject: quote\n\nPlease quote this for the business and send it to the producer.")
+        two_rows = {"fields": [{"field_id": "premises_address", "value": "100 Main St, Austin, TX 78701", "source": "application.md", "quote": PREM},
+                               {"field_id": "premises_address", "value": "9 Oak Ave, Waco, TX 76701", "source": "application.md", "quote": PREM}]}
+        assert not _premises_shows_one(two_rows, {"application.md": APP55}), "premises rows that disagree never pass"
+        assert _premises_shows_one({"fields": two_rows["fields"][:1]}, {"application.md": APP55})
+        real_max = llm_extract.MAX_CHARS  # code review: a file past the size limit stays listed as not sent on a model-count manual intake
+        llm_extract.MAX_CHARS = len(APP55) + 10
+        try:
+            big77 = run77({"value": 2, "quote": PREM, "source": "application.md"})
+        finally:
+            llm_extract.MAX_CHARS = real_max
+        assert big77["status"] == MANUAL_INTAKE and any(r["reason"].startswith("not sent: text past") for r in big77["unread"]) and isinstance(big77["retries"], list), big77["unread"]
+        failed77 = run77({"value": 1, "quote": PREM, "source": "application.md"}, post=_raiser(RuntimeError("model call failed: HTTP 429 rate limit")))
+        assert failed77["status"] == "extraction_failed" and failed77["scope"]["in_scope"], "D-021: a failed call is never read as a count"
     print("prepare ok")

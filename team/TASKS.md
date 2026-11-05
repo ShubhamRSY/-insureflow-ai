@@ -1832,5 +1832,152 @@ D-004 (user, 2026-10-09): Sanger & Altgelt agency pipeline. Eight steps. No auto
   - [ ] Gold first, by hand from the documents and written rules only; every conflict line names a field actually in conflict in the builder source data (B-465, checked by hand until the lint does it); lint PASS with v11 (or only failures recorded before the run, as D-128); gold manifest sha256 recorded.
   - [ ] @model-risk build check (gold vs builder source, scope, slots, valued-as-of, routes vs written rules), High only, one look-again (D-129).
   - [ ] Not run and not scored until the user says so (D-020); scored once, with no code change after the gold exists.
+- Noted 2026-10-27, before the gold freeze and before any run (orchestrator, per this plan's cooking-conflict line and D-128): the SUB-461 and SUB-463 cooking-conflict marks (gold line 23) cannot be measured under v11 (no figure). They are reported separately and excluded from the conflict rate, as D-128 did for SUB-348/349. Planted-conflict recall is measured on the 7 figure conflicts (454, 455, 458, 459, 460, 462, 469). For @user to confirm.
+- Noted 2026-10-27, before the gold freeze and before any run: M5 (@model-risk T-120-build-check-2.md) — SUB-464's email says "kitchen", and v11 reads any "kitchen" as the restaurant class; an answer that copies that sentence into operations misses. Known scorer limit, reported with the result; not a gold change (v11 frozen).
+- **Gold frozen 2026-10-27:** manifest `deliverables/senior-underwriter/T-120-gold-manifest.sha256` (33 lines: SUB-450..481.md then T-120-routes.md), sha256 `534e65a55456f2a173e5ef3f85ecfa700c5693afa82e1007eac58e41bbcb3a73`. @model-risk build check BLOCK (H1) → fixed at source → look-again APPROVE (T-120-build-check-2.md). Not run, not scored (D-020).
 - Open before the build (the user decides): whether T-120 also uses the operations gate @model-risk set out in `deliverables/model-risk/T-027-operations-gate-answer.md` (C1–C7); if yes, it must be recorded in DECISIONS.md before any T-120 gold exists (C7), C1 needs its own P-###, and C6 adds file counts (at least 12 none-line, 3 cooking, 2 planted cooking conflicts).
 
+
+### T-121 — Hold-out SUB-510–541 (20 in-scope + 12 out-of-scope) after P-077; build, gold first, do not run
+- Owner: @producer (files, mix), @senior-underwriter (gold), @senior-test-engineer (plan JSON, lint), @model-risk (build check, one look-again) · Status: BUILT, GOLD FROZEN 2026-11-03 (not run) · Planned by: orchestrator, Claude Code session, from the user's list (D-149).
+- Numbers: SUB-510 to SUB-541 (free; SUB-500, 601+ and 777+ appear in self-checks).
+- Code under test: the freeze in team/NEXT-SESSION.md (2026-11-03): code `8baa00a`, PROMPT_VERSION `392b9ce3c1af`, scope-v5, scorer v11, lint, C2 counter v2. Any byte change reopens it.
+- **Scope rule for the gold (P-077, D-145, D-146, D-149):** a different street address for the premises in any document, or a second store, branch or location stated in words (incl. one sold or closed), is OUT of scope → manual intake (P-055 criterion 2). In-scope near-misses stay IN: "two floors", "2nd floor", "two entrances", "Suite 200"/"Unit 2", "second shift", role-labelled addresses (mailing, billing, producer) that are not a second premises.
+- Acceptance criteria (for the build):
+  - [ ] 32 new files under `simulation/inbox/`, nothing reused from any hold-out or dev set: 20 in-scope and 12 out-of-scope over proposal-P-055 criteria 1–4, at least two per criterion.
+  - [ ] Criterion 2 (multi-location): at least 6 out-of-scope files, at least 4 of them words-only (no second street address anywhere; e.g. "both stores", "our other branch", "second shop", "closed our second store"); the rest give a different street address in another document.
+  - [ ] In-scope near-misses: at least 3 in-scope files that use "two floors", "2nd floor" or "two entrances" (one each), single premises address in every document; gold in scope.
+  - [ ] Planted conflicts: at least 5 measurable ones (B-473) on a scored or rating figure (sales, floor area, unit/suite count, TIV), both sides plain figures in two documents, in the gold as an open conflict with both sides; at least one worded amount ("$1.42 million") and one approximate ("about", "roughly", "~") against an exact figure (P-074). No planted conflict on the premises address (that is now out of scope, D-149).
+  - [ ] Cooking stated and cooking conflicts (C6): at least 12 files with a "Cooking operations: None"-type line and no cooking word elsewhere, at least 3 with cooking stated, at least 2 with a planted cooking conflict (application none, another document states cooking). Cooking-conflict marks that are not measurable under v11 are noted here before the gold freeze (D-128).
+  - [ ] Direct Carrier A: at least 3 in-scope files that route straight to Carrier A (R14/R17: allow-list words only, no W1/W2 word, TIV ≤ $5M, clean typed loss run).
+  - [ ] Loss runs: typed, in the published carrier formats (`CARRIER_RUN_FORMATS`), at least 2 Carrier C and 1 Carrier B; every typed run passes `carrier_run_check`; valued before the run date; no `| None reported |` rows.
+  - [ ] Build rules as T-119/T-120: at least two held W1 files, two office-lessor and two deli-style files.
+  - [ ] `deliverables/producer/T-121-mix.md` before the gold; `deliverables/senior-test-engineer/T-121-plan.json`.
+  - [ ] Operations gate as T-120 (D-134, C1–C7); C2 counted with the frozen v2 counter (D-141).
+  - [ ] Gold first, by hand from the documents and written rules only; every conflict line names a field in conflict in the builder source (B-465, hand check); lint PASS with v11 (unmeasurable marks noted before the freeze, D-128); gold manifest sha256 recorded here and in NEXT-SESSION.md.
+  - [ ] @model-risk build check (gold vs builder source, scope incl. P-077 near-misses, slots, valued-as-of, routes vs written rules), High only, one look-again (D-129).
+  - [ ] Not run and not scored until the user says so (D-020); scored once, no code change after the gold exists. Gates: every T-120 gate, detection recall 100% (incl. criterion 2), planted-conflict recall 100%, 0 leaks.
+- **Gold frozen 2026-11-03:** manifest `deliverables/senior-underwriter/T-121-gold-manifest.sha256` (33 lines: SUB-510..541.md then T-121-routes.md), sha256 `8ba4a9f3779d7e34b8ec5a6d0b022ebb639310de08462ef681beda5c0d3fea7f`. @model-risk build check APPROVE, no High (`deliverables/model-risk/T-121-build-check.md`); M1 fixed before the freeze (SUB-524 renamed Midnight Mesa Nightclub LLC, too close to SUB-201), L2 and L3 wording fixed. Not run, not scored (D-020).
+- Built 2026-11-03 (builder `simulation/inbox/build_SUB-510-541.py`, mix `deliverables/producer/T-121-mix.md`, gold `gold-set/SUB-510..541.md` + `T-121-routes.md`). Not run, no model call.
+- Noted 2026-11-03, before the gold freeze and before any run (orchestrator, per this plan and D-128): lint v11 fails only on the SUB-520 and SUB-522 cooking-conflict marks (no figure; `deliverables/senior-test-engineer/T-121-lint.txt`). They are reported separately and excluded from the conflict rate, as D-128 did for SUB-348/349 and T-120 for SUB-461/463. Planted-conflict recall is measured on the 6 figure conflicts (514, 515, 517, 518, 519, 521). For @user to confirm.
+- B-465 check 2026-11-03: gold vs documents on all 20 in-scope cards (insured, premises, effective date, sales, TIV, construction, year built, valued-as-of, claim count and paid): 0 mismatches; each of the 8 conflict lines names a field that differs in the builder source. Faithful-answer probe (application operations, Line of business and cooking lines into v11 `ops_items_hit`): 20/20 hit.
+
+### T-129 — P-079, P-080, P-081: Part B accepts one found premises address; A3 per sentence; resolved files read review pending (D-155–D-157)
+- Owner: @ai-engineer-assistant / @software-engineer (built in the main session, D-139) · Status: DONE 2026-11-03 — @model-risk REJECT → fixed (D-159) → look-again APPROVE WITH CHANGES, no High (check-T-129-2.md); merged into ai-team · As built: deliverables/ai-engineer/P-079-P-081-as-built.md
+- Acceptance criteria: the user's conditions in D-155 (a)–(f), D-156 (stricter only), D-157; dev re-check incl. the T-121 shapes; quick set before/after; self-checks, tests/pipeline, pyright, code review; D-065 card text and screenshots.
+
+### T-128 — Hold-out SUB-550–581 (20 in-scope + 12 out-of-scope) after P-079/P-080/P-081; plan only, not built
+- Owner: @producer (files, mix), @senior-underwriter (gold), @senior-test-engineer (plan JSON, lint), @model-risk (build check, one look-again) · Status: DONE 2026-11-05 (built, build check REJECT → look-again APPROVE, gold frozen 307e6fec…, run once 20261105T012147-15550, scored once: every gate PASS; T-027 memo LIFT conditional, D-167) · Planned by: orchestrator, from the user's list (D-158 and the T-121 memo lift conditions).
+- Numbers: SUB-550 to SUB-581 (free).
+- Code under test: pilot-integration after T-129 (P-079, P-080, P-081) is merged; code commit, PROMPT_VERSION, scope version, llm_extract/scope/prepare/package sha256, scorer v11, lint and C2 counter v2 frozen in team/NEXT-SESSION.md before any file is built.
+- Scope rule for the gold (P-077, D-146, D-149, P-080): a different premises street, highway or route address in any document, or a second store/branch/shop in words (incl. sold or closed), is OUT of scope (criterion 2). Near-misses stay IN.
+- **M1 rule (D-158), set before any gold:** an in-scope file sent to manual intake is a scope miss (false manual intake), not a C2 operations silent error; C2 counts only files that reached another status; C4 unchanged (`deliverables/senior-test-engineer/count_ops_gate_v2-notes.md`).
+- Acceptance criteria (for the build):
+  - [ ] 32 new files, nothing reused: 20 in-scope, 12 out-of-scope over P-055 criteria 1–4, at least two per criterion.
+  - [ ] Criterion 2: at least 6 out-of-scope files; at least 4 words-only (no second address anywhere); at least 2 SUB-533-shaped (the second address on a line or sentence that also names a carrier/agent, or below a filled "Mailing address: same as premises" line); the rest a different address in another document.
+  - [ ] Highway addresses: at least 2 in-scope files whose premises is a highway/route address ("Hwy", "FM", "US-", "State Route"), one address in every document; at least 1 out-of-scope file whose second address is a highway/route address.
+  - [ ] Near-misses in scope: at least 3 ("two floors", "2nd floor", "two entrances"), plus at least 1 file whose email says only "one address, one building" style words.
+  - [ ] Planted conflicts: at least 5 measurable (sales, floor area, unit/suite count, TIV), both sides plain figures in two documents, open in the gold; at least 1 worded amount and 1 approximate vs exact (fresh figures). At least 1 planted conflict whose resolution would make the file routable under P-081 is still scored as gold "incomplete" (the pipeline is scored before any underwriter action).
+  - [ ] C6: at least 12 "Cooking operations: None" files with no cooking word elsewhere, at least 3 cooking stated, at least 2 cooking conflicts (unmeasurable marks noted before the freeze, D-128/D-153).
+  - [ ] Direct Carrier A: at least 3 in-scope files (R14/R17 allow-list words only, no W1/W2, TIV <= $5M, clean typed Carrier A run).
+  - [ ] Loss runs typed in the published formats, at least 2 Carrier C and 1 Carrier B; every run passes carrier_run_check; valued before the run date; loss dates inside their term.
+  - [ ] At least two held W1, two office-lessor and two deli-style files.
+  - [ ] Mix file and plan JSON before the gold; collision check on name stems, not only full names (B-515).
+  - [ ] Gold first, by hand from the documents and written rules; B-465 check; faithful-answer probe under v11; lint PASS with v11 (unmeasurable marks noted before the freeze); gold manifest sha256 recorded.
+  - [ ] @model-risk build check, High only, one look-again.
+  - [ ] Not run until the user says so (D-020); scored once with v11 and count_ops_gate_v2 plus the M1 rule. Gates: every T-121 gate (leakage 0, recall 100% per criterion, near-misses kept, false manual intake <= 2, false completes 0, route 0 unsafe and >= 18/20, fields >= 18/20, C2 0, C3 0, C4, planted-conflict recall 100%).
+
+- Build 2026-11-05 (D-162, D-165; before the gold freeze): 32 files by `simulation/inbox/build_SUB-550-581.py`; mix `deliverables/producer/T-128-mix.md`; plan `deliverables/senior-test-engineer/T-128-plan.json`; gold `deliverables/senior-underwriter/gold-set/SUB-550..581.md`, routes `T-128-routes.md`. v11 --check-gold: 32 ok. Lint v11 (run date 2026-11-05, `T-128-lint.txt`): 2 FAIL, SUB-560 and SUB-562 cooking-conflict marks only — **unmeasurable under v11, noted here before the freeze (D-128/D-153); report them apart from the conflict rate**. B-465 hand check: 0 mismatches over 20 in-scope cards (insured, premises, effective date, sales, TIV, construction, year built, valued-as-of, claim count and paid); each of the 8 figure conflicts names a field whose two figures are in the documents. Faithful-answer probe (application Operations, Line of business and Cooking lines into v11 `ops_items_hit`): 20/20 (T-121 control 20/20).
+
+- Rewrite 2026-11-05 after @model-risk build check REJECT (`deliverables/model-risk/T-128-build-check.md`: H1 lint marks not ruled; H2 T-121 copy): all 32 emails rewritten, gold updated where it quotes them; similarity gate 0 of 32 ≥ 0.80 (`T-128-similarity.txt`); every check above re-run green (lint: only 560/562). Pre-registered (M2): if the pipeline cites an email word on a direct Carrier A file and fails closed to senior_referral, it is a route miss (R17 reads the operations text), not a gold ambiguity; the 550–553 emails now hold no goods or trade words. H1 ruled by the user in D-166 (as D-153 for T-121).
+
+- Gold frozen 2026-11-05 after @model-risk look-again APPROVE (`deliverables/model-risk/T-128-build-check-2.md`); manifest `deliverables/senior-underwriter/T-128-gold-manifest.sha256` sha256 `307e6fec738d6132eeca82a91472d1ca6dfaf052dd638fd2931063283db8e0ff` (also in team/NEXT-SESSION.md). Run under D-163/D-166 next.
+
+- Run 2026-11-05 (D-163, D-166): results `deliverables/ai-engineer/evals/SUB-550-581-results.md`, run record `SUB-550-581-run-record.md`, score `SUB-550-581-holdout-v11.{md,json}`, counter `SUB-550-581-ops-gate-v2.txt`. Every T-121 gate PASS (false manual intake 0/20, route 19/20, planted-conflict recall 8/8, C2 0, C3 0, C4 19/19). Memo `deliverables/model-risk/T-027-memo-T-128.md`: LIFT, conditional (D-167). Nothing fixed.
+
+### T-122 — P-078: security checks for the demo pipeline (D-138)
+- Owner: @software-engineer · Status: IN_REVIEW (A-D built; ClamAV tested 2026-10-30; quick-15 see 2026-10-30 note) · Reviewers: @senior-underwriter (UI, High only), @senior-test-engineer (build check)
+- Acceptance criteria:
+  - [x] A: `read_folder` calls `insureflow.ingestion.intake.prepare()` per file; locked/infected files are never parsed and carry `unread` with a plain reason; active content sets `needs_human` with the reason; a mislabelled file is read as its real type. Self-checks for each case.
+  - [x] B: `genai_defense` runs on each file's text; a flagged file gets `needs_human` and a reason naming the file; the model input is byte-identical to before. Self-check.
+  - [x] C: `.zip` and `.eml` attachments are unpacked into the submission; path-traversal names and nested archives are refused with a reason; each inner file passes A. Self-check.
+  - [x] D: the workbench shows every block/flag in plain words; "What's new" line (2026-10-27, T-122, D-138); screenshot in `deliverables/software-engineer/screenshots/T-122*.png` (D-069: temp copy only).
+  - [x] Quick set of 15 run; no field drops against the previous regression.
+  - [x] ClamAV tested against a real clamd (EICAR test file blocked; clamd down → blocked).
+- Status 2026-10-27 (@software-engineer): built. Files: ai/sources.py (read_folder: prepare(), injection_flag), ai/prepare.py (unread_rows reason, needs_human + report["security_flags"]; display only), app/intake.py (unpack, unpack_folder), app/workbench.py (security_html, What's new). Self-checks pass: sources.py, intake.py, workbench.py, prepare.py. Screenshot: deliverables/software-engineer/screenshots/T-122-security-checks.png (temp copy). 0 flags across all 273 inbox submissions read (no false positives). Quick-15 (read-only, temp cache copy, live calls blocked): 5 of 15 had a cached result, all fields hit, key unchanged; the other 10 need live model calls, NOT run: stopped for the orchestrator. Pyright: no new findings in changed code except none (baseline 44 errors, unchanged).
+- 2026-10-27 orchestrator: @senior-underwriter APPROVE (UI, after one look-again); @senior-test-engineer APPROVE (after one look-again). ClamAV tested against a real clamd (clamav/clamav-debian; EICAR blocked, clamd down → blocked). Open: quick-15 has 5/15 from cache, 10 need live calls — waiting on @user (H2). Not committed.
+- 2026-10-30 orchestrator: renumbered from P-070/T-121/D-130 (all already used); @user re-approved as P-078 (D-138). docker-compose.yml now `clamav/clamav-debian:stable` (runs natively on arm64; healthy on the user's Mac). Real clamd at 127.0.0.1:3310: EICAR blocked (alone and inside a zip); clamd down → every file blocked; the reason now says "the antivirus scanner could not be reached" instead of "flagged" (sources.py, display only; self-check added). CLAMAV_HOST unset → no scan (B-485); demo guide updated. Ported to pilot-integration on branch `p078-security` (one workbench.py conflict resolved); tests/pipeline 93 passed; pyright 39 → 39 (no new). Quick-15 on pilot-integration with vs without P-078: 0 differences in any field or status over 15 files; the 5 that reach the model hit the same cache keys (model input unchanged). The other 10 go to manual intake before any model call (scope-v4, B-498).
+
+### T-123 — C2 counter v2: a reason counts only if it names the item or evidence (B-491, D-141)
+- Owner: @senior-test-engineer · Status: DONE (frozen) · Reviewer: @model-risk (High only)
+- Acceptance criteria:
+  - [x] New file `deliverables/senior-test-engineer/count_ops_gate_v2.py`, stdlib only; v1 `count_ops_gate.py` unchanged (sha256 f942010d…9aa1).
+  - [x] A reason counts as specific only if it names the item or its evidence ("operations may be missing: <item>", a cooking reason, an open operations/cooking conflict). Generic text ("value is not in the cited text (translated or reworded)", the policy note, unknown text) does not count; unknown text fails closed and is shown in the report.
+  - [x] C4 unchanged. Self-check covers every shape above.
+  - [x] @model-risk check 2026-11-02: APPROVE WITH CHANGES, no High (deliverables/model-risk/check-T-123-T-125.md). **Frozen 2026-11-02: sha256 a57010b0796e7f88ce283375b2a3e6cde338d79c99fd79eab64f49a3ad63085a.** Any edit voids it for T-121.
+
+### T-124 — Quick-15 refreshed: every file reaches the model (B-498, D-142)
+- Owner: @ai-engineer-assistant · Status: DONE except first live run (@model-risk APPROVE 2026-11-02) · Reviewer: @model-risk (High only)
+- Acceptance criteria:
+  - [x] `QUICK` in `underwriting_pipeline/ai/regression_dev.py` lists 15 dev files (SUB-017–076 only) that are in scope under scope-v4.
+  - [x] `regression_dev.py --self-check` fails if any quick-set file would go to manual intake.
+  - [x] 2026-11-02 (@user): SUB-210 and SUB-221 (T-108 dev data, D-115; application + Excel schedule, scored by frozen v7) added so the xlsx reader is covered; 17 files; self-check fails without an xlsx file or with any out-of-scope file.
+  - [ ] First live quick-15 run on the new set is the new baseline (needs model calls; not run yet).
+
+### T-125 — Pilot mode blocks every file when no virus scanner is set up (B-485, D-143)
+- Owner: @software-engineer · Status: DONE (@model-risk APPROVE 2026-11-02; M4 to backlog B-508) · Reviewer: @model-risk (High only)
+- Acceptance criteria:
+  - [x] `PILOT_MODE=assist-only` and `CLAMAV_HOST` unset → `read_folder` opens no file (zip and email are not unpacked either); each file is `unread` with "Blocked: pilot mode needs the antivirus scanner …"; the file goes to manual intake. Dev (pilot off) unchanged.
+  - [x] Workbench (D-065): the manual-intake card names the missing scanner first and lists every not-read file with its reason; "What's new" line (2026-11-02, B-485, D-143); screenshot `deliverables/software-engineer/screenshots/B-485-pilot-no-scanner-card.png` (temp copy).
+  - [x] Self-check in `sources.py`; `tests/pipeline/test_pilot.py::test_b485_pilot_without_scanner_opens_nothing`; tests/pipeline 94 passed.
+
+### T-126 — B-508: card text names the missing scanner (D-148)
+- Owner: @software-engineer · Status: DONE 2026-11-02 (fast lane; @model-risk APPROVE) · Reviewer: @model-risk (with T-127)
+- Acceptance criteria:
+  - [x] The send refusal (`prepare.status_refusal`) and the send-time scope line (`prepare.scope_problem`) lead with the "Blocked:" scanner reason; one helper `prepare.blocked_reasons`, also used by the manual-intake card.
+  - [x] Test `test_b485_pilot_without_scanner_opens_nothing` extended (fails on the old code); What's new line; screenshot `deliverables/software-engineer/screenshots/B-508-scanner-named-in-send-and-scope.png` (temp copy).
+
+### T-127 — P-077 parts A and B: a second location by rules or by the model's count; any doubt → manual intake (D-145, D-146)
+- Owner: @software-engineer · Status: DONE (@model-risk REJECT H1 → fixed → APPROVE on look-again, 2026-11-02; M1–M3, L1–L2 to backlog B-511–B-514) · Reviewer: @model-risk (High only, one look-again)
+- Acceptance criteria (the user's conditions a–e):
+  - [x] (a) Either signal sends the whole file to manual intake: Part A in `scope.py` (scope-v5: count phrase, place-labelled values, a second street address in any document) before any call; Part B in `prepare._location_problem` after the call.
+  - [x] (b) Fail closed: count missing, null, not an integer, 0, a blank quote, a quote with no street address or not in the cited file → manual intake "number of locations not clear". A failed call stays extraction_failed (D-021).
+  - [x] (c) "two floors", "two entrances", "2nd floor", "Suite 200", "Unit 2", "Ste. 2 shop", "second shift", "two fryers", role-labelled addresses stay in scope (scope.py self-check). D-146: sold/closed second store → manual intake.
+  - [x] (d) PROMPT_VERSION 759b3e6bc9b2 → 392b9ce3c1af (3,257 bytes); all 143 requests change and only by the prompt (old prompt patched back = 143/143 old hashes); fixture re-recorded.
+  - [x] (e) Stricter only: over 273 dev submissions no file moves from manual intake to in scope.
+  - [x] Card quotes the words that fired; What's new line; screenshot `deliverables/software-engineer/screenshots/P-077-second-place-manual-intake.png` (temp copy).
+  - [x] tests/pipeline 94 passed; scope, prepare, sources, regression_dev, workbench self-checks pass; pyright 77 → 77; code review findings fixed.
+
+### T-132 — P-084 (D-165): second-address detector catches more address forms (stricter only)
+- Owner: @software-engineer (built by the orchestrator per D-165 fast lane) · Status: DONE 2026-11-05 (@model-risk APPROVE, no High, check-T-132.md; M1 text fixed; B-527, B-528 opened) · Reviewer: @model-risk (High only, one look-again)
+- Acceptance criteria (D-165):
+  - [x] The second-address detector also catches addresses in any letter case ("1200 ELM DR", "9 oak way"), Texas route codes ("IH 35", "SL 1604", "TX-71", "RM", "FM", "SH", "US"), PMB and "General Delivery" mailing addresses, and Spanish-format addresses ("Calle Roble 12", "Av. …"). City-only mentions are left to the model location count.
+  - [x] Stricter only: 380-folder sweep 0 newly in scope; every newly manual-intake file listed.
+  - [x] Generated comparison: 0 loosenings.
+  - [x] Dev multi-location shapes still caught; near-misses still in scope.
+  - [x] tests/pipeline pass; quick set run.
+  - [x] pyright-lsp + code-review before @model-risk; What's new line + screenshot (D-065).
+- As built: deliverables/ai-engineer/P-084-as-built.md
+
+### T-131 — P-083 (D-164): one highway premises is one place when it is the only address (B-525)
+- Owner: @software-engineer (built by the orchestrator per D-164) · Status: DROPPED 2026-11-05 (D-165: code review found loosenings; reverted, never merged; B-525 open) · Reviewer: —
+- Acceptance criteria (D-164, the user's conditions):
+  - [ ] (a) A single highway-style premises ("FM 1960 Rd", "State Highway 6", "County Road 12", "I-35 Frontage Rd", "Spur 5" etc.) counts as one place only when it is the only address in all documents.
+  - [ ] (b) Any second address anywhere still → manual intake.
+  - [ ] (c) The 380-folder sweep shows only the intended files newly in scope, each listed.
+  - [ ] (d) All multi-location dev shapes (SUB-475, SUB-533–537, two highway addresses) still go to manual intake.
+  - [ ] (e) The generated-test comparison shows no other loosening.
+  - [ ] pyright-lsp + code-review findings fixed before @model-risk; tests/pipeline pass; What's new line + screenshot (D-065).
+- As built: deliverables/ai-engineer/P-083-as-built.md
+
+### T-130 — P-082 (D-161): role words and name lines never hide an address; Spur; approve records resolved values (B-523, B-524)
+- Owner: @software-engineer (built by the orchestrator per D-161 fast lane) · Status: DONE 2026-11-04 (@model-risk REJECT H1 → fixed → APPROVE on look-again; B-523, B-524 closed; B-525, B-526 opened) · Reviewer: @model-risk (High only, one look-again)
+- Acceptance criteria:
+  - [x] Title Case lines without punctuation and role words or "home" in the same sentence never hide an address on that or the next line (scope-v7).
+  - [x] "Spur" recognised as a highway (second-address check only).
+  - [x] Approve records include the value entered on resolve.
+  - [x] Dev re-check 12 files unchanged; 381-folder scope sweep: 0 newly in scope.
+  - [x] Quick set: 0 differences (17 live calls, bands identical).
+  - [x] tests/pipeline 94 passed; self-checks ok; pyright 31 → 31; code review findings fixed.
+  - [x] @model-risk check, no High (look-again APPROVE, check-T-130-2.md).
+- As built: deliverables/ai-engineer/P-082-as-built.md

@@ -63,7 +63,8 @@ def test_request_and_cache_key_are_identical_off_and_on(monkeypatch):
 
 
 def test_requests_equal_the_recorded_head_baseline(monkeypatch):
-    """P-075 (D-133): 0 of 143 request bodies changed against the SHA-256s recorded from HEAD before the build."""
+    """P-075 (D-133): 0 of 143 request bodies changed against the recorded SHA-256s. Re-recorded for P-077 part B (D-145, prompt 392b9ce3c1af):
+    with the old prompt patched back all 143 matched the old hashes, so the prompt is the only change."""
     import hashlib
 
     baseline = json.loads((Path(__file__).parent / "fixtures" / "request_baseline.json").read_text())

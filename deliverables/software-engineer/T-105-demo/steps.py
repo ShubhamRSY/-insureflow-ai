@@ -1,9 +1,10 @@
 APP=lambda uw,**k:("act","/decision",{"underwriter_id":uw,"action":"approve","reason":"demo review of the file","_hash":True,"_acks":True,**k})
 Q=lambda sub,c,prem,ded,terms:("quote",f"QUOTE\nCarrier: {c}\nSubmission: {sub}\nFICTIONAL planning figures. Not a bind.\n\nPremium: {prem}\nDeductible: {ded}\nTerms: {terms}\nSubjectivities: none beyond the file as sent.\n",f"carrier-{c.lower()}")
 run("SUB-133",[("route",),("act","/send",{"user_line":"send to carrier SUB-133"}),
+ ("act","/decision",{"underwriter_id":"UW-002","action":"resolve","conflict_field":"operations","chosen_value":"Residential apartments, 12 units in one two-story building, long-term leases","reason":"signed application says 12 units; the email says 12 or 14","_hash":True}),("act","/decision",{"underwriter_id":"UW-002","action":"resolve","conflict_field":"unit_count","chosen_value":"12","reason":"signed application says 12 units; the email says 12 or 14","_hash":True}),("route",),
  ("act","/confirm-market",{"underwriter_id":"UW-001","carrier":"carrier_c","reason":"habitational, 12 units; Carrier C habitational appetite","_hash":True}),
  ("act","/send",{"user_line":"send to carrier SUB-133"}),
- APP("UW-002"),("am",),("act","/send",{"user_line":"send to carrier SUB-133"}),Q("SUB-133","C",11800,2500,"habitational 12 units, per file.")])
+ APP("UW-002"),("am",),("act","/send",{"user_line":"send to carrier SUB-133"}),Q("SUB-133","C",11800,2500,"habitational 12 units, per file.")])  # D-152, P-081
 run("SUB-129",[("route",),("act","/decision",{"underwriter_id":"UW-002","action":"approve","reason":"x","_hash":True}),("act","/send",{"user_line":"send to carrier SUB-129"}),("act","/approve-draft",{"reason":"x"})])
 run("SUB-127",[("route",),("act","/confirm-market",{"underwriter_id":"UW-002","carrier":"carrier_a","reason":"non-senior try","_hash":True}),
  ("act","/confirm-market",{"underwriter_id":"UW-001","carrier":"carrier_a","reason":"financial advisory is an office occupancy; Carrier A office appetite","_hash":True}),

@@ -87,7 +87,7 @@ services:
   # Antivirus for uploads (ingestion/intake.py). Scanning fails closed, so the
   # app waits for clamd to finish loading signatures (~1-2 min on first boot).
   clamav:
-    image: clamav/clamav:stable
+    image: clamav/clamav-debian:stable  # the plain clamav/clamav image has no arm64 build (Apple Silicon); P-078
     volumes:
       - clamav-db:/var/lib/clamav
     healthcheck:

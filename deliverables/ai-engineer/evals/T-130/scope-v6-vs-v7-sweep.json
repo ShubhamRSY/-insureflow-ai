@@ -1,0 +1,56 @@
+{
+ "folders": 380,
+ "same": 380,
+ "newly_in_scope": [],
+ "newly_manual_intake": [],
+ "dev12_v7_in_scope": [
+  [
+   "DEV-01-hwy",
+   true
+  ],
+  [
+   "DEV-02-suite-sentence",
+   true
+  ],
+  [
+   "DEV-03-two-floors",
+   true
+  ],
+  [
+   "DEV-04-two-entrances",
+   true
+  ],
+  [
+   "DEV-05-2nd-floor",
+   true
+  ],
+  [
+   "DEV-06-475-two-stores",
+   false
+  ],
+  [
+   "DEV-07-533-warehouse",
+   false
+  ],
+  [
+   "DEV-08-both-stores",
+   false
+  ],
+  [
+   "DEV-09-other-branch",
+   false
+  ],
+  [
+   "DEV-10-second-shop",
+   false
+  ],
+  [
+   "DEV-11-closed-second",
+   false
+  ],
+  [
+   "DEV-12-hwy-second",
+   false
+  ]
+ ]
+}

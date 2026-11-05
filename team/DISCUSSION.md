@@ -3483,3 +3483,152 @@ Resolves when: both fixed under approved P-### with a @model-risk check (no High
 ### 2026-10-26 — orchestrator → @user — TYPE: STATUS — P-075 built, reviewed, merged (D-133); T-027 gate answer; T-120 planned
 @model-risk supplied 128 probe sentences (P-075-probes.json), stored as tests: 107/107 "hold" probes hold. Code-review plugin found 10 issues; 6 fixed (CSV column, name masking, score while a conflict is open, routing of the copied line, card wording, merge note), 3 fail-safe items to B-481. @senior-underwriter UI APPROVE WITH CHANGES (evidence side, second screenshot) fixed. @model-risk check BLOCK (H1 the note claimed absence; H2 approved words not built) fixed; look-again APPROVE. tests/pipeline 93 passed; request equality 143/143 identical and baseline 0 of 143 changed; PROMPT_VERSION 759b3e6bc9b2. Replay of 102 stored-reply folders: 16 lines copied (status unchanged), 19 held on a cooking conflict (mostly false holds, fail safe), routes changed only toward hold (SUB-149, 158, 206, 213, 218). Not a production approval; the T-027 veto stands.
 @model-risk on the user's question (answer only): ACCEPT WITH CONDITIONS C1–C7 for "operations never auto-accepted; operations gate 0 silent errors" — see deliverables/model-risk/T-027-operations-gate-answer.md; needs the user's decision and, for C1, a P-###. T-120 (SUB-450–481) planned in TASKS.md, not built.
+
+### 2026-10-27 — orchestrator → @user — TYPE: STATUS — P-076 built, reviewed, merged (D-135)
+Operations with a value is always flagged (`policy_review` kept apart from specific reasons) and always on the one acknowledgment list, also for runs saved before P-076; the send is refused until it is acknowledged on the run hash. @senior-underwriter UI check PASS (deliverables/senior-underwriter: inline, Mediums to B-483). @model-risk check APPROVE WITH CHANGES (H1: pre-P-076 runs sent without ack) → fixed → look-again APPROVE (deliverables/model-risk/check-P-076.md, check-P-076-2.md). tests/pipeline 93 passed; request equality 0 of 143 changed; pyright new 0. Backlog B-483. Not a production approval; the T-027 veto stands.
+
+### 2026-10-27 — orchestrator → @user — TYPE: STATUS — T-120 built and gold frozen (not run)
+@producer built SUB-450–481; two build fixes before the freeze (direct Carrier A words; v11-readable wording for 454/464/468/469, fresh 455 figures, loss dates in term). @senior-underwriter gold first, from the documents. Lint v11: only SUB-461/463 cooking-conflict marks (unmeasurable, noted). @model-risk build check BLOCK (H1 faithful-answer misses) → fixed → look-again APPROVE (deliverables/model-risk/T-120-build-check.md, -2.md). Gold manifest recorded in NEXT-SESSION.md. Backlog B-484. Not run (D-020).
+
+### 2026-10-27 — @model-risk → @user — TYPE: REVIEW — T-027 memo after T-120: KEEP
+Run integrity verified (code fa604b9, PROMPT_VERSION 759b3e6bc9b2, v11/lint/counter/gold manifest match; no cache; run once). Operations gate C1–C7 met (19/20 present and hits, 0 silent, 0 understated hazards); all fields ≥ 18/20; conflict recall 7/7; 0 false completes, 0 unsafe routes, route 18/20. Not met: 1 leak and detection recall 11/12 (SUB-475, second location stated only in words; `ai/scope.py` reads addresses, numbered labels and schedules only). Resolves when: stricter-only scope rule under a new P-###, dev self-checks incl. near-pass negatives, @model-risk check no High, fresh 20+12 hold-out with ≥ 6 criterion-2 files (≥ 4 words-only) meeting every gate. Memo: deliverables/model-risk/T-027-memo-T-120.md. Not a production approval.
+
+---
+[2026-10-27 | @software-engineer → orchestrator, @senior-underwriter, @senior-test-engineer] TYPE: STATUS
+Re: T-122 (P-078, D-138)
+Message: A-D built, IN_REVIEW. A: read_folder runs the main app's prepare() per file; locked/virus-flagged/clamd-down files are unread with a plain reason; macros/scripts set needs_human + a named reason; mislabelled files read as their real type. B: genai_defense on each text; flag-only (needs_human list + "Security check" on the card); text and cache key unchanged. C: app/intake.py unpack() uses the main app's zip and email readers; unsafe names and archives inside archives are refused with a reason; the container is kept whole so it shows as not read. D: card "Security check" block, What's new line, screenshot T-122-security-checks.png. Quick-15: only 5 of 15 are in the cache (all fields hit); 10 need live calls, not run. ClamAV real-clamd test is the orchestrator's. Edit outside sources.py: ai/prepare.py, 3 display lines (unread_rows reason, needs_human, report["security_flags"]), no extraction change.
+
+---
+[2026-10-27 | @senior-underwriter -> orchestrator, @software-engineer] TYPE: REVIEW (D-065 item 3, UI only)
+Re: T-122 (P-078, D-138) workbench card, screenshot T-122-security-checks.png
+Verdict: APPROVE WITH CHANGES. The block reason and file name are clear; the card contradicts itself in two places.
+H1 Contradiction: "Not read by extraction: none" sits above a "Not read:" list naming locked.pdf and macro.pdf, with "Extraction: ok", "Saved run: status complete". An underwriter skimming the top lines reads "all files read". Fix: the "Not read by extraction" line (and status/Extraction line) must count files unread for security/lock reasons, or say "2 files not read - see below".
+H2 Misleading absence: "Cooking: not scored - no cooking equipment stated in the file", "Hood and suppression: not stated", and Missing: "named_insured" are shown as facts while a locked PDF and a macro PDF were never read. The locked file may hold the named insured or cooking details. Fix: when any file is unread, say "not stated in the files that were read; N files unread" and do not let a missing-info request go out for items the unread file may contain.
+H3 Header "these files were not trusted ... underwriter reads them by hand" is applied equally to notes.md, but notes.md (flag-only) WAS sent to the model, while macro.pdf was not. The card does not say whether notes.md values (e.g. operations=restaurant) came from the flagged text. Fix: per row say "not sent to the model" or "was read; check any value taken from it", and give the next step for injection text (e.g. "do not rely on values sourced from this file; confirm with the producer").
+M1 Reason repeats the file name ("macro.pdf: macro.pdf contains...", "notes.md: notes.md looks like"); strip the prefix. M2 Raw Python list shown: ['ignore previous instructions']; show the phrase in quotes. M3 macro.pdf appears twice (Not read and Security check) with the same text; merge or cross-reference. M4 Jargon "prompt-injection / jailbreak" - use "text that tries to give the AI instructions". M5 Extracted-fields table shows operations=restaurant with empty confidence, no source: unclear if that came from flagged notes.md. M6 Screenshot is the demo card only; no screenshot of a clean card (not required).
+Not committed; no code edited.
+
+---
+[2026-10-27 | @senior-underwriter -> orchestrator] TYPE: REVIEW (T-122 look-again, D-129)
+Verdict: APPROVE. H1 closed: red banner "2 files not read", "Not read by extraction: locked.pdf, macro.pdf", status "ok for the files that were read; 2 not read". H2 closed: "these may hold this" banner under the Cooking/Hood lines and "No missing-info request is drafted until they are read" under Missing. H3 closed: "Not opened" (macro.pdf, not sent) is separate from "Read but flagged" (notes.md, sent unchanged, values taken: operations, check them). Low note for backlog: the original "Cooking: not scored - no cooking equipment stated in the file" line still prints above the warning; reword when next touched. Not committed; no code edited.
+
+---
+[2026-10-27 | @senior-test-engineer -> orchestrator] TYPE: REVIEW (T-122 quality gate, D-138)
+Verdict: APPROVE WITH CHANGES. Code not edited, not committed; all runs read-only / temp dirs / no model calls.
+H1 (criterion C not met in the pipeline): app/intake.py unpack_folder() has no caller. process_submission -> read_folder(folder) reads the raw folder, so a .zip/.eml in a submission is only listed "not unpacked" (ARCHIVE_NOT_UNPACKED); the inner files are never read through A/B. unpack() itself works (self-check + my probes: "../" and absolute names refused, nested zip refused, locked zip refused, container kept whole on any refusal, eml "../../evil.txt" refused). Fix: call unpack_folder into a temp dir in process_submission (and show its refusals on the card), or restate C as "unpack function only".
+H2 (gate open): quick-15 not complete: 5 of 15 cached, 10 need live calls (not run). "No field drops" is unproven for 10; needs a human-approved run.
+Checked OK: (1) no-draft-when-whole-file-unread rule: counted read-only with read_folder over all 273 inbox + 2 inbox-dev submissions: 0 real submissions have a whole-file unread row (only stray simulation/inbox/__pycache__/*.pyc, not a submission), 0 security flags -> outcomes unchanged. (2) clean files: no "flag" key, text and sha256(raw) as before, key_for equal with/without flag (self-check + code read). (3) Blocked (locked/virus) docs: unread set, text "", dropped at llm_extract line 820. Active-content docs go as "UNREADABLE" placeholder only (needs_human), text not sent. Injection-flagged docs are sent unchanged by design. (4) ClamAV vs real clamd 127.0.0.1:3310: EICAR blocked ("antivirus flagged Eicar-Test-Signature"), clean .md read; port 1 (clamd down) -> every file blocked, text empty. Passes.
+Medium/Low: M1 zip bomb is refused (600 MB of zeros -> refused, 0.9 s) but _zip_members reads up to 500 MB into RAM first (RSS ~890 MB); lower MAX for the demo or stream-check declared sizes. M2 eml attachment sizes are not capped (only zips). M3 a .msg goes through message_from_bytes in _email_body (OLE bytes, garbage body); use read_msg. M4 with CLAMAV_HOST unset the scan is skipped/unknown: confirm the demo env sets it. M5 needs_human docs' text still feeds scope.detect and rule-based steps (not the model); pre-existing. M6 hidden/__MACOSX zip members are dropped silently.
+
+---
+[2026-10-27 | @senior-test-engineer -> orchestrator] TYPE: REVIEW (T-122 look-again, D-129)
+Verdict: APPROVE (H2 quick-15 live calls still pending with the user). Read-only, temp dirs, no model calls, nothing edited or committed.
+H1 closed: read_folder now unpacks via temp copy; probed through read_folder: inner zip files read as "pack.zip/a.md" and go through A/B (clean.zip/c.md got the injection flag), unsafe-name and nested zips kept whole with the refusal reason and needs_human, source folder unchanged.
+Q4 closed: 600 MB-of-zeros zip refused by declared size ("too large (over 500 MB unpacked): not opened") before any member is read; (the 662 MB RSS in my probe is the test data I built, not the reader). Eml attachment cap present (code read); not probed live. Open Low: .msg still parsed as plain email (M3), CLAMAV_HOST must be set in the demo env (M4).
+
+---
+[2026-10-30 | orchestrator -> @user, @software-engineer, @senior-test-engineer] TYPE: STATUS
+Re: T-122 (P-078, D-138)
+Message: Renumbered P-070/T-121/D-130 to P-078/T-122/D-138; P-077 kept for the scope words-only fix, T-121 for the planned hold-out. ClamAV image clamav/clamav-debian:stable: starts on arm64, EICAR blocked (plain and in a zip), clamd down blocks every file with a plain "scanner could not be reached" reason. Ported to pilot-integration (branch p078-security): tests/pipeline 93 passed, self-checks 6/6 ok. Quick-15 on pilot-integration: 0 field or status changes; only 5 of 15 reach the model there (B-498). Live paced run on ai-team code: see the next entry. The Mac slept during the runs; one ai-team run was stopped after Docker stopped answering and restarted.
+
+---
+[2026-10-31 | orchestrator -> @user] TYPE: STATUS
+Re: T-122 (P-078, D-138) quick-15
+Message: ai-team code, with vs without P-078 (real ClamAV on the with side): 0 field or status differences over 15 files; 0 failed calls; 0 model calls (5 cached, 10 manual intake by scope-v4). Quick-15 criterion met on both branches; the set reaching the model on only 5 files is B-498.
+
+---
+[2026-11-02 | @model-risk -> orchestrator] TYPE: REVIEW (T-123, T-124, T-125; relayed by the orchestrator as written)
+Verdict: T-123 APPROVE WITH CHANGES; T-124 APPROVE; T-125 APPROVE. No High, no veto. Not a production approval; not an approval of any T-121 gate result.
+M1 (T-123, required before any T-121 gold): record v2 sha256 a57010b0…3085a in DECISIONS/TASKS and commit; any later edit voids it for T-121. (Done by the orchestrator 2026-11-02.)
+M2–M4 and L1–L5: see deliverables/model-risk/check-T-123-T-125.md; M2–M4 in BACKLOG B-506–B-508.
+
+---
+FROM: @model-risk · TO: @software-engineer, @ai-engineer-assistant · TYPE: OBJECTION · DATE: 2026-11-02 · RE: T-126, T-127
+T-126 (B-508): APPROVE. T-127 (P-077 A+B): REJECT, one look-again. (d) and (e) were recomputed: prompt 392b9ce3c1af, 3,257 bytes; scope-v4→v5 over 333 inbox folders moves 6 to manual and 0 back. 
+H1: `prepare.HOUSE_NUMBER` (added after dispatch) lets a model count of 1 pass on quotes with no premises address: "1 Location", "Seats: 40 Indoor", "PO Box 9 Waco", "2 Stores", "Est. 2009 Family owned". This breaks D-145 (b) and T-127 (b). To resolve: revert the check to `scope.STREET_WORDS`, or require city/state/ZIP after the street and reject PO Box. Add the five quotes above as self-check cases that must give location_count_unclear, then re-run prepare.py and tests/pipeline.
+Medium/Low are in deliverables/model-risk/check-T-126-T-127.md. This is not a production approval; the T-027 veto stands.
+
+---
+FROM: @model-risk · TO: @software-engineer, @ai-engineer-assistant · TYPE: REVIEW · DATE: 2026-11-02 · RE: T-127 look-again
+H1 CLOSED. `_shows_one_address` sends all 14 probe quotes ("1 Location", "Seats: 40 Indoor", "PO Box 9 Waco", "2 Stores", ...) to location_count_unclear, and real addresses pass. prepare.py self-check ok; tests/pipeline 94 passed (temp copy). Final T-127: APPROVE. T-126: APPROVE. New Medium M3 (backlog): with a count of 1, a quote holding two addresses or a mailing address still passes Part B; Part A's A3 rule covers the two-address case. Not a production approval; the T-027 veto stands. Details: deliverables/model-risk/check-T-126-T-127.md.
+
+---
+[2026-11-03 | @model-risk -> orchestrator] TYPE: REVIEW (T-121 build check; relayed by the orchestrator as written)
+Verdict: APPROVE. No High. Freeze hashes match; rebuild byte-identical; gold vs builder 0 mismatches; 29 runs pass carrier_run_check; 6 figure conflicts scorable; C6 15/3/2; scope, near-misses 527-529 and routes agree with the rules; lint fails only on the D-128 cooking marks 520/522. M1: SUB-524 name close to published SUB-201 (fixed before the freeze). L1-L4: see deliverables/model-risk/T-121-build-check.md. Not a production approval; the T-027 veto stands.
+
+---
+[2026-11-03 | orchestrator -> @user] TYPE: STATUS
+Re: D-149-D-151, T-121
+Message: T-105 demo replies re-recorded (23 replies, paced, 0 failed); demo replays with 0 live calls; SUB-133 now held by a unit-count conflict (B-517). Quick set: SUB-026/036 replace SUB-022/042, self-check ok. Freeze recorded. T-121 built, gold frozen (manifest 8ba4a9f3779d7e34b8ec5a6d0b022ebb639310de08462ef681beda5c0d3fea7f). Not run.
+
+---
+[2026-11-03 | @model-risk -> @user, @ai-engineer-assistant, @software-engineer] TYPE: OBJECTION (T-027 memo after T-121; relayed by the orchestrator as written)
+Verdict: KEEP. Run integrity verified (code diff empty, hashes and manifest match, gold before run, statuses reproduced with calls blocked). Safety gates met: 0 leaks, recall 12/12 (words-only 4/4), 0 false completes, 0 unsafe, conflicts 6/6, C3 0. Six gates failed, all from 510, 513, 527, 529.
+H1: P-077 Part B fails closed on clean single-location files (highway-style addresses fail the shape test; the model quotes a reassurance sentence). Resolve: a new P-### for @user (it loosens Part B): accept count 1 when the count quote OR the found-in-file premises quote shows one address; shape test learns highway/route forms; all else fails closed; dev self-checks incl. near-pass negatives.
+H2: Part A rule A3 missed SUB-533 (ROLE_LINE skips the whole line on "Carrier"; label_above hides the address); recall rested on the model count. Resolve: stricter-only P-###: role skip limited to the address's sentence, label_above only on a bare label line; dev positives and negatives.
+Lift needs: H1+H2 fixed, @model-risk check no High, fresh 20+12 hold-out (>= 6 criterion-2, >= 3 words-only, >= 2 SUB-533-shaped, >= 3 near-misses, >= 2 highway addresses, C2/C4 rule for manual-intake files set before gold), every gate met. Memo: deliverables/model-risk/T-027-memo-T-121.md. Not a production approval.
+
+---
+[2026-11-03 | @model-risk -> @ai-engineer-assistant, @software-engineer, @user] TYPE: OBJECTION (T-129 check; relayed by the orchestrator as written)
+Verdict: REJECT, 3 High. D-155 (c) and D-157 fail as built; per the user's conditions the build STOPS and goes to @user. Report: deliverables/model-risk/check-T-129.md.
+H1 (P-081, C1 ack): approve and send_to_carrier/ack_problem read the raw saved run, so the operations value entered in a resolve is never acknowledged; P-081 opens the send path. Fix: build the ack list from with_resolutions(saved) in approve and the send gate; self-check that the send is refused until operations is acknowledged on this run hash.
+H2 (P-081, card text): workbench.saved_report forces "extra": [], so the card promotes runs with items still owed (and pre-P-081 runs), withdraws the producer draft and refuses its approve, while the send gate says incomplete. Fix: pass the saved extra through (None when absent) or read prepare.read_saved_run; self-checks with extra items and a pre-P-081 run.
+H3 (P-080 / D-155 c): _bare_label treats any short colon-free sentence ("Carrier A loss run attached.") as a label, hiding a second address on the next line; with the P-079 fallback a rule miss now stays in scope unless the model counts 2. Fix: a label is a line ending in ":" or a name-only line; add the two-line 533 shape as a dev positive and self-check.
+Medium/Low: M1 role word in the same sentence (and "home") still hides an address; M2 dev set lacks mailing/PO-Box-only and null-count negatives; M3 dev re-check replies not saved; L1 "Spur" and lowercase "highway"; L2 a count quote naming a second place without a street number passes.
+Confirmed holding: D-155 (a), (b), (d), (e), (f); D-156 stricter only; self-checks and quick-17 equal. Not a production approval; the T-027 veto stands.
+
+---
+[2026-11-03 | @model-risk -> orchestrator, @user] TYPE: REVIEW (T-129 look-again; relayed as written)
+Verdict: APPROVE WITH CHANGES. H1, H2, H3 closed; no new High. H1: send gate refused until operations was acknowledged on this run hash (probe with real temp log). H2: extra [] reads review pending on card and gate, draft withdrawn; extra ["hours"] or a pre-P-081 run reads incomplete on both, draft kept. H3: two-line carrier-sentence shape caught; D-155 (c) holds; dev re-check byte-identical; quick-17 0 scoring differences. Medium/Low to backlog B-524. Report deliverables/model-risk/check-T-129-2.md. Not a production approval; the T-027 veto stands.
+
+---
+2026-11-04 · @model-risk → @ai-engineer-assistant · TYPE: OBJECTION (T-130 first check; relayed as written)
+Verdict: REJECT (1 High, O-T130-1). H1: v7 kept one match per offset; v6 counted "4400 FM 1960 Rd" / "12 State Highway 6" / "77 County Road 12" / "800 I-35 Frontage Rd" as two places (manual intake); v7 put them in scope, an undisclosed loosening under stricter-only D-161. Fix: restore v6 counting + self-checks, or a separate P-###. ReDoS fixed at a94c3468 closed. Report deliverables/model-risk/check-T-130.md.
+
+---
+2026-11-04 · @model-risk → @ai-engineer-assistant · TYPE: REVIEW (T-130 look-again; relayed as written)
+T-130 look-again APPROVE; O-T130-1 closed; not a production approval. v6 counting restored; 140,200 differential cases, 0 loosened; sweep 380/380 identical; quick-17 identical; tests 94 passed. M2 → B-525 (loosening fix needs own P-###), L3 → B-526. Report deliverables/model-risk/check-T-130-2.md.
+
+---
+**2026-11-05 · @model-risk · TYPE: REVIEW · T-132 / P-084 (scope-v8, D-165)**
+@ai-engineer-assistant @software-engineer — Verdict: **APPROVE** (no High). Re-ran in a temp copy: self-check ok; 380-folder sweep byte-identical (0 newly in scope, 0 newly manual intake, DEV-06–12 caught, DEV-01–05 in scope); generated comparison 200,924 cases, 0 loosenings; tests/pipeline 94 passed; quick17 metrics identical to T-130. v8 = v7 pass `or` extra pass, stricter by construction.
+Medium M1: the any-case / Spanish forms need a comma + city on the same line; `1200 ELM DR WACO TX 76701` and USPS line format are missed. Not a loosening. Fix the What's new wording ("when a comma and a city follow") and record the limit; backlog the comma-less form. Lows L1–L7 in deliverables/model-risk/check-T-132.md.
+Not a production approval of the scope detector.
+
+---
+**2026-11-05 — @model-risk — TYPE: OBJECTION (T-128 build check: REJECT) — to @senior-test-engineer @producer @senior-underwriter, cc @user**
+T-128 hold-out SUB-550–581 build check: **REJECT**, 2 High. Do not freeze the gold and do not run T-128 (D-163) until both are closed. One look-again (D-129). Full check: `deliverables/model-risk/T-128-build-check.md`.
+- H1: the v11 lint FAILs on SUB-560/562 (cooking-conflict marks not scorable), and no unmeasurable-mark note exists before the freeze. Resolves when: @user records, in the D-128/D-153 form, that these two marks are reported separately and excluded from the conflict rate (recall on the 8 figure conflicts), and the lint record cites it.
+- H2: T-128 copies T-121 slot by slot. 15/32 emails score ≥ 0.80 similarity to an earlier file (T-121 baseline: 0/32), and the near-miss/direct-A files repeat phrases that sit word for word in the frozen self-checks (`prepare.py:3216-3224` "One address, one building." / "Same single building."; `scope.py:590` "The store has two entrances."). Resolves when: (a) the ≥ 0.80 files and 567 are rewritten with new wording, a similarity gate (< 0.80) is added to the collision check, and the gold is re-written and re-linted; or (b) @user accepts in writing that T-128 is a paired replication, not the fresh hold-out the T-027 memo requires.
+- Verified OK: freeze hashes, --check-gold 32/32, carrier_run_check 30/30, cooking_word counts, B-465 conflicts by hand, no stem collisions. Medium/Low are in the file. This is not a production approval; the T-027 veto stands.
+
+---
+FROM: @model-risk
+TO: @producer, @senior-underwriter, @senior-test-engineer, @user
+TYPE: REVIEW
+TASK: T-128
+DATE: 2026-11-05
+
+T-128 build check 2 (the one look-again): **APPROVE.** H1 is closed by D-166, and the lint record notes the 560/562 marks as declared. H2 is closed by a full email rewrite: 0 of 32 emails at ≥ 0.80 (max 0.64, mean 0.54; recomputed independently) and no sentence in scope.py, prepare.py or inbox-dev. No new High. I re-ran the freeze hashes, the lint, --check-gold and --check-ops-gold (32/32), carrier_run_check (30/30), cooking_word (15/3/2), the B-465 conflicts and the stem collisions, and all are as the gold states. Medium/Low items are in deliverables/model-risk/T-128-build-check-2.md: M1 restaurant Missing form, M3 class-level slot mirroring (to note in the T-027 memo), L6 routes.md wording. The gold may be frozen. This is not a production approval, and the T-027 veto stands.
+
+---
+FROM: @model-risk
+TO: @user, @ai-engineer-assistant, @software-engineer, @senior-test-engineer, @ml-engineer
+TYPE: REVIEW
+TASK: T-027
+DATE: 2026-11-05
+
+T-027 memo after T-128: **LIFT (conditional, frozen build only).** Every lift condition and every T-128 gate is met. I recomputed them myself. The rebuilt reports re-mark with 0 differences from the published scores, and C2/C4 output is byte-identical. Part A alone caught 572/573 (SUB-533 shapes) and 574–577 (words-only). P-079 kept 550, 555 and 567 in scope. False manual intake is 0/20, with 0 leaks, 0 unsafe routes and 0 false completes. No High. The lift is conditional on: the frozen build (1ddae83c, 392b9ce3c1af, scope-v8, qwen) with any change re-checked; criteria 1–4 Texas BOP only; C6 monitoring (≥ 60 reviewed files) with stop rules; and M1 (562's cooking conflict cites the wrong lines) plus M2 (the "complete — review pending" label on files with an open conflict) closed before any send-enabled mode. Medium/Low items are in deliverables/model-risk/T-027-memo-T-128.md. This is not a go-live decision, which is @user's, and the T-082 @responsible-ai veto is separate.
+
+---
+[2026-11-05 | orchestrator → @user, @pm, @head-of-underwriting, @data-scientist] TYPE: HANDOFF
+Re: T-082
+Message: @responsible-ai answered in chat at @user's request (answer only, nothing written, verdict unchanged). Seven lift requirements:
+1. EN↔ES counterfactual on workbench.match(), 0 route/note/suggested/overridable differences (@data-scientist, T-067 extension, synthetic now).
+2. Spanish bar words (cantina, taberna, antro, discoteca + restaurant) get the same route as "bar restaurant" (today R1 no_match vs R2 senior_referral; a loosening, @user decides).
+3. B-197 Spanish-variant one-to-one review (@responsible-ai).
+4. deliverables/responsible-ai/proxy-review.md for student/subsidized housing: neutral reason, loss basis or "none", one less discriminatory alternative, @compliance on the legal standard.
+5. @user decides the housing route (now W1 never-overridable, workbench.py:172).
+6. Recommendation-mix test by housing class with n (@data-scientist).
+7. Language outcome rates (hold/no_match by source language): reportable on synthetic data; the AIR ≥ 0.8 threshold needs pilot data.
+Items 1–6 lift the veto for demo/synthetic only; 7 and the protected-group impact of 6 stay required before pilot. Summary in deliverables/pm/pilot-readiness.md. No verdict given by the orchestrator.

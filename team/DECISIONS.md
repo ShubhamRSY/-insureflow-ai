@@ -1478,3 +1478,196 @@ Then continue: P-066 concurrent-write tests, @pm pilot-readiness update, @model-
   - **C6:** T-120 will include ≥12 files with "Cooking operations: None"-type lines, ≥3 with cooking stated, ≥2 with planted cooking conflicts (added to plan).
   - **C7:** Recorded before any T-120 gold exists (satisfied).
 - Effect: Operations and status automation go to 0 by design. T-027 veto remains until T-120 meets all conditions; this is not a production approval.
+
+## D-135 — P-076 approved (C1: operations is never auto-accepted; flagged and acknowledged before send)
+- Rationale: the user's words in the Claude Code session on 2026-10-27 (pasted, D-032): "C1 proposal: show me its full text. I approve it (record as "approve change P-### — conditional approval typed by @user, conditions met") ONLY if all three hold: (a) it only adds an operations flag and acknowledgment before send, loosening nothing; (b) it reuses the pilot per-value confirm; (c) it touches no frozen file." Recorded as: **approve change P-076 — conditional approval typed by @user, conditions met.** Proposal: `deliverables/ai-engineer/proposal-P-076.md`.
+- Conditions checked by the orchestrator against the proposal text and the code on pilot-integration 6b827a1: (a) the change sets `needs_review` on operations and keeps every existing reason; routing, appetite and every gate unchanged; the only new effect is the acknowledgment before send (stricter only). (b) no new confirm path: the pilot form already shows a per-value confirm for every value (`workbench.py` 1339), and outside the pilot the one acknowledgment list `package.needs_review_ids` / `ack_problem` is reused. (c) touches `ai/prepare.py`, `app/package.py`, `app/workbench.py` and tests only; no frozen scorer, lint, gold or hold-out file.
+- Dissent: none
+- Follow-up tasks: build on a new branch from pilot-integration in the fix worktree; pyright + self code review; tests/pipeline green; request-equality on all 143; Playwright screenshot on a temp copy; @senior-underwriter UI check; @model-risk check (High only, one look-again max, D-129); merge if no High; then freeze and build T-120 (not run).
+- Status: ACCEPTED by @user, 2026-10-27
+- Amends: none. v11 and all published scores stay frozen (D-020). Not a production approval; the T-027 veto stands.
+
+## D-136 — T-120 pre-run rulings: SUB-461/463 conflict marks excluded; C2 counter rules confirmed (2026-10-27)
+- Rationale: the user's words in the Claude Code session on 2026-10-27 (pasted, D-032): "Decisions (typed by @user): exclude the SUB-461/463 cooking-conflict marks from the conflict rate (as D-128); planted-conflict recall is measured on the 7 figure conflicts. C2 counter rules confirmed as written. Record before the run."
+- Decision: (1) SUB-461 and SUB-463 cooking-conflict marks are v11-unmeasurable; reported separately, excluded from the conflict rate (as D-128). Planted-conflict recall is measured on the 7 figure conflicts (SUB-454, 455, 458, 459, 460, 462, 469). (2) `count_ops_gate.py` (sha256 f942010d…9aa1) rules confirmed as written: silent error = v11 operations miss with no non-empty `reason` and no open operations/cooking conflict; `policy_review` never counts; failed calls counted apart, not present and not hit.
+- Dissent: none
+- Status: ACCEPTED by @user, 2026-10-27, before the T-120 run
+- Amends: none. v11 and all published scores stay frozen (D-020). Not a production approval; the T-027 veto stands.
+
+## D-137 — T-120 official run: GO
+- Rationale: the user's words in the Claude Code session on 2026-10-27 (pasted, D-032): "T-120 official run: GO (D-020). Verify every hash in NEXT-SESSION.md first (code fa604b9, PROMPT_VERSION 759b3e6bc9b2, scorer v11, lint, C2/C4 counter, gold manifest 534e65a5…); stop if any differs. smoke_readers first; no cached replies for SUB-450–481; qwen paced 55 s; retries per RUN-RULES; run once, score once with v11 and count_ops_gate.py. Report all gates … Mismatches file and run record. Fix nothing." Then @model-risk writes the T-027 memo.
+- Status: ACCEPTED by @user, 2026-10-27
+- Amends: none.
+
+## D-138 — P-078: security checks for the demo pipeline (intake agent stages 1, 2, 4)
+- Date / Owner: 2026-10-27 / @user
+- Context: the demo pipeline (`underwriting_pipeline/`) reads files with no type check, lock check, virus scan, macro check, prompt-injection check or ZIP/email unpacking. The main app has these in `src/insureflow/ingestion/intake.py` and `src/insureflow/fraud/genai_defense.py`.
+- Decision (in the user's words): 2026-10-27 "approve change P-070", "yes, override rule 8 for this", "yes, start Docker for ClamAV". P-070 was already used (T-118 cooking proposal), so on 2026-10-30 the user had it renumbered and re-approved: "approve change P-078 (security gate: unpacking, ClamAV fail-closed, macro/script to person, injection flag, unread-file warning) — typed by @user". Task renumbered T-121 → T-122 (T-121 kept for the planned hold-out); decision D-130 → D-138 (D-130–D-137 used on pilot-integration). P-077 is kept for the scope words-only fix.
+  - A. `sources.read_folder` runs every file through the main app's `ingestion.intake.prepare()` first. Locked or infected → not opened, `unread` with a plain reason. Macros/scripts → `needs_human` with the reason. Wrong extension → read as its real type. Reuse, no second copy.
+  - B. The existing `genai_defense` check runs on each file's text before the model call. Flag only (`needs_human` + reason naming the file); the text sent to the model is unchanged.
+  - C. `app/intake.py` unpacks `.zip` and `.eml` attachments into the submission before reading; each inner file goes through A like any other.
+  - D. Workbench (D-065): every block and flag in plain words, a "What's new" line, a screenshot.
+  - Plus: test the ClamAV path against a real clamd in Docker.
+- Conditions: stricter only (more to a person, never less). Built in the `insureflow-ai-team` worktree. After the build, run the quick set of 15 and report any field drop. No hold-out run, no scorer change. Budget rule 8 is overridden for this task only.
+- Status: ACCEPTED by @user, 2026-10-27; re-approved as P-078 on 2026-10-30. Not a production approval; the T-027 veto stands.
+
+## D-139 — Repo stays public; gitleaks before every push; tool rules for this session
+- Date / Owner: 2026-11-02 / @user
+- Decision (the user's words, pasted, D-032): "Repo stays public for now (my decision). Before every push: gitleaks over the pushed commits must be clean; otherwise stop." "Tools: drafting and docs — no plugins. Code changes — pyright-lsp and code-review before any @model-risk review; playwright only if the UI changes; commit-commands for commits. No superpowers. Subagents only for the @model-risk reviews."
+- Status: ACCEPTED by @user, 2026-11-02. Replaces NEXT-SESSION pending decision 1.
+
+## D-140 — P-077 to be drafted (not built)
+- Date / Owner: 2026-11-02 / @user
+- Decision (the user's words): "@ai-engineer-assistant drafts P-077 for me to read (do not build): a second location is detected by EITHER rules (number words + place nouns like "two stores", "both locations", "second shop", "other branch"; a different street address in any document) OR a model-reported location count with citation; count >1 or uncertain → whole file to manual intake. Stricter only. State the PROMPT_VERSION change. Include in-scope near-misses ("two floors", "two entrances", "2nd floor")."
+- Draft: `deliverables/ai-engineer/proposal-P-077.md`. Not approved; needs `approve change P-077`.
+- Status: ACCEPTED by @user, 2026-11-02.
+
+## D-141 — B-491 approved: C2 counter v2 (reason must name the item or evidence)
+- Date / Owner: 2026-11-02 / @user
+- Decision (the user's words): "B-491 approved: build the new C2 counter (a reason counts only if it names the item or evidence); new version, old one frozen; hash and freeze it before any T-121 gold."
+- Built as T-123: `deliverables/senior-test-engineer/count_ops_gate_v2.py`. v1 `count_ops_gate.py` unchanged (sha256 f942010d…9aa1).
+- Frozen 2026-11-02 after @model-risk APPROVE WITH CHANGES (M1 = record the hash): count_ops_gate_v2.py sha256 a57010b0796e7f88ce283375b2a3e6cde338d79c99fd79eab64f49a3ad63085a. Recorded before any T-121 gold.
+- Status: ACCEPTED by @user, 2026-11-02.
+
+## D-142 — B-498 approved: quick-15 refreshed so every file reaches the model (dev files only)
+- Date / Owner: 2026-11-02 / @user
+- Decision (the user's words): "B-498 approved: refresh the quick-15 so every file reaches the model (dev files only)."
+- Built as T-124 in `underwriting_pipeline/ai/regression_dev.py`.
+- Status: ACCEPTED by @user, 2026-11-02.
+
+## D-143 — B-485 approved: pilot mode blocks every file when no scanner is set up
+- Date / Owner: 2026-11-02 / @user
+- Decision (the user's words): "B-485 approved: in pilot mode, block all files if CLAMAV_HOST is unset; optional in dev."
+- Built as T-125 (stricter only).
+- Status: ACCEPTED by @user, 2026-11-02.
+
+## D-144 — Merge pilot-integration into ai-team; push both after gitleaks
+- Date / Owner: 2026-11-02 / @user
+- Decision (the user's words): "Merge pilot-integration into ai-team; push both (gitleaks first)."
+- Status: ACCEPTED by @user, 2026-11-02. `pilot-integration` stays the branch of record.
+
+## D-145 — P-077 parts A and B approved, on conditions
+- Date / Owner: 2026-11-02 / @user
+- Decision (the user's words, pasted, D-032): "approve change P-077 parts A and B — conditional approval typed by @user, valid ONLY if all hold: (a) either signal (rule hit or model location count) sends the whole file to manual intake; (b) missing, unreadable or uncertain location count → manual intake (fail-closed); (c) "two floors", "two entrances", "2nd floor" stay in scope; (d) the PROMPT_VERSION change is stated and all requests change; (e) stricter only. If any fails or is unclear, STOP and show me."
+- Build order: quick set baseline first (D-147), then build, dev near-miss checks, quick set again, @model-risk check (one look-again max). If no High: merge, gitleaks, push ai-team and pilot-integration.
+- Status: ACCEPTED by @user, 2026-11-02, conditional. Not a production approval; the T-027 veto stands.
+
+## D-146 — A sold or closed second store goes to manual intake
+- Date / Owner: 2026-11-02 / @user
+- Decision (the user's words): "A sold or closed second store → manual intake, not in scope (wording like "closed on our second store" is ambiguous; fail closed). Add to P-077 and its near-miss tests."
+- Replaces P-077 draft decision 2 (the draft recommended "stay in scope").
+- Status: ACCEPTED by @user, 2026-11-02.
+
+## D-147 — Live 17-file quick set as the baseline before P-077
+- Date / Owner: 2026-11-02 / @user
+- Decision (the user's words): "Run the 17-file quick set live first (paced) as the baseline, before building P-077; record results."
+- Status: ACCEPTED by @user, 2026-11-02.
+
+## D-148 — B-508: card text names the missing scanner (fast lane)
+- Date / Owner: 2026-11-02 / @user
+- Decision (the user's words): "B-508: fix the card text so send-refusal and scope lines name the missing scanner (fast lane); playwright screenshot."
+- Status: ACCEPTED by @user, 2026-11-02.
+
+## D-149 — Address mismatch keeps the file in manual intake
+- Date / Owner: 2026-11-03 / @user
+- Decision (the user's words, pasted, D-032): "keep address-mismatch → manual intake". A different street address in any document stays a manual-intake reason (P-077 part A, scope-v5); no loosening.
+- Status: ACCEPTED by @user, 2026-11-03.
+
+## D-150 — Re-record the T-105 demo replies for prompt 392b9ce3c1af (B-510)
+- Date / Owner: 2026-11-03 / @user
+- Decision (the user's words): "re-record T-105 demo replies". Paced live calls on a temp copy; the demo must then run with 0 live calls.
+- Status: ACCEPTED by @user, 2026-11-03.
+
+## D-151 — Replace SUB-022 and SUB-042 in the quick set (B-511)
+- Date / Owner: 2026-11-03 / @user
+- Decision (the user's words): "replace SUB-022/042 in the quick set" with two in-scope dev files (text PDF + email, same address). Done with SUB-026 and SUB-036, the only two dev-band files that qualify under scope-v5.
+- Status: ACCEPTED by @user, 2026-11-03.
+
+## D-152 — T-105 demo: SUB-133 gets a resolve step (B-517)
+- Date / Owner: 2026-11-03 / @user
+- Decision (the user's words, pasted, D-032): "1 = (a) demo step: underwriter resolves the unit count to 12 from the signed application, then approves". Done after the T-121 memo only.
+- Status: ACCEPTED by @user, 2026-11-03.
+
+## D-153 — T-121 pre-run ruling: SUB-520/522 cooking marks excluded
+- Date / Owner: 2026-11-03 / @user
+- Decision (the user's words): "SUB-520/522 cooking-conflict marks reported separately and excluded from the conflict rate (as D-128); planted-conflict recall on the 6 figure conflicts" (514, 515, 517, 518, 519, 521).
+- Status: ACCEPTED by @user, 2026-11-03, before the run.
+
+## D-154 — T-121 official run GO (D-020)
+- Date / Owner: 2026-11-03 / @user
+- Decision (the user's words): "T-121 official run GO (D-020)". Run once against the 2026-11-03 freeze, scored once with v11 and count_ops_gate_v2.py; fix nothing. Then the @model-risk T-027 memo.
+- Status: ACCEPTED by @user, 2026-11-03.
+
+## D-155 — P-079 approved on conditions (memo T-121 H1, B-518)
+- Date / Owner: 2026-11-03 / @user
+- Decision (the user's words, pasted, D-032): "approve change P-079 — conditional approval typed by @user, valid ONLY if all hold: (a) a count of 1 is accepted only when the count quote or the premises quote parses as one street/highway/route address found in the documents; (b) the rule-based checks still run and any hit wins; (c) any second address in any document still → manual intake; (d) dev re-check: SUB-475 and SUB-533–537 shapes still go to manual intake; (e) "two floors", "2nd floor", "two entrances" stay in scope; (f) SUB-510/513/527/529 shapes now stay in scope. If any fails, STOP and show me."
+- Status: ACCEPTED by @user, 2026-11-03, conditional. Not a production approval; the T-027 veto stands.
+
+## D-156 — P-080 approved (memo T-121 H2, B-519), stricter only
+- Date / Owner: 2026-11-03 / @user
+- Decision (the user's words): "P-080 (H2): stricter only — a second address on a line mentioning "Carrier" or under "Mailing address" is still caught. approve change P-080."
+- Status: ACCEPTED by @user, 2026-11-03.
+
+## D-157 — P-081 approved on conditions (B-522)
+- Date / Owner: 2026-11-03 / @user
+- Decision (the user's words): "approve change P-081 — conditional approval typed by @user, valid ONLY if: a file becomes routable only when every conflict is resolved by a logged underwriter action bound to the run hash, nothing is missing, every acknowledgment (incl. the operations C1 ack) is done, it is in scope, and the senior confirm is done where required; never automatic; the "Missing: operations" card text matches the true state. If any fails, STOP."
+- Status: ACCEPTED by @user, 2026-11-03, conditional.
+
+## D-158 — M1: manual-intake files are scope misses, not C2 silent errors
+- Date / Owner: 2026-11-03 / @user
+- Decision (the user's words): "M1 agreed." "Write the M1 rule (manual-intake files = scope misses, not C2 silent errors) into the counter notes and the next hold-out plan before any gold." The frozen counter v2 is not edited; T-121 is not re-scored.
+- Status: ACCEPTED by @user, 2026-11-03.
+
+## D-159 — T-129: fix H1–H3, one look-again; pilot-integration stays local
+- Date / Owner: 2026-11-03 / @user
+- Decision (the user's words, pasted, D-032): "T-129 = (a) fix H1–H3 per check-T-129.md, one look-again; pilot-integration stays local until the look-again passes." Backup branch t129-wip pushed (gitleaks clean); if any High remains after the look-again, STOP with 2–3 options.
+- Status: ACCEPTED by @user, 2026-11-03.
+
+## D-160 — SUB-219 is a known gold difference under D-149
+- Date / Owner: 2026-11-03 / @user
+- Decision (the user's words): "SUB-219 recorded as a known gold difference under D-149, no re-score." The published T-108 gold (in scope) predates D-149; its application (2701 Memorial Blvd) and schedule (4810 Twin City Hwy) give different addresses, so scope-v6 sends it to manual intake. Published scores unchanged (D-020).
+- Status: ACCEPTED by @user, 2026-11-03.
+
+## D-161 — Fix B-523/B-524 before T-128; P-082 approved (stricter only)
+- Date / Owner: 2026-11-04 / @user
+- Decision (the user's words, pasted, D-032): "fix B-523/B-524 before T-128". "approve change P-082 (stricter only): Title Case lines without punctuation ("Carrier A Loss Run Attached") and role words or "home" in the same sentence never hide an address on that or the next line; "Spur" recognised as a highway; approve records include the value entered on resolve. Dev re-check (12 files + 365-folder scope sweep: 0 newly in scope), quick set, tests/pipeline, @model-risk check, one look-again max. If no High: merge, push."
+- Status: ACCEPTED by @user, 2026-11-04. Not a production approval; the T-027 veto stands.
+
+## D-162 — Freeze before T-128; build T-128
+- Date / Owner: 2026-11-04 / @user
+- Decision (the user's words): "Freeze in NEXT-SESSION.md before any T-128 file exists: code commit, PROMPT_VERSION, scope version, scorer v11, lint, C2 counter v2 + M1 notes, all sha256." "Build T-128 (SUB-550–581) per the plan ... @model-risk build check, one look-again max. Freeze the gold, record the manifest sha256."
+- Status: ACCEPTED by @user, 2026-11-04.
+
+## D-163 — T-128 official run GO, conditional (D-020)
+- Date / Owner: 2026-11-04 / @user
+- Decision (the user's words): "T-128 run GO, conditional" — "valid only if step 3 ends with no High: run T-128 once (all hashes verified, smoke_readers, no cache, qwen paced 55 s), score once with v11 and count_ops_gate_v2.py ... Fix nothing. Then the @model-risk T-027 memo." "If any step hits a High after its one look-again: STOP and give me options."
+- Status: ACCEPTED by @user, 2026-11-04, conditional.
+
+## D-164 — P-083 approved on conditions (B-525)
+- Date / Owner: 2026-11-04 / @user
+- Decision (the user's words, pasted, D-032): "approve change P-083 (B-525) — conditional approval typed by @user, valid ONLY if: (a) a single highway-style premises ("FM 1960 Rd", "State Highway 6", "County Road 12", "I-35 Frontage Rd", "Spur 5" etc.) counts as one place only when it is the only address in all documents; (b) any second address anywhere still → manual intake; (c) the 380-folder sweep shows only the intended files newly in scope, each listed; (d) all multi-location dev shapes (SUB-475, 533–537, two highway addresses) still go to manual intake; (e) the generated-test comparison shows no other loosening. If any fails, STOP." "If it passes: merge, push, re-record the freeze in NEXT-SESSION.md (new code commit, scope version) before any T-128 file exists. Then continue with step 3 (build T-128) and step 4 (conditional GO) as instructed."
+- Status: ACCEPTED by @user, 2026-11-04, conditional. A loosening; built as T-131 (scope-v8). Not a production approval (@model-risk).
+- Superseded 2026-11-05 by D-165: dropped before merge (code review found loosenings the "only address" check could not close); code reverted; B-525 stays open.
+
+## D-165 — Drop P-083; P-084 (stricter only, fast lane)
+- Date / Owner: 2026-11-05 / @user
+- Decision (the user's words, pasted, D-032): "option 1 — drop P-083 for now, revert its changes; B-525 stays open (revisit with pilot data)." "P-084 (stricter only, fast lane): the second-address detector also catches addresses in any letter case ("1200 ELM DR", "9 oak way"), Texas route codes ("IH 35", "SL 1604", "TX-71", "RM", "FM", "SH", "US"), PMB and "General Delivery" mailing addresses, and Spanish-format addresses ("Calle Roble 12", "Av. …"). City-only mentions are left to the model location count. Checks: 380-folder sweep (0 newly in scope; list every newly manual-intake file), generated comparison (0 loosenings), dev multi-location shapes still caught, near-misses still in scope, tests/pipeline, quick set. @model-risk check, one look-again max; if a High remains, STOP with options." "If no High: merge, push both branches, re-record the freeze in NEXT-SESSION.md (code commit, scope version, all hashes) before any T-128 file exists."
+- Status: ACCEPTED by @user, 2026-11-05. Built as T-132 (scope-v8). Not a production approval (@model-risk).
+
+## D-166 — T-128 pre-run ruling: SUB-560/562 cooking marks excluded
+- Date / Owner: 2026-11-05 / @user
+- Decision (the user's words, pasted, D-032): "SUB-560/562 cooking-conflict marks reported separately and excluded from the conflict rate (as D-128); planted-conflict recall on the 8 figure conflicts (554, 555, 556, 557, 558, 559, 561, 566)." "Record this as a decision, send the build for its one look-again. If no High: freeze the gold, record the manifest sha256, then run T-128 under the conditional GO exactly as instructed (all hashes verified, smoke_readers, no cache, qwen paced 55 s, run once, score once with v11 and count_ops_gate_v2.py), then the @model-risk T-027 memo. If any High remains: STOP with options."
+- Status: ACCEPTED by @user, 2026-11-05, before the gold freeze and before the run. Answers T-128 build check H1. v11 and every published score stay frozen (D-020).
+
+## D-167 — @model-risk lifts the T-027 production veto, conditional (after T-128)
+- Date / Owner: 2026-11-05 / @model-risk (its own veto; not a @user decision, not a go-live decision)
+- Decision: LIFT, conditional, no High (`deliverables/model-risk/T-027-memo-T-128.md`). Conditions (any breach reinstates the veto): the frozen build only (code 1ddae83c, PROMPT_VERSION 392b9ce3c1af, scope-v8, qwen/qwen3.8-27b), any change needs a new @model-risk check; Texas BOP under P-055 criteria 1–4 only; C6 monitoring on at least 60 reviewed files with stop rules; memo M1 (562 cooking conflict cites the wrong lines) and M2 ("complete — review pending" with an open conflict) closed before any send-enabled mode.
+- Go-live stays @user's decision; the @responsible-ai T-082 veto is separate and stands. No AI role approves or sends (D-017).
+- Status: RECORDED by the orchestrator from the @model-risk memo, 2026-11-05.
+
+## D-168 — @user: go-live not yet; draft P-085/P-086; B-525/B-529/B-532 deferred; repo to be made private
+- Date / Owner: 2026-11-05 / @user (typed in this Claude Code session)
+- Decision: (1) Go-live: not yet. (2) Draft B-530 and B-531 as proposals for @user to read, not built: P-085 (B-531, `deliverables/ai-engineer/proposal-P-085.md`) and P-086 (B-530, `deliverables/ai-engineer/proposal-P-086.md`). (3) B-525, B-529 and B-532 are deferred to pilot data. (4) @user will make the GitHub repo private.
+- Also asked: @responsible-ai states the T-082 lift requirements (answer only, verdict unchanged); a plan-only final pilot build and validation (`deliverables/pm/pilot-final-build-plan.md`; the hold-out is T-133 because T-130 is taken); `deliverables/pm/pilot-readiness.md` updated.
+- Not an approval of P-085 or P-086 (each needs `approve change P-###`). No model call, nothing sent.
+- Status: RECORDED by the orchestrator from @user's words, 2026-11-05.

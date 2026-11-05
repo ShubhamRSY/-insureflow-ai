@@ -218,7 +218,31 @@ def with_resolutions(report: dict, submission: str = "") -> dict:
                  if c.get("resolution") != "resolved" and c.get("field") in done else c for c in report.get("conflicts") or []]
     fields = [{**r, "value": done[r["field_id"]]["new_value"].strip(), "resolved_by": done[r["field_id"]]["underwriter_id"]} if r.get("field_id") in done else r
               for r in report.get("fields") or []]
-    return {**report, "conflicts": conflicts, "fields": fields}
+    out = {**report, "conflicts": conflicts, "fields": fields}
+    if "missing" in report:  # P-081 (D-157): the card's Missing line reads the resolved values, not the saved ones
+        out["missing"] = [r["field_id"] for r in fields if not (r.get("value") or "").strip()]
+    if resolved_to_review(report, out, done):
+        out["status"] = prepare.REVIEW_PENDING
+        out["status_reason"] = RESOLVED_REASON
+    return out
+
+
+RESOLVED_REASON = ("every conflict was resolved by a listed underwriter on this run; it still needs the approve with each acknowledgment, "
+                   "the senior market confirm where required and the send checks (P-081)")
+
+
+def resolved_to_review(saved: dict, resolved: dict, done: dict) -> bool:
+    """P-081 (D-157): an "incomplete" run whose only gap was open conflicts reads as review pending once a listed underwriter resolved every
+    one of them on this run (same run hash). Never "complete": approve, acknowledgments, senior confirm and the send gates are unchanged.
+    Fails closed: any field still empty, any item still asked of the producer (or a run saved before P-081, which did not record them),
+    an unread file or page, a file for a human read, out of scope or no scope result, or a conflict the underwriter did not resolve."""
+    was_open = [c for c in saved.get("conflicts") or [] if c.get("resolution") != "resolved"]
+    fields = {r.get("field_id"): r for r in resolved.get("fields") or []}
+    return (saved.get("status") == "incomplete" and bool(was_open) and all(c.get("field") in done for c in was_open)
+            and not any(c.get("resolution") != "resolved" for c in resolved.get("conflicts") or [])
+            and all((fields.get(f) or {}).get("value") and str(fields[f]["value"]).strip() for f in prepare.FIELDS)
+            and saved.get("extra") == [] and not saved.get("unread") and not saved.get("needs_human")
+            and isinstance(saved.get("scope"), dict) and saved["scope"].get("in_scope") is True)
 
 
 def conflict_problem(report: dict) -> str:
@@ -398,9 +422,17 @@ def senior_confirm_problem(submission: str, report: dict) -> str:
     return "" if market_confirmation(submission, report.get("saved_hash") or "") else "a senior referral needs a senior underwriter to confirm the market first"
 
 
+def is_review_row(row: dict) -> bool:
+    """P-076 (D-135, model-risk H1): a value that needs review, and operations whenever it has a value, even in a run saved before P-076."""
+    return bool(row.get("value") and (row.get("needs_review") or row.get("field_id") == "operations"))
+
+
 def needs_review_ids(report: dict) -> list[str]:
-    """Field ids of the rows the underwriter must acknowledge at approve (D-039, D-068): needs_review with a value. The one list."""
-    ids = [r["field_id"] for r in report.get("fields") or [] if r.get("needs_review") and r.get("value")]
+    """Field ids of the rows the underwriter must acknowledge at approve (D-039, D-068): needs_review with a value. The one list.
+    P-081 (check-T-129 H1): read after the logged resolutions on this run, so a value entered by a resolve (operations, C1) is acknowledged
+    at approve and checked at send, the same list in both places."""
+    report = with_resolutions(report)
+    ids = [r["field_id"] for r in report.get("fields") or [] if is_review_row(r)]
     if ((report.get("cooking") or {}).get("equipment") or {}).get("state") == "needs_review":  # P-029 (D-072)
         ids.append("cooking_equipment")
     return ids
@@ -559,8 +591,10 @@ if __name__ == "__main__":
 
         seq = iter(range(1, 1000))
 
-        def decide(sub: str, action: str, reason: str = "", who: str = "UW-001", n: int | None = None):
+        def decide(sub: str, action: str, reason: str = "", who: str = "UW-001", n: int | None = None, ack: bool = True):
             row = {"seq": next(seq) if n is None else n, "submission": sub, "action": action, "underwriter_id": who, "reason": reason, "run_hash": _current_hash(sub)}
+            if action == "approve" and ack:  # P-076: operations is always listed, so the approve acknowledges what the saved run lists (as the workbench does); ack=False tests the refusal
+                row["acknowledged"] = needs_review_ids(prepare.read_saved_run(sub))
             with log.open("a") as handle:
                 handle.write(json.dumps(row) + "\n")
 
@@ -696,7 +730,7 @@ if __name__ == "__main__":
                 pass
             with log.open("a") as handle:
                 handle.write(json.dumps({"seq": 800, "submission": "SUB-195", "action": "edit", "underwriter_id": "UW-001", "reason": "from the loss run", "field_id": "year_built", "new_value": "1987"}) + "\n")
-                handle.write(json.dumps({"seq": 801, "submission": "SUB-195", "action": "approve", "underwriter_id": "UW-001", "reason": "", "run_hash": _current_hash("SUB-195")}) + "\n")
+                handle.write(json.dumps({"seq": 801, "submission": "SUB-195", "action": "approve", "underwriter_id": "UW-001", "reason": "", "acknowledged": ["operations"], "run_hash": _current_hash("SUB-195")}) + "\n")
             edited = build_package("SUB-195")
             assert "year_built: 1987" in edited and "EDITED by UW-001" in edited and "from the loss run" in edited
             # T-085: no carrier named (nightclub) -> refused.
@@ -928,7 +962,7 @@ if __name__ == "__main__":
             low = full(named_insured="Acme")
             low = [{**r, "needs_review": True} if r["field_id"] in ("named_insured", "operations") else r for r in low]
             save(ext, "SUB-321", "complete", complete=True, fields=low, sprinklers="no")
-            decide("SUB-321", "approve")
+            decide("SUB-321", "approve", ack=False)
             try:
                 send_to_carrier("SUB-321", "user", dest_dir, user_line=LINE("SUB-321"))
                 raise SystemExit("unacknowledged needs-review values must refuse the send, for the user too")
@@ -937,6 +971,31 @@ if __name__ == "__main__":
             with log.open("a") as handle:
                 handle.write(json.dumps({"seq": 9001, "submission": "SUB-321", "action": "approve", "underwriter_id": "UW-001", "reason": "", "acknowledged": ["named_insured", "operations"], "run_hash": _current_hash("SUB-321")}) + "\n")
             assert send_to_carrier("SUB-321", "user", dest_dir, user_line=LINE("SUB-321")).exists()
+            # P-076 (D-135, T-027 C1): operations alone flagged (policy): send refused until acknowledged on this run hash, then allowed.
+            only_ops = [{**r, "needs_review": True, "policy_review": True} if r["field_id"] == "operations" else r for r in full()]
+            save(ext, "SUB-376", prepare.REVIEW_PENDING, fields=only_ops, sprinklers="no")
+            decide("SUB-376", "approve", ack=False)
+            try:
+                send_to_carrier("SUB-376", "user", dest_dir, user_line=LINE("SUB-376"))
+                raise SystemExit("P-076: operations not acknowledged must refuse the send")
+            except ValueError as exc:
+                assert "1 value needs review and is not acknowledged (operations)" in str(exc), exc
+            with log.open("a") as handle:
+                handle.write(json.dumps({"seq": 9376, "submission": "SUB-376", "action": "approve", "underwriter_id": "UW-001", "reason": "", "acknowledged": ["operations"], "run_hash": _current_hash("SUB-376")}) + "\n")
+            assert send_to_carrier("SUB-376", "user", dest_dir, user_line=LINE("SUB-376")).exists(), "P-076: acknowledged on the current run hash, other gates pass: sent"
+            # P-076 (model-risk H1): a run saved before P-076 (operations has a value, not flagged, status complete) still needs the operations acknowledgment.
+            old76 = full()
+            assert not any(r.get("needs_review") or r.get("policy_review") for r in old76 if r["field_id"] == "operations")
+            save(ext, "SUB-377", "complete", complete=True, fields=old76, sprinklers="no")
+            decide("SUB-377", "approve", ack=False)
+            try:
+                send_to_carrier("SUB-377", "user", dest_dir, user_line=LINE("SUB-377"))
+                raise SystemExit("P-076 H1: a pre-P-076 run must refuse the send until operations is acknowledged")
+            except ValueError as exc:
+                assert "(operations)" in str(exc) and "not acknowledged" in str(exc), exc
+            with log.open("a") as handle:
+                handle.write(json.dumps({"seq": 9377, "submission": "SUB-377", "action": "approve", "underwriter_id": "UW-001", "reason": "", "acknowledged": ["operations"], "run_hash": _current_hash("SUB-377")}) + "\n")
+            assert send_to_carrier("SUB-377", "user", dest_dir, user_line=LINE("SUB-377")).exists()
             # P-026 (D-069, B-220): approve + acknowledge, then a re-save with a changed value -> refused; approve + acknowledge again -> allowed.
             save(ext, "SUB-322", "complete", complete=True, fields=low, sprinklers="no")
             def approve_ack(n):
@@ -1006,4 +1065,42 @@ if __name__ == "__main__":
     # P-029 (D-072): an ambiguous cooking line joins the one needs-review list, so the send gate waits for its acknowledgment.
     assert needs_review_ids({"fields": [], "cooking": {"equipment": {"state": "needs_review"}}}) == ["cooking_equipment"]
     assert needs_review_ids({"fields": [], "cooking": {"equipment": {"state": "yes"}}}) == []
+    # P-081 (D-157): an incomplete run whose only gap was open conflicts reads as review pending once every one is resolved on this run; anything else stays
+    real_resolutions = globals()["resolutions"]
+    rows81 = [{"field_id": f, "value": "x"} for f in prepare.FIELDS if f != "operations"] + [{"field_id": "operations", "value": None}]
+    base81 = {"submission": "SUB-881", "status": "incomplete", "saved_hash": "h81", "extra": [], "unread": [], "needs_human": [], "scope": {"in_scope": True},
+              "missing": ["operations"], "fields": rows81,
+              "conflicts": [{"field": "operations", "resolution": "unresolved"}, {"field": "unit_count", "resolution": "unresolved"}]}
+    both = {"operations": {"new_value": "Residential apartments, 12 units", "underwriter_id": "UW-002"}, "unit_count": {"new_value": "12", "underwriter_id": "UW-002"}}
+    try:
+        globals()["resolutions"] = lambda submission, run_hash: both if run_hash == "h81" else {}  # stub: the log is tested above with SUB-330
+        got = with_resolutions(base81)
+        assert got["status"] == prepare.REVIEW_PENDING and got["status_reason"] == RESOLVED_REASON and got["missing"] == [], got
+        assert prepare.ready_to_route(got) and not conflict_problem(got)
+        for label, report in (("another run", {**base81, "saved_hash": "other"}), ("extra asked", {**base81, "extra": ["hours"]}),
+                              ("saved before P-081", {k: v for k, v in base81.items() if k != "extra"}), ("unread page", {**base81, "unread": [{"file": "a.pdf", "page": None}]}),
+                              ("human read", {**base81, "needs_human": ["scan.jpg"]}), ("out of scope", {**base81, "scope": {"in_scope": False}}), ("no scope", {**base81, "scope": None}),
+                              ("another field empty", {**base81, "fields": [*rows81[:-2], {"field_id": rows81[-2]["field_id"], "value": None}, rows81[-1]]}),
+                              ("a third conflict", {**base81, "conflicts": [*base81["conflicts"], {"field": "sales_or_payroll", "resolution": "unresolved"}]}),
+                              ("already review pending", {**base81, "status": prepare.REVIEW_PENDING}), ("manual intake", {**base81, "status": prepare.MANUAL_INTAKE})):
+            out81 = with_resolutions(report)
+            assert out81.get("status_reason") != RESOLVED_REASON and out81["status"] == report["status"], (label, out81.get("status"))
+        globals()["resolutions"] = lambda submission, run_hash: {"operations": both["operations"]}
+        half = with_resolutions(base81)
+        assert half["status"] == "incomplete" and half["missing"] == [] and conflict_problem(half), "one conflict left: stays incomplete"
+        # check-T-129 H1: the operations value entered by a resolve is a C1 review row at approve and at send, read from the saved run
+        globals()["resolutions"] = lambda submission, run_hash: both if run_hash == "h81" else {}
+        assert "operations" in needs_review_ids(base81), "the approve list reads the resolved run"
+        real_decisions = globals()["decisions"]
+        try:
+            for acked, want in (([], "operations"), (["loss_run_valued_through"], "operations"), (["operations"], "")):
+                globals()["decisions"] = lambda submission, log, a=acked: [{"action": "approve", "run_hash": "h81", "acknowledged": a}]
+                got = ack_problem("SUB-881", base81)
+                assert (want in got) if want else got == "", (acked, got)
+            globals()["decisions"] = lambda submission, log: [{"action": "approve", "run_hash": "another", "acknowledged": ["operations"]}]
+            assert "operations" in ack_problem("SUB-881", base81), "another run's acknowledgment does not count"
+        finally:
+            globals()["decisions"] = real_decisions
+    finally:
+        globals()["resolutions"] = real_resolutions
     print("package ok")

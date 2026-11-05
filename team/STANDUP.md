@@ -2125,3 +2125,8 @@ Blocked: No.
 - Done: P-073 scorer v12 built (cooking slot only), lint wrapper PASS, dev re-score (0 calls), self-checks ok, tests/pipeline 86 passed. `deliverables/senior-test-engineer/P-073-v12-as-built.md`.
 - Doing next: fix anything @model-risk finds; freeze v12 only after their check (D-126).
 - Blocked by / need from: @model-risk check; a decision on gold for other_class cards (@senior-underwriter); 30 dev files have no saved reply.
+
+### 2026-11-05 — @model-risk (written by orchestrator, D-102 item 5)
+- Done (2026-11-04 to 2026-11-05): T-130 check REJECT (H1) → look-again APPROVE (P-082); T-132 check APPROVE (P-084, scope-v8); T-128 build check REJECT (H1 lint ruling, H2 copy of T-121) → look-again APPROVE; T-027 memo after T-128: LIFT, conditional (D-167, `deliverables/model-risk/T-027-memo-T-128.md`).
+- Doing next: re-check any change to the frozen build (1ddae83c, 392b9ce3c1af, scope-v8); C6 monitoring on at least 60 reviewed files.
+- Blocked by / need from: B-530 and B-531 closed before any send-enabled mode.

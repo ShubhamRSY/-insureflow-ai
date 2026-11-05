@@ -44,6 +44,14 @@ BANNER = ""  # set by serve(); the sandbox screenshots label the page with it
 MESSAGES: dict[str, tuple[bool, str]] = {}  # submission -> (ok, plain-words result of the last action); shown once
 # D-065 item 5: one line per user-visible feature: date, task or proposal, decision number, what an underwriter sees.
 WHATS_NEW = (
+    ("2026-11-05", "P-084 (T-132)", "D-165", "A second address now sends the file to manual intake in more forms: all capitals or all lower case followed by a comma and a city (\"1200 ELM DR, WACO\", \"9 oak way, Waco\"), Texas route codes in capitals (\"IH 35\", \"SL 1604\", \"TX-71\"), PMB and \"General Delivery, <city> TX\", and Spanish-format addresses followed by a comma and a city (\"Calle Roble 12, Laredo\", \"Av. Juarez 120, Laredo\"). Under a label such as \"Mailing address:\" they are still set aside."),
+    ("2026-11-04", "P-082 (B-523/B-524)", "D-161", "An address next to a carrier, agent or other role word in a sentence, under a name line (\"ABC Insurance Agency\"), or near the word \"home\" now sends the file to manual intake; only a short label such as \"Mailing address:\" sets an address aside. \"Spur\" roads count as highway addresses. The approve and confirm records keep the values entered on resolve."),
+    ("2026-11-03", "P-079/P-080/P-081 (T-129)", "D-155–D-157", "A single-location file whose address is a highway or route (\"1906 Hwy 290 W\") or whose model count quotes a sentence now stays in scope when the premises line shows one address. A second address on a line that also names a carrier, or under a filled-in \"Mailing address:\" line, still sends the file to manual intake. When an underwriter resolves every conflict on a file that was incomplete only because of them, the card reads \"complete — review pending\" with the reason, the Missing line shows the resolved values, and the producer draft is withdrawn; approve, acknowledgments, senior confirm and send checks still apply."),
+    ("2026-11-02", "P-077", "D-145", "A file goes to manual intake as a whole when it names a second place in words (\"two stores\", \"our other shop\", a sold or closed second store, a second street address in any document) or when the model's own count of premises is above one, missing, or not found in the documents. The card quotes the words or the count that sent it."),
+    ("2026-11-02", "B-508", "D-148", "On a file blocked because no antivirus scanner is set up, the send refusal and the Scope check line now name the missing scanner first, before any scope reason."),
+    ("2026-11-02", "B-485", "D-143", "In assist-only pilot mode with no antivirus scanner set up, no file is opened: each one shows \"Blocked: pilot mode needs the antivirus scanner\" and the file goes to manual intake. A manual-intake card now lists every file that was not opened or not read, with its reason."),
+    ("2026-10-27", "T-122", "D-138", "Security checks on every file: a locked or virus-flagged file is not opened and says why; a file with macros or scripts, or text that tries to steer the model, shows a \"Not opened\" or \"Read but flagged\" note naming the file and goes to a person; zips and emails are unpacked, unsafe ones refused."),
+    ("2026-10-27", "P-076", "D-135", "Operations is always checked by the underwriter before send."),
     ("2026-10-26", "P-075", "D-133", "When the application says \"Cooking operations: None\" and the operations answer leaves it out, the line is copied as written, with its quote, and marked \"copied by a rule, not read by the model\"; "
      "the system still never writes \"no cooking\" itself. If any other document (or the application's other lines, or a schedule cooking column) mentions cooking, the file is held on an open \"cooking operations\" conflict that shows both sentences."),
     ("2026-10-24", "P-074", "D-132", "A conflict the system cannot check against the document now stays open and holds the file. Each side says why: \"Not verified against the document\" "
@@ -388,7 +396,7 @@ def saved_report(name: str) -> tuple[dict | None, str]:
         "fields": fields,
         "conflicts": saved.get("conflicts") or [],
         "missing": [r["field_id"] for r in fields if not r.get("value")],
-        "extra": [],  # not stored in the saved run
+        "extra": saved.get("extra"),  # P-081 (check-T-129 H2): items still asked of the producer, as saved; None in a run saved before P-081
         "locations": None,  # not stored in the saved run
         "status_reason": prepare.REJECT_REASON if saved.get("status") == "all_values_rejected" else None,
     }, ""
@@ -602,7 +610,7 @@ def record_decision(payload: dict, log_path: Path) -> dict:
             raise ValueError(f"confirm every value before recording: {', '.join(unacked)}")
         if not listed:
             raise ValueError("there is no value to confirm on this run")
-        payload = {**payload, "acknowledged": listed, "confirmed_values": field_values(saved), "run_hash": saved["saved_hash"]}
+        payload = {**payload, "acknowledged": listed, "confirmed_values": field_values(package.with_resolutions(saved)), "run_hash": saved["saved_hash"]}
     if action == "approve":
         submission = (payload.get("submission") or "").strip()
         # T-071: read the file's status from the last saved run itself. An approve is refused on either
@@ -619,7 +627,7 @@ def record_decision(payload: dict, log_path: Path) -> dict:
         unacked = [f for f in listed if f not in (payload.get("ack") or [])]
         if unacked:
             raise ValueError(f"acknowledge every needs-review value before approving: {', '.join(unacked)}")
-        payload = {**payload, "acknowledged": listed, "run_hash": saved["saved_hash"], "approved_values": field_values(saved)}  # B-266: what was approved
+        payload = {**payload, "acknowledged": listed, "run_hash": saved["saved_hash"], "approved_values": field_values(package.with_resolutions(saved))}  # B-266: what was approved; P-082 (L4): incl. values entered on resolve
     with _LOG_LOCK:
         if action == "approve" and not reason:
             # D-053: an approve after a decline needs a written reason; refused here, not only at the send.
@@ -779,6 +787,9 @@ def act(path: str, payload: dict) -> tuple[str, bool, str]:
         if path == "/send":  # item 1: the same gate as every send; the actor is the user, the line is typed on the card
             dest = package.send_to_carrier(sub, payload.get("underwriter_id") or "user", TO_CARRIER, user_line=payload.get("user_line", ""), resend_reason=payload.get("resend_reason", ""))
             return done(f"Sent: package {dest.name} written to to-carrier. Not bound.")
+        resolved, _ = saved_report(sub)
+        if resolved is not None and package.with_resolutions(resolved, sub).get("status_reason") == package.RESOLVED_REASON:  # P-081 (D-157)
+            raise ValueError("the draft is withdrawn: every conflict on this file was resolved by an underwriter on this run")
         dest = prepare.approve(PENDING / f"{sub}.md", payload.get("underwriter_id") or "user", TO_PRODUCER, payload.get("reason", ""))  # item 13: D-050, user override
         return done(f"Approved: request {dest.name} written to to-producer. It lists only missing items and declines nothing.")
     except (ValueError, OSError) as exc:
@@ -984,6 +995,29 @@ def _send_panel(item: dict, report: dict, refused: bool, manifest: str, user: au
     )
 
 
+def whole_unread(report: dict) -> list[str]:
+    """Files no value could come from: the saved run's whole-file unread rows (locked, virus, macros, unsupported type, damaged)."""
+    return sorted({row["file"] for row in report.get("unread") or [] if row.get("page") is None})
+
+
+def security_html(report: dict) -> str:
+    """T-122 (D-138, senior-underwriter H3): two kinds. Not opened = never sent to the model. Read but flagged = sent as is; check what came from it."""
+    flags = report.get("security_flags") or []
+    if not flags:
+        return ""
+    out = ""
+    closed = [f for f in flags if f.get("kind") == "not_opened"]
+    if closed:
+        out += ('<p class="msg bad" role="alert"><b>Not opened</b> — not sent to the model; its reason is in the Not read list above. An underwriter opens: '
+                + html.escape(", ".join(f["file"] for f in closed)) + "</p>")
+    for f in (f for f in flags if f.get("kind") == "flagged"):
+        cited = [r["field_id"] for r in report.get("fields") or [] if r.get("value") and r.get("source") == f["file"]]
+        use = (f"Values taken from it: {', '.join(cited)}. Check them against the source before relying on them." if cited
+               else "No extracted value cites it, but the model did read it. Confirm with the producer if anything looks odd.")
+        out += f'<p class="msg bad" role="alert"><b>Read but flagged</b> — {html.escape(f["file"])}: {html.escape(f["reason"])}. It was sent to the model unchanged. {html.escape(use)}</p>'
+    return out
+
+
 def whats_new_items(rows) -> str:
     return "".join(f"<li>{html.escape(d)} · {html.escape(t)} · {html.escape(n)}: {html.escape(w)}</li>" for d, t, n, w in rows)
 
@@ -997,6 +1031,8 @@ def manual_intake_html(report: dict) -> str:
     if report.get("status") != prepare.MANUAL_INTAKE:
         return ""
     reasons = prepare.scope.reasons_text(report.get("scope")) or ["Manual intake: outside the pilot scope"]
+    blocked = ["Blocked: " + r for r in prepare.blocked_reasons(report.get("unread"))]
+    reasons = blocked + reasons  # B-485: a file that was never opened says so first; the scope reasons that follow come from that
     return (
         '<div class="msg bad" role="alert"><b>Manual intake</b> — a person reads this whole file. Why:<ul>'
         + "".join(f"<li>{html.escape(r)}</li>" for r in reasons)
@@ -1217,8 +1253,11 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
             note = ""
             if failed:
                 note = NOT_READ
-            elif row.get("needs_review") and row.get("value"):
-                note = "NEEDS REVIEW: " + (row.get("reason") or "flagged")
+            elif package.is_review_row(row):  # P-076 (H1): operations with a value always, also in a run saved before P-076
+                parts = [row.get("reason")]
+                if row.get("policy_review") or row.get("field_id") == "operations":
+                    parts.append(prepare.POLICY_NOTE)  # P-076 (D-135): beside any specific reason, never in place of it
+                note = "NEEDS REVIEW: " + ("; ".join(x for x in parts if x) or "flagged")
             elif row.get("reason") and not row.get("value"):
                 note = row["reason"]
             merged_n = len([q for q in row.get("also_quoted") or [] if not (row.get("rule_copied") and (row.get("value") or "").endswith("; " + str(q.get("quote"))))])
@@ -1270,9 +1309,13 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
             reason = report.get("status_reason") or "every value was rejected by the gate"
             extraction = f"REJECTED — {reason}. No field was accepted. This is not a missing-data file. Sends are blocked."
         unread = report.get("unread") or []
+        unread_files = whole_unread(report)
+        if unread_files and extraction == "ok":
+            extraction = f"ok for the files that were read; {len(unread_files)} not read (see Not read)"
         failed = report.get("status") == "extraction_failed"
         none_ = NOT_READ if failed else MI_NOT_READ if manual else "none"  # D-080 (B-297): a failed card never says "none"; nor does a manual-intake card (T-104a UI H1)
-        unread_html = f"<p>Not read: {none_}</p>" if not unread or manual else "<p>Not read:</p><ul>" + "".join(
+        # B-485: a manual-intake card also lists every file not opened or not read, with its reason (virus, lock, macros, no scanner)
+        unread_html = f"<p>Not read: {none_}</p>" if not unread else "<p>Not read:</p><ul>" + "".join(
             "<li>{}, {}: {}</li>".format(
                 html.escape(u["file"]),
                 "whole file" if u.get("page") is None else f"page {u['page']}",
@@ -1285,9 +1328,13 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
             f"<h2>{html.escape(item['id'])}</h2>",
             _msg_for(messages, user, item["id"]),
             (f'<p class="msg bad" role="alert">{package.STALE}. Approve and tick each needs-review value again.</p>' + stale_changes(item["id"], report) if package._decision_problem(item["id"], report.get("saved_hash") or "") == package.STALE else ""),
-            f"<p>Saved run: status {html.escape(str(report.get('status')))} · hash check: ok · manifest check: "
+            f"<p>Saved run: status {html.escape(str(report.get('status')))}"
+            + (f" ({html.escape(package.RESOLVED_REASON)})" if report.get("status_reason") == package.RESOLVED_REASON else "")
+            + " · hash check: ok · manifest check: "
             + (f'<span class="bad">FAILED — {html.escape(manifest)}. A send will be refused.</span>' if manifest else "ok")
             + "</p>",
+            (f'<p class="msg bad" role="alert"><b>{len(unread_files)} file{"s" if len(unread_files) != 1 else ""} not read</b> ({html.escape(", ".join(unread_files))}). '
+             "Nothing below says anything about what is in them.</p>" if unread_files and not manual else ""),
             review_pending_html(report),
             manual_intake_html(report),
             scope_html(item, report),
@@ -1295,9 +1342,11 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
              "Do not chase the missing items. Next step: re-run extraction on this file; the scope check then makes it manual intake, "
              "and an underwriter reads the whole file by hand.</p>" if item.get("scope_now") and not refused else ""),  # P-063, T-109a UI check H1
             f"<p>Files: {html.escape(', '.join(item['files']) or 'none')}</p>",
-            f"<p>Not read by extraction: {html.escape(none_ if manual else ', '.join(item['ignored']) or none_)}</p>",
+            f"<p>Not read by extraction: {html.escape(none_ if manual else ', '.join(sorted(set(item['ignored']) | set(unread_files))) or none_)}</p>",
         ]
         lines += score_html(item, report, user)
+        if unread_files and not manual and not refused:
+            lines.append(f'<p class="msg bad">Cooking, hood and the other "not stated" lines: {len(unread_files)} file{"s" if len(unread_files) != 1 else ""} unread ({html.escape(", ".join(unread_files))}) — these may hold this.</p>')
         if item.get("scope_now") and not refused:  # P-063 (T-109a UI check H1): no route or hold wording on an out-of-scope file
             lines.append("<p>Carrier match: none — out of pilot scope at send time (see the alert above)</p>")
         elif not refused:
@@ -1313,6 +1362,7 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
         lines += [
             f"<p>Extraction: {html.escape(extraction)}</p>",
             unread_html,
+            security_html(report),
             f"<p>Needs human read: {html.escape(none_ if manual else ', '.join(report.get('needs_human') or []) or none_)}</p>",
             f"<p>Address check: {html.escape(address_check)}</p>",
             f"<p>Locations: {html.escape('; '.join(('primary ' if row.get('primary') else 'other ') + row['address'] for row in report['locations']) or 'one premises') if report.get('locations') is not None else 'not stored in the saved run'}</p>",
@@ -1325,8 +1375,10 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
             quotes.html_for(item["id"], user),
         ]
         if not refused:
-            missing = report["missing"] + report.get("extra", [])
+            missing = report["missing"] + (report.get("extra") or [])
             lines += ["<h3>Missing</h3>", f"<p>{html.escape(', '.join(missing) or 'none')}</p>"]
+            if unread_files and not manual:
+                lines.append(f"<p>{len(unread_files)} file{'s' if len(unread_files) != 1 else ''} unread — these may hold the missing items. No missing-info request is drafted until they are read.</p>")
         # T-071: on a refused card there is no approve option. Edit and decline stay so a person decides.
         options = "<option>decline</option>" if manual else "<option>edit</option><option>decline</option>" if refused else (
             "<option>confirm</option><option>edit</option><option>decline</option>" if pilot.active()
@@ -1336,7 +1388,7 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
                 html.escape(row["field_id"]), html.escape(row["value"]), html.escape(row.get("quote") or "—")
             )
             for row in report["fields"]
-            if row.get("value") and (pilot.active() or row.get("needs_review"))
+            if row.get("value") and (pilot.active() or package.is_review_row(row))
         )
         cook = (report.get("cooking") or {}).get("equipment") or {}
         if cook.get("state") == "needs_review":  # P-029 (D-072): the same acknowledgment; no cooking points either way
@@ -1363,7 +1415,9 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
         )
         sid = html.escape(item["id"])
         draft = PENDING / f"{item['id']}.md"
-        if draft.is_file() and not manual:  # P-055: a manual-intake file has no automated missing-info draft
+        if draft.is_file() and not manual and report.get("status_reason") == package.RESOLVED_REASON:  # P-081 (D-157): the draft named the resolved conflicts
+            lines.append("<h3>Missing-info draft for the producer</h3><p>Withdrawn: every conflict on this file was resolved by an underwriter on this run, so nothing is asked of the producer.</p>")
+        elif draft.is_file() and not manual:  # P-055: a manual-intake file has no automated missing-info draft
             lines.append(
                 f"<h3>Missing-info draft for the producer (not sent)</h3><pre>{html.escape(draft.read_text())}</pre>"
                 + (f'<p class="bad">No send to producer: {html.escape(item["scope_now"])}.</p>' if item.get("scope_now") else  # P-063
@@ -1704,7 +1758,7 @@ if __name__ == "__main__":
                     except ValueError:
                         pass
                 n = len(check.read_text().splitlines())
-                assert record_decision({**ap, "ack": ["year_built"]}, check)["acknowledged"] == ["year_built"]
+                assert record_decision({**ap, "ack": ["year_built", "operations"]}, check)["acknowledged"] == ["year_built", "operations"]  # P-076: operations is always listed
                 assert len(check.read_text().splitlines()) == n + 1
                 assert "acknowledged" not in logged  # a report with no needs-review value approves as before
 
@@ -1826,8 +1880,8 @@ if __name__ == "__main__":
         mi = card(prepare.MANUAL_INTAKE)
         mi["report"].update(scope=prepare.scope.detect([{"name": "application.jpg", "text": "", "needs_human": True}, {"name": "schedule.csv", "text": "loc,address\n1,1 A St\n2,2 B St"}]),
                             fields=[{"field_id": "operations", "value": None}], sprinklers=None)
-        want_reasons = ["Manual intake: scanned application", "Manual intake: multiple locations"]
-        assert all(t in [r["text"] for r in mi["report"]["scope"]["reasons"]] for t in want_reasons)
+        want_reasons = ["Manual intake: scanned application", "Manual intake: multiple locations"]  # P-077 A quotes words only when they alone sent the file
+        assert all(t in [r["text"] for r in mi["report"]["scope"]["reasons"]] for t in want_reasons), mi["report"]["scope"]["reasons"]
         m = match(mi["report"])
         assert m["route"] == "manual_intake" and "provisional" not in m and m["suggested"] == "" and "hold" not in m["route"], m
         mi.update(route=m["route"], note=m["note"], suggested=m["suggested"], score=points.score_run(mi["report"]))
@@ -1841,13 +1895,13 @@ if __name__ == "__main__":
             shutil.rmtree(tmp_pending)
         for label in ("Not read", "Not read by extraction", "Needs human read"):  # T-104a UI H1: never "none" under the manual-intake banner
             assert f"<p>{label}: {MI_NOT_READ}</p>" in mi_page and f"<p>{label}: none</p>" not in mi_page, label
-        assert "Manual intake</b>" in mi_page and all(f"<li>{t}</li>" in mi_page for t in want_reasons), mi_page[:900]
+        assert "Manual intake</b>" in mi_page and all(f"<li>{html.escape(t)}</li>" in mi_page for t in want_reasons), mi_page[:900]
         assert "<option>edit</option>" not in mi_page and "<th>Cited text</th>" not in mi_page and "Nothing filled in: a person reads the file." in mi_page
         assert "<option>approve</option>" not in mi_page and "Carrier match:" not in mi_page and "Provisional route" not in mi_page and "Suggested market" not in mi_page
         assert "Missing-info draft" not in mi_page and "approve-draft" not in mi_page and "<h3>Missing</h3>" not in mi_page
         assert html.escape(f"No send: this file's status is {prepare.status_refusal(mi['report'])}; it cannot be sent.") in mi_page and "scanned application; multiple locations" in mi_page, mi_page[-1500:]
         assert "Cooking: not read (manual intake)" in mi_page and "no cooking equipment stated" not in mi_page and "Hood and suppression: not stated" not in mi_page
-        assert "MANUAL INTAKE" in mi_page and prepare.status_refusal(mi["report"]) in mi_page
+        assert "MANUAL INTAKE" in mi_page and html.escape(prepare.status_refusal(mi["report"])) in mi_page
         # P-041 (D-088): review pending says what is pending, keeps approve with the tick, and routes as complete did.
         rp = card(prepare.REVIEW_PENDING, fields=[{"field_id": "operations", "value": "accounting office"},
                                                   {"field_id": "sales_or_payroll", "value": "2100000", "needs_review": True, "reason": "check against the email"}])
@@ -1873,11 +1927,30 @@ if __name__ == "__main__":
         # P-016 R1/D-039: the card shows reason, quote, unread rows, and a checkbox per needs-review value.
         lowc = render([card("complete", fields=[{"field_id": "tiv_building", "value": "220000", "needs_review": True, "quote": "TIV 220,000", "reason": "Low-confidence scan read — check against the page"}])], None)
         assert "NEEDS REVIEW: Low-confidence scan read — check against the page" in lowc and needs_review_ids({"fields": [{"field_id": "tiv_building", "value": "220000", "needs_review": True}]}) == ["tiv_building"], "P-025 label and approve list"
+        # P-076 (D-135): the policy note shows beside the value, and beside a specific reason without replacing it.
+        pol = render([card("complete", fields=[{"field_id": "operations", "value": "Office", "needs_review": True, "policy_review": True}])], None)
+        assert "NEEDS REVIEW: Operations is always checked by the underwriter" in pol and 'name="ack" value="operations"' in pol, "P-076 policy note and ack box"
+        pol2 = render([card("complete", fields=[{"field_id": "operations", "value": "Office", "needs_review": True, "policy_review": True, "reason": "operations may be missing: fryer"}])], None)
+        assert "NEEDS REVIEW: operations may be missing: fryer; Operations is always checked" in pol2, "P-076: specific reason kept"
+        old = render([card("complete", fields=[{"field_id": "operations", "value": "Office", "needs_review": False}])], None)  # P-076 H1: a run saved before P-076
+        assert 'name="ack" value="operations"' in old and "NEEDS REVIEW: Operations is always checked" in old, "P-076 H1: ack box and note on a pre-P-076 run"
         flagged = card("complete", fields=[{"field_id": "year_built", "value": "1942", "needs_review": True, "quote": "Built 1942", "reason": "number or date read from a scan"}])
         flagged["report"]["unread"] = [{"file": "a.pdf", "page": 2, "reason": "blank"}, {"file": "b.docx", "page": None, "reason": "file type .docx is not read"}]
         pf = render([flagged], None)
         assert "NEEDS REVIEW: number or date read from a scan" in pf and "Built 1942" in pf and 'name="ack" value="year_built"' in pf
         assert "a.pdf, page 2: blank" in pf and "b.docx, whole file:" in pf
+        # T-122 (D-138): a flagged file is named on the card with its reason.
+        sec = card("complete")
+        sec["report"]["security_flags"] = [{"file": "macro.pdf", "kind": "not_opened", "reason": "contains JavaScript; not sent to the model, an underwriter opens it by hand"},
+                                           {"file": "notes.md", "kind": "flagged", "reason": "the text has words that try to give the AI instructions"}]
+        sec["report"]["unread"] = [{"file": "macro.pdf", "page": None, "reason": "contains JavaScript; not sent to the model, an underwriter opens it by hand"}]
+        sec["report"]["needs_human"] = ["macro.pdf", "notes.md"]
+        sec["report"]["fields"] = [{"field_id": "operations", "value": "restaurant", "source": "notes.md"}]
+        pg_sec = render([sec], None).split("<article", 1)[1]
+        assert "<b>Not opened</b>" in pg_sec and "<b>Read but flagged</b> — notes.md" in pg_sec and "Values taken from it: operations" in pg_sec and "<b>Security check</b>" not in pg_sec
+        assert "1 file not read" in pg_sec and "Not read by extraction: macro.pdf" in pg_sec and "ok for the files that were read; 1 not read" in pg_sec, "H1"
+        assert "these may hold this" in pg_sec and "No missing-info request is drafted" in pg_sec, "H2"
+        assert "<b>Not opened</b>" not in render([card("complete")], None).split("<article", 1)[1]
         # B-428 (D-113): the "Not read by extraction" list comes from the saved run's unread rows, never from the file name.
         assert not_read_by_extraction({"unread": []}, ["application.pdf", "loss-runs.jpg", "email.md"]) == [], "a read pdf or jpg is not 'not read' (SUB-184, SUB-127/133)"
         assert not_read_by_extraction({"unread": [{"file": "a.pdf", "page": 2, "reason": "blank"}]}, ["a.pdf"]) == [], "a partly read file belongs on the Not read line, not here"
@@ -1886,7 +1959,7 @@ if __name__ == "__main__":
         flagged["ignored"] = not_read_by_extraction(flagged["report"], [])
         pf_unread = render([flagged], None).split("<article", 1)[1]
         assert "<p>Not read by extraction: b.docx</p>" in pf_unread and "<p>Not read by extraction: a.pdf</p>" not in pf_unread, pf_unread[:900]
-        assert 'name="ack"' not in page_ok
+        assert page_ok.count('name="ack"') == 1 and 'name="ack" value="operations"' in page_ok  # P-076: operations is the only value listed on an otherwise clean card
         # T-087: the card shows the quote status per carrier and SUB-002's open subjectivity.
         sub2 = card("complete", fields=[{"field_id": "operations", "value": "restaurant"}])
         sub2["id"] = "SUB-002"
@@ -2131,9 +2204,9 @@ if __name__ == "__main__":
                 # P-063 (B-432): a SUB-233-shaped file saved complete is refused at send time and its card says why, whatever the status
                 stored("SUB-933", "complete", good, app=APP_OK.replace("100 Main St, Austin, TX 78701", "Loc 1: 3412 S Georgia St, Amarillo, TX 79109; Loc #2: 6901 Bell St, Amarillo, TX 79106"))
                 msg933 = act("/send", {"submission": "SUB-933", "user_line": "send to carrier SUB-933"})[2]
-                assert msg933.startswith("Send refused: out of pilot scope at send time (multiple locations, " + prepare.scope.VERSION), msg933
+                assert msg933.startswith("Send refused: " + "out of pilot scope at send time (multiple locations, " + prepare.scope.VERSION), msg933
                 card933 = render(load_queue("SUB-933"), None)
-                assert html.escape("No send: out of pilot scope at send time (multiple locations, " + prepare.scope.VERSION) in card933 and 'action="/send"' not in card933, card933[-2000:]
+                assert html.escape("No send: " + "out of pilot scope at send time (multiple locations, " + prepare.scope.VERSION) in card933 and 'action="/send"' not in card933, card933[-2000:]
                 (PENDING / "SUB-933.md").parent.mkdir(parents=True, exist_ok=True)
                 (PENDING / "SUB-933.md").write_text("Nothing has been declined")
                 card933 = render(load_queue("SUB-933"), None)
@@ -2145,7 +2218,7 @@ if __name__ == "__main__":
                 assert 'class="msg bad"' in pg and "Send refused: x" in pg and "Approve first" in pg and 'action="/send"' not in pg  # B-249
 
                 # item 1: a recorded approve, then the typed line. A wrong line is refused; the right one writes the package.
-                assert act("/decision", {"submission": "SUB-901", "underwriter_id": "user", "action": "approve", "reason": "ok"})[1]
+                assert act("/decision", {"submission": "SUB-901", "underwriter_id": "user", "action": "approve", "ack": ["operations"], "reason": "ok"})[1]
                 assert "exact line" in refused("/send", user_line="yes")
                 assert not TO_CARRIER.exists()
                 sub, ok, text = act("/send", {"submission": "SUB-901", "user_line": "send to carrier SUB-901"})
@@ -2167,15 +2240,15 @@ if __name__ == "__main__":
                 sub, ok, text = act("/send", {"submission": "SUB-901", "user_line": line, "resend_reason": "carrier lost it"})
                 assert ok and json.loads((tmp / "sends.jsonl").read_text().splitlines()[-1])["resend_reason"] == "carrier lost it", text
                 stored("SUB-904", "complete", good)
-                assert act("/decision", {"submission": "SUB-904", "underwriter_id": "user", "action": "approve", "reason": "ok"})[1]
+                assert act("/decision", {"submission": "SUB-904", "underwriter_id": "user", "action": "approve", "ack": ["operations"], "reason": "ok"})[1]
                 assert "The package goes to <b>carrier_a</b>" in render(load_queue(), None)
                 assert "SUB-901.md, SUB-901-resend-2.md" in render(load_queue(), None)  # B-247 card lists each file
                 # B-244: an approve logged before the run held low-confidence values does not cover them.
                 stored("SUB-905", "complete", [{**r, "needs_review": True} if r["field_id"] == "named_insured" else r for r in good])
                 with dlog.open("a") as h:
                     h.write(json.dumps({"seq": 9000, "submission": "SUB-905", "action": "approve", "underwriter_id": "user", "reason": "ok", "run_hash": package._current_hash("SUB-905")}) + "\n")
-                assert "Send refused: 1 value needs review and is not acknowledged (named_insured)" in render(load_queue(), None)
-                assert "not acknowledged (named_insured)" in act("/send", {"submission": "SUB-905", "user_line": "send to carrier SUB-905"})[2]
+                assert "Send refused: 2 values need review and are not acknowledged (named_insured, operations)" in render(load_queue(), None)
+                assert "not acknowledged (named_insured, operations)" in act("/send", {"submission": "SUB-905", "user_line": "send to carrier SUB-905"})[2]
 
                 # item 13: the draft shows on the card; the user approves it (D-050); refused files cannot be approved.
                 PENDING.mkdir()
@@ -2196,7 +2269,7 @@ if __name__ == "__main__":
 
                 stored("SUB-906", "complete", good)
                 assert act("/decision", {"submission": "SUB-906", "underwriter_id": "user", "action": "approve", "reason": "ok", "run_hash": "0ld"})[2].startswith("Decision refused: the saved run changed since this card was opened")
-                assert act("/decision", {"submission": "SUB-906", "underwriter_id": "user", "action": "approve", "reason": "ok"})[1]
+                assert act("/decision", {"submission": "SUB-906", "underwriter_id": "user", "action": "approve", "ack": ["operations"], "reason": "ok"})[1]
                 first = json.loads(dlog.read_text().splitlines()[-1])
                 assert first["run_hash"] == package._current_hash("SUB-906") and first["at"] and "Re-review needed" not in art(render(load_queue(), None), "SUB-906")
                 stored("SUB-906", "complete", [{**r, "value": "Different Co"} if r["field_id"] == "named_insured" else r for r in good])
@@ -2204,7 +2277,7 @@ if __name__ == "__main__":
                 assert "Re-review needed: file changed since your approval" in art(pg, "SUB-906") and 'action="/send"' not in art(pg, "SUB-906")
                 assert act("/send", {"submission": "SUB-906", "user_line": "send to carrier SUB-906"})[2] == "Send refused: Re-review needed: file changed since your approval"
                 assert "not the current run" in art(pg, "SUB-906")
-                assert act("/decision", {"submission": "SUB-906", "underwriter_id": "user", "action": "approve", "reason": "ok again"})[1]
+                assert act("/decision", {"submission": "SUB-906", "underwriter_id": "user", "action": "approve", "reason": "ok again", "ack": ["operations"]})[1]
                 pg = render(load_queue(), None)
                 assert "Re-review needed" not in art(pg, "SUB-906") and 'action="/send"' in art(pg, "SUB-906")
                 assert act("/send", {"submission": "SUB-906", "user_line": "send to carrier SUB-906"})[1]
@@ -2219,8 +2292,8 @@ if __name__ == "__main__":
                 assert "No decision or send logged" in art(render(load_queue(), None), "SUB-929")
 
                 stored("SUB-908", "complete", [{**r, "needs_review": True, "quote": "Acme", "reason": "r"} if r["field_id"] == "named_insured" else r for r in good])
-                assert act("/decision", {"submission": "SUB-908", "underwriter_id": "user", "action": "approve", "reason": "checked", "ack": ["named_insured"]})[1]
-                assert "acknowledged 1: named_insured" in art(render(load_queue(), None), "SUB-908")
+                assert act("/decision", {"submission": "SUB-908", "underwriter_id": "user", "action": "approve", "reason": "checked", "ack": ["named_insured", "operations"]})[1]
+                assert "acknowledged 2: named_insured, operations" in art(render(load_queue(), None), "SUB-908")
                 # B-324 (D-089): a resolve names an open conflict of this run, is logged with the run hash, and the card then shows it resolved.
                 sq = {"field": "square_feet", "values": [{"value": "16800", "source": "email.md"}, {"value": "14200", "source": "application.md"}], "resolution": "unresolved"}
                 stored("SUB-909", prepare.REVIEW_PENDING, good, complete=False, conflicts=[sq])
@@ -2342,7 +2415,7 @@ if __name__ == "__main__":
                     assert "underwriter recorded present (user: fryer on the photos)" in _a
                     assert json.loads(calls_path().read_text().splitlines()[-1])["run_hash"] == j["saved_hash"]
                     # B-266: a stale card lists changed fields, old to new.
-                    assert act("/decision", {"submission": "SUB-908", "underwriter_id": "user", "action": "approve", "reason": "again", "ack": ["named_insured"]})[1]
+                    assert act("/decision", {"submission": "SUB-908", "underwriter_id": "user", "action": "approve", "reason": "again", "ack": ["named_insured", "operations"]})[1]
                     stored("SUB-908", "complete", [{**r, "value": "Other Co", "needs_review": True, "quote": "Acme", "reason": "r"} if r["field_id"] == "named_insured" else r for r in good])
                     a = art(render(load_queue(), None), "SUB-908")
                     assert "Re-review needed" in a and "named_insured: x → Other Co" in a, a
@@ -2387,7 +2460,7 @@ if __name__ == "__main__":
                 PAGE.write_text(render(load_queue(), correction_counts(LOG)))  # what serve() writes first
                 # Sorted, and only a saved run the gate accepts: iterdir order differs by OS and old runs carry no hash.
                 sid = next(p.name for p in sorted(INBOX.iterdir()) if p.name.startswith("SUB-") and _gate_ok(p.name))
-                act("/decision", {"submission": sid, "underwriter_id": "user", "action": "approve", "reason": "sandbox check"})
+                act("/decision", {"submission": sid, "underwriter_id": "user", "action": "approve", "reason": "sandbox check", "ack": ["operations"]})
                 act("/send", {"submission": sid, "user_line": f"send to carrier {sid}"})
                 act("/close-subjectivity", {"submission": "SUB-002", "carrier": "carrier_b", "subjectivity": "x", "underwriter_id": "user", "reason": "sandbox check"})
                 assert LOG.is_file() and (box_dir / "workbench.html").is_file() and "SANDBOX COPY" in PAGE.read_text()
@@ -2424,4 +2497,33 @@ if __name__ == "__main__":
             plain_row = {"field_id": "operations", "value": "Insurance agency office, 48 seats", "quote": "Operations: Insurance agency office, 48 seats"}
             copied_row = {**plain_row, "value": f"{plain_row['value']}; {line_}", "rule_copied": True, "also_quoted": [{"quote": line_, "source": "application.md"}]}
             assert _ops({"fields": [copied_row]}) == _ops({"fields": [plain_row]}) and _unlisted(_ops({"fields": [copied_row]})) == _unlisted(_ops({"fields": [plain_row]})), body
+        # check-T-129 H2 (P-081): the card reads the saved "items still owed"; card status and the send gate agree; the draft stays until nothing is owed
+        with tempfile.TemporaryDirectory() as tmp81:
+            ext81, log81 = Path(tmp81) / "extractions", Path(tmp81) / "decisions.jsonl"
+            ext81.mkdir()
+            old81 = (prepare.EXTRACT_DIR, package.DECISIONS_LOG)
+            uw = sorted(package.underwriters())[0]
+            try:
+                prepare.EXTRACT_DIR, package.DECISIONS_LOG = ext81, log81
+                for seq, (sub, extra) in enumerate((("SUB-981", ["hours"]), ("SUB-982", None), ("SUB-983", [])), start=1):
+                    payload = {"submission": sub, "status": "incomplete", "error": None, "complete": False, "needs_human": [], "unread": [], "sprinklers": "no",
+                               "scope": {"version": "self", "in_scope": True, "reasons": []}, "hash_algorithm": prepare.HASH_ALGORITHM,
+                               "conflicts": [{"field": "operations", "resolution": "unresolved", "values": [{"value": "Office"}, {"value": "Office and storage"}]}],
+                               "fields": [{"field_id": f, "value": None if f == "operations" else "x", "needs_review": f == "operations"} for f in prepare.FIELDS]}
+                    if extra is not None:
+                        payload["extra"] = extra
+                    payload["saved_hash"] = prepare.hash_payload(payload)
+                    (ext81 / f"{sub}.json").write_text(json.dumps(payload))
+                    with log81.open("a") as fh:
+                        fh.write(json.dumps({"seq": seq, "submission": sub, "action": "resolve", "underwriter_id": uw, "reason": "signed application",
+                                             "conflict_field": "operations", "new_value": "Office", "run_hash": payload["saved_hash"]}) + "\n")
+                    shown = saved_report(sub)[0]
+                    assert shown is not None, sub
+                    card81 = package.with_resolutions(shown, sub)
+                    gate = package.with_resolutions(prepare.read_saved_run(sub), sub)
+                    assert card81["status"] == gate["status"] and card81.get("status_reason") == gate.get("status_reason"), (sub, card81["status"], gate["status"])
+                    assert (card81["status"] == prepare.REVIEW_PENDING) == (extra == []), (sub, extra, card81["status"])
+                    assert "operations" in package.needs_review_ids(prepare.read_saved_run(sub)), "check-T-129 H1: the resolved value is acknowledged"
+            finally:
+                prepare.EXTRACT_DIR, package.DECISIONS_LOG = old81
         print("workbench ok")

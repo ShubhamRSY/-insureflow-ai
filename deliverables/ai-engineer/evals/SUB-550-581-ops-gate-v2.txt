@@ -1,0 +1,24 @@
+file     ops mark            present  specific reason (v2)                    silent  not counted
+SUB-550  hit                 yes      cooking line copied from the applicati  no      check the other documents for cooking
+SUB-551  hit                 yes      none                                    no      
+SUB-552  hit                 yes      none                                    no      
+SUB-553  hit                 yes      cooking line copied from the applicati  no      check the other documents for cooking
+SUB-554  hit                 yes      cooking line copied from the applicati  no      check the other documents for cooking
+SUB-555  hit                 yes      none                                    no      value is not in the cited text (translated or reworded)
+SUB-556  hit                 yes      cooking line copied from the applicati  no      value is not in the cited text (translated or reworded); che
+SUB-557  miss                no       open operations conflict                no      value is not in the cited text (translated or reworded)
+SUB-558  hit                 yes      none                                    no      
+SUB-559  hit                 yes      cooking line copied from the applicati  no      check the other documents for cooking
+SUB-560  hit                 yes      cooking: the documents disagree         no      
+SUB-561  hit                 yes      none                                    no      
+SUB-562  hit                 yes      cooking: the documents disagree         no      value is not in the cited text (translated or reworded)
+SUB-563  hit                 yes      operations may be missing: liquor       no      value is not in the cited text (translated or reworded)
+SUB-564  hit                 yes      cooking line copied from the applicati  no      check the other documents for cooking
+SUB-565  hit                 yes      none                                    no      
+SUB-566  hit                 yes      none                                    no      
+SUB-567  hit                 yes      cooking line copied from the applicati  no      check the other documents for cooking
+SUB-568  hit                 yes      cooking line copied from the applicati  no      check the other documents for cooking
+SUB-569  hit                 yes      cooking line copied from the applicati  no      check the other documents for cooking
+in-scope files 20; silent 0; present 19; hits 19
+C2 v2 (silent errors == 0, reason must name the item): PASS
+C4 (present >= 18/20 and hits >= 15/20): PASS

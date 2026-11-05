@@ -1,0 +1,33 @@
+60200 cases; v6 fires, v7 not: 0
+--- singles (v6, v7)
+'2215 Leonard Rd, Bryan' None None
+'Insured\t2215 Leonard Rd, Bryan' None None
+'We are at 2215 Leonard Rd, Bryan' None None
+'1906 Hwy 290 W, Brenham' None None
+'Insured\t1906 Hwy 290 W, Brenham' None None
+'We are at 1906 Hwy 290 W, Brenham' None None
+'100 Spur 191, Kerrville' None None
+'Insured\t100 Spur 191, Kerrville' None None
+'We are at 100 Spur 191, Kerrville' None None
+'100 US-59, Houston' None None
+'Insured\t100 US-59, Houston' None None
+'We are at 100 US-59, Houston' None None
+'4400 FM 1960 Rd, Houston' ('4400 FM 1960', 'e.md') ('4400 FM 1960', 'e.md')
+'Insured\t4400 FM 1960 Rd, Houston' ('4400 FM 1960', 'e.md') ('4400 FM 1960', 'e.md')
+'We are at 4400 FM 1960 Rd, Houston' ('4400 FM 1960', 'e.md') ('4400 FM 1960', 'e.md')
+'9 Oak Ave, Waco' None None
+'Insured\t9 Oak Ave, Waco' None None
+'We are at 9 Oak Ave, Waco' None None
+'800 I-35 Frontage Rd, Waco' ('800 I-35', 'e.md') ('800 I-35', 'e.md')
+'Insured\t800 I-35 Frontage Rd, Waco' ('800 I-35', 'e.md') ('800 I-35', 'e.md')
+'We are at 800 I-35 Frontage Rd, Waco' ('800 I-35', 'e.md') ('800 I-35', 'e.md')
+'12 State Highway 6, Bryan' ('12 State Highway 6', 'e.md') ('12 State Highway 6', 'e.md')
+'Insured\t12 State Highway 6, Bryan' ('12 State Highway 6', 'e.md') ('12 State Highway 6', 'e.md')
+'We are at 12 State Highway 6, Bryan' ('12 State Highway 6', 'e.md') ('12 State Highway 6', 'e.md')
+'55 N. Elm Street Ste 2, Austin' None None
+'Insured\t55 N. Elm Street Ste 2, Austin' None None
+'We are at 55 N. Elm Street Ste 2, Austin' None None
+'77 County Road 12, Hearne' ('77 County Road 12', 'e.md') ('77 County Road 12', 'e.md')
+'Insured\t77 County Road 12, Hearne' ('77 County Road 12', 'e.md') ('77 County Road 12', 'e.md')
+'We are at 77 County Road 12, Hearne' ('77 County Road 12', 'e.md') ('77 County Road 12', 'e.md')
+loose not explained by v6 self-double-count: 0
