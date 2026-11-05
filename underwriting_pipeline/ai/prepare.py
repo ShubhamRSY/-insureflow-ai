@@ -1163,6 +1163,7 @@ def _insured_names(name: str | None, texts: dict) -> list[str]:
 
 
 COOKING_QUOTES_MAX = 3  # P-086: quotes per document on a cooking conflict side
+COOKING_QUOTE_CHARS = 360  # P-086 (code review): one quote never grows past this; a dense one-line scan is not quoted whole
 
 
 def cooking_hits(texts: dict, skip: dict | None = None) -> list[dict]:
@@ -1198,26 +1199,27 @@ def cooking_hits(texts: dict, skip: dict | None = None) -> list[dict]:
                 offset += len(line) + 1
             if hits and hits[-1]["source"] == doc:
                 continue
-        spans, words = [], []  # P-086 (D-169): every cooking clause in the document, so the hazard sentence is cited, not only the first word (B-530)
+        spans, word0 = [], None  # P-086 (D-169): every cooking clause in the document, so the hazard sentence is cited, not only the first word (B-530)
         for clause in _CLAUSE.finditer(scan):
             word = cooking_word(clause.group(0))
             if not word:
                 continue
+            word0 = word0 or word
             ls = text.rfind("\n", 0, clause.start()) + 1
             le = text.find("\n", clause.end())
             le = len(text) if le < 0 else le
             start, end = max(ls, clause.start() - 120), min(le, clause.end() + 120)
-            if spans and start <= spans[-1][1]:  # overlapping windows on one line are one quote
+            if spans and start <= spans[-1][1] and max(end, spans[-1][1]) - spans[-1][0] <= COOKING_QUOTE_CHARS:  # overlapping windows join, up to a cap
                 spans[-1] = (spans[-1][0], max(end, spans[-1][1]))
-            else:
+            elif not spans or start >= spans[-1][1]:
                 spans.append((start, end))
-            words.append(word)
+            else:  # overlaps a full quote: start where it ends, so no text is quoted twice
+                spans.append((spans[-1][1], end))
         if spans:  # still one hit per document (UI check H1); detection is unchanged, only the quote grows
             shown = spans[:COOKING_QUOTES_MAX]
-            quote = " … ".join(text[a:b].strip() for a, b in shown)
-            if len(spans) > COOKING_QUOTES_MAX:
-                quote += f" … and {len(spans) - COOKING_QUOTES_MAX} more in {doc}"
-            hits.append({"source": doc, "start": shown[0][0], "end": shown[-1][1], "spans": shown, "quote": quote, "word": words[0]})
+            # start/end stay the first quote only, so text[start:end] never covers the uncited lines between quotes (B-365 L1); spans lists each
+            hits.append({"source": doc, "start": shown[0][0], "end": shown[0][1], "spans": shown, "more": len(spans) - len(shown),
+                         "quote": " … ".join(text[a:b].strip() for a, b in shown), "word": word0})
     return sorted(hits, key=lambda h: h["source"].lower().startswith("application"))  # stable: the email or schedule sentence comes before the application's own other lines
 
 
@@ -1239,7 +1241,7 @@ def apply_cooking_rule(merged: dict, conflicts: list, texts: dict, scans: dict |
             return
         first = {"value": line["quote"], "source": line["source"], "quote": line["quote"], "start": line["start"], "end": line["end"]} if line else {
             "value": row["value"], "source": row.get("source"), "quote": row.get("quote") or row["value"]}
-        conflicts.append(_conflict("cooking", [first] + [{"value": h["quote"], "source": h["source"], "quote": h["quote"], "start": h["start"], "end": h["end"], **({"spans": h["spans"]} if h.get("spans") else {})} for h in hits]))  # P-086: each cited clause
+        conflicts.append(_conflict("cooking", [first] + [{"value": h["quote"], "source": h["source"], "quote": h["quote"], "start": h["start"], "end": h["end"], **({"spans": h["spans"], "more": h["more"]} if h.get("spans") else {})} for h in hits]))  # P-086: each cited clause; "more" is not in the value
         if row.get("value"):
             row["reason"] = f"{row['reason']}; {REASON_COOKING_CONFLICT}" if row.get("reason") else REASON_COOKING_CONFLICT
             row["needs_review"] = True
@@ -3172,10 +3174,14 @@ if __name__ == "__main__":
         mustang = "Subject: Mustang Island Deli - Port Aransas\n\nPort Aransas deli on Alister St selling po-boys and sandwiches to beach traffic. I left this off the application: shrimp and fries are fried every day. Carrier C run attached, no claims.\n"
         h86 = cooking_hits({"email.md": mustang})
         assert len(h86) == 1 and "fried every day" in h86[0]["quote"] and "Mustang Island Deli" in h86[0]["quote"] and len(h86[0]["spans"]) == 2, h86
-        assert all(mustang[a:b].strip() in h86[0]["quote"] for a, b in h86[0]["spans"]), h86
+        assert all(mustang[a:b].strip() in h86[0]["quote"] for a, b in h86[0]["spans"]) and (h86[0]["start"], h86[0]["end"]) == h86[0]["spans"][0], h86
         many = "\n".join(f"Line {i}: we fry wings." for i in range(5))
         h86 = cooking_hits({"email.md": many})
-        assert len(h86) == 1 and len(h86[0]["spans"]) == 3 and h86[0]["quote"].endswith("and 2 more in email.md"), h86
+        assert len(h86) == 1 and len(h86[0]["spans"]) == 3 and h86[0]["more"] == 2 and "more" not in h86[0]["quote"], h86
+        dense = cooking_hits({"scan.md": " ".join(["we fry wings."] * 200)})[0]  # code review: a one-line scan is never quoted whole
+        assert all(b - a <= COOKING_QUOTE_CHARS for a, b in dense["spans"]) and dense["more"] > 0 and len(dense["quote"]) < 1200, (dense["spans"], dense["more"])
+        far = cooking_hits({"email.md": "We fry wings.\n" + "filler line\n" * 30 + "We grill steaks.\n"})[0]  # code review: start/end cover the first quote only
+        assert far["end"] - far["start"] < 40 and len(far["spans"]) == 2, far
         assert [h["spans"] for h in cooking_hits({"email.md": "We grill burgers daily."})] == [[(0, 23)]]  # one clause: the window runs to the end of the line
         assert cooking_hits({"schedule.csv": "address\tno\tcooking\n12 Main St, Unit 2\tNo\tYes\n"}) and not cooking_hits({"schedule.csv": "address\tcooking\n12 Main St, Unit 2\tNo\n"})  # code review 1: the cell is not split on its comma
         pizza = {"application.md": "Named insured: Main Street Pizza & Grill LLC\nOperations: Office\nCooking operations: None\n"}

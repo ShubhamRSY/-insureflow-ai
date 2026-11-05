@@ -115,7 +115,7 @@ def not_scored_reason(report: dict) -> str | None:
         return "file incomplete: " + ("; ".join(parts) or "see status")
     if status == prepare.REVIEW_PENDING and not prepare.ready_to_route(report):  # @model-risk H2: an open conflict is not scored (D-070)
         conflicts = [c.get("field") for c in report.get("conflicts") or [] if c.get("resolution") != "resolved"]
-        return "file complete — review pending: " + "; ".join(f"open conflict on {field}" for field in conflicts)
+        return "file held — open conflict, not complete: " + "; ".join(f"open conflict on {field}" for field in conflicts)  # P-085 (D-169): never "complete" while a conflict is open
     if status in ("complete", prepare.REVIEW_PENDING) and any(r.get("value") for r in report.get("fields") or []):
         return None  # P-041 (D-088): review pending with no open conflict is scored as complete was; the card says what is pending
     return "unknown status" if status not in ("complete", prepare.REVIEW_PENDING) else "file complete but holds no values"

@@ -45,7 +45,7 @@ MESSAGES: dict[str, tuple[bool, str]] = {}  # submission -> (ok, plain-words res
 # D-065 item 5: one line per user-visible feature: date, task or proposal, decision number, what an underwriter sees.
 WHATS_NEW = (
     ("2026-11-05", "P-085 (B-531)", "D-169", "A file with an open conflict no longer reads \"complete — review pending\": the card says \"Held — open conflict: <topic>. Not complete. Resolve each conflict, then approve.\" Once every conflict is resolved it reads \"complete — review pending\" as before. Sends and routes are unchanged."),
-    ("2026-11-05", "P-086 (B-530)", "D-169", "A cooking conflict now quotes every line in a document that mentions cooking (up to 3, then \"and N more\"), so the sentence that states the hazard (\"shrimp and fries are fried every day\") is on the card, not only a name or subject line. The same files are held as before."),
+    ("2026-11-05", "P-086 (B-530)", "D-169", "A cooking conflict now quotes each passage in a document that mentions cooking (up to 3 quotes, then \"and N more in this file\"), so the sentence that states the hazard (\"shrimp and fries are fried every day\") is on the card, not only a name or subject line. The same files are held as before."),
     ("2026-11-05", "P-084 (T-132)", "D-165", "A second address now sends the file to manual intake in more forms: all capitals or all lower case followed by a comma and a city (\"1200 ELM DR, WACO\", \"9 oak way, Waco\"), Texas route codes in capitals (\"IH 35\", \"SL 1604\", \"TX-71\"), PMB and \"General Delivery, <city> TX\", and Spanish-format addresses followed by a comma and a city (\"Calle Roble 12, Laredo\", \"Av. Juarez 120, Laredo\"). Under a label such as \"Mailing address:\" they are still set aside."),
     ("2026-11-04", "P-082 (B-523/B-524)", "D-161", "An address next to a carrier, agent or other role word in a sentence, under a name line (\"ABC Insurance Agency\"), or near the word \"home\" now sends the file to manual intake; only a short label such as \"Mailing address:\" sets an address aside. \"Spur\" roads count as highway addresses. The approve and confirm records keep the values entered on resolve."),
     ("2026-11-03", "P-079/P-080/P-081 (T-129)", "D-155–D-157", "A single-location file whose address is a highway or route (\"1906 Hwy 290 W\") or whose model count quotes a sentence now stays in scope when the premises line shows one address. A second address on a line that also names a carrier, or under a filled-in \"Mailing address:\" line, still sends the file to manual intake. When an underwriter resolves every conflict on a file that was incomplete only because of them, the card reads \"complete — review pending\" with the reason, the Missing line shows the resolved values, and the producer draft is withdrawn; approve, acknowledgments, senior confirm and send checks still apply."),
@@ -884,11 +884,12 @@ def review_pending_html(report: dict) -> str:
     """P-041 (D-088): say what keeps a file with every field from being complete. P-085: an open conflict reads as held, never complete."""
     if report.get("status") != prepare.REVIEW_PENDING:
         return ""
-    open_ = _open_topics(report)
-    if not prepare.ready_to_route(report):
-        return (f'<p class="bad">Held — open conflict: {html.escape(", ".join(open_) or "see the conflicts")}. '
-                "Not complete. Resolve each conflict, then approve.</p>")
     review = [r["field_id"] for r in report.get("fields") or [] if r.get("value") and r.get("needs_review")]
+    if not prepare.ready_to_route(report):  # P-085: only an open conflict makes a review-pending file unroutable
+        also = f" Also to review: {html.escape(', '.join(review))}." if review else ""
+        return (f'<p class="bad">Held — open conflict: {html.escape(", ".join(_open_topics(report)))}. '
+                f"Not complete. Resolve each conflict, then approve.{also}</p>")
+    open_ = _open_topics(report)
     what = "; ".join(x for x in (review and "values to review: " + ", ".join(review), open_ and "open conflict: " + ", ".join(open_)) if x)
     return f'<p class="bad">Complete — review pending: {html.escape(what or "see the review notes")}. Not complete until checked.</p>'
 
@@ -959,7 +960,7 @@ def _no_send_reason(item: dict, report: dict, refused: bool) -> str:
         if report.get("status") == prepare.REVIEW_PENDING:
             return "an open conflict is still on the file"
         why = "the file is incomplete (a required field is empty)"
-        open_ = [prepare.PLAIN.get(c.get("field") or "?", c.get("field") or "?") for c in report.get("conflicts") or [] if c.get("resolution") != "resolved"]  # P-070: the topic in plain words
+        open_ = _open_topics(report)  # P-070: the topic in plain words
         if open_:  # D-065 item 2: the block says what is open, not only that something is
             why += " and there is an open conflict on " + ", ".join(open_)
         return why
@@ -1304,7 +1305,7 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
                         "<li><b>{}</b> ({}){}{}</li>".format(
                             html.escape(str(v.get("value"))), html.escape(str(v.get("source") or "file not named")),
                             "" if v.get("quote") == v.get("value") else " — cited: " + html.escape(str(v.get("quote") or "—")),  # UI check M: the quote is not repeated when it is the value
-                            f' <span class="bad">{side_note(v)}</span>' if side_note(v) else "",  # P-074 (D-132)
+                            (f' <span class="bad">{side_note(v)}</span>' if side_note(v) else "") + (f" (and {int(v['more'])} more in this file)" if v.get("more") else ""),  # P-074 (D-132); P-086
                         )
                         for v in (item_c["values"] if isinstance(item_c["values"], list) else [])
                     ),
