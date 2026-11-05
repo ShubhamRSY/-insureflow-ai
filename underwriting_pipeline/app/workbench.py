@@ -44,6 +44,8 @@ BANNER = ""  # set by serve(); the sandbox screenshots label the page with it
 MESSAGES: dict[str, tuple[bool, str]] = {}  # submission -> (ok, plain-words result of the last action); shown once
 # D-065 item 5: one line per user-visible feature: date, task or proposal, decision number, what an underwriter sees.
 WHATS_NEW = (
+    ("2026-11-05", "P-085 (B-531)", "D-169", "A file with an open conflict no longer reads \"complete — review pending\": the card says \"Held — open conflict: <topic>. Not complete. Resolve each conflict, then approve.\" Once every conflict is resolved it reads \"complete — review pending\" as before. Sends and routes are unchanged."),
+    ("2026-11-05", "P-086 (B-530)", "D-169", "A cooking conflict now quotes every line in a document that mentions cooking (up to 3, then \"and N more\"), so the sentence that states the hazard (\"shrimp and fries are fried every day\") is on the card, not only a name or subject line. The same files are held as before."),
     ("2026-11-05", "P-084 (T-132)", "D-165", "A second address now sends the file to manual intake in more forms: all capitals or all lower case followed by a comma and a city (\"1200 ELM DR, WACO\", \"9 oak way, Waco\"), Texas route codes in capitals (\"IH 35\", \"SL 1604\", \"TX-71\"), PMB and \"General Delivery, <city> TX\", and Spanish-format addresses followed by a comma and a city (\"Calle Roble 12, Laredo\", \"Av. Juarez 120, Laredo\"). Under a label such as \"Mailing address:\" they are still set aside."),
     ("2026-11-04", "P-082 (B-523/B-524)", "D-161", "An address next to a carrier, agent or other role word in a sentence, under a name line (\"ABC Insurance Agency\"), or near the word \"home\" now sends the file to manual intake; only a short label such as \"Mailing address:\" sets an address aside. \"Spur\" roads count as highway addresses. The approve and confirm records keep the values entered on resolve."),
     ("2026-11-03", "P-079/P-080/P-081 (T-129)", "D-155–D-157", "A single-location file whose address is a highway or route (\"1906 Hwy 290 W\") or whose model count quotes a sentence now stays in scope when the premises line shows one address. A second address on a line that also names a carrier, or under a filled-in \"Mailing address:\" line, still sends the file to manual intake. When an underwriter resolves every conflict on a file that was incomplete only because of them, the card reads \"complete — review pending\" with the reason, the Missing line shows the resolved values, and the producer draft is withdrawn; approve, acknowledgments, senior confirm and send checks still apply."),
@@ -865,12 +867,28 @@ def resolve_form(sub: str, report: dict, conflict: dict, user: auth.User | None 
             "<small>Logged with this run. Resolve each open conflict, then approve.</small></form>")
 
 
+HELD_OPEN_CONFLICT = "held — open conflict"  # P-085 (D-169, B-531): the card words for a review-pending file that cannot route
+
+
+def _open_topics(report: dict) -> list[str]:
+    return [prepare.PLAIN.get(c.get("field") or "?", c.get("field") or "?") for c in report.get("conflicts") or [] if c.get("resolution") != "resolved"]  # P-070: plain words
+
+
+def card_status(report: dict) -> str:
+    """P-085: the status words the card shows. The word "complete" appears only when the file can route; the saved status is unchanged."""
+    status = str(report.get("status"))
+    return HELD_OPEN_CONFLICT if status == prepare.REVIEW_PENDING and not prepare.ready_to_route(report) else status
+
+
 def review_pending_html(report: dict) -> str:
-    """P-041 (D-088): say what keeps a file with every field from being complete."""
+    """P-041 (D-088): say what keeps a file with every field from being complete. P-085: an open conflict reads as held, never complete."""
     if report.get("status") != prepare.REVIEW_PENDING:
         return ""
+    open_ = _open_topics(report)
+    if not prepare.ready_to_route(report):
+        return (f'<p class="bad">Held — open conflict: {html.escape(", ".join(open_) or "see the conflicts")}. '
+                "Not complete. Resolve each conflict, then approve.</p>")
     review = [r["field_id"] for r in report.get("fields") or [] if r.get("value") and r.get("needs_review")]
-    open_ = [prepare.PLAIN.get(c.get("field") or "?", c.get("field") or "?") for c in report.get("conflicts") or [] if c.get("resolution") != "resolved"]  # P-070: plain words
     what = "; ".join(x for x in (review and "values to review: " + ", ".join(review), open_ and "open conflict: " + ", ".join(open_)) if x)
     return f'<p class="bad">Complete — review pending: {html.escape(what or "see the review notes")}. Not complete until checked.</p>'
 
@@ -1328,7 +1346,7 @@ def render(queue: list[dict], counts: dict | None = None, messages: dict | None 
             f"<h2>{html.escape(item['id'])}</h2>",
             _msg_for(messages, user, item["id"]),
             (f'<p class="msg bad" role="alert">{package.STALE}. Approve and tick each needs-review value again.</p>' + stale_changes(item["id"], report) if package._decision_problem(item["id"], report.get("saved_hash") or "") == package.STALE else ""),
-            f"<p>Saved run: status {html.escape(str(report.get('status')))}"
+            f"<p>Saved run: status {html.escape(card_status(report))}"  # P-085
             + (f" ({html.escape(package.RESOLVED_REASON)})" if report.get("status_reason") == package.RESOLVED_REASON else "")
             + " · hash check: ok · manifest check: "
             + (f'<span class="bad">FAILED — {html.escape(manifest)}. A send will be refused.</span>' if manifest else "ok")
@@ -1916,6 +1934,16 @@ if __name__ == "__main__":
         rpc["report"].update(missing=[], conflicts=[{"field": "square_feet", "values": [{"value": "16800", "source": "email.md"}, {"value": "14200", "source": "application.md"}], "resolution": "unresolved"}])
         rpc_page = render([rpc], None).split("<article", 1)[1]
         assert 'name="action" value="resolve"' in rpc_page and 'value="16800"' in rpc_page and 'name="entered_value"' in rpc_page, rpc_page[:400]
+        # P-085 (D-169, B-531): an open conflict reads held, never complete; once resolved it reads review pending again.
+        shown85 = rpc_page.replace(html.escape(rpc["id"]), "").replace(rpc["id"], "")  # the fixture's id is its status text
+        assert "Held — open conflict: square footage" in shown85 and "status held — open conflict" in shown85 and "omplete — review pending" not in shown85, shown85[:600]
+        rpc["report"]["conflicts"][0]["resolution"] = "resolved"
+        assert "Complete — review pending" in render([rpc], None).split("<article", 1)[1]
+        for st in prepare.STATUSES:  # the invariant: the card says "complete" only when the file can route
+            for confl in ([], [{"field": "square_feet", "values": [], "resolution": "unresolved"}]):
+                rep85 = {**rp["report"], "status": st, "complete": st == "complete", "conflicts": confl}
+                says = bool(re.search(r"(?i)(?<!not )\bcomplete", card_status(rep85) + review_pending_html(rep85)))  # "incomplete" and "Not complete" do not count
+                assert says == (st in ("complete", prepare.REVIEW_PENDING) and prepare.ready_to_route(rep85)), (st, confl, card_status(rep85))
         assert "OPEN: no send until the underwriter chooses or enters the value" in rpc_page and "No send: open conflict on square footage" in rpc_page
         rpc["report"]["conflicts"][0].update(resolution="resolved", resolved_value="14200", resolved_by="UW-001")
         assert "RESOLVED by UW-001: 14200" in render([rpc], None) and 'value="resolve"' not in render([rpc], None).split("<article", 1)[1]
