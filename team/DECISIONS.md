@@ -1671,3 +1671,10 @@ Then continue: P-066 concurrent-write tests, @pm pilot-readiness update, @model-
 - Also asked: @responsible-ai states the T-082 lift requirements (answer only, verdict unchanged); a plan-only final pilot build and validation (`deliverables/pm/pilot-final-build-plan.md`; the hold-out is T-133 because T-130 is taken); `deliverables/pm/pilot-readiness.md` updated.
 - Not an approval of P-085 or P-086 (each needs `approve change P-###`). No model call, nothing sent.
 - Status: RECORDED by the orchestrator from @user's words, 2026-11-05.
+
+## D-169 — @user approves P-085 and P-086 (option A each); T-133 id; P-087 and P-088 to be drafted
+- Date / Owner: 2026-11-05 / @user (typed in this Claude Code session)
+- Decision: (1) `approve change P-085` — option A (card wording only). (2) `approve change P-086` — option A (quote up to 3 cooking lines per document). (3) The next hold-out id is T-133. (4) T-082 item 2: one rule for both languages by meaning — cantina/taberna = bar/tavern (same route as "bar restaurant"); discoteca/antro = nightclub (same as P-062, no_match); draft as P-087, not built. (5) T-082 item 5: student and subsidized housing → senior_referral with a documented reason instead of a non-overridable no_match; draft as P-088, not built; real company compliance must sign it before any pilot.
+- Build on branch `pilot-final` (worktree `insureflow-pilot-final`); the frozen build on `pilot-integration` is not changed until the T-133 plan is ready. T-082 items 1, 3, 4, 6 now.
+- An approved proposal is not a production approval; @model-risk checks P-085/P-086 (D-167).
+- Status: RECORDED by the orchestrator from @user's words, 2026-11-05.

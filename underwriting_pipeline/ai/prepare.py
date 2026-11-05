@@ -1162,6 +1162,26 @@ def _insured_names(name: str | None, texts: dict) -> list[str]:
     return sorted(names, key=len, reverse=True)
 
 
+COOKING_QUOTES_MAX = 3  # P-086: quotes per document on a cooking conflict side
+# P-086 (UI check H1): a quote that names a cooking activity or equipment states the hazard; a business name or type alone ("Deli") does not.
+# Labels only: detection, holds and statuses do not read this. ponytail: a prefix list; a name such as "Pizza & Grill LLC" still counts as stated.
+_COOK_ACTIVITY = ("cook", "fry", "frial", "fries", "fried", "frit", "freid", "frei", "grill", "griddl", "broil", "plancha", "parrill", "comal", "stove", "estufa",
+                  "hotplate", "burner", "oven", "horno", "horne", "salamander", "smok", "barbec", "bbq", "barbac", "rotiss", "tandoor", "toast", "skillet", "steamer",
+                  "sous", "warm", "reheat", "bak", "boil", "cocin", "coce", "microwav", "microond", "ansul", "greas", "saut", "simmer", "roast", "brais", "induction",
+                  "crock", "kettle", "asar", "asad", "calent", "calien", "hervi", "fogon", "charcoal", "wok", "hood", "sear", "hob", "range", "kitchen", "galley")
+_COOK_BUSINESS_PHRASES = {"coffee shop", "food service", "food court", "food truck", "food trucks", "we serve", "food and drink", "food and beverage"}
+
+
+def cooking_activity(clause: str) -> bool:
+    """P-086: True when the clause names a cooking activity or equipment, not only a food business name or type."""
+    norm = _COOK_RANGE_SKIP.sub(" ", _cook_norm(clause))
+    phrase = _COOK_PHRASES.search(norm)
+    if phrase and phrase.group(0) not in _COOK_BUSINESS_PHRASES:
+        return True
+    return any(token.startswith(_COOK_ACTIVITY) for token in re.findall(r"[^\W\d_]+", norm))
+COOKING_QUOTE_CHARS = 360  # P-086 (code review): one quote never grows past this; a dense one-line scan is not quoted whole
+
+
 def cooking_hits(texts: dict, skip: dict | None = None) -> list[dict]:
     """P-075 (B): every document that states a cooking word, one hit per document (UI check H1), documents other than the application first. Not read: the matched none-line (skip) only. The insured's name IS read
     (code review: "Main Street Pizza & Grill LLC" holds; a false hold at worst). Schedule files: the "cooking" column (a header alone is not read), every other cell is."""
@@ -1195,16 +1215,29 @@ def cooking_hits(texts: dict, skip: dict | None = None) -> list[dict]:
                 offset += len(line) + 1
             if hits and hits[-1]["source"] == doc:
                 continue
+        spans, strong, word0 = [], [], None  # P-086 (D-169): every cooking clause in the document, so the hazard sentence is cited, not only the first word (B-530)
         for clause in _CLAUSE.finditer(scan):
             word = cooking_word(clause.group(0))
             if not word:
                 continue
+            word0 = word0 or word
             ls = text.rfind("\n", 0, clause.start()) + 1
             le = text.find("\n", clause.end())
             le = len(text) if le < 0 else le
             start, end = max(ls, clause.start() - 120), min(le, clause.end() + 120)
-            hits.append({"source": doc, "start": start, "end": end, "quote": text[start:end].strip(), "word": word})
-            break
+            active = cooking_activity(clause.group(0))
+            if spans and start <= spans[-1][1] and max(end, spans[-1][1]) - spans[-1][0] <= COOKING_QUOTE_CHARS:  # overlapping windows join, up to a cap
+                spans[-1] = (spans[-1][0], max(end, spans[-1][1]))
+                strong[-1] = strong[-1] or active
+            else:
+                spans.append((spans[-1][1], end) if spans and start < spans[-1][1] else (start, end))  # never quote the same text twice
+                strong.append(active)
+        if spans:  # still one hit per document (UI check H1); detection is unchanged, only the quote grows
+            order = [i for i in range(len(spans)) if strong[i]] + [i for i in range(len(spans)) if not strong[i]]  # UI check H1: the hazard sentence first
+            shown = [spans[i] for i in order[:COOKING_QUOTES_MAX]]
+            # start/end stay the first quote only, so text[start:end] never covers the uncited lines between quotes (B-365 L1); spans lists each
+            hits.append({"source": doc, "start": shown[0][0], "end": shown[0][1], "spans": shown, "more": len(spans) - len(shown), "weak": not any(strong),
+                         "quote": " … ".join(text[a:b].strip() for a, b in shown), "word": word0})
     return sorted(hits, key=lambda h: h["source"].lower().startswith("application"))  # stable: the email or schedule sentence comes before the application's own other lines
 
 
@@ -1226,7 +1259,7 @@ def apply_cooking_rule(merged: dict, conflicts: list, texts: dict, scans: dict |
             return
         first = {"value": line["quote"], "source": line["source"], "quote": line["quote"], "start": line["start"], "end": line["end"]} if line else {
             "value": row["value"], "source": row.get("source"), "quote": row.get("quote") or row["value"]}
-        conflicts.append(_conflict("cooking", [first] + [{"value": h["quote"], "source": h["source"], "quote": h["quote"], "start": h["start"], "end": h["end"]} for h in hits]))
+        conflicts.append(_conflict("cooking", [first] + [{"value": h["quote"], "source": h["source"], "quote": h["quote"], "start": h["start"], "end": h["end"], **({"spans": h["spans"], "more": h["more"], "weak": h["weak"]} if h.get("spans") else {})} for h in hits]))  # P-086: each cited clause; "more" is not in the value
         if row.get("value"):
             row["reason"] = f"{row['reason']}; {REASON_COOKING_CONFLICT}" if row.get("reason") else REASON_COOKING_CONFLICT
             row["needs_review"] = True
@@ -3155,6 +3188,22 @@ if __name__ == "__main__":
         assert not cooking_hits({"schedule.csv": "location\tsq_ft\tcooking\nMain\t3700\tNo\n"}) and cooking_hits({"schedule.csv": "location\tcooking\nMain\tYes\n"})
         assert not cooking_hits({"schedule.xlsx": "sheet: Schedule\nloc\tsq_ft\tcooking\n1\t900\tnone\n"}) and cooking_hits({"schedule.xlsx": "sheet: Schedule\nloc\tcooking\n1\tYes\n"})
         assert cooking_hits({"email.md": "Grill Masters LLC is the insured."}) and cooking_hits({"email.md": "Grill Masters LLC is next door."})  # the name is read (code review 2)
+        # P-086 (D-169, B-530): the hazard sentence is cited, not only the first cooking word; still one hit per document; at most 3 quotes
+        mustang = "Subject: Mustang Island Deli - Port Aransas\n\nPort Aransas deli on Alister St selling po-boys and sandwiches to beach traffic. I left this off the application: shrimp and fries are fried every day. Carrier C run attached, no claims.\n"
+        h86 = cooking_hits({"email.md": mustang})
+        assert len(h86) == 1 and "fried every day" in h86[0]["quote"] and "Mustang Island Deli" in h86[0]["quote"] and len(h86[0]["spans"]) == 2, h86
+        assert all(mustang[a:b].strip() in h86[0]["quote"] for a, b in h86[0]["spans"]) and (h86[0]["start"], h86[0]["end"]) == h86[0]["spans"][0], h86
+        assert h86[0]["quote"].startswith("Port Aransas deli") and h86[0]["weak"] is False, h86  # UI check H1: the frying passage comes first
+        name_only = cooking_hits({"loss-runs.md": "Account: Mustang Island Deli LLC\nValued: 2026-09-03\n"})[0]
+        assert name_only["weak"] is True and cooking_activity("we fry wings") and not cooking_activity("Mustang Island Deli LLC") and not cooking_activity("coffee shop")
+        many = "\n".join(f"Line {i}: we fry wings." for i in range(5))
+        h86 = cooking_hits({"email.md": many})
+        assert len(h86) == 1 and len(h86[0]["spans"]) == 3 and h86[0]["more"] == 2 and "more" not in h86[0]["quote"], h86
+        dense = cooking_hits({"scan.md": " ".join(["we fry wings."] * 200)})[0]  # code review: a one-line scan is never quoted whole
+        assert all(b - a <= COOKING_QUOTE_CHARS for a, b in dense["spans"]) and dense["more"] > 0 and len(dense["quote"]) < 1200, (dense["spans"], dense["more"])
+        far = cooking_hits({"email.md": "We fry wings.\n" + "filler line\n" * 30 + "We grill steaks.\n"})[0]  # code review: start/end cover the first quote only
+        assert far["end"] - far["start"] < 40 and len(far["spans"]) == 2, far
+        assert [h["spans"] for h in cooking_hits({"email.md": "We grill burgers daily."})] == [[(0, 23)]]  # one clause: the window runs to the end of the line
         assert cooking_hits({"schedule.csv": "address\tno\tcooking\n12 Main St, Unit 2\tNo\tYes\n"}) and not cooking_hits({"schedule.csv": "address\tcooking\n12 Main St, Unit 2\tNo\n"})  # code review 1: the cell is not split on its comma
         pizza = {"application.md": "Named insured: Main Street Pizza & Grill LLC\nOperations: Office\nCooking operations: None\n"}
         merged_p, conf_p = {"operations": {"value": "Office", "source": "application.md", "needs_review": False, "confidence": 0.9}, "named_insured": {"value": "Main Street Pizza & Grill LLC"}}, []

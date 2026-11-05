@@ -3632,3 +3632,8 @@ Message: @responsible-ai answered in chat at @user's request (answer only, nothi
 6. Recommendation-mix test by housing class with n (@data-scientist).
 7. Language outcome rates (hold/no_match by source language): reportable on synthetic data; the AIR ≥ 0.8 threshold needs pilot data.
 Items 1–6 lift the veto for demo/synthetic only; 7 and the protected-group impact of 6 stay required before pilot. Summary in deliverables/pm/pilot-readiness.md. No verdict given by the orchestrator.
+
+---
+[2026-11-05 | orchestrator → @user, @pm, @model-risk, @responsible-ai, @compliance, @head-of-underwriting] TYPE: HANDOFF
+Re: P-085, P-086, T-082
+Message: Branch pilot-final (pilot-integration untouched, D-169). P-085/P-086 built: @senior-underwriter UI check APPROVE WITH CHANGES (High: name-only cooking quotes read as "stated"; fixed by labels, hazard passage first); @model-risk APPROVE, no High, M1 and M2 closed, 0 scored T-128 outputs changed. Record: deliverables/ai-engineer/P-085-P-086-as-built.md. T-082: items 1/1b/3/6 in deliverables/data-scientist/T-082-fairness-checks.md (EN/ES 404/408; plurals 5/18; B-197 0 problems; housing 3 outcomes by wording). Item 4 deliverables/responsible-ai/proxy-review.md (@responsible-ai High F1–F3; @compliance OBJECTION to keeping W1 for any pilot, P-088 APPROVE WITH CONDITIONS, real legal sign-off required). P-087, P-088 drafted, not built. Verdicts relayed as written; the T-082 veto stands.
