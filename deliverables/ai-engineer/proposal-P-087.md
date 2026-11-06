@@ -38,9 +38,9 @@
 ## Tests (dev only, no model call)
 
 - `t082_fairness_checks.py`:
-  - Item 1: 408/408 EN↔ES pairs equal (today 404/408).
-  - Item 1b: every listed plural pair equal (part B).
-  - Item 3: 0 mapping problems.
+  - Item 1: 462/462 EN↔ES pairs equal (before P-087/P-088: 404/408).
+  - Item 1b: 19/19 listed plural pairs equal (part B), including `tiendas de ropa` / `clothing stores`.
+  - Item 3: 77 Spanish entries, 0 mapping problems.
 - Routing self-checks: "restaurante con cantina" → senior_referral R2 with the liquor note; "cantina" → R1; "restaurante con discoteca" → R1; "cantinas" → R1 (part B).
 - Replay of T-128 from cache: the route changes are listed file by file (expected 0; no T-128 file uses these words).
 

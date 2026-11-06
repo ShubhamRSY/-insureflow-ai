@@ -20,9 +20,9 @@ Student and subsidized housing track protected classes: race, national origin, f
 ## Change (`underwriting_pipeline/app/workbench.py`, `carrier-match.md`)
 
 1. Remove the four housing phrases from `PROHIBITED` (W1).
-2. New referral group `HOUSING_PROGRAM`: "student housing", "subsidized housing", "affordable housing", "low-income housing", "low income housing", "section 8", "public housing", "senior housing", "dormitory", "dormitories", plus the Spanish twins (B-197 rule: translations of the English entries only).
-   - Route: **senior_referral**, never a carrier and never a decline. It is the same habitational rule as R12: Carrier C suggested with sprinklers yes; hold when the sprinkler answer is missing.
-   - The note gives the documented reason. Draft wording, @head-of-underwriting to confirm: *"Housing program or student housing (P-088): habitational underwriting by a person — occupancy, sprinklers, building age and condition; the program or the occupants are not a reason to decline."*
+2. New referral group `HOUSING_PROGRAM`: "student housing", "subsidized housing", "affordable housing", "low-income housing", "low income housing", "low-income apartments", "low income apartments", "section 8", "public housing", "senior housing", "dormitory", "dormitories", plus the Spanish twins (B-197 rule: translations of the English entries only).
+   - Route: **senior_referral**, never a carrier and never a decline. It is the same habitational rule as R12: Carrier C suggested with sprinklers yes; hold when the sprinkler answer is missing; R2 or W2 referral wins first; over $5M keeps the R13 note.
+   - The note gives the documented reason. Final wording confirmed by @head-of-underwriting, 2026-11-05 (`deliverables/head-of-underwriting/P-088-housing-reason.md`): *"Habitational fire and liability severity depends on construction, protection, sprinklers, cooking, unit count and loss history, and the class label alone does not show those facts, so a senior underwriter must review the file before any market is selected. The housing program and its occupants are not a reason to decline."*
 3. It is checked before the plain habitational words, so "low-income apartments" and "subsidized housing" give the same route and note.
 4. `carrier-match.md`: @head-of-underwriting moves the rows from W1 to the referral list and records why this departs from AG:45-50.
 5. D-065: card wording, a What's-new line, a screenshot, and the @senior-underwriter UI check.

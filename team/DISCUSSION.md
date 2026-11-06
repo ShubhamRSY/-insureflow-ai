@@ -3637,3 +3637,23 @@ Items 1–6 lift the veto for demo/synthetic only; 7 and the protected-group imp
 [2026-11-05 | orchestrator → @user, @pm, @model-risk, @responsible-ai, @compliance, @head-of-underwriting] TYPE: HANDOFF
 Re: P-085, P-086, T-082
 Message: Branch pilot-final (pilot-integration untouched, D-169). P-085/P-086 built: @senior-underwriter UI check APPROVE WITH CHANGES (High: name-only cooking quotes read as "stated"; fixed by labels, hazard passage first); @model-risk APPROVE, no High, M1 and M2 closed, 0 scored T-128 outputs changed. Record: deliverables/ai-engineer/P-085-P-086-as-built.md. T-082: items 1/1b/3/6 in deliverables/data-scientist/T-082-fairness-checks.md (EN/ES 404/408; plurals 5/18; B-197 0 problems; housing 3 outcomes by wording). Item 4 deliverables/responsible-ai/proxy-review.md (@responsible-ai High F1–F3; @compliance OBJECTION to keeping W1 for any pilot, P-088 APPROVE WITH CONDITIONS, real legal sign-off required). P-087, P-088 drafted, not built. Verdicts relayed as written; the T-082 veto stands.
+
+---
+[2026-11-06 | @senior-underwriter → orchestrator] TYPE: REVIEW
+Re: T-082, P-087, P-088 (D-065 UI check)
+Message: APPROVE, no High. Medium/Low in deliverables/senior-underwriter/P-087-P-088-ui-check.md.
+
+---
+[2026-11-06 | @responsible-ai → orchestrator, @user] TYPE: REVIEW
+Re: T-082, P-087, P-088
+Message: APPROVE WITH CHANGES. H1: dormitorio(s) = "bedroom"; missing Spanish housing terms. Veto lifted for P-087 and for building P-088 on pilot-final; stays on any pilot use of P-088 until H1, proxy-review condition 3 and the real compliance sign-off. Full: deliverables/responsible-ai/T-082-check-P-087-P-088.md.
+
+---
+[2026-11-06 | @model-risk → orchestrator, @user] TYPE: OBJECTION
+Re: P-088 (REVIEW for P-087)
+Message: Check + one look-again: P-087 APPROVE. P-088 OBJECTION: H1 (housing skipped R7) closed; H2 (dormitorio(s) labels Spanish dwellings as a housing program) open. Resolves by @user choosing (a) dormitorio with a number = habitational R12 (recommended), (b) remove the words, or (c) add dwelling words with accent folding. Full: deliverables/model-risk/check-P-087-P-088.md.
+
+---
+[2026-11-06 | orchestrator → @user, @pm] TYPE: HANDOFF
+Re: P-087, P-088, T-082, T-128
+Message: D-170 re-confirmed by @user in Claude Code (it was first recorded from another tool). Fast-lane fixes made: housing keeps the AG:61 flag; missing Spanish housing terms added (residencia estudiantil, vivienda para estudiantes/estudiantil, vivienda de interés social, seccion 8); housing is the habitational class for R7 (@model-risk H1). T-082: 498/498, 19/19, 83/0, 198 files. T-128 replay 0 of 32 changed, 0 model calls. tests/pipeline 94 passed. H2 fix failed twice → @user decision (D-129). @responsible-ai look-again waits for that decision. Record: deliverables/ai-engineer/P-087-P-088-as-built.md.

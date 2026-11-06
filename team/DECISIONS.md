@@ -1678,3 +1678,11 @@ Then continue: P-066 concurrent-write tests, @pm pilot-readiness update, @model-
 - Build on branch `pilot-final` (worktree `insureflow-pilot-final`); the frozen build on `pilot-integration` is not changed until the T-133 plan is ready. T-082 items 1, 3, 4, 6 now.
 - An approved proposal is not a production approval; @model-risk checks P-085/P-086 (D-167).
 - Status: RECORDED by the orchestrator from @user's words, 2026-11-05.
+
+## D-170 — @user approves P-087 (A+B) and P-088 as drafted, conditional on real company compliance; pilot-final is separate from the frozen pilot-integration build
+- Date / Owner: 2026-11-05 drafted; confirmed 2026-11-06 / @user. First recorded from another tool's session, which does not count (D-045/D-053/D-054); @user pasted the same words in the Claude Code session on 2026-11-06, which makes it valid from that date.
+- Decision (the user's words, pasted, D-032): "approve change P-087 — A + B." "approve change P-088 — as drafted, conditional: not used in any pilot until real company compliance signs it; record that condition." "pilot-final stays separate; pilot-integration remains the frozen D-167 build. All pilot changes collect on pilot-final; T-133 will validate pilot-final." "@head-of-underwriting writes the neutral business reason for the housing rule; @actuary states in writing whether any loss basis exists."
+- Conditions recorded: P-088 is built on `pilot-final` but is **not used in any pilot until the real company compliance/legal function signs the rule and its reason**. The team's @compliance is simulated and its sign-off does not count for real applicants.
+- Branch rule: `pilot-final` stays separate; `pilot-integration` remains the frozen D-167 build. All pilot changes collect on `pilot-final`; T-133 validates `pilot-final`.
+- Tools for this build: pyright-lsp and code-review before @model-risk; playwright for any card change; git with gitleaks before push; subagents only for reviewers and the two role statements.
+- Status: ACCEPTED by @user, 2026-11-05. An approved proposal is not a production approval; @model-risk still checks the build (D-167 branch rule above).
