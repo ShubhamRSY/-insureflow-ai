@@ -44,6 +44,8 @@ BANNER = ""  # set by serve(); the sandbox screenshots label the page with it
 MESSAGES: dict[str, tuple[bool, str]] = {}  # submission -> (ok, plain-words result of the last action); shown once
 # D-065 item 5: one line per user-visible feature: date, task or proposal, decision number, what an underwriter sees.
 WHATS_NEW = (
+    ("2026-11-05", "P-087 (T-082)", "D-170", "Spanish bar, tavern, nightclub and plural words now get the same route and note as their English twins: cantina/taberna beside restaurant evidence is a senior referral, discoteca/antro stay no match even beside it, and listed plurals no longer fall to the looser no-list route. Bare \"tiendas\" and \"tiendas de ropa\" are senior referrals, not Carrier A direct."),
+    ("2026-11-05", "P-088 (T-082)", "D-170", "Student, subsidized, affordable, low-income, public, senior and dormitory housing now go to a senior underwriter with a documented reason instead of a never-overridable no match; Carrier C may be suggested, a missing sprinkler answer holds, and the housing program or occupants are not a reason to decline. Not used in any pilot until real company compliance signs the rule and reason."),
     ("2026-11-05", "P-085 (B-531)", "D-169", "A file with an open conflict no longer reads \"complete — review pending\": the card says \"Held — open conflict: <topic>. Not complete. Resolve each conflict, then approve.\" Once every conflict is resolved it reads \"complete — review pending\" as before. Sends and routes are unchanged."),
     ("2026-11-05", "P-086 (B-530)", "D-169", "A cooking conflict now quotes each passage in a document that mentions cooking (up to 3 quotes, then \"and N more in this file\"), so the sentence that states the hazard (\"shrimp and fries are fried every day\") is on the card, not only a name or subject line. The same files are held as before."),
     ("2026-11-05", "P-084 (T-132)", "D-165", "A second address now sends the file to manual intake in more forms: all capitals or all lower case followed by a comma and a city (\"1200 ELM DR, WACO\", \"9 oak way, Waco\"), Texas route codes in capitals (\"IH 35\", \"SL 1604\", \"TX-71\"), PMB and \"General Delivery, <city> TX\", and Spanish-format addresses followed by a comma and a city (\"Calle Roble 12, Laredo\", \"Av. Juarez 120, Laredo\"). Under a label such as \"Mailing address:\" they are still set aside."),
@@ -168,22 +170,29 @@ def _ops(report: dict) -> str:
 # D-059 as amended by D-060. Whole word or exact phrase, case-insensitive, never substring.
 # Spanish entries are translations of sourced classes only (D-060); @responsible-ai review is B-197.
 # ponytail: plain lists in code; move to a data file when @head-of-underwriting edits them often.
-PROHIBITED = ("bar", "bars", "nightclub", "nightclubs", "tavern", "taverns", "cantina", "taberna", "antro", "discoteca",
+PROHIBITED = ("bar", "bars", "nightclub", "nightclubs", "tavern", "taverns", "cantina", "taberna", "cantinas", "tabernas", "antro", "discoteca", "antros", "discotecas",
               "cannabis", "marijuana", "marihuana", "dispensary", "dispensario", "fireworks", "firework", "explosives", "explosive",
               "fuegos artificiales", "explosivos", "armed security", "armed guard", "seguridad armada", "guardia armado",
-              "student housing", "subsidized housing", "alojamiento estudiantil", "vivienda subsidiada",
               "hookah", "adult entertainment", "ammunition", "bail bonds", "sawmill", "sawmills", "pallet manufacturing",
-              "plastics manufacturing", "recycling", "pub", "pubs", "lounge", "lounges")  # W1 (R1; AG:45-50); P-051: pubs, lounges per AG:46. Never overridable (D-057/D-060)
+              "plastics manufacturing", "recycling", "pub", "pubs", "lounge", "lounges")  # W1 (R1; AG:45-50); P-051: pubs, lounges per AG:46. Never overridable (D-057/D-060). P-088: the four housing phrases moved to HOUSING_PROGRAM
+# P-088 (D-170): the housing-program group is a senior referral, not W1. Checked before the plain habitational words so
+# every wording of the same occupancy gives one route and one note. Spanish entries are translations of the English entries (B-197).
+HOUSING_PROGRAM = ("student housing", "subsidized housing", "affordable housing", "low-income housing", "low income housing",
+                   "low-income apartments", "low income apartments", "section 8", "public housing", "senior housing", "dormitory", "dormitories",
+                   "alojamiento estudiantil", "vivienda subsidiada", "vivienda asequible", "vivienda de bajos ingresos",
+                   "vivienda para personas de bajos ingresos", "sección 8", "vivienda pública", "vivienda para personas mayores",
+                   "vivienda para adultos mayores", "dormitorio", "dormitorios",
+                   "residencia estudiantil", "residencias estudiantiles", "vivienda para estudiantes", "vivienda estudiantil", "vivienda de interés social", "seccion 8")  # 2026-11-06: @responsible-ai H1/M2 (stricter only)
 # W2 (R14, D-097 1d): referral words, checked before any class word; each sends the file to senior_referral, never to a carrier.
 NO_UTILITIES = ("no utilities", "without utilities", "utilities off", "utilities disconnected", "utilities shut off", "power off", "power disconnected",
                 "sin servicios", "sin luz", "no tenants", "building empty", "empty building", "utilities are off", "utilities turned off", "power is off",
                 "no power", "no electricity", "electricity off", "electricity disconnected", "not occupied", "sin ocupar")  # P-051 (c), P-054 (b): read on the raw text, before the negation drop
 VACANT = ("vacant", "vacancy", "vacante", "vacío", "vacio", "vacía", "vacia", "desocupado", "desocupada", "unoccupied", "abandoned", "abandonado", "abandonada", "deshabitado", "deshabitada") + NO_UTILITIES  # W2e; AG:51 lists true vacancy and no utilities as prohibited, so no market confirm (P-052)
 REFERRAL = (
-    (("fertilizer", "fertilizers", "pesticide", "pesticides", "herbicide", "chemical", "chemicals", "hazardous", "flammable", "solvent",
-      "solvents", "propane", "fuel", "fertilizante", "pesticida", "químico", "químicos"), "wholesale/retail with hazardous goods - not Carrier A (R14; AG:31)"),
-    (("laboratory", "laboratories", "lab", "medical", "clinic", "clinics", "therapy", "therapist", "physician", "doctor", "dental", "dentist",
-      "pediatric", "chiropractic", "hospital", "médico", "clínica", "terapia", "pediátrico"), "lab or medical occupancy - not Carrier A (R14; AG:29)"),
+     (("fertilizer", "fertilizers", "pesticide", "pesticides", "herbicide", "chemical", "chemicals", "hazardous", "flammable", "solvent",
+       "solvents", "propane", "fuel", "fertilizante", "fertilizantes", "pesticida", "pesticidas", "químico", "químicos"), "wholesale/retail with hazardous goods - not Carrier A (R14; AG:31)"),
+     (("laboratory", "laboratories", "lab", "medical", "clinic", "clinics", "therapy", "therapist", "physician", "doctor", "dental", "dentist",
+       "pediatric", "chiropractic", "hospital", "médico", "clínica", "clínicas", "laboratorio", "laboratorios", "terapia", "pediátrico"), "lab or medical occupancy - not Carrier A (R14; AG:29)"),
     (("cold storage", "refrigerated", "freezer", "freezers", "almacenamiento en frío", "refrigerado"), "cold storage - not Carrier A (R14; AG:31)"),
     (("liquor", "liquor store", "package store", "licor"), "liquor sales, share of receipts not checked - not Carrier A (R14; AG:30)"),
     (VACANT, "vacant, unoccupied or no utilities: renovation with signed GC contract is a referral, true vacancy is prohibited; a person decides (R14; AG:40, AG:51)"),
@@ -203,17 +212,18 @@ def not_read_by_extraction(report: dict | None, files: list[str]) -> list[str]:
     return sorted(name for name in files if not name.endswith((".md", ".csv")))
 
 
-NEVER_SOFT = ("nightclub", "nightclubs", "lounge", "lounges")  # P-062 (D-112): R1 even beside restaurant evidence; bar, tavern, pub stay R2 there
+NEVER_SOFT = ("nightclub", "nightclubs", "discoteca", "discotecas", "antro", "antros", "lounge", "lounges")  # P-062 (D-112): R1 even beside restaurant evidence; bar, tavern, pub, cantina, taberna stay R2 there; P-087 (A) adds the Spanish nightclub words
 SNACKS = ("pre-packaged snacks only", "prepackaged snacks only", "pre packaged snacks only", "snacks only", "snack warmer")  # P-062 (b): not restaurant evidence
 EQUIP = ("fryer", "fryers", "deep fryer", "deep fryers", "burner", "burners", "flat-top", "flat top", "griddle", "charbroiler", "char-broiler",
-         "broiler", "oven", "ovens", "smoker", "smokers", "comal", "wok", "freidora", "freidoras", "horno")  # P-061: stated cooking equipment (R9); "snack warmer" and "range" are not here
-BAR_WORDS = ("bar", "bars", "tavern", "taverns", "nightclub", "nightclubs", "pub", "pubs", "lounge", "lounges")  # D-079
+         "broiler", "oven", "ovens", "smoker", "smokers", "comal", "wok", "freidora", "freidoras", "horno", "hornos")  # P-061: stated cooking equipment (R9); "snack warmer" and "range" are not here; P-087 (B): hornos
+BAR_WORDS = ("bar", "bars", "tavern", "taverns", "cantina", "cantinas", "taberna", "tabernas", "nightclub", "nightclubs", "discoteca", "discotecas",
+             "antro", "antros", "pub", "pubs", "lounge", "lounges")  # D-079; P-087 (A): cantina/taberna = bar/tavern, discoteca/antro = nightclub
 
 # P-051 (a): the Carrier A allow-list, one group per written guide line. Only a file whose one operation is on it routes to Carrier A.
 ALLOW_A = {
     "office": ("office", "offices", "office building", "oficina", "oficinas"),  # AG:29 "Office: tenants and office-building lessors"
     "retail": ("retail", "retail store", "dry retail", "dry goods", "storefront", "clothing", "clothing store", "boutique", "apparel",
-               "thrift shop", "thrift shops", "thrift store", "thrift stores", "comercio minorista", "tienda minorista", "tienda de ropa", "ropa"),  # AG:30 "Retail: dry goods, clothing, professional services storefront"
+               "thrift shop", "thrift shops", "thrift store", "thrift stores", "comercio minorista", "tienda minorista", "tiendas", "tienda de ropa", "ropa"),  # AG:30 "Retail: dry goods, clothing, professional services storefront"; P-087 (B): tiendas
     "wholesale": ("wholesale", "light wholesale", "mayoreo", "mayorista"),  # AG:31 "Wholesale: light"
 }
 # P-051 (b): an occupancy word for a class that is not a target (AG:33 "No other class is a target"). Beside an allow-list word it is a
@@ -246,17 +256,21 @@ CLASSES = {
     **ALLOW_A,
     # D-078 (B-286): generic restaurant evidence only, never a cuisine or ethnic word; Spanish only as translations (D-060).
     "b": ("restaurant", "restaurants", "restaurante", "restaurantes", "food service", "foodservice", "servicio de alimentos",
-          "kitchen", "kitchens", "cocina", "eatery", "eateries", "comedor", "cafe", "café", "cafeteria", "cafetería",
-          "catering", "banquetes", "bakery", "bakeries", "coffee shop", "coffee shops", "deli", "delis"),  # D-079 (B-293)
-    "contractor": ("contractor", "contractors", "contratista", "roofing", "roofer", "techado", "techador", "handyman", "painter", "painting",
+          "kitchen", "kitchens", "cocina", "cocinas", "eatery", "eateries", "comedor", "comedores", "cafe", "café", "cafeteria", "cafetería",
+          "catering", "banquetes", "bakery", "bakeries", "coffee shop", "coffee shops", "deli", "delis"),  # D-079 (B-293); P-087 (B): cocinas, comedores
+    "contractor": ("contractor", "contractors", "contratista", "contratistas", "roofing", "roofer", "techado", "techador", "handyman", "painter", "painting",
                    "pintor", "pintura", "carpenter", "carpentry", "carpintero", "carpintería", "flooring", "drywall", "plumbing", "electrician",
-                   "hvac", "glazier", "mason"),  # R11
+                   "hvac", "glazier", "mason"),  # R11; P-087 (B): contratistas
     "habitational": ("habitational", "habitacional", "apartment", "apartments", "apartamento", "apartamentos", "flats", "multifamily",
-                     "multifamiliar", "duplex", "triplex", "fourplex"),
+                     "multifamiliar", "multifamiliares", "duplex", "triplex", "fourplex"),  # P-087 (B): multifamiliares
 }
+
 PILOT_TIV = 5_000_000  # R13, inclusive. R15 (P-049): the unsourced Carrier B $2,000,000 cap is removed
 OUT_TIV = "outside pilot TIV limit (R13; AG:16)"
 CONFIRM = ", underwriter confirms"  # P-049 (c): Carrier B and C are suggested markets only
+HOUSING_NOTE = ("housing program (P-088; AG:37, AG:62): habitational fire and liability severity depends on construction, protection, sprinklers, "
+                "cooking, unit count and loss history, and the class label alone does not show those facts, so a senior underwriter must review the file "
+                "before any market is selected; the housing program and its occupants are not a reason to decline")  # D-170; reason by @head-of-underwriting; no loss basis (@actuary)
 
 
 def _has(text: str, words) -> bool:
@@ -332,6 +346,12 @@ def _match(report: dict, gated: bool) -> dict:
     hit = [k for k, words in CLASSES.items() if _has(cls, words) and not (k == "b" and snack)]
     if "b" not in hit and equip:
         hit.append("b")  # D-078, P-061: stated cooking equipment is generic restaurant evidence
+    # P-088 (D-170): a housing-program word is the habitational class, so R7/R16 and the sprinkler hold apply as for plain habitational
+    # (@model-risk H1). "dormitorio(s)" also means "bedroom": it counts only when no plain habitational word is present (H2).
+    housing = bool(ops) and (_has(cls, tuple(w for w in HOUSING_PROGRAM if not w.startswith("dormitorio")))
+                             or (_has(cls, ("dormitorio", "dormitorios")) and "habitational" not in hit))
+    if housing and "habitational" not in hit:
+        hit.append("habitational")
     if not hit:
         return out("no_match", "readable class on no carrier list (R8; KO 8); a restaurant needs generic evidence (restaurant, food service, kitchen, eatery, café, catering or stated cooking equipment), never a cuisine word (D-078)", overridable=True)
     spr = report.get("sprinklers")
@@ -349,9 +369,9 @@ def _match(report: dict, gated: bool) -> dict:
         return out("senior_referral", "contractor (R11; AG:38, AG:62); suggested market: Carrier B" + CONFIRM + big, suggested="carrier_b")
     if kind == "habitational":
         if not unsprinklered and not (spr == "yes" or "sprinklers yes" in ops or _has(ops, ("sprinklered",))):
-            return out("hold", "habitational: sprinkler answer missing")
+            return out("hold", "housing program: sprinkler answer missing (P-088; AG:62)" if housing else "habitational: sprinkler answer missing")
         bare = "; no sprinklers" if unsprinklered else ""  # R12: the sprinkler fact stays on the card
-        return out("senior_referral", "habitational (R12; AG:37, AG:62)" + bare + "; suggested market: Carrier C" + CONFIRM + big, suggested="carrier_c")
+        return out("senior_referral", (HOUSING_NOTE if housing else "habitational (R12; AG:37, AG:62)") + bare + "; suggested market: Carrier C" + CONFIRM + big, suggested="carrier_c")
     if kind == "b":  # R10 (AG:39, AG:62): every restaurant or cooking occupancy is a senior referral
         return out("senior_referral", "restaurant / cooking occupancy (R10; AG:39, AG:62); suggested market: Carrier B" + CONFIRM + "; its 3 clean loss years are not checked" + big, suggested="carrier_b")
     if over(PILOT_TIV):
@@ -365,6 +385,8 @@ def _match(report: dict, gated: bool) -> dict:
     extra = _unlisted(raw)
     if extra:  # P-053: a word outside the allow-list and the neutral list (e.g. "office and casino")
         return out("senior_referral", "words not on the Carrier A allow-list: " + ", ".join(list(dict.fromkeys(extra))[:5]) + " (P-053; AG:29-30)" + suggest_a, suggested="carrier_a")
+    if kind == "retail" and _has(ops, ("tiendas",)) and not _has(ops, ("tiendas minoristas",)):  # P-087 (B): "tiendas" alone means stores; "clothing stores"/"tiendas de ropa" are not a direct pair, so both refer
+        return out("senior_referral", "retail in Spanish without a listed retail phrase (P-053); a person decides" + suggest_a, suggested="carrier_a")
     return out("carrier_a", "Carrier A (R14; AG:29-31); verify: no restaurant, liquor <= 10%, no cold storage, no hazardous goods, no lab or medical")
 
 
@@ -2032,7 +2054,11 @@ if __name__ == "__main__":
         m144 = match(notiv("outpatient pediatric physical and speech therapy, treatment rooms, waiting room, offices, no overnight, no beds"))
         assert (m144["route"], m144["provisional"], m144["provisional_note"]) == ("hold", "senior_referral", "lab or medical occupancy - not Carrier A (R14; AG:29)") and not package._overridable(notiv("x")), m144
         # P-049 (d) (D-097): a referral word always wins over class words. SUB-138 and SUB-144 shapes.
-        r = lambda ops, tiv="$1,000,000": {"complete": True, "fields": [{"field_id": "operations", "value": ops}, {"field_id": "tiv_building", "value": tiv}]}
+        def r(ops, tiv: str | None = "$1,000,000", **kw):
+            f = [{"field_id": "operations", "value": ops}]
+            if tiv is not None:
+                f.append({"field_id": "tiv_building", "value": tiv})
+            return {"complete": True, "fields": f, **kw}
         for ops, why in (("Wholesale and retail of animal feed, seed and fertilizer bags. Warehouse with loading dock", "AG:31"), ("pediatric therapy offices", "AG:29"),
                          ("cold storage warehouse, wholesale", "AG:31"), ("retail liquor store", "AG:30"), ("vacant office building", "AG:40")):
             assert route(r(ops)) == "senior_referral" and why in match(r(ops))["note"], (ops, match(r(ops)))
@@ -2049,20 +2075,34 @@ if __name__ == "__main__":
         assert route(worded) == "senior_referral" and "no sprinklers" in match(worded)["note"], "code-review: a 'no sprinklers' phrase is read before negation is dropped"
         R10 = "restaurant / cooking occupancy (R10; AG:39, AG:62); suggested market: Carrier B, underwriter confirms; its 3 clean loss years are not checked"
         # T-083: D-059 + D-060, written to the temp-free in-memory report only.
-        def r(ops, tiv="$1,000,000", **kw):
-            f = [{"field_id": "operations", "value": ops}]
-            if tiv is not None:
-                f.append({"field_id": "tiv_building", "value": tiv})
-            return {"complete": True, "fields": f, **kw}
-
         m = match(r("barber shop"))
         assert m["route"] == "no_match" and m["overridable"]
         assert match(r("Barbecue Restaurant")) == {"route": "senior_referral", "note": "restaurant / cooking occupancy (R10; AG:39, AG:62); suggested market: Carrier B, underwriter confirms; its 3 clean loss years are not checked", "suggested": "carrier_b", "overridable": False}
         m = match(r("accounting office", "$8,000,000"))
         assert m["route"] == "senior_referral" and m["note"] == "outside pilot TIV limit (R13; AG:16)"
-        for ops in ("cannabis dispensary retail", "armed security office", "sprinklered student housing", "Bar and grill", "fireworks"):
+        for ops in ("cannabis dispensary retail", "armed security office", "Bar and grill", "fireworks"):
             m = match(r(ops, sprinklers="yes"))
             assert m["route"] == "no_match" and not m["overridable"], ops
+        # P-088 (D-170): every wording of the housing program is one senior referral with one reason; never a carrier, never a decline.
+        housing = {route(r(w, sprinklers="yes")) for w in ("sprinklered student housing", "subsidized housing", "alojamiento estudiantil", "vivienda subsidiada",
+                                                           "affordable housing", "section 8 apartments", "public housing", "senior housing", "dormitory")}
+        assert housing == {"senior_referral"}, housing
+        housing_note = match(r("student housing", sprinklers="yes"))["note"]
+        assert housing_note == match(r("vivienda subsidiada", sprinklers="yes"))["note"] and "P-088" in housing_note and "P-088" in match(r("section 8 apartments", sprinklers="yes"))["note"]
+        assert match(r("student housing", sprinklers="yes"))["suggested"] == "carrier_c" and not match(r("student housing", sprinklers="yes"))["overridable"]
+        held_housing = match(r("student housing"))
+        assert held_housing["route"] == "hold" and held_housing["note"] == "housing program: sprinkler answer missing (P-088; AG:62)" and held_housing["provisional"] is None, held_housing
+        assert {route(r(w, sprinklers="yes")) for w in HOUSING_PROGRAM} == {"senior_referral"}, "every P-088 word is a senior referral"
+        assert "P-088" in match(r("student housing", "$8,000,000", sprinklers="yes"))["note"] and OUT_TIV in match(r("student housing", "$8,000,000", sprinklers="yes"))["note"]
+        missing_tiv = match(r("student housing", None, sprinklers="yes"))
+        assert missing_tiv["route"] == "hold" and missing_tiv["note"] == "TIV missing or unreadable", missing_tiv
+        assert "AG:61 knock-out candidate" in match(r("student housing with kitchen", sprinklers="no"))["note"] and "AG:61" not in match(r("student housing", sprinklers="no"))["note"], "housing keeps the R12 knock-out flag"
+        # @model-risk H1/H2 (2026-11-06): housing is the habitational class for R7; "dormitorios" beside a plain habitational word is R12.
+        assert match(r("low-income apartments with ground floor restaurant", sprinklers="yes")) == match(r("apartments with ground floor restaurant", sprinklers="yes"))
+        assert "R7" in match(r("student housing and office", sprinklers="yes"))["note"]
+        assert match(r("apartamentos de 2 dormitorios", sprinklers="yes"))["note"] == match(r("2 bedroom apartments", sprinklers="yes"))["note"]
+        assert "P-088" in match(r("dormitorio", sprinklers="yes"))["note"]
+        assert "hazardous goods" in match(r("student housing with fertilizer", sprinklers="yes"))["note"] and "P-088" not in match(r("student housing with fertilizer", sprinklers="yes"))["note"], "W2 wins over P-088"
         m = match(r("roofing contractor"))
         assert m["route"] == "senior_referral" and m["suggested"] == "carrier_b" and "R11" in m["note"]
         assert {route(r(f"{w} services")) for w in ("hvac", "glazier", "mason")} == {"senior_referral"}, "R11 words"
@@ -2113,6 +2153,16 @@ if __name__ == "__main__":
         assert R1(match(r("nightclub with restaurant"))) and R1(match(r("hotel lounge with catering"))) and R1(match(r("hookah restaurant")))
         assert R1(match(r("bar and grill"))), "bar and grill: no restaurant word, as before"
         assert match(r("restaurant with a bar", class_lines=cl(None, "Two fryers"))) == bar_ref == match(r("pub, restaurant, full kitchen")), "R2 stays for bar, tavern, pub beside real evidence"
+        # P-087 (A): Spanish bar/tavern words follow the English rule by meaning; the Spanish nightclub words are never softened (P-062).
+        assert match(r("restaurante con cantina")) == match(r("restaurante con taberna")) == bar_ref, "cantina/taberna beside restaurant evidence are R2, as bar/tavern"
+        for word in ("cantina", "taberna", "cantinas", "tabernas"):
+            assert R1(match(r(word))), word
+        for word in ("antro", "discoteca", "antros", "discotecas"):
+            assert R1(match(r(word))) and R1(match(r(f"restaurante con {word}"))), word
+        # P-087 (B): the listed Spanish plural reaches the same referral as the English plural; bare "tiendas" is never Carrier A direct.
+        assert route(r("tiendas minoristas")) == route(r("retail stores")) == "senior_referral" and match(r("tiendas minoristas"))["suggested"] == "carrier_a"
+        assert route(r("tiendas")) == "senior_referral" and match(r("tiendas"))["suggested"] == "carrier_a" and route(r("stores")) == "no_match"
+        assert route(r("tiendas de ropa")) == route(r("clothing stores")) == "senior_referral", "plural phrase follows the English plural"
         assert route(r("restaurant", class_lines=cl("restaurant and bar"))) == "senior_referral" and "R2" in match(r("restaurant", class_lines=cl("restaurant and bar")))["note"]
         assert match(r("Pre-packaged snacks only, no cooking", class_lines=cl("restaurant")))["route"] == "no_match", "snacks only blocks the word evidence"
         assert route(r("Pizzeria, two fryers, snacks only")) == "senior_referral", "stated equipment still counts"

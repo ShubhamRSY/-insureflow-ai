@@ -12,6 +12,10 @@
   - It also needs C6 monitoring on ≥ 60 reviewed files with stop rules, and B-530/B-531 closed before any send-enabled mode. Any change to the build needs a new @model-risk check.
 - **Go-live: not yet** (@user, D-168).
 - **@responsible-ai T-082 fairness veto: stands.** Its lift requirements are below.
+- **P-087 A+B and P-088 are built on `pilot-final` (D-170, confirmed by @user in Claude Code 2026-11-06).** T-082 re-run (synthetic, no model call): 498/498 EN↔ES pairs, 19/19 plurals, 83 Spanish entries/0 mapping problems, 198 housing files. T-128 cache replay: 0 of 32 files changed (0 model calls). Self-checks ok; tests/pipeline 94 passed.
+  - Reviews: @senior-underwriter UI APPROVE; @responsible-ai APPROVE WITH CHANGES (veto lifted for P-087 and for building P-088; stays on pilot use of P-088); @model-risk APPROVE WITH CHANGES — **P-087 approved; P-088 OBJECTION stands on H2** (`dormitorio(s)` = "bedroom" labels Spanish dwellings as a housing program). The fix failed twice: options for @user (D-129).
+  - **T-082 status:** items 1, 1b, 2, 3 resolved; item 4 written; item 6 resolved for listed wordings; **item 5 open** until H2 is decided and @responsible-ai looks again; proxy-review condition 3 (refuse a decline that cites the class or occupants) not built; item 7 and group rates need pilot data.
+  - **Compliance sign-off needed:** P-088 (rule + reason, `deliverables/head-of-underwriting/P-088-housing-reason.md`; @actuary: no loss basis) is **not used in any pilot until the real company compliance/legal function signs it** (D-170). The team's @compliance is simulated and does not count.
 - **The plan for the final build** is in `deliverables/pm/pilot-final-build-plan.md`: P-085/P-086, the provider switch, then one fresh 20+12 hold-out (T-133), run once.
 - **Deferred to pilot data (D-168):** B-525, B-529, B-532.
 - **The repo will be made private** by @user (D-168).
@@ -24,20 +28,20 @@
 4. C6 monitoring plan (≥ 60 reviewed files, stop rules), written before the first pilot file.
 5. The older items below (c7, c8, C7 freeze, C8 registration) where still open.
 6. T-082. @responsible-ai lists 7 items; items 1–6 can be done now on synthetic data (no model call):
-   1. EN↔ES class counterfactual test.
-   2. Spanish bar words routed the same as English. This is a rule change and a loosening, so it is your decision.
-   3. B-197 Spanish-variant review.
-   4. Housing proxy-review document.
-   5. Your decision on the housing route.
-   6. Recommendation-mix test by housing class.
-   - Items 1–6 lift the veto for demo/synthetic use only.
+   1. EN↔ES class counterfactual test — built on `pilot-final`; 462/462 equal.
+   2. Spanish bar words routed the same as English — approved by @user (P-087 A+B, D-170), built.
+   3. B-197 Spanish-variant review — 77 Spanish entries, 0 mapping problems; @responsible-ai review still owed.
+   4. Housing proxy-review document — written (`deliverables/responsible-ai/proxy-review.md`).
+   5. Your decision on the housing route — approved by @user (P-088, D-170); built, conditional on real company compliance.
+   6. Recommendation-mix test by housing class — 162 files, every housing wording is P-088 senior referral.
+   - Items 1–6 lift the veto for demo/synthetic use only. @responsible-ai look-again is pending.
    - Item 7 (language outcome rates against AIR ≥ 0.8) and the protected-group impact in item 6 need real pilot data before a pilot.
 
 ### Questions for the manager
 
 - Go / no-go and who signs it. Pilot size (files, underwriters) and dates. C6 needs ≥ 60 reviewed files.
 - Which accuracy numbers the pilot shows (c1), the reporting run (c2), and the per-field threshold that pauses the pilot (c3).
-- The housing route under T-082 (keep never-overridable no_match with a written reason, or an alternative).
+- The housing route under T-082 — resolved by @user on 2026-11-05: P-088 senior referral with a documented reason (D-170), conditional on real company compliance.
 
 ### Questions for IT
 

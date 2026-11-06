@@ -42,7 +42,7 @@ No other class is a target. "Target" means eligible for auto-quote, not "we like
 
 ## Prohibited (decline only by a human, citing this list)
 
-- Student housing and subsidized housing.
+- Student housing and subsidized housing. **P-088/D-170 (2026-11-05): no longer prohibited in code on `pilot-final`; these and the wider housing-program group go to senior referral, conditional on real company compliance signing the rule and its reason. This guide line remains the source text until that sign-off.**
 - Bars, pubs, lounges, taverns, nightclubs, hookah, adult entertainment; liquor receipts > 50%.
 - Cannabis cultivation, processing, or retail.
 - Fireworks, explosives, ammunition manufacturing.
